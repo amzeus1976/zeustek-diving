@@ -1,0 +1,132 @@
+name: Bug report
+description: Report a problem in the ZeusTek Diving site/PWA so it can be reproduced, diagnosed, and fixed.
+title: "[BUG] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a ZeusTek Diving problem. Please include enough detail to reproduce it reliably. Screenshots are especially useful for visual/UI issues.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What is wrong?
+      description: Give a concise description of the problem.
+      placeholder: The main content area uses the wrong background colour...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of ZeusTek Diving is affected?
+      options:
+        - Dashboard / navigation
+        - Dive logging
+        - Training / question banks
+        - Media / study resources
+        - Equipment / loadouts
+        - Analytics / strengths and weaknesses
+        - Import / export / JSON
+        - PWA / offline behaviour
+        - Mobile layout
+        - Desktop layout
+        - Accessibility
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Tell us exactly how to make the problem happen.
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. Scroll to ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Drag and drop screenshots, screen recordings, or other useful evidence here.
+
+  - type: input
+    id: page
+    attributes:
+      label: Page / route / URL
+      description: Paste the affected page URL or describe where in the app it occurs.
+      placeholder: https://zeustek-dashboard.amzeus.chatgpt.site/...
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and operating system
+      placeholder: iPhone 15 Pro Max / iOS 26, Windows 11 desktop, etc.
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / PWA
+      placeholder: Installed iPhone PWA, Chrome 152, Safari, Edge, etc.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Cosmetic only
+        - Minor inconvenience
+        - Feature partly unusable
+        - Feature completely unusable
+        - Data loss / corruption risk
+        - Security / privacy concern
+    validations:
+      required: true
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Did this work before?
+      options:
+        - Yes - this is a regression
+        - No - it has never worked correctly
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Add anything else that may help diagnose or verify the fix.
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have checked that this issue is not already reported.
+          required: true
