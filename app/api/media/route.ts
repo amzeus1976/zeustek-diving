@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       { error: 'File and owner are required' },
       { status: 400 },
     );
-  const conservationFile = ownerKind === 'conservation_activity' && ['application/pdf','text/plain'].includes(file.type);
+  const conservationFile = ['conservation_activity','site-overhead-profile','dive-trip'].includes(ownerKind) && ['application/pdf','text/plain'].includes(file.type);
   if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !conservationFile)
     return Response.json(
       { error: 'Choose an image or video' },

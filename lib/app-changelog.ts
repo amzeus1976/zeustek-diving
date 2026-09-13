@@ -1,6 +1,47 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.15',
+    date: '2026-09-13',
+    title: 'Trips & Expeditions',
+    changes: [
+      'Added trips with itinerary, bookings, accommodation, team, packing, gas logistics and private documents.',
+      'Link existing Dive Plans, Sites, People and reusable Equipment Sets without copying or changing their records.',
+      'Trip details save offline through existing events, sync and backups; readiness is advisory and similar trips are never automatically merged.',
+      'Added responsive, searchable reference choices and protected editors while preserving Wreck & Overhead dialog behaviour.',
+    ],
+  },
+  {
+    version: '1.0.14',
+    date: '2026-09-13',
+    title: 'Wreck & Overhead profiles with contained editor Escape',
+    changes: [
+      'Released optional canonical Site wreck/overhead profiles, dated observations, original media references and read-only Planner summaries.',
+      'Escape closes only the topmost wreck editor, restores its launcher and leaves the Site card open; unsaved edits retain the existing confirmation protection.',
+      'Exterior facts remain separate from disclosed trained-overhead notes; no readiness, competence or authorisation is inferred.',
+    ],
+  },
+  {
+    version: '1.0.13',
+    date: '2026-09-13',
+    title: 'Wreck & Overhead Site profiles — rolled-back candidate',
+    changes: [
+      'Added an optional wreck/overhead profile to the existing canonical Site with recorded depths, access, structured hazards, egress and route notes.',
+      'Kept exterior/open-water facts separate from disclosed trained-overhead notes; recorded information never implies competence, readiness or authorisation.',
+      'Added dated observations and original Dive/media references through existing offline-first events, sync and backup without duplicating Sites or historical records.',
+      'Planner Site selection and detail show a read-only summary/link; route sketches use a focus-managed full-size viewer with phone-safe controls.',
+    ],
+  },
+  {
+    version: '1.0.12',
+    date: '2026-09-13',
+    title: 'Human-readable Skill CSV matching',
+    changes: [
+      'CSV import previews now show the matched canonical Skill name and group without exposing its internal ID during ordinary review.',
+      'Exact Skill ID matching, updates, archive/restore actions, unresolved-ID diagnostics and exported skill_id values remain unchanged.',
+    ],
+  },
+  {
     version: '1.0.11',
     date: '2026-09-13',
     title: 'Protected editors and visible competence guidance',
