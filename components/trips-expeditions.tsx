@@ -30,6 +30,7 @@ import {
   type PersonRecord,
   type Stored,
 } from '../lib/offline/dive-planning';
+import { currentDiveAccount } from '../lib/offline/dive-store';
 import {
   deleteDiveExpeditionTrip,
   editableDiveExpeditionTrip,
@@ -42,6 +43,7 @@ import {
   type DiveExpeditionTripStatus,
   type TripBooking,
   type TripGasLogisticsItem,
+  type TripGuestParticipant,
   type TripItinerarySegment,
   type TripPackingItem,
 } from '../lib/offline/trips-expeditions';
@@ -54,6 +56,28 @@ const statuses: Array<[DiveExpeditionTripStatus, string]> = [
   ['active', 'Active'],
   ['completed', 'Completed'],
   ['cancelled', 'Cancelled'],
+];
+
+const itineraryKinds: Array<[TripItinerarySegment['kind'], string]> = [
+  ['travel', 'Travel'],
+  ['transfer', 'Transfer'],
+  ['accommodation', 'Accommodation'],
+  ['dive', 'Dive'],
+  ['meal', 'Meal'],
+  ['activity', 'Activity / excursion'],
+  ['training', 'Training'],
+  ['meeting', 'Meeting'],
+  ['rest', 'Rest / free time'],
+  ['other', 'Other'],
+];
+
+const guestRoles: Array<[TripGuestParticipant['role'], string]> = [
+  ['non-diver', 'Non-diver'],
+  ['family-guest', 'Family / guest'],
+  ['surface-support', 'Surface support'],
+  ['driver', 'Driver'],
+  ['photographer', 'Photographer'],
+  ['other', 'Other'],
 ];
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string | undefined }) {
@@ -72,8 +96,19 @@ function dateLabel(value?: string | null) {
   });
 }
 
+function itineraryKindLabel(kind: TripItinerarySegment['kind']) {
+  return itineraryKinds.find(([value]) => value === kind)?.[1] ?? kind;
+}
+
+function guestRoleLabel(role: TripGuestParticipant['role']) {
+  return guestRoles.find(([value]) => value === role)?.[1] ?? role;
+}
+
 function newItinerary(): TripItinerarySegment {
   return { id: crypto.randomUUID(), kind: 'travel', title: '', startsAt: '', endsAt: '', location: '', bookingRef: '', notes: '' };
+}
+function newGuest(): TripGuestParticipant {
+  return { id: crypto.randomUUID(), name: '', role: 'non-diver', notes: '' };
 }
 function newBooking(): TripBooking {
   return { id: crypto.randomUUID(), kind: 'travel', provider: '', reference: '', amount: null, currency: 'GBP', paid: false, dueOn: '', notes: '' };
@@ -87,12 +122,13 @@ function newGasItem(): TripGasLogisticsItem {
 
 const emptyTrip = (): DiveExpeditionTripInput => ({
   name: '', destination: '', startsOn: null, endsOn: null, status: 'draft',
-  organiserPersonId: '', teamPersonIds: [], siteIds: [], planIds: [], accommodation: '',
+  organiserPersonId: '', organiserUserId: '', teamPersonIds: [], guestParticipants: [], siteIds: [], planIds: [], accommodation: '',
   itinerary: [], bookings: [], packingEquipmentSetIds: [], packingItems: [], gasLogistics: [],
   documentAttachmentIds: [], emergencyNotes: '', insuranceNotes: '', medicalNotes: '', notes: '',
 });
 
 export function TripsExpeditions() {
+  const currentUserId = currentDiveAccount();
   const [items, setItems] = useState<Array<Stored<DiveExpeditionTripRecord>>>([]);
   const [plans, setPlans] = useState<Array<Stored<DiveTripRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
@@ -165,13 +201,14 @@ export function TripsExpeditions() {
 
     {adding && <TripEditor
       item={editing} items={items} plans={plans} sites={sites} people={people}
-      equipment={equipment} equipmentSets={equipmentSets}
+      equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
       close={() => { setAdding(false); setEditing(null); }} saved={refresh}
     />}
 
     <div className={styles.grid}>
       {visible.map((item) => {
         const readiness = tripReadiness(item);
+        const participantCount = item.teamPersonIds.length + (item.guestParticipants?.filter((guest) => guest.name.trim()).length ?? 0);
         return <Card key={item.entityId} className={`${styles.tripCard} clickable-card`}>
           <button className="card-hit" aria-label={`Open ${item.name}`} onClick={() => setViewing(item)}/>
           <div className="focus-card-head"><ShipWheel className="focus-accent"/><div className="record-actions">
@@ -182,39 +219,46 @@ export function TripsExpeditions() {
           <p>{item.destination || 'Destination not recorded'}</p>
           <div className={styles.dates}><CalendarDays size={15}/><span>{dateLabel(item.startsOn)} → {dateLabel(item.endsOn)}</span></div>
           <div className={styles.readinessMini}><span>Readiness</span><strong>{readiness.percent}%</strong><progress value={readiness.percent} max="100" aria-label={`${readiness.percent}% trip readiness`}/></div>
-          <div className={styles.chips}><span>{item.planIds.length} plans</span><span>{item.siteIds.length} sites</span><span>{item.teamPersonIds.length} team</span></div>
+          <div className={styles.chips}><span>{item.planIds.length} plans</span><span>{item.siteIds.length} sites</span><span>{participantCount} people</span></div>
         </Card>;
       })}
     </div>
     {!visible.length && !adding && <Card className="focus-empty"><ShipWheel size={32}/><h2>{items.length ? 'No matching trips' : 'No trips yet'}</h2><p>Create a UK day trip, liveaboard, holiday or expedition and link the records you already have.</p></Card>}
 
-    {viewing && <TripDetail item={viewing} plans={plans} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets}
+    {viewing && <TripDetail item={viewing} plans={plans} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
       close={() => setViewing(null)} edit={() => { setEditing(viewing); setViewing(null); setAdding(true); }}
       remove={() => void remove(viewing)} togglePacked={(id) => void togglePacked(viewing, id)}
       addDocuments={(ids) => changeDocuments(viewing, ids)} removeDocument={(id) => changeDocuments(viewing, [], id)} />}
   </>;
 }
 
-function TripDetail({ item, plans, sites, people, equipment, equipmentSets, close, edit, remove, togglePacked, addDocuments, removeDocument }: {
+function TripDetail({ item, plans, sites, people, equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument }: {
   item: Stored<DiveExpeditionTripRecord>;
   plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>; people: Array<Stored<PersonRecord>>;
-  equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>;
+  equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
   close: () => void; edit: () => void; remove: () => void; togglePacked: (id: string) => void;
   addDocuments: (ids: string[]) => Promise<void>; removeDocument: (id: string) => Promise<void>;
 }) {
   const readiness = tripReadiness(item);
   const organiser = people.find((person) => person.entityId === item.organiserPersonId);
+  const guests = (item.guestParticipants ?? []).filter((guest) => guest.name.trim());
+  const organiserIsCurrentUser = Boolean(item.organiserUserId && item.organiserUserId === currentUserId);
   return <AccessibleDialog className={`focus-modal ${styles.detail}`} label={`${item.name} trip details`} close={close}>
     <header className={styles.hero}><div><span className="focus-eyebrow">{item.status.toUpperCase()}</span><h2>{item.name}</h2><p>{item.destination || 'Destination not recorded'} · {dateLabel(item.startsOn)} → {dateLabel(item.endsOn)}</p></div><button className="focus-icon" aria-label="Close trip" onClick={close}><X/></button></header>
 
-    <section><h3>Upcoming itinerary</h3>{item.itinerary.length ? <div className={styles.stack}>{[...item.itinerary].sort((a,b)=>(a.startsAt??'').localeCompare(b.startsAt??'')).map((segment) => <article key={segment.id}><b>{segment.title || segment.kind}</b><span>{[segment.startsAt && new Date(segment.startsAt).toLocaleString('en-GB'), segment.location].filter(Boolean).join(' · ')}</span>{segment.notes && <small>{segment.notes}</small>}</article>)}</div> : <p className="focus-copy">No itinerary segments yet.</p>}</section>
+    <section><h3>Upcoming itinerary</h3>{item.itinerary.length ? <div className={styles.stack}>{[...item.itinerary].sort((a,b)=>(a.startsAt??'').localeCompare(b.startsAt??'')).map((segment) => <article key={segment.id}><small className={styles.itineraryKind}>{itineraryKindLabel(segment.kind)}</small><b>{segment.title || itineraryKindLabel(segment.kind)}</b><span>{[segment.startsAt && new Date(segment.startsAt).toLocaleString('en-GB'), segment.location].filter(Boolean).join(' · ')}</span>{segment.notes && <small>{segment.notes}</small>}</article>)}</div> : <p className="focus-copy">No itinerary segments yet.</p>}</section>
 
     <section><h3>Readiness · advisory</h3><div className={styles.readiness}><div><strong>{readiness.percent}%</strong><span>{readiness.state.replace('-', ' ')}</span></div><progress value={readiness.percent} max="100" aria-label="Trip logistics readiness"/><div className={styles.checks}>{readiness.checks.map((check) => <span key={check.id} className={check.complete ? styles.complete : ''}>{check.complete ? <Check size={14}/> : <span aria-hidden="true">○</span>}<b>{check.label}</b><small>{check.detail}</small></span>)}</div></div></section>
 
     <section className={styles.linkColumns}><div><h3>Linked Plans</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); return <a className="focus-link" key={id} href={recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
       <div><h3>Linked Sites</h3>{item.siteIds.map((id) => {const site=sites.find((candidate)=>candidate.entityId===id);return <a className="focus-link" key={id} href={recordHref('Sites','siteId',id)}><MapPin size={13}/>{site?.name ?? 'Site unavailable'}</a>;})}{!item.siteIds.length&&<p className="focus-copy">No Sites linked.</p>}</div></section>
 
-    <section><h3>Team</h3>{organiser&&<p><b>Organiser:</b> <a className="focus-link" href={recordHref('People','personId',organiser.entityId)}>{organiser.name}</a></p>}<div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person?.name ?? 'Person unavailable'}</a>;})}</div>{!item.teamPersonIds.length&&<p className="focus-copy">No team members linked.</p>}</section>
+    <section><h3>Team</h3>
+      {(item.organiserUserId || organiser) && <p><b>Organiser:</b> {organiserIsCurrentUser ? 'Me (this account)' : organiser ? <a className="focus-link" href={recordHref('People','personId',organiser.entityId)}>{organiser.name}</a> : 'Account organiser'}</p>}
+      {!!item.teamPersonIds.length && <><h4>Diving team</h4><div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person?.name ?? 'Person unavailable'}</a>;})}</div></>}
+      {!!guests.length && <><h4>Non-diving participants</h4><div className={styles.guestList}>{guests.map((guest)=><article key={guest.id}><b>{guest.name}</b><small>{guestRoleLabel(guest.role)}</small>{guest.notes&&<small>{guest.notes}</small>}</article>)}</div></>}
+      {!item.teamPersonIds.length&&!guests.length&&<p className="focus-copy">No team members or guests linked.</p>}
+    </section>
 
     <section><h3>Equipment &amp; packing</h3>{item.packingEquipmentSetIds.length>0&&<div className={styles.chips}>{item.packingEquipmentSetIds.map((id)=><a key={id} href="/?section=Equipment"><Wrench size={13}/>{equipmentSets.find((set)=>set.entityId===id)?.name ?? 'Loadout unavailable'}</a>)}</div>}
       <div className={styles.packing}>{item.packingItems.map((packing)=><label key={packing.id}><input type="checkbox" checked={packing.packed} onChange={()=>togglePacked(packing.id)}/><span><b>{packing.label || equipment.find((gear)=>gear.entityId===packing.equipmentId)?.name || 'Packing item'}</b><small>{packing.quantity && packing.quantity>1?`Qty ${packing.quantity}`:''}{packing.notes?` · ${packing.notes}`:''}</small></span></label>)}</div>{!item.packingItems.length&&!item.packingEquipmentSetIds.length&&<p className="focus-copy">No packing list yet.</p>}
@@ -232,10 +276,10 @@ function TripDetail({ item, plans, sites, people, equipment, equipmentSets, clos
   </AccessibleDialog>;
 }
 
-function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, close, saved }: {
+function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, close, saved }: {
   item: Stored<DiveExpeditionTripRecord> | null;
   items: Array<Stored<DiveExpeditionTripRecord>>; plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>;
-  people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>;
+  people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
   close: () => void; saved: () => void;
 }) {
   const initial = item ? editableDiveExpeditionTrip(item) : emptyTrip();
@@ -245,6 +289,8 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
   const [message, setMessage] = useState('');
   const set = <K extends keyof DiveExpeditionTripInput>(key: K, next: DiveExpeditionTripInput[K]) => setValue((current) => ({ ...current, [key]: next }));
   const toggle = (key: 'teamPersonIds'|'siteIds'|'planIds'|'packingEquipmentSetIds', id: string, checked: boolean) => set(key, checked ? [...new Set([...value[key],id])] : value[key].filter((entry)=>entry!==id));
+  const guests = value.guestParticipants ?? [];
+  const organiserValue = value.organiserUserId && value.organiserUserId === currentUserId ? '__current_user__' : value.organiserPersonId ?? '';
 
   async function submit() {
     if (!value.name.trim() || busy) return;
@@ -253,7 +299,7 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
     if (duplicate && !window.confirm(`A similar Trip already exists: “${duplicate.name}”. Save another Trip anyway?`)) return;
     setBusy(true); setMessage('Saving locally…');
     try {
-      await saveDiveExpeditionTrip({ ...value, name:value.name.trim(), destination:value.destination?.trim()||'', accommodation:value.accommodation?.trim()||'', emergencyNotes:value.emergencyNotes?.trim()||'', insuranceNotes:value.insuranceNotes?.trim()||'', medicalNotes:value.medicalNotes?.trim()||'', notes:value.notes?.trim()||'' });
+      await saveDiveExpeditionTrip({ ...value, guestParticipants: guests.filter((guest)=>guest.name.trim()).map((guest)=>({...guest,name:guest.name.trim(),notes:guest.notes?.trim()||''})), name:value.name.trim(), destination:value.destination?.trim()||'', accommodation:value.accommodation?.trim()||'', emergencyNotes:value.emergencyNotes?.trim()||'', insuranceNotes:value.insuranceNotes?.trim()||'', medicalNotes:value.medicalNotes?.trim()||'', notes:value.notes?.trim()||'' });
       saved(); close();
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Trip could not be saved.'); }
     finally { setBusy(false); }
@@ -261,14 +307,17 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
 
   return <div className="focus-modal-bg"><AccessibleDialog editable dirty={dirty} className={`focus-modal record-form ${styles.editor}`} label={item?'Edit trip':'New trip'} close={close}>
     <div className="record-form-head"><div><span className="focus-eyebrow">{item?'EDIT TRIP':'NEW TRIP'}</span><h3>{item?'Update trip logistics':'Create trip or expedition'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X/></button></div>
-    <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input value={value.destination??''} onChange={(e)=>set('destination',e.target.value)}/></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={value.organiserPersonId??''} onChange={(e)=>set('organiserPersonId',e.target.value)}><option value="">Not recorded</option>{people.map((person)=><option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
+    <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input value={value.destination??''} onChange={(e)=>set('destination',e.target.value)}/></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={organiserValue} onChange={(e)=>{const next=e.target.value;setValue((current)=>next==='__current_user__'?{...current,organiserUserId:currentUserId,organiserPersonId:''}:{...current,organiserUserId:'',organiserPersonId:next});}}><option value="">Not recorded</option>{currentUserId&&<option value="__current_user__">Me (this account)</option>}{people.map((person)=><option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
 
-    <EditorChoices title="Team" icon={<Users size={17}/>} empty="Add People first if the team is not listed.">{people.map((person)=><label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{person.name}</b><small>{person.role}</small></span></label>)}</EditorChoices>
+    <EditorChoices title="Diving team" icon={<Users size={17}/>} empty="Add People first if the diving team is not listed.">{people.map((person)=><label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{person.name}</b><small>{person.role}</small></span></label>)}</EditorChoices>
+
+    <RepeatSection title="Non-diving participants" addLabel="Add non-diver" add={()=>set('guestParticipants',[...guests,newGuest()])}>{guests.map((guest,index)=><div className={styles.repeatRow} key={guest.id}><label>Name<input value={guest.name} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,name:e.target.value}:row))} placeholder="Guest name"/></label><label>Role<select value={guest.role} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,role:e.target.value as TripGuestParticipant['role']}:row))}>{guestRoles.map(([role,label])=><option key={role} value={role}>{label}</option>)}</select></label><label className="record-wide">Notes<textarea value={guest.notes??''} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,notes:e.target.value}:row))} placeholder="Relationship, surface-support role, travel notes…"/></label><button className="focus-secondary danger" onClick={()=>set('guestParticipants',guests.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
+
     <EditorChoices title="Linked sites" icon={<MapPin size={17}/>} empty="Add Sites first if needed.">{sites.map((site)=><label key={site.entityId}><input type="checkbox" checked={value.siteIds.includes(site.entityId)} onChange={(e)=>toggle('siteIds',site.entityId,e.target.checked)}/><span><b>{site.name}</b><small>{site.location}</small></span></label>)}</EditorChoices>
     <EditorChoices title="Linked Dive Plans" icon={<CalendarDays size={17}/>} empty="Plans stay canonical on Dive Plans.">{plans.map((plan)=><label key={plan.entityId}><input type="checkbox" checked={value.planIds.includes(plan.entityId)} onChange={(e)=>toggle('planIds',plan.entityId,e.target.checked)}/><span><b>{plan.name}</b><small>{plan.startDate} · {plan.siteName}</small></span></label>)}</EditorChoices>
     <EditorChoices title="Reusable loadouts" icon={<Wrench size={17}/>} empty="Create Equipment Sets first if useful.">{equipmentSets.map((setRecord)=><label key={setRecord.entityId}><input type="checkbox" checked={value.packingEquipmentSetIds.includes(setRecord.entityId)} onChange={(e)=>toggle('packingEquipmentSetIds',setRecord.entityId,e.target.checked)}/><span><b>{setRecord.name}</b><small>{setRecord.equipmentIds.length} items</small></span></label>)}</EditorChoices>
 
-    <RepeatSection title="Itinerary" addLabel="Add itinerary segment" add={()=>set('itinerary',[...value.itinerary,newItinerary()])}>{value.itinerary.map((segment,index)=><div className={styles.repeatRow} key={segment.id}><label>Type<select value={segment.kind} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,kind:e.target.value as TripItinerarySegment['kind']}:row))}><option value="travel">Travel</option><option value="accommodation">Accommodation</option><option value="dive">Dive</option><option value="transfer">Transfer</option><option value="other">Other</option></select></label><label>Title<input value={segment.title} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,title:e.target.value}:row))}/></label><label>Starts<input type="datetime-local" value={segment.startsAt??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,startsAt:e.target.value}:row))}/></label><label>Ends<input type="datetime-local" value={segment.endsAt??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,endsAt:e.target.value}:row))}/></label><label>Location<input value={segment.location??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,location:e.target.value}:row))}/></label><label>Booking ref<input value={segment.bookingRef??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,bookingRef:e.target.value}:row))}/></label><label className="record-wide">Notes<textarea value={segment.notes??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label><button className="focus-secondary danger" onClick={()=>set('itinerary',value.itinerary.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
+    <RepeatSection title="Itinerary" addLabel="Add itinerary event" add={()=>set('itinerary',[...value.itinerary,newItinerary()])}>{value.itinerary.map((segment,index)=><div className={styles.repeatRow} key={segment.id}><label>Type<select value={segment.kind} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,kind:e.target.value as TripItinerarySegment['kind']}:row))}>{itineraryKinds.map(([kind,label])=><option key={kind} value={kind}>{label}</option>)}</select></label><label>Title<input value={segment.title} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,title:e.target.value}:row))} placeholder="e.g. Desert camel safari"/></label><label>Starts<input type="datetime-local" value={segment.startsAt??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,startsAt:e.target.value}:row))}/></label><label>Ends<input type="datetime-local" value={segment.endsAt??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,endsAt:e.target.value}:row))}/></label><label>Location<input value={segment.location??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,location:e.target.value}:row))}/></label><label>Booking ref<input value={segment.bookingRef??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,bookingRef:e.target.value}:row))}/></label><label className="record-wide">Notes<textarea value={segment.notes??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label><button className="focus-secondary danger" onClick={()=>set('itinerary',value.itinerary.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
 
     <RepeatSection title="Bookings & payments" addLabel="Add booking" add={()=>set('bookings',[...value.bookings,newBooking()])}>{value.bookings.map((booking,index)=><div className={styles.repeatRow} key={booking.id}><label>Type<select value={booking.kind} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,kind:e.target.value as TripBooking['kind']}:row))}><option value="travel">Travel</option><option value="accommodation">Accommodation</option><option value="operator">Operator</option><option value="dive">Dive</option><option value="other">Other</option></select></label><label>Provider<input value={booking.provider} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,provider:e.target.value}:row))}/></label><label>Reference<input value={booking.reference??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,reference:e.target.value}:row))}/></label><label>Amount<input type="number" min="0" step="0.01" value={booking.amount??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,amount:e.target.value===''?null:Number(e.target.value)}:row))}/></label><label>Currency<input value={booking.currency??'GBP'} maxLength={3} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,currency:e.target.value.toUpperCase()}:row))}/></label><label>Due<input type="date" value={booking.dueOn??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,dueOn:e.target.value}:row))}/></label><label className="record-check"><input type="checkbox" checked={booking.paid??false} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,paid:e.target.checked}:row))}/>Paid</label><label className="record-wide">Notes<textarea value={booking.notes??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label><button className="focus-secondary danger" onClick={()=>set('bookings',value.bookings.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
 
