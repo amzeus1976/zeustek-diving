@@ -1,0 +1,15 @@
+:root,
+.dark {
+  --background: #080808;
+  --foreground: #f7f7f7;
+  --panel: #121212;
+  --panel2: #1b1b1b;
+  --line: #343434;
+  --muted: #b8b8b8;
+  --orange: #ff7a00;
+  --orange2: #ff8c1a;
+  --good: #30d158;
+  --danger: #ff453a;
+  --warning: #ffd60a;
+  --focus: #ff9f4a;
+}

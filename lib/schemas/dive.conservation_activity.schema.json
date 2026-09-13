@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://zeustek.local/schemas/dive.conservation_activity.schema.json",
+  "title":"dive.conservation_activity",
+  "type":"object",
+  "additionalProperties":true,
+  "required":["activityType","occurredAt"],
+  "properties":{
+    "activityType":{"type":"string"},
+    "occurredAt":{"type":"string","format":"date-time"},
+    "siteId":{"type":["string","null"],"format":"uuid"},
+    "diveId":{"type":["string","null"],"format":"uuid"},
+    "participantPersonIds":{"type":"array","items":{"type":"string","format":"uuid"}},
+    "speciesOrSubject":{"type":["string","null"]},
+    "tags":{"type":"array","items":{"type":"string"}},
+    "debris":{"type":["object","null"],"additionalProperties":true},
+    "externalReference":{"type":["string","null"]},
+    "attachmentIds":{"type":"array","items":{"type":"string","format":"uuid"}},
+    "notes":{"type":["string","null"]}
+  }
+}

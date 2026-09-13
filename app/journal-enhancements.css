@@ -1,0 +1,107 @@
+:root,.dark{
+  --font-geist-sans:var(--font-inter);
+  --font-geist-mono:var(--font-jetbrains-mono);
+  --orange:#ff5a00;
+  --orange2:#ff7a1a;
+  --good:#45c46a;
+  --warning:#ffb020;
+  --danger:#ff4d4d;
+  --info:#5ca9ff;
+}
+
+button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{
+  outline:2px solid var(--orange);
+  outline-offset:2px;
+}
+
+.journal-tabs{
+  display:flex;
+  gap:5px;
+  overflow-x:auto;
+  margin:-12px 0 18px;
+  padding-bottom:9px;
+  border-bottom:1px solid var(--line);
+}
+.journal-tabs button{
+  flex:none;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--muted);
+  border-radius:6px;
+  padding:8px 10px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  font-size:9px;
+}
+.journal-tabs button:hover,.journal-tabs button.active{
+  color:#fff;
+  border-color:#63301b;
+  background:#261108;
+}
+.journal-tabs button.active{box-shadow:inset 0 -2px var(--orange)}
+.entry-filter>div strong,.entry-filter>div span{display:block}
+.entry-filter>div span{color:var(--muted);font-size:8px;margin-top:3px}
+.entry-date small{display:block;color:#6d6d6a;font:600 7px var(--font-jetbrains-mono);margin-top:5px}
+.entry-context{display:flex;gap:12px;margin:8px 0;color:#777;font-size:8px}
+.entry-context span{display:flex;gap:4px;align-items:center}
+
+.journal-alt{
+  min-height:430px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  overflow:hidden;
+}
+.alt-icon{
+  width:66px;height:66px;border-radius:12px;
+  display:grid;place-items:center;
+  color:var(--orange);
+  background:#241007;
+  border:1px solid #5d2a16;
+  box-shadow:0 0 35px #ff5a0022;
+  margin-bottom:15px;
+}
+.journal-alt h2{font-size:22px;margin:6px 0}
+.journal-alt>p{max-width:460px;color:var(--muted);font-size:10px;line-height:1.6}
+.alt-preview{width:min(680px,92%);display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
+.alt-preview div{height:92px;border-radius:8px;border:1px solid #303030;background:linear-gradient(145deg,#1c1c1c,#0b0b0b);position:relative}
+.alt-preview div:after{content:'';position:absolute;left:12px;right:12px;bottom:12px;height:3px;background:linear-gradient(90deg,var(--orange),transparent);opacity:.55}
+
+.journal-editor-modal{width:min(780px,100%)}
+.entry-title-input{
+  width:100%;height:42px;background:#080808;border:1px solid #333;border-radius:7px;
+  padding:0 12px;margin-bottom:8px;outline:0;font-size:15px;font-weight:600;
+}
+.formatbar{
+  display:flex;gap:4px;align-items:center;padding:6px;
+  border:1px solid #333;border-bottom:0;background:#121212;border-radius:7px 7px 0 0;
+}
+.formatbar button{width:31px;height:29px;border:0;border-radius:5px;background:transparent;color:#aaa;display:grid;place-items:center}
+.formatbar button:hover{background:#2a160d;color:var(--orange)}
+.formatbar i{width:1px;height:20px;background:#343434;margin:0 4px}
+.rich-editor{
+  min-height:230px;max-height:430px;overflow-y:auto;
+  padding:14px;background:#080808;border:1px solid #333;border-radius:0 0 7px 7px;
+  outline:0;font-size:12px;line-height:1.65;
+}
+.rich-editor:empty:before{content:attr(data-placeholder);color:#666;pointer-events:none}
+.entry-extras{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:10px}
+.rating{display:flex;align-items:center;gap:2px;color:#777;font-size:8px}
+.rating>span{margin-right:5px}.rating button{border:0;background:transparent;color:#4a4a48;padding:2px}.rating button.on{color:var(--orange)}
+.import-safety{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.import-safety>div{display:flex;align-items:center;gap:9px;background:#0b0b0b;border:1px solid #33251f;border-radius:7px;padding:10px;color:var(--orange)}
+.import-safety strong,.import-safety small{display:block}.import-safety strong{font-size:9px;color:#eee}.import-safety small{font-size:7px;line-height:1.45;color:var(--muted);margin-top:3px}
+
+@media(max-width:720px){
+  .journal-tabs{margin-top:0}
+  .journal-tabs button{padding:8px}.journal-tabs button svg{display:none}
+  .entry-extras{align-items:flex-start;flex-direction:column}
+  .formatbar{overflow-x:auto}.formatbar button{flex:none}
+  .rich-editor{min-height:200px}
+  .import-safety{grid-template-columns:1fr}
+}
+
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

@@ -1,0 +1,41 @@
+{
+  "$id": "https://zeustek.app/schemas/diving/question-set/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "schemaVersion", "setId", "version", "title", "createdAt", "provenance", "reviewed", "questions"],
+  "properties": {
+    "format": { "const": "zeustek-question-set" },
+    "schemaVersion": { "const": 1 },
+    "setId": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "createdAt": { "type": "string", "minLength": 10, "maxLength": 40 },
+    "provenance": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "reviewed": { "type": "boolean" },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "topic", "type", "difficulty", "prompt", "answers", "explanation", "provenance"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "topic": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "type": { "enum": ["single-choice", "multiple-response", "missing-word", "diagram-labels", "scenario-response", "multiple-choice", "fill-gap"] },
+          "difficulty": { "enum": ["foundation", "beginner", "novice", "competent", "proficient", "advanced", "specialist", "expert", "master", "world-class", "introductory", "intermediate"] },
+          "prompt": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "options": { "type": "array", "minItems": 2, "maxItems": 8, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+          "answers": { "type": "array", "minItems": 1, "maxItems": 20, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+          "exactTopic": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "explanation": { "type": "string", "minLength": 1, "maxLength": 3000 },
+          "incorrectExplanations": { "type": "object", "maxProperties": 8, "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 1000 } },
+          "studySources": { "type": "array", "maxItems": 10, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 1000 } },
+          "diagramImage": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "provenance": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        }
+      }
+    }
+  }
+}
