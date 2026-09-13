@@ -1,13 +1,13 @@
 {
   "name": "sites-project",
-  "version": "1.0.4",
+  "version": "1.0.11",
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "vinext dev",
+    "dev": "vite",
     "prebuild": "node scripts/generate-question-set-validator.mjs",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",

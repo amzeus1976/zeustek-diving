@@ -2,6 +2,7 @@
 import { ChevronLeft, ChevronRight, ImagePlus, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadMediaMetadata } from '../lib/offline/media-metadata';
+import { AccessibleDialog } from './accessible-dialog';
 type Asset = {
   id: string;
   fileName: string;
@@ -213,10 +214,10 @@ function PhotoEditor({
       }
       {open && (
         <div className="focus-modal-bg">
-          <dialog open className="focus-modal photo-editor">
+          <AccessibleDialog editable label="Colour correct photo" close={() => setOpen(false)} className="focus-modal photo-editor">
             <header>
               <h2>Colour correct photo</h2>
-              <button className="focus-icon" onClick={() => setOpen(false)}>
+              <button className="focus-icon" aria-label="Close photo editor" data-dialog-close onClick={() => setOpen(false)}>
                 <X />
               </button>
             </header>
@@ -260,6 +261,7 @@ function PhotoEditor({
             <footer>
               <button
                 className="focus-secondary"
+                data-dialog-close
                 onClick={() => setOpen(false)}
               >
                 Cancel
@@ -268,7 +270,7 @@ function PhotoEditor({
                 Save corrected copy
               </button>
             </footer>
-          </dialog>
+          </AccessibleDialog>
         </div>
       )}
     </>

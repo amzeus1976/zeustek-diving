@@ -81,6 +81,7 @@ import { AccessibleDialog } from '@/components/accessible-dialog';
 import { ConservationPage } from '@/components/conservation-page';
 import { ProfilePicture } from '@/components/profile-picture';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
+import { SkillCatalogue } from '@/components/skill-catalogue';
 import {
   BackupsScreen,
   PlatformHeaderStatus,
@@ -551,6 +552,7 @@ export default function DiveApp({ userId }: { userId: string }) {
             <>
               <AdminPanel />
               <HouseholdSettings />
+              <SkillCatalogue />
               <PlatformSettings />
               <DashboardAwardsSettings />
               <NewsSourceSettings />
@@ -3401,7 +3403,7 @@ function SiteV2Form({
     close();
   }
   return (
-    <div className="focus-modal-bg"><AccessibleDialog label={item ? "Edit site" : "New site"} close={close} className="focus-modal record-form site-form">
+    <div className="focus-modal-bg"><AccessibleDialog editable label={item ? "Edit site" : "New site"} close={close} className="focus-modal record-form site-form">
       <div className="record-form-head">
         <div>
           <span className="focus-eyebrow">
@@ -3409,7 +3411,7 @@ function SiteV2Form({
           </span>
           <h3>Site knowledge</h3>
         </div>
-        <button className="focus-icon" aria-label="Close editor" onClick={close}>
+        <button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}>
           <X size={17} />
         </button>
       </div>
@@ -3443,7 +3445,7 @@ function SiteV2Form({
           </select>
         </label><label className="">Maximum depth (m)<input type="number" value={value.maxDepth} onChange={e=>field('maxDepth',e.target.value)}/></label><fieldset className="record-wide"><legend>DIVE SETTING & ACTIVITY</legend><DiveSettingActivity values={siteActivities} onChange={setSiteActivities}/></fieldset></div></section><section className="site-entry-section"><h3>3 · Access and facilities</h3><div className="site-entry-grid"><label className="">Access and directions<textarea value={value.access} onChange={e=>field('access',e.target.value)}/></label><label className="">Entry and exit<textarea value={value.entryExit} onChange={e=>field('entryExit',e.target.value)}/></label><label className="">Parking<input type="text" value={value.parking} onChange={e=>field('parking',e.target.value)}/></label><label className="">Amenities<input type="text" value={value.amenities} onChange={e=>field('amenities',e.target.value)}/></label><label className="">Air / Nitrox<input type="text" value={value.airFill} onChange={e=>field('airFill',e.target.value)}/></label><label className="">Mobile signal<input type="text" value={value.mobileSignal} onChange={e=>field('mobileSignal',e.target.value)}/></label><label className="">Accommodation<input type="text" value={value.accommodation} onChange={e=>field('accommodation',e.target.value)}/></label><label className="">Nearby food / cafe / pub<input type="text" value={value.nearbyFood} onChange={e=>field('nearbyFood',e.target.value)}/></label><label className="site-field-wide">Hazards<textarea value={value.hazards} onChange={e=>field('hazards',e.target.value)}/></label></div></section><section className="site-entry-section"><h3>4 · Contact and opening times</h3><div className="site-entry-grid"><label className="">Website<input type="url" value={value.website} onChange={e=>field('website',e.target.value)}/></label><label className="">Telephone<input type="tel" value={value.telephone} onChange={e=>field('telephone',e.target.value)}/></label><label className="">Email<input type="email" value={value.email} onChange={e=>field('email',e.target.value)}/></label><label className="site-field-wide">Opening times<textarea value={value.openingTimes} onChange={e=>field('openingTimes',e.target.value)}/></label></div></section><section className="site-entry-section"><h3>5 · Site knowledge and notes</h3><div className="site-entry-grid"><label className="site-field-wide">Description<textarea value={value.description} onChange={e=>field('description',e.target.value)}/></label><label className="">Diving notes / profile<textarea value={value.diving} onChange={e=>field('diving',e.target.value)}/></label><label className="">Biodiversity<textarea value={value.biodiversity} onChange={e=>field('biodiversity',e.target.value)}/></label><label className="">Tides and currents<textarea value={value.tides} onChange={e=>field('tides',e.target.value)}/></label><label className="">History<textarea value={value.history} onChange={e=>field('history',e.target.value)}/></label><label className="site-field-wide">Personal notes<textarea value={value.notes} onChange={e=>field('notes',e.target.value)}/></label></div></section><section className="site-entry-section"><h3>6 · Dive map</h3><div className="site-entry-grid"><section className="record-wide site-map-image"><h3>Dive map image</h3>{diveMapImage && <><CardImageView image={diveMapImage} label="Dive site map"/><button className="focus-secondary" onClick={()=>setDiveMapImage(null)}>Remove map</button></>}<label>Upload map<input type="file" accept="image/jpeg,image/png,image/webp" disabled={mapBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void importMap(file);}}/></label><label>Map image URL<input type="url" value={mapUrl} onChange={e=>setMapUrl(e.target.value)}/></label><button className="focus-secondary" disabled={mapBusy || !mapUrl} onClick={async()=>{setMapBusy(true);try{const url=new URL(mapUrl);if(url.protocol!=='https:')throw new Error('Use an HTTPS image URL.');const response=await fetch(`/api/image-proxy?url=${encodeURIComponent(url.href)}`);if(!response.ok)throw new Error('Image import failed. Upload the image file instead.');const blob=await response.blob();await importMap(new File([blob],'dive-map',{type:blob.type}));}catch(error){setMapMessage(String(error));}finally{setMapBusy(false);}}}>Import map URL</button>{mapMessage&&<p role="status">{mapMessage}</p>}</section></div></section><section className="site-entry-section"><h3>7 · Preferences</h3><div className="site-entry-grid"><label className="record-check"><input type="checkbox" checked={value.showWeather} onChange={e=>field('showWeather',e.target.checked)}/>Show a weather card for this site</label><label className="record-check"><input type="checkbox" checked={value.favourite} onChange={e=>field('favourite',e.target.checked)}/>Favourite site</label></div></section></div>
       <footer>
-        <button className="focus-secondary" onClick={close}>
+        <button className="focus-secondary" data-dialog-close onClick={close}>
           Cancel
         </button>
         <button
@@ -5724,13 +5726,13 @@ function DiveModal({
   }
   return (
     <div className="focus-modal-bg">
-      <AccessibleDialog label={item ? "Edit dive" : "Log a dive"} close={close} className="focus-modal dive-log-modal">
+      <AccessibleDialog editable label={item ? "Edit dive" : "Log a dive"} close={close} className="focus-modal dive-log-modal">
         <header>
           <div>
             <span className="focus-eyebrow">PRIVATE CLOUD ENTRY</span>
             <h2 id="dive-title">Log a dive</h2>
           </div>
-          <button className="focus-icon" aria-label="Close editor" onClick={close}>
+          <button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}>
             <X size={18} />
           </button>
         </header>
@@ -6003,7 +6005,7 @@ function DiveModal({
           </div>
         </details>
         <footer>
-          <button className="focus-secondary" onClick={close}>Cancel</button>
+          <button className="focus-secondary" data-dialog-close onClick={close}>Cancel</button>
           <button
             className="focus-primary"
             disabled={!site.trim() || !diveNumber || !timeIn || !timeOut || saving}

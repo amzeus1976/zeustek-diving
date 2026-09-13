@@ -42,13 +42,40 @@ describe('shared conservation records',()=>{
     expect((await zeustekDb.entities.toArray()).filter(r=>r.entityType!==CONSERVATION_KIND).map(r=>r.record)).toEqual(originals);
     expect(await zeustekDb.events.where('entityId').equals(`dive:conservation-test:${activity.entityId}`).count()).toBe(2);
   });
-  it('validates dates, numeric debris, UUID refs and missing/deleted/wrong-kind records before writing',async()=>{
-    for(const bad of [{occurredAt:'not-date'},{occurredAt:'2026-02-30T10:00:00Z'},{activityType:'fake'},{siteId:'not-uuid'},{debris:{operation:'removal',massKg:-1}},{debris:{operation:'survey',count:1.5}}])expect(()=>validateActivity({...base,...bad} as never)).toThrow();
+  it('validates dates, numeric debris, opaque ref syntax and missing/deleted/wrong-kind records before writing',async()=>{
+    for(const bad of [{occurredAt:'not-date'},{occurredAt:'2026-02-30T10:00:00Z'},{activityType:'fake'},{siteId:' invalid reference '},{debris:{operation:'removal',massKg:-1}},{debris:{operation:'survey',count:1.5}}])expect(()=>validateActivity({...base,...bad} as never)).toThrow();
     await expect(saveConservation({...base,siteId:ids.site})).rejects.toThrow('unavailable');
     await saveLocalRecord('person',{entityId:ids.site,name:'Wrong kind'});
     await expect(saveConservation({...base,siteId:ids.site})).rejects.toThrow('unavailable');
     await expect(saveConservation({...base,entityId:ids.activity})).rejects.toThrow('Load this activity');
     expect(await listConservation()).toHaveLength(0);
+  });
+  it('persists no Dive, oldest/latest legacy Dive IDs, exact duplicate-date selection, edits and clear without creating Dives',async()=>{
+    const dives=[
+      {entityId:'legacy-oldest',date:'2025-01-02',timeIn:'09:00',site:'Same Site',diveNumber:1},
+      {entityId:'legacy-same-a',date:'2026-09-05',timeIn:'11:58',site:'St Abbs Harbour – East',diveNumber:64},
+      {entityId:'legacy-same-b',date:'2026-09-05',timeIn:'14:10',site:'St Abbs Harbour – East',diveNumber:65},
+      {entityId:'legacy-latest',date:'2026-09-12',timeIn:'16:45',site:'Latest Site',diveNumber:66},
+    ];
+    for(const dive of dives)await saveLocalRecord('dive',dive);
+    const noLink=await saveConservation({...base,speciesOrSubject:'No Dive',diveId:null});
+    expect((await listConservation()).find(item=>item.entityId===noLink.id)?.diveId).toBeNull();
+    const oldest=await saveConservation({...base,speciesOrSubject:'Oldest',diveId:'legacy-oldest'});
+    const latest=await saveConservation({...base,speciesOrSubject:'Latest',diveId:'legacy-latest'});
+    expect((await listConservation()).find(item=>item.entityId===oldest.id)?.diveId).toBe('legacy-oldest');
+    expect((await listConservation()).find(item=>item.entityId===latest.id)?.diveId).toBe('legacy-latest');
+    const duplicate=await saveConservation({...base,speciesOrSubject:'Exact duplicate-date choice',diveId:'legacy-same-b'});
+    expect((await listConservation()).find(item=>item.entityId===duplicate.id)?.diveId).toBe('legacy-same-b');
+    const reopened=(await listConservation()).find(item=>item.entityId===latest.id)!;
+    await saveConservation({...reopened,diveId:'legacy-oldest'});
+    expect((await listConservation()).find(item=>item.entityId===latest.id)?.diveId).toBe('legacy-oldest');
+    await saveConservation({...reopened,diveId:null});
+    expect((await listConservation()).find(item=>item.entityId===latest.id)?.diveId).toBeNull();
+    await expect(saveConservation({...base,diveId:'unresolved-dive'})).rejects.toThrow('unavailable');
+    expect(await listLocalDiveRecords('dive')).toHaveLength(4);
+    await zeustekDb.close();await zeustekDb.open();
+    expect((await listConservation()).find(item=>item.entityId===duplicate.id)?.diveId).toBe('legacy-same-b');
+    expect(fetch).not.toHaveBeenCalled();
   });
   it('retains an unchanged unavailable historical reference without fabricating a new Site',async()=>{
     await saveLocalRecord(CONSERVATION_KIND,{...base,entityId:ids.activity,siteId:ids.site,participantPersonIds:[ids.person],attachmentIds:[ids.asset],futureField:'keep'});
