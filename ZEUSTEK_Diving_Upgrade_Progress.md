@@ -2,9 +2,9 @@
 
 > Work agent: resolve the Windows Desktop path with `[Environment]::GetFolderPath('Desktop')` and maintain this file as `ZEUSTEK_Diving_Upgrade_Progress.md`. Update atomically after every subtask. If local Desktop access is unavailable, maintain the same file at repository root, set `Desktop sync: PENDING`, and copy it to Desktop as soon as local access becomes available. Never claim it is on the Desktop unless the write succeeded.
 
-**Project status:** IN_PROGRESS — scheduled same-task T02 continuation; production known-good
-**Current app version:** production 1.0.2 / Sites67 (accepted)
-**Current task:** T02 Conservation & AWARE IN_PROGRESS — T03 not authorized
+**Project status:** IN_PROGRESS — v1.2 Skills release deployed; production acceptance smoke BLOCKED_ACCESS
+**Current app version:** production 1.0.8 / Sites73 (deployment succeeded; authenticated interactive smoke pending)
+**Current task:** SNAG-DIVE-003 + SNAG-SKILL-001 BLOCKED_ACCESS pending owner-session production acceptance; T03 not authorized
 **Primary task planning envelopes:** 820 credits / planning estimate £24.24
 **Normal contingency:** 82 credits / planning estimate £2.43
 **Astra rescue reserve:** 60 credits / planning estimate £1.78
@@ -14,16 +14,16 @@
 **Cumulative observed planning £:** NOT_EXPOSED
 **Budget trend:** NOT_EXPOSED — no inferred allowance percentages or billing guarantees; bounded workflow only
 **Authoritative account usage checked by owner:** NOT_RECORDED
-**Current known-good production version/deployment:** Sites67 / appgdep_6aa5936c62dc819196ad17dae023e745 — succeeded 2026-09-12T18:01:33.221982Z; production smoke PASS
-**Current release candidate:** 1.0.3 — T02 local gate PASS; publication pending; preceding source 46c84930ba676f1778ef93770b3b98e4604f2835
-**Last rollback reference:** T02 known-good Sites67 / saved version appgprj_6a91926878b48191a80d70f1681ef135~appgver_09881d6e2a84819182a7601053363090
-**Desktop sync:** VERIFIED — C:/Users/amzeu/OneDrive/Desktop (resolved by Windows Desktop API in host context)
+**Current known-good production version/deployment:** app 1.0.7 / Sites72 / appgdep_6aa65eea7f7481919b714148bf05ee52 — owner manually accepted 2026-09-13
+**Current release candidate:** app 1.0.8 / Sites73 — source a5abcf6689e535ac5068dc02e7e6439f26daaa5c; deployment appgdep_6aa6690772ac8191be2321df6db855da succeeded; interactive smoke pending
+**Last rollback reference:** app 1.0.7 / Sites72 / saved version appgprj_6a91926878b48191a80d70f1681ef135~appgver_23ba3fc321e08191ad94cbbb2013de47
+**Desktop sync:** PENDING — Windows Desktop is unavailable in this execution environment; repository-root tracker maintained
 
 | ID | Task | Status | Planning credits | Planning £ | Observed credits | Observed £ | Published version | Commit/deploy |
 |---|---|---|---:|---:|---:|---:|---|---|
 | T00 | Bootstrap: Version, Changelog, Progress & Regression Baseline | COMPLETE | 15 | £0.44 | NOT_EXPOSED | NOT_EXPOSED | 1.0.1 / Sites66 | 2f0e58a3c0f28cfb6d36e1368d8593dc07b8a3cc / appgdep_6aa585eb5bc88191926d2a8dd43c4408 |
 | T01 | Dive Log Multi-View — Overview / Debrief / Story | COMPLETE | 30 | £0.89 | NOT_EXPOSED | NOT_EXPOSED | 1.0.2 / Sites67 | 46c84930ba676f1778ef93770b3b98e4604f2835 / appgdep_6aa5936c62dc819196ad17dae023e745 |
-| T02 | Conservation & AWARE | IN_PROGRESS | 35 | £1.03 | NOT_EXPOSED | NOT_EXPOSED | NOT_PUBLISHED | Known-good Sites67 / 46c84930ba676f1778ef93770b3b98e4604f2835 |
+| T02 | Conservation & AWARE | COMPLETE | 35 | £1.03 | NOT_EXPOSED | NOT_EXPOSED | 1.0.5 / Sites70 | e96905315fd5fa7e5294dab0f98cb77178050c5c / appgdep_6aa65cb51fd88191b36c7126cd078338 |
 | T03 | Wreck & Overhead | NOT_STARTED | 40 | £1.18 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T04 | Trips & Expeditions | NOT_STARTED | 45 | £1.33 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T05 | Reusable Loadouts + Gas/Cylinder Foundation | NOT_STARTED | 55 | £1.63 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
@@ -75,7 +75,7 @@ Next implementation task remains T02 — Conservation & AWARE; planning envelope
 | T02 | Dashboard + activity list/detail/form | COMPLETE | 10 | NOT_EXPOSED | Existing navigation/core CRUD; seven activity types, filters, details, reference version capture and summaries. |
 | T02 | Dive/Site/Person/attachment references | COMPLETE | 5 | NOT_EXPOSED | Canonical IDs/deep links, private media uploads, optional PDF/text files and retry-link recovery. Local upload/reopen verified. |
 | T02 | Derived progress + responsive/offline states | COMPLETE | 4 | NOT_EXPOSED | Version-bound targets, survey/removal separation, offline-origin save/reopen and attachment retention;390/820/1280 reflow,44px targets,keyboard dialogs. Physical assistive-device testing not claimed. |
-| T02 | Tests/regression/publish | IN_PROGRESS | 7 | NOT_EXPOSED | Targeted12 PASS; full26 files/118 PASS; typecheck/build PASS; candidate1.0.3 publication/smoke pending. |
+| T02 | Tests/regression/publish | COMPLETE | 7 | NOT_EXPOSED | Corrective release 1.0.5 / Sites70 deployed; targeted 12 PASS and full gate later superseded by 26 files/122 PASS, typecheck/build PASS. Snag closure remains BLOCKED_ACCESS pending authenticated production smoke. |
 | T03 | Locate Site detail/current site model | NOT_STARTED | 3 | NOT_EXPOSED |  |
 | T03 | Optional overhead-profile schema/repository | NOT_STARTED | 6 | NOT_EXPOSED |  |
 | T03 | Site-detail integration + dedicated presentation | NOT_STARTED | 11 | NOT_EXPOSED |  |
@@ -154,6 +154,28 @@ Next implementation task remains T02 — Conservation & AWARE; planning envelope
 
 Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `COMPLETE`, `BLOCKED`, `BLOCKED_ACCESS`, `BLOCKED_ASTRA`, `BLOCKED_BUDGET`, `BLOCKED_DEPLOYMENT`, `BLOCKED_REVIEW`.
 
+## Snag corrective pass v1.1 — 2026-09-13
+
+| Snag | Status | Release evidence | Remaining acceptance work |
+|---|---|---|---|
+| SNAG-AWARE-002 | CLOSED | app 1.0.5 / Sites70; e96905315fd5fa7e5294dab0f98cb77178050c5c; appgdep_6aa65cb51fd88191b36c7126cd078338 | Owner manually verified in the authenticated live application for v1.2 baseline. |
+| SNAG-AWARE-001 | CLOSED | app 1.0.5 / Sites70; same release as AWARE-002 | Owner manually verified in the authenticated live application for v1.2 baseline. |
+| SNAG-DIVE-001 | CLOSED | app 1.0.6 / Sites71; abff0bced44aa09357d2a66c31f432f1ad736a50; appgdep_6aa65e46f8a88191be47d42b042e5751 | Owner manually verified Add/Edit/Link/Unlink/Delete in the authenticated live application. |
+| SNAG-UI-001 | CLOSED | app 1.0.7 / Sites72; 5184debd348dac045b499e735e14a733751298b7; appgdep_6aa65eea7f7481919b714148bf05ee52 | Owner reports the remaining site behaviour and appearance work as intended. |
+| SNAG-DIVE-002 | DEFERRED_TO_T12 | No implementation or release | Remains explicitly deferred to T12; no temporary replacement page. |
+
+The owner manually accepted all four historical v1.1 snags on 2026-09-13. Sites72 is therefore the known-good rollback target for the v1.2 Skills pass.
+
+## Skills corrective pass v1.2 — 2026-09-13
+
+| Snag | Status | Release evidence | Remaining acceptance work |
+|---|---|---|---|
+| SNAG-DIVE-003 | BLOCKED_ACCESS | app 1.0.8 / Sites73; a5abcf6689e535ac5068dc02e7e6439f26daaa5c; appgdep_6aa6690772ac8191be2321df6db855da | Authenticated production confirmation that existing multi-evidence Dives show distinct Skill names after reload and actions remain functional. |
+| SNAG-SKILL-001 | BLOCKED_ACCESS | app 1.0.8 / Sites73; same release | Authenticated production catalogue bulk-create → Dive selection → save/reopen smoke, disposable-record cleanup and unrelated-route smoke. |
+| SNAG-DIVE-002 | DEFERRED_TO_T12 | No implementation or release | No temporary Dive Computer work performed. |
+
+Implementation uses the existing `skill` and `skill_evidence` JSON records, local IndexedDB projection, core mutation/event/outbox path and canonical IDs. The only additive record properties are optional `archived` and `archivedAt` on canonical Skills; there is no table, backend, ID rewrite or migration/backfill. Targeted gate: 2 files / 12 tests PASS. Full gate: 26 files / 125 tests PASS; TypeScript PASS; production build PASS. Sites73 deployment succeeded. Managed interactive QA could not reach its supervised preview from the isolated browser; production authentication is also unavailable to that browser. No production failure was observed, so rollback was not triggered. Sites72 remains ready as the rollback target. Actual usage: NOT_EXPOSED.
+
 
 ## Current task checklist
 
@@ -167,15 +189,15 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `COMPLETE`, `BLOCKED`, `BLO
 - [x] Implementation complete
 - [x] Targeted tests pass
 - [x] Full regression/build pass
-- [x] Responsive website verified
+- [ ] Interactive responsive verification — implementation and build pass; managed browser preview was blocked by the test environment
 - [x] Installed-PWA/offline behaviour verified where applicable
 - [x] Candidate version/changelog prepared before publish
 - [x] Production published only after release-candidate gate passed
-- [x] Production smoke test passed
-- [x] If smoke failed: immediate rollback performed, rollback health verified, BLOCKED_DEPLOYMENT recorded
+- [ ] Production smoke test passed — BLOCKED_ACCESS because the isolated browser cannot use the owner's authenticated session
+- [x] Rollback rule evaluated — no failing production result was observed, so rollback was not triggered
 - [x] Version footer and changelog updated
 - [x] Observed credit/cost entered only if exposed; otherwise NOT_EXPOSED
-- [x] Status changed to COMPLETE
+- [ ] Snag statuses changed to CLOSED — intentionally not done until authenticated production acceptance passes
 
 ## Blockers / decisions
 
@@ -186,7 +208,7 @@ T00 BLOCKED_DEPLOYMENT: candidate publication succeeded, but required production
 Record exact paths as discovered so later tasks can reuse them without searching again:
 
 - App shell/navigation: app/dashboard-client.tsx
-- Version source: package.json (current1.0.1)
+- Version source: package.json (current 1.0.8)
 - Changelog route/component: components/app-changelog.tsx; lib/app-changelog.ts; /?section=Changelog
 - Dive repository/mutation service: lib/offline/dives.ts; lib/offline/dive-store.ts
 - Router: existing section state/deep-link handling in app/dashboard-client.tsx
@@ -197,11 +219,33 @@ Record exact paths as discovered so later tasks can reuse them without searching
 - Editable source/project confirmed: appgprj_6a91926878b48191a80d70f1681ef135; same source worktree zeustek-expansion-v15
 - Production origin: https://zeustek-dashboard.amzeus.chatgpt.site/
 - PWA launch variant verified: /?source=pwa on same canonical origin; original manifest scope / unchanged
-- Last known-good commit/version: 2f0e58a3c0f28cfb6d36e1368d8593dc07b8a3cc / app1.0.1 / Sites66
-- Last known-good deployment/rollback reference: current appgdep_6aa585eb5bc88191926d2a8dd43c4408; rollback Sites65 / source898d5124b6cc4b728c25f6a0a4c6c1b867afdc13
-- Current release candidate/deployment: NONE; T00 accepted, Sites66
+- Last owner-accepted commit/version: 5184debd348dac045b499e735e14a733751298b7 / app 1.0.7 / Sites72
+- Last known-good deployment/rollback reference: appgdep_6aa65eea7f7481919b714148bf05ee52; saved Sites72 version appgprj_6a91926878b48191a80d70f1681ef135~appgver_23ba3fc321e08191ad94cbbb2013de47
+- Current release candidate/deployment: app 1.0.8 / Sites73; appgdep_6aa6690772ac8191be2321df6db855da succeeded; authenticated smoke pending
 - Current budget band: NOT_EXPOSED
 - Current Astra handoff: NONE
+
+## Skill Catalogue CSV enhancement — 2026-09-13
+
+- Baseline verified before edits: current production app 1.0.8 / Sites73 / source a5abcf6689e535ac5068dc02e7e6439f26daaa5c; deployment appgdep_6aa6690772ac8191be2321df6db855da succeeded. Last owner-verified rollback remains app 1.0.7 / Sites72 / deployment appgdep_6aa65eea7f7481919b714148bf05ee52.
+- Candidate version: app 1.0.9. Same canonical Skill and Skill Evidence entity kinds, IDs, local mutation service, pending-sync path and production project are retained. No D1 schema or second catalogue/evidence store added.
+- Added additive rich Skill fields and legacy fallback, normative CSV parser/preview/export/apply, exact-ID and normalized group/name matching, row selection, archive/restore, and reference-protected unused archived cleanup.
+- Targeted gate: 19/19 tests pass across Skill CSV, canonical Skill/Evidence and Dive selector suites. Full regression: 27 files / 132 tests pass. TypeScript: PASS. Production build: PASS with the existing non-blocking chunk-size, alias and intermediate PWA glob warnings; final PWA precache contains 69 entries.
+- Managed browser QA could not open the supervised preview because the browser returned ERR_BLOCKED_BY_CLIENT for the required terminal.local URL. This is an access limitation, not a failing app smoke result; deployment may proceed but production interaction must remain unverified unless a supported authenticated surface becomes available.
+- Astra usage: NONE. Actual usage: NOT_EXPOSED.
+- Status: BLOCKED_DEPLOYMENT. Tested candidate source 5af2dfefca878661a903461fb8db96d6dec85173 was pushed to the existing repository, but Sites returned the same internal error while saving the version with the validated archive twice and once through the source-build fallback. Version 74 was not created and no deployment started.
+- Production remains unchanged at Sites73. No production smoke was possible because there is no new deployment; no rollback was necessary. Preserve Sites72 as the last owner-verified rollback target. Stop after the bounded deployment recovery attempts.
+
+## Skill Catalogue CSV deployment-only recovery — 2026-09-13
+
+- Preserved implementation verified before publishing: app 1.0.9 at tested product commit 5af2dfefca878661a903461fb8db96d6dec85173. The only later commit was this release/progress evidence; no Skill Catalogue, CSV, data-model or application code changed.
+- Production baseline before publish reconfirmed: app 1.0.8 / Sites73 / deployment appgdep_6aa6690772ac8191be2321df6db855da succeeded.
+- The first save attempt correctly rejected the tested implementation SHA because the remote main HEAD had advanced to audit-only commit 431ef130355ea5fa0bfb47b325a574748261dee1. The product source was unchanged; the validated build was repackaged against that current HEAD using the normal Sites mechanism.
+- Sites74 saved successfully: appgprj_6a91926878b48191a80d70f1681ef135~appgver_7d36308defd881918f2387b20854035e. Archive content hash sha256:cb71ef01c45bc48cf60963b31906f60ae16725111a67f9fc78a32c8a4782833b.
+- Sites74 deployment appgdep_6aa677abef848191bdd9b672169408d0 succeeded at 2026-09-13T10:15:23Z on the existing public production origin, env revision 3. get_site confirms latest_version_number 74.
+- Production smoke status: BLOCKED_ACCESS. The Sites deployment and production-version checks pass, but this environment exposes no controllable authenticated in-app browser session and Sites policy does not permit navigating the isolated cloud browser to the live Sites origin. Skill Catalogue, CSV controls, existing Dive/Skill Evidence and unrelated-route interaction therefore still require owner-authenticated acceptance.
+- No candidate failure was observed, so no rollback was performed. Current rollback target remains last owner-verified app 1.0.7 / Sites72 / appgdep_6aa65eea7f7481919b714148bf05ee52.
+- Astra usage: NONE. Actual usage: NOT_EXPOSED. No subsequent feature task started.
 
 
 ## T00 persisted preflight / execution map
@@ -307,3 +351,18 @@ Owner-returned SOL_RETURN_INSTRUCTIONS are focused diagnostic/review input, not 
 - Full existing source/deployment map reused; global pack/T00 discovery/baselines not repeated. Working preview is local only; restart established port5179 on resumption if stopped. Repository-root progress and real Windows Desktop tracker maintained together; verify read-back before handoff.
 - Preview teardown: local server stopped normally by interruption; working files retained. Server output exposed a development/HMR warning: “Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.” Browser error log was empty at its checked point. Warning is recorded for targeted release-gate verification, NOT assumed resolved or a production failure. Full build/regression remains pending.
 - STOP: T01_CHECKPOINT_REACHED / OWNER_BUDGET_CHECK_REQUIRED.
+
+## Skills UI corrective release — 2026-09-13
+
+- Scope: SNAG-SKILL-002, SNAG-DIVE-004 and SNAG-SKILL-003 only. No T03 or other expansion work; CSV schema/matching and canonical Skill IDs remain unchanged.
+- Pre-change production checkpoint: app 1.0.9 / Sites74; saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_7d36308defd881918f2387b20854035e`; deployment `appgdep_6aa677abef848191bdd9b672169408d0`.
+- Final candidate app 1.0.10 source: `fb84910bf69a38677acb792496049171e8a7c589`.
+- The bounded steering addition changed only catalogue presentation state: zero groups selected initially, searchable checkbox multi-selection, Select all/Clear all, search within selected groups and 75-Skill incremental batches. Canonical data, CSV, archive/restore, usage counts, Dive integration and Skill Evidence semantics remain unchanged.
+- Targeted Skill/UI/CSV tests: 3 files / 25 tests PASS. Full regression: 27 files / 138 tests PASS. TypeScript PASS. Production build PASS; PWA precache 69 entries.
+- Sites77 saved version: `appgprj_6a91926878b48191a80d70f1681ef135~appgver_51917ba9a27c8191b3f1d1c3d2a23a8c`; deployment `appgdep_6aa6a3c9667c81918e431b69851e9b51` succeeded at 2026-09-13T13:23:37Z on the unchanged canonical production origin and public audience.
+- Sites75 and Sites76 were superseded during the same bounded corrective pass before owner acceptance; Sites76 is the immediate pre-steering rollback checkpoint.
+- Deployment/version smoke PASS: Sites confirms Sites77 is current and the exact saved source/archive was published.
+- Authenticated product acceptance is BLOCKED_ACCESS: this environment cannot control the owner's signed-in in-app browser, and the isolated cloud browser is not permitted to navigate to a live Sites origin. Owner verification remains required before marking the three snags CLOSED.
+- Required owner smoke: Skill Catalogue header/toolbar and group selector at desktop, tablet and phone widths; zero-group empty state; one/multiple/select-all/clear-all filtering; bounded Load more results; Import/Export presence; select a rich Skill, confirm each competence definition, save/reopen; compact Edit/Unlink/Delete controls and delete confirmation; one unrelated route.
+- Immediate rollback target is app 1.0.10 / Sites76: saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_583b3da80d7481919aade742d4f6dc17`; deployment `appgdep_6aa684b42554819183ff2673b84c7c32`. The original pre-pass app 1.0.9 / Sites74 checkpoint remains recorded above. No rollback was required because the Sites77 deployment succeeded and no candidate failure was observed.
+- Astra invoked: no. Actual usage: NOT_EXPOSED.

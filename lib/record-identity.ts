@@ -1,4 +1,4 @@
-export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-set','site','trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','skill_evidence','conservation_activity','conservation-programme'] as const;
+export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-set','site','trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','skill','skill_evidence','conservation_activity','conservation-programme'] as const;
 export function normaliseText(value: unknown) { return typeof value === 'string' ? value.normalize('NFKC').trim().toLocaleLowerCase('en-GB').replace(/\s+/g, ' ') : ''; }
 export function canonicalUrl(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) return '';
@@ -11,6 +11,7 @@ export function recordIdentity(kind: string, input: object) {
   if (kind === 'news-article') return canonicalUrl(record.link);
   if (kind === 'training-progress') return `${t('agency')}|${t('courseId')}`;
   if (kind === 'question-set') return `${t('setId')}|${record.version}`;
+  if (kind === 'skill') return t('name') || t('title') || t('skillKey');
   if (kind === 'dive') return t('date') && t('timeIn') && t('site') ? `${t('date')}|${t('timeIn')}|${t('site')}|${record.maxDepthM}` : '';
   if (kind === 'equipment') return t('serialNumber') ? `${t('manufacturer')}|${t('serialNumber')}` : '';
   if (kind === 'person') return t('email') || (t('agency') && t('membershipNumber') ? `${t('agency')}|${t('membershipNumber')}` : '');

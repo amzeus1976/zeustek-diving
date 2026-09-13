@@ -4,11 +4,11 @@ Editable source for the ZeusTek dive logbook, planning dashboard, and offline PW
 
 ## Source import
 
-Imported from the original Sites Git repository, using the exact source commit for live version 69:
+Imported from the original Sites Git repository, using the exact source commit for version 78:
 
 - Site: https://zeustek-dashboard.amzeus.chatgpt.site
 - Project: `appgprj_6a91926878b48191a80d70f1681ef135`
-- Source commit: `9f0e0386c199ad58c9d89e1ef24e08de546a0e58`
+- Source commit: `26f1d360916fcf3a6dcca5eb3eff99d99e21567f`
 - Import date: 2026-09-13
 
 The import includes authored application code, assets, dependencies and lockfiles, database migrations, configuration, and existing tests. It excludes installed dependencies, local environment files, and production build output. Bundled third-party browser libraries retain their existing license files.

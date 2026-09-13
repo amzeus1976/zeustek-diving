@@ -27,12 +27,17 @@ export interface ProgrammeReference {
 }
 export const listConservation = () => listLocalDiveRecords<ConservationActivity>(CONSERVATION_KIND);
 export const listProgrammes = () => listLocalDiveRecords<ProgrammeReference>(PROGRAMME_KIND);
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const types = new Set<string>(ACTIVITY_TYPES.map(([key]) => key));
+function validOpaqueReference(id: unknown) {
+  return id == null || (typeof id === 'string' && id.length > 0 && id.length <= 240 && id.trim() === id && !/[\u0000-\u001f\u007f]/.test(id));
+}
 export function validateActivity(input: Partial<ConservationActivity>) {
   if (!types.has(String(input.activityType))) throw new Error('Choose an activity type.');
   if (!input.occurredAt || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(input.occurredAt) || !Number.isFinite(Date.parse(input.occurredAt)) || new Date(input.occurredAt.slice(0,10)).toISOString().slice(0,10)!==input.occurredAt.slice(0,10)) throw new Error('Choose a valid activity date and time.');
-  for (const id of [input.entityId, input.siteId, input.diveId, ...(input.participantPersonIds ?? []), ...(input.attachmentIds ?? []), input.programmeVersionId]) if (id && !uuid.test(id)) throw new Error('Choose an existing record reference.');
+  // Record IDs are canonical opaque identifiers. Older synced records may predate
+  // UUID-only IDs, so identity is proven against the local canonical projection
+  // in saveConservation rather than inferred from an ID's display syntax.
+  for (const id of [input.entityId, input.siteId, input.diveId, ...(input.participantPersonIds ?? []), ...(input.attachmentIds ?? []), input.programmeVersionId]) if (!validOpaqueReference(id)) throw new Error('Choose an existing record reference.');
   if (input.verificationState && !['recorded','verified','needs-review'].includes(input.verificationState)) throw new Error('Choose a verification state.');
   if (input.debris) {
     if (!['survey','removal'].includes(input.debris.operation)) throw new Error('Choose survey or removal.');
