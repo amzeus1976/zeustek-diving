@@ -9,11 +9,16 @@ import {
   skillRecordName, updateCanonicalSkill, type ArchivedSkillCleanupPreview, type CanonicalSkillRecord,
 } from '../lib/offline/dive-context';
 import { refreshDiveRecords } from '../lib/offline/dive-store';
-import { applySkillCsvRows, exportSkillsCsv, previewSkillCsv, type SkillCsvPreview } from '../lib/skills/skill-csv';
+import { applySkillCsvRows, exportSkillsCsv, previewSkillCsv, type SkillCsvPreview, type SkillCsvPreviewRow } from '../lib/skills/skill-csv';
 
 const levels = ['foundation','developing','competent','advanced','mastered'] as const;
 const levelLabel = (level: typeof levels[number]) => level.charAt(0).toUpperCase() + level.slice(1);
 export const SKILL_CATALOGUE_BATCH_SIZE = 75;
+
+export function SkillCsvMatchedSkill({ row }: { row: Pick<SkillCsvPreviewRow, 'matchedSkillId' | 'matchedSkillName' | 'matchedSkillGroup'> }) {
+  if (!row.matchedSkillId) return <>—</>;
+  return <><b>{row.matchedSkillName || 'Existing Skill'}</b><small>{row.matchedSkillGroup || 'Skill group not recorded'}</small></>;
+}
 
 export function filterSkillCatalogueSkills(skills: CanonicalSkillRecord[], selectedGroups: ReadonlySet<string>, query: string, limit = SKILL_CATALOGUE_BATCH_SIZE) {
   if (selectedGroups.size === 0) return { matches: [] as CanonicalSkillRecord[], visible: [] as CanonicalSkillRecord[], total: 0 };
@@ -86,7 +91,7 @@ function CsvImportDialog({ skills, close, saved }: { skills: CanonicalSkillRecor
     <label className="skill-file-picker"><FileUp size={18}/><span>{fileName || 'Choose UTF-8 CSV file'}</span><input type="file" accept=".csv,text/csv" aria-label="Choose Skills CSV file" disabled={busy} onChange={event => void choose(event.target.files?.[0])} /></label>
     {preview?.fatalError && <p role="alert" className="dive-save-error">{preview.fatalError}</p>}
     {preview && !preview.fatalError && <><section className="skill-csv-counts" aria-label="CSV preview counts"><b>{preview.totalRows} rows</b>{Object.entries(preview.counts).filter(([, count]) => count).map(([status, count]) => <span key={status}>{count} {status.replace('_', ' ')}</span>)}</section>
-      <div className="skill-csv-table-wrap"><table className="skill-csv-table"><thead><tr><th>Include</th><th>Row</th><th>Result</th><th>Skill</th><th>Matched canonical Skill</th><th>Changes / validation</th></tr></thead><tbody>{preview.rows.map(row => { const canInclude = ['NEW','UPDATE','ARCHIVE','RESTORE'].includes(row.status); return <tr key={row.rowNumber}><td><input type="checkbox" aria-label={`Include CSV row ${row.rowNumber}`} disabled={!canInclude || busy} checked={selected.has(row.rowNumber)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(row.rowNumber); else next.delete(row.rowNumber); return next; })} /></td><td>{row.rowNumber}</td><td><span className={`skill-csv-status status-${row.status.toLowerCase()}`}>{row.status.replace('_', ' ')}</span></td><td><b>{row.group || '—'} — {row.name || '—'}</b><small>{row.action}</small></td><td>{row.matchedSkillId ? <><b>{row.matchedSkillName}</b><small>{row.matchedSkillId}</small></> : '—'}</td><td>{row.problem || (row.changes.length ? row.changes.map(change => <div key={change.field}><b>{change.field}:</b> {change.from || '(blank)'} → {change.to || '(blank)'}</div>) : 'No field changes')}</td></tr>; })}</tbody></table></div>
+      <div className="skill-csv-table-wrap"><table className="skill-csv-table"><thead><tr><th>Include</th><th>Row</th><th>Result</th><th>Skill</th><th>Matched canonical Skill</th><th>Changes / validation</th></tr></thead><tbody>{preview.rows.map(row => { const canInclude = ['NEW','UPDATE','ARCHIVE','RESTORE'].includes(row.status); return <tr key={row.rowNumber}><td><input type="checkbox" aria-label={`Include CSV row ${row.rowNumber}`} disabled={!canInclude || busy} checked={selected.has(row.rowNumber)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(row.rowNumber); else next.delete(row.rowNumber); return next; })} /></td><td>{row.rowNumber}</td><td><span className={`skill-csv-status status-${row.status.toLowerCase()}`}>{row.status.replace('_', ' ')}</span></td><td><b>{row.group || '—'} — {row.name || '—'}</b><small>{row.action}</small></td><td><SkillCsvMatchedSkill row={row} /></td><td>{row.problem || (row.changes.length ? row.changes.map(change => <div key={change.field}><b>{change.field}:</b> {change.from || '(blank)'} → {change.to || '(blank)'}</div>) : 'No field changes')}</td></tr>; })}</tbody></table></div>
     </>}
     {error && <p role="alert" className="dive-save-error">{error}</p>}<footer><button className="focus-secondary" data-dialog-close disabled={busy} onClick={close}>Cancel</button><button className="focus-primary" disabled={busy || !preview || Boolean(preview.fatalError) || selected.size === 0} onClick={() => void apply()}>{busy ? 'Applying…' : `Apply ${selected.size} selected row${selected.size === 1 ? '' : 's'}`}</button></footer>
   </AccessibleDialog></div>;

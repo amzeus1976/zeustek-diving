@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { DiveRecordDetail, SkillEvidenceCard, SkillEvidenceDialog } from '../components/dive-record-detail';
-import { filterSkillCatalogueSkills, SKILL_CATALOGUE_BATCH_SIZE, SkillCatalogue } from '../components/skill-catalogue';
+import { filterSkillCatalogueSkills, SKILL_CATALOGUE_BATCH_SIZE, SkillCatalogue, SkillCsvMatchedSkill } from '../components/skill-catalogue';
 import type { DiveRecord } from '../lib/offline/dives';
 
 const dive: DiveRecord & { entityId: string } = { entityId: 'same-dive-id', site: 'Historical quarry Dive', date: '2026-09-01', maxDepthM: 12, bottomTimeMin: 38, gas: 'Air', notes: '', source: 'manual', createdAt: '2026-09-01', modifiedAt: '2026-09-01' };
@@ -57,6 +57,13 @@ describe('Dive segmented-view shell', () => {
     expect(catalogue).toContain('Clear unused archived');
     const dashboard=readFileSync(new URL('../app/dashboard-client.tsx',import.meta.url),'utf8');
     expect(dashboard).toMatch(/active === 'Settings'[\s\S]*?<SkillCatalogue \/>/);
+  });
+  it('renders human-readable CSV matches without exposing the canonical ID',()=>{
+    const canonicalId='147dbe19-efa8-4800-85b3-dcc03c4adb29';
+    const html=renderToStaticMarkup(createElement(SkillCsvMatchedSkill,{row:{matchedSkillId:canonicalId,matchedSkillName:'Ascent initiation',matchedSkillGroup:'Dive planning & execution'}}));
+    expect(html).toContain('Ascent initiation');
+    expect(html).toContain('Dive planning &amp; execution');
+    expect(html).not.toContain(canonicalId);
   });
   it('shows the selected Skill-specific competence definition and a controlled no-definition state',()=>{
     const skill={entityId:'air-share-id',skillKey:'air-share-id',name:'Air-sharing stop control',group:'Buoyancy & Trim',competenceDefinitions:{foundation:'Holds the stop with coaching.',developing:'Usually stable but requires regular corrections.',competent:'Maintains depth and contact reliably.',advanced:'Remains stable while communicating and monitoring gas or decompression.',mastered:'Precise, relaxed and essentially automatic.'}};

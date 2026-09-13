@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://zeustek.local/schemas/dive.site_overhead_profile.schema.json",
+  "title":"dive.site_overhead_profile","type":"object","additionalProperties":true,
+  "properties":{
+    "siteId":{"type":"string","format":"uuid"},
+    "featureType":{"type":["string","null"]},
+    "depthMinM":{"type":["number","null"],"minimum":0},
+    "depthMaxM":{"type":["number","null"],"minimum":0},
+    "hazards":{"type":"array","items":{"type":"object"}},
+    "entryExitPoints":{"type":"array","items":{"type":"object"}},
+    "trainingLimitations":{"type":"array","items":{"type":"string"}},
+    "routeNotes":{"type":"array","items":{"type":"object"}},
+    "attachmentIds":{"type":"array","items":{"type":"string","format":"uuid"}},
+    "observations":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"id":{"type":"string"},"date":{"type":"string","format":"date"},"notes":{"type":"string"},"diveId":{"type":["string","null"]}},"required":["id","date","notes"]}},
+    "notes":{"type":["string","null"]}
+  },"required":["siteId"]
+}

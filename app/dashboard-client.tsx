@@ -79,9 +79,11 @@ import { imageSource, storeDiveImage, type CardImage } from '@/lib/offline/dive-
 import { InteractiveDiveSiteMap } from '@/components/dive-site-map';
 import { AccessibleDialog } from '@/components/accessible-dialog';
 import { ConservationPage } from '@/components/conservation-page';
+import { SiteOverheadSection } from '@/components/site-overhead-profile';
 import { ProfilePicture } from '@/components/profile-picture';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { SkillCatalogue } from '@/components/skill-catalogue';
+import { TripsExpeditions } from '@/components/trips-expeditions';
 import {
   BackupsScreen,
   PlatformHeaderStatus,
@@ -223,6 +225,7 @@ const navigation = [
   ['Sites', MapPin],
   ['Dive Site Map', Compass],
   ['Dive Plans', CalendarDays],
+  ['Trips', ShipWheel],
   ['People', Users],
   ['Albums', Images],
   ['Conservation & AWARE', Leaf],
@@ -535,6 +538,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
           {active === 'Dive Plans' && <PlanningCentre initialTab={destinationTab==='Dive Bucket List'?'Bucket list':'Plans'} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} />}{' '}
+          {active === 'Trips' && <TripsExpeditions />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
           {active === 'People' && <People />}{' '}
           {active === 'Albums' && <Albums />}{' '}
@@ -2320,7 +2324,9 @@ function Trips({ convertToDive }: { convertToDive: (draft: Partial<DiveRecord>) 
             ['People', viewing.buddy],
             ['Notes', viewing.notes],
           ]}
-        ><details className="plan-more"><summary>More… {sites.find(site=>site.entityId===viewing.siteId)?.name || viewing.siteName || 'site'}, people and notes</summary>{sites.filter(site=>site.entityId===viewing.siteId).map(site=><section key={site.entityId}><h3>{site.name}</h3><p>{[site.address,site.location,site.postcode,site.country].filter(Boolean).join(', ')}</p><div className="detail-grid"><SiteDetail label="Access" value={site.access}/><SiteDetail label="Entry / exit" value={site.entryExit}/><SiteDetail label="Hazards" value={site.hazards}/><SiteDetail label="Facilities" value={site.amenities}/></div>{site.latitude!=null&&site.longitude!=null&&<a className="focus-link" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${site.latitude},${site.longitude}`}>Open site in Google Maps</a>}</section>)}<div>{people.filter(person=>viewing.personIds?.includes(person.entityId)||viewing.buddy?.split(',').map(name=>name.trim()).includes(person.name)).map(person=><p key={person.entityId}>{person.name} · {person.role} · {person.email}</p>)}</div><p>{viewing.notes||'No additional notes recorded.'}</p></details></RecordDetail>
+        >
+          {sites.filter(site=>site.entityId===viewing.siteId).map(site=><SiteOverheadSection key={site.entityId} site={site} readOnly summaryOnly/>)}
+          <details className="plan-more"><summary>More… {sites.find(site=>site.entityId===viewing.siteId)?.name || viewing.siteName || 'site'}, people and notes</summary>{sites.filter(site=>site.entityId===viewing.siteId).map(site=><section key={site.entityId}><h3>{site.name}</h3><p>{[site.address,site.location,site.postcode,site.country].filter(Boolean).join(', ')}</p><div className="detail-grid"><SiteDetail label="Access" value={site.access}/><SiteDetail label="Entry / exit" value={site.entryExit}/><SiteDetail label="Hazards" value={site.hazards}/><SiteDetail label="Facilities" value={site.amenities}/></div>{site.latitude!=null&&site.longitude!=null&&<a className="focus-link" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${site.latitude},${site.longitude}`}>Open site in Google Maps</a>}</section>)}<div>{people.filter(person=>viewing.personIds?.includes(person.entityId)||viewing.buddy?.split(',').map(name=>name.trim()).includes(person.name)).map(person=><p key={person.entityId}>{person.name} · {person.role} · {person.email}</p>)}</div><p>{viewing.notes||'No additional notes recorded.'}</p></details></RecordDetail>
       )}
     </>
   );
@@ -2570,6 +2576,7 @@ function TripForm({
             </small>
           )}
         </label>
+        {sites.filter(site=>site.entityId===siteId).map(site=><SiteOverheadSection key={site.entityId} site={site} readOnly summaryOnly/>)}
         <label>
           Buddy
           <select value={buddy} onChange={(e) => setBuddy(e.target.value)}>
@@ -3150,6 +3157,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
         >
           {viewing.diveMapImage && <section className="site-map-image"><h3>Dive map</h3><CardImageView image={viewing.diveMapImage} label={`${viewing.name} dive map`}/></section>}
           <SiteAlbums site={viewing}/>
+          <SiteOverheadSection key={viewing.entityId} site={viewing}/>
         </RecordDetail>
       )}
     </>

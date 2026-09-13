@@ -13,6 +13,7 @@ export interface SkillCsvPreviewRow {
   name: string;
   matchedSkillId?: string;
   matchedSkillName?: string;
+  matchedSkillGroup?: string;
   changes: SkillCsvChange[];
   problem?: string;
   included: boolean;
@@ -104,7 +105,7 @@ export function previewSkillCsv(text: string, existing: CanonicalSkillRecord[]):
       if ((idCounts.get(skillId) || 0) > 1) return finish('DUPLICATE', { problem: `skill_id ${skillId} appears more than once in this file; no row for it will be applied.` });
       const skill = existing.find(item => item.entityId === skillId);
       if (!skill) return finish('REVIEW_REQUIRED', { problem: `Unknown canonical skill_id ${skillId}.` });
-      const match = { matchedSkillId: skill.entityId, matchedSkillName: skillRecordName(skill) };
+      const match = { matchedSkillId: skill.entityId, matchedSkillName: skillRecordName(skill), matchedSkillGroup: skillRecordGroup(skill) };
       if (action === 'archive') return skill.archived ? finish('UNCHANGED', match) : finish('ARCHIVE', match);
       if (action === 'restore') return skill.archived ? finish('RESTORE', match) : finish('UNCHANGED', match);
       const changes = changesFor(skill, input);
@@ -115,11 +116,11 @@ export function previewSkillCsv(text: string, existing: CanonicalSkillRecord[]):
     seenPairs.add(pair);
     if (matches.length > 1) return finish('REVIEW_REQUIRED', { problem: 'More than one canonical Skill matches this normalized group and name.' });
     if (matches.length === 1) {
-      const skill = matches[0]!; const match = { matchedSkillId: skill.entityId, matchedSkillName: skillRecordName(skill) }; const changes = changesFor(skill, input);
+      const skill = matches[0]!; const match = { matchedSkillId: skill.entityId, matchedSkillName: skillRecordName(skill), matchedSkillGroup: skillRecordGroup(skill) }; const changes = changesFor(skill, input);
       return changes.length ? finish('UPDATE', { ...match, changes }) : finish('UNCHANGED', match);
     }
     const sameName = byName.get(identity(input.name)) || [];
-    if (sameName.length) { const same = sameName[0]!; return finish(sameName.length > 1 ? 'REVIEW_REQUIRED' : 'DUPLICATE', { problem: 'A canonical Skill with this normalized name already exists in another group.', matchedSkillId: same.entityId, matchedSkillName: skillRecordName(same) }); }
+    if (sameName.length) { const same = sameName[0]!; return finish(sameName.length > 1 ? 'REVIEW_REQUIRED' : 'DUPLICATE', { problem: 'A canonical Skill with this normalized name already exists in another group.', matchedSkillId: same.entityId, matchedSkillName: skillRecordName(same), matchedSkillGroup: skillRecordGroup(same) }); }
     return finish('NEW');
   });
   for (const row of rows) counts[row.status] = (counts[row.status] ?? 0) + 1;

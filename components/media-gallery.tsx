@@ -17,6 +17,8 @@ export function MediaGallery({
   retainOfflineMetadata = false,
   acceptFiles = false,
   onUploaded,
+  onRemoved,
+  accessibleViewer = false,
 }: {
   ownerKind: string;
   ownerId: string;
@@ -25,6 +27,8 @@ export function MediaGallery({
   retainOfflineMetadata?: boolean;
   acceptFiles?: boolean;
   onUploaded?: (ids: string[]) => Promise<void>;
+  onRemoved?: (id: string) => Promise<void>;
+  accessibleViewer?: boolean;
 }) {
   const [items, setItems] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
@@ -76,9 +80,21 @@ export function MediaGallery({
     }
   }
   async function remove(id: string) {
-    await fetch(`/api/media?id=${id}`, { method: 'DELETE' });
+    const response = await fetch(`/api/media?id=${id}`, { method: 'DELETE' });
+    if (response.ok && onRemoved) await onRemoved(id);
     refresh();
   }
+  const imageIndices = items.flatMap((item,index) => item.contentType.startsWith('image/') ? [index] : []);
+  const imagePosition = lightboxIndex == null ? -1 : imageIndices.indexOf(lightboxIndex);
+  const viewerContents = lightboxIndex != null && items[lightboxIndex] ? <>
+    <button className="media-lightbox-close" onClick={() => setLightboxIndex(null)} aria-label="Close full-size media"><X /></button>
+    {imageIndices.length > 1 && <button className="media-lightbox-prev" onClick={() => setLightboxIndex(imageIndices[(imagePosition - 1 + imageIndices.length) % imageIndices.length]!)} aria-label="Previous image"><ChevronLeft /></button>}
+    <div onClick={(event) => event.stopPropagation()}>
+      <img src={`/api/media?id=${items[lightboxIndex].id}`} alt={items[lightboxIndex].caption || items[lightboxIndex].fileName} />
+      <p>{items[lightboxIndex].caption || items[lightboxIndex].fileName} · {imagePosition + 1} of {imageIndices.length}</p>
+    </div>
+    {imageIndices.length > 1 && <button className="media-lightbox-next" onClick={() => setLightboxIndex(imageIndices[(imagePosition + 1) % imageIndices.length]!)} aria-label="Next image"><ChevronRight /></button>}
+  </> : null;
   return (
     <section className="media-section">
       <div className="media-head">
@@ -141,7 +157,7 @@ export function MediaGallery({
       {loadError && <p role="status" className="media-empty">{loadError} <button className="focus-secondary" onClick={refresh}>Retry media</button></p>}
       {uploadError && <p role="alert" className="media-empty">{uploadError}</p>}
       {onFeaturedChange && <p className="story-media-help">{featuredIds?.length ?? 0} featured. Unticking removes a highlight, not the original attachment.</p>}
-      {lightboxIndex != null && items[lightboxIndex] && (
+      {lightboxIndex != null && items[lightboxIndex] && (accessibleViewer ? <AccessibleDialog label="Full resolution media viewer" className="media-lightbox overhead-media-viewer" containDismiss close={() => setLightboxIndex(null)}>{viewerContents}</AccessibleDialog> : (
         <div className="media-lightbox" role="dialog" aria-modal="true" aria-label="Full resolution media viewer" onClick={() => setLightboxIndex(null)}>
           <button className="media-lightbox-close" onClick={() => setLightboxIndex(null)} aria-label="Close"><X /></button>
           {items.length > 1 && <button className="media-lightbox-prev" onClick={(event) => { event.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + items.length) % items.length); }} aria-label="Previous image"><ChevronLeft /></button>}
@@ -151,7 +167,7 @@ export function MediaGallery({
           </div>
           {items.length > 1 && <button className="media-lightbox-next" onClick={(event) => { event.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % items.length); }} aria-label="Next image"><ChevronRight /></button>}
         </div>
-      )}
+      ))}
     </section>
   );
 }

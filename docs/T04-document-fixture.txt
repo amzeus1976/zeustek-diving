@@ -1,0 +1,2 @@
+T04 local document acceptance fixture.
+No personal, medical, insurance or booking information.

@@ -32,6 +32,8 @@ describe('canonical Skill CSV', () => {
     const result = previewSkillCsv(csv, [rich, archived, active]);
     expect(result.rows.map(item => item.status)).toEqual(['NEW','UPDATE','UNCHANGED','ARCHIVE','RESTORE','INVALID','REVIEW_REQUIRED']);
     expect(result.rows.find(item => item.status === 'UPDATE')?.changes).toContainEqual({ field: 'description', from: rich.description, to: 'Changed' });
+    expect(result.rows.find(item => item.status === 'UPDATE')).toMatchObject({ matchedSkillId: 'skill-1', matchedSkillName: 'Air-sharing stop control', matchedSkillGroup: 'Buoyancy & Trim' });
+    expect(result.rows.at(-1)?.problem).toContain('Unknown canonical skill_id missing');
   });
 
   it('detects case/whitespace duplicates, ambiguous canonical matches and contradictory duplicate IDs', () => {
@@ -61,6 +63,25 @@ describe('canonical Skill CSV', () => {
     const selected = preview.rows.map((item, index) => ({ ...item, included: index !== 0 }));
     expect(await applySkillCsvRows(selected, { create, update, archive })).toBe(20);
     expect(create).toHaveBeenCalledTimes(20); expect(create).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'Skill 1' }));
+  });
+
+  it('applies exact-ID update, archive and restore to the same canonical records', async () => {
+    const archived = { ...rich, entityId: 'skill-2', skillKey: 'skill-2', name: 'Hover', archived: true };
+    const active = { ...rich, entityId: 'skill-3', skillKey: 'skill-3', name: 'Frog kick', group: 'Propulsion' };
+    const preview = previewSkillCsv([header,
+      row(['1','upsert','skill-1','Buoyancy & Trim','Renamed safely','Changed','','','','','']),
+      row(['1','archive','skill-3','Propulsion','Frog kick','','','','','','']),
+      row(['1','restore','skill-2','Buoyancy & Trim','Hover','','','','','','']),
+    ].join('\n'), [rich, archived, active]);
+    const update = vi.fn(async (entityId, input) => ({ entityId, ...input } as CanonicalSkillRecord));
+    const archive = vi.fn(async (entityId, archivedValue) => ({ entityId, archived: archivedValue } as CanonicalSkillRecord));
+    const create = vi.fn();
+    expect(preview.rows.map(item => item.status)).toEqual(['UPDATE','ARCHIVE','RESTORE']);
+    expect(await applySkillCsvRows(preview.rows, { create, update, archive })).toBe(3);
+    expect(update).toHaveBeenCalledWith('skill-1', expect.objectContaining({ name: 'Renamed safely' }));
+    expect(archive).toHaveBeenNthCalledWith(1, 'skill-3', true);
+    expect(archive).toHaveBeenNthCalledWith(2, 'skill-2', false);
+    expect(create).not.toHaveBeenCalled();
   });
 
   it('exports exact columns, IDs and archive actions and is safely re-importable', () => {

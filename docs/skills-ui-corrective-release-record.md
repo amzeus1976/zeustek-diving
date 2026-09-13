@@ -43,3 +43,17 @@
 - The three snags are not marked CLOSED until owner-authenticated production acceptance is completed.
 - Astra invoked: no.
 - Actual usage: NOT_EXPOSED.
+
+## Owner-acceptance follow-up — app 1.0.11 / Sites78
+
+- Source commit: `26f1d360916fcf3a6dcca5eb3eff99d99e21567f`.
+- Saved version: `appgprj_6a91926878b48191a80d70f1681ef135~appgver_30e54cb3da78819180db7230a61c3620`.
+- Deployment: `appgdep_6aa6acd49e5c81918b73c92962a12a44`; succeeded at 2026-09-13T14:02:12Z on the existing production origin.
+- SNAG-SKILL-002: IMPLEMENTED_PENDING_OWNER_ACCEPTANCE. The compact level selector now has an always-visible, live Skill-specific definition associated with `aria-describedby`. The adjacent information control exposes the current definition on hover/focus and toggles all five definitions for touch users. Evidence continues to store only the stable lowercase competence level; legacy assessments are preserved.
+- SNAG-UI-002: IMPLEMENTED_PENDING_OWNER_ACCEPTANCE. Shared editable dialogs ignore backdrop clicks and Escape. Explicit X/Cancel closes a clean editor immediately; a changed editor displays `Discard unsaved changes?`, with Keep editing preserving mounted values and Discard changes closing without saving. Read-only dialogs retain their existing dismiss behaviour.
+- Applied through the shared dialog to Skill, bulk Skill, CSV import, Skill Evidence, Site, Dive, Conservation/programme and photo editors. No CSV schema, canonical Skill ID, competence-level or historical evidence changes were made.
+- Targeted Skill/dialog/UI gate: 4 files / 28 tests passed. Full regression: 28 files / 141 tests passed. TypeScript and production build passed; PWA precache contains 69 entries.
+- Deployment/version smoke: PASS. Sites confirms release 78 is current, the deployment succeeded, and its saved source matches the commit above.
+- Authenticated UI smoke: BLOCKED_ACCESS. The managed browser cannot reach the local preview in this environment, and the owner's signed-in production browser is not controllable. Owner acceptance remains required before either snag is CLOSED.
+- Rollback target: app 1.0.10 / Sites77, saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_51917ba9a27c8191b3f1d1c3d2a23a8c`, deployment `appgdep_6aa6a3c9667c81918e431b69851e9b51`.
+- No rollback was required. Astra invoked: no. Actual usage: NOT_EXPOSED.
