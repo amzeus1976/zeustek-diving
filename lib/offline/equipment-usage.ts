@@ -79,6 +79,38 @@ export function equipmentServiceStatus(
   } as const;
 }
 
+/**
+ * Overview projection only: scheduled-service kit with a meaningful due date.
+ * Never infer serviceability from category and never persist this ordering.
+ */
+export function overviewServiceItems(
+  equipment: Array<Stored<EquipmentRecord>>,
+  dives: Array<DiveRecord & { entityId: string }>,
+  limit = 8,
+) {
+  const priority = { overdue: 0, due: 1, current: 2 } as const;
+  return equipment
+    .filter((item) => !item.retired && item.serviceRequired === true)
+    .map((item) => ({ item, service: equipmentServiceStatus(item, dives) }))
+    .filter(({ service }) => Boolean(service.dateDue))
+    .sort((left, right) =>
+      priority[left.service.state] - priority[right.service.state]
+      || left.service.dateDue.localeCompare(right.service.dateDue)
+      || left.item.name.localeCompare(right.item.name),
+    )
+    .slice(0, Math.max(0, limit))
+    .map(({ item }) => item);
+}
+
+export function nextServiceDateFromBaseline(
+  equipment: Pick<EquipmentRecord, 'serviceIntervalMonths'>,
+  baseline: string,
+) {
+  return baseline && equipment.serviceIntervalMonths
+    ? addMonths(baseline, equipment.serviceIntervalMonths)
+    : '';
+}
+
 function addMonths(value: string, months: number) {
   const date = new Date(`${value}T12:00:00`);
   date.setMonth(date.getMonth() + months);
