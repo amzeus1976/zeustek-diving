@@ -1,5 +1,7 @@
 # Equipment owner snagging — released 1.0.23 / Sites90
 
+GitHub healthy-source sync COMPLETE via PR9/main72d4b71f96bfd2a53aed9899f11f27a32c1f1c12; exact source tree verified. PR8 closed as superseded without merging the old precode; owner acceptance remains pending. The owner subsequently authorised T08 repair separately. Historical no-roadmap/Gate2 statements below describe this Equipment release, not later authorisation.
+
 Scope SNAG-EQUIP-001/002/003 only; owner acceptance pending. Canonical project appgprj_6a91926878b48191a80d70f1681ef135.
 Known-good app1.0.21/Sites88 rollback saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_b55f093aaab881919f69a5e731fff72e.
 Preserved original blocked T08 source and history, not republished. Draft PR8 reference head3e6f6d486a1ee45a5c749b95f302ffeef758c68f manually integrated after its guarded script stopped at a CRLF anchor; no blind merge.
