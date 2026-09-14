@@ -23,14 +23,16 @@ describe('T04 Trips & Expeditions shell integration', () => {
   it('keeps document attachment ids in sync when common media is removed', () => {
     const media = read('components/media-gallery.tsx');
     expect(media).toContain('onRemoved?: (id: string) => Promise<void>');
-    expect(media).toContain('if (response.ok && onRemoved) await onRemoved(id)');
+    expect(media).toContain("if (!response.ok)");
+    expect(media).toContain('if (onRemoved) await onRemoved(id)');
   });
 
   it('preserves T03 containment and reuses common private evidence files and protected Trip editors', () => {
     expect(DIVE_RECORD_KINDS).toContain('site-overhead-profile');
     const source=read('components/trips-expeditions.tsx');
     expect(source).toContain('<AccessibleDialog editable dirty={dirty}');
-    expect(source).toContain('acceptFiles retainOfflineMetadata accessibleViewer');
+    expect(source).toContain('<TripResources');
+    expect(read('components/trip-resources.tsx')).toContain('acceptFiles retainOfflineMetadata accessibleViewer');
     const mediaKinds = read('app/api/media/route.ts').match(/const conservationFile = \[([^\]]+)\]\.includes\(ownerKind\)/)?.[1] ?? '';
     for (const kind of ['conservation_activity','site-overhead-profile','dive-trip','gas-analysis']) expect(mediaKinds).toContain(`'${kind}'`);
     expect(read('components/site-overhead-profile.tsx')).toContain('onKeyDown={handleOverheadEscape}');

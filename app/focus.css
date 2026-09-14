@@ -446,4 +446,27 @@ body,.focus-app{font-size:1rem}
 .overhead-section button,.overhead-editor button,.overhead-body a { min-height: 44px; }
 .overhead-media-viewer { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; }
 .overhead-media-viewer button { min-width: 44px; min-height: 44px; }
+.media-batch-pending,.media-compact-list,.trip-resources,.trip-resource-links,.technical-plan-fields { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.media-batch-pending ul,.trip-resource-links ul { list-style:none; padding:0; display:grid; gap:.65rem; }
+.media-batch-pending li,.trip-resource-links li { display:flex; flex-wrap:wrap; gap:.65rem; align-items:center; padding:.65rem; border:1px solid #33515c; border-radius:.5rem; }
+.media-batch-pending li>span,.trip-resource-links li>div { flex:1 1 14rem; min-width:0; }
+.media-compact-list { display:grid;gap:.65rem; }
+.media-group-heading { grid-column:1/-1; margin:.6rem 0; color:#ff8b1f; }
+.media-compact-list figure { margin:0;display:flex;flex-wrap:wrap;gap:.65rem;align-items:center;border:1px solid #33515c;padding:.65rem;border-radius:.5rem; }
+.media-compact-list figure>a,.media-compact-list figcaption { flex:1 1 14rem; min-width:0; }
+.media-compact-list .media-delete { position:static; }
+.media-compact-list .media-open { width:144px; max-width:100%; border:0; background:transparent; padding:0; cursor:pointer; }
+.media-compact-list .media-open img { display:block; width:100%; height:108px; object-fit:contain; border-radius:.4rem; }
+.media-selection-toolbar { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin:.75rem 0; }
+.media-select-file { display:flex; align-items:center; gap:.5rem; min-height:44px; padding:.35rem .5rem; }
+.media-bulk-dialog { width:min(36rem,calc(100vw - 2rem)); max-height:90vh; overflow:auto; }
+.media-bulk-dialog>label { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:.75rem 0; }
+.media-bulk-dialog>div { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
+.trip-link-fields { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;margin:.65rem 0; }
+.trip-resources label,.trip-link-fields label,.technical-plan-fields label { display:grid;gap:.4rem;min-width:0; }
+.trip-resources input,.trip-resources select,.trip-resources textarea,.trip-link-fields input,.technical-plan-fields input,.technical-plan-fields select { min-width:0;max-width:100%;min-height:44px; }
+.trip-resources button,.trip-resources a,.media-batch-pending button,.technical-plan-fields button { min-height:44px; }
+.trip-resources :focus-visible,.technical-plan-fields :focus-visible,.media-batch-pending :focus-visible { outline:2px solid #00d9f5;outline-offset:3px; }
+.technical-plan-fields fieldset { min-width:0;margin:.75rem 0; }
+@media(max-width:680px){.trip-link-fields{grid-template-columns:minmax(0,1fr)}.media-compact-list figure{display:grid;grid-template-columns:minmax(0,1fr)}.media-compact-list .media-delete{justify-self:start}}
 @media(max-width:600px) { .overhead-facts,.overhead-columns { grid-template-columns: minmax(0,1fr); } .overhead-section { padding: .75rem; } .overhead-editor { width: calc(100vw - 1rem); } }
