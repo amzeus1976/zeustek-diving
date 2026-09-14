@@ -30,6 +30,8 @@ export interface TripGuestParticipant {
 }
 
 export interface TripItinerarySegment {
+  attachments?: import('./trip-attachments').TripAttachmentReference[];
+  links?: import('./trip-attachments').TripResourceLink[];
   id: string;
   kind: TripItineraryKind;
   title: string;
@@ -75,6 +77,8 @@ export interface TripGasLogisticsItem {
 }
 
 export interface DiveExpeditionTripRecord {
+  attachments?: import('./trip-attachments').TripAttachmentReference[];
+  links?: import('./trip-attachments').TripResourceLink[];
   name: string;
   destination?: string | null;
   startsOn?: string | null;

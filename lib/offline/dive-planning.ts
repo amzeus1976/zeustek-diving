@@ -163,6 +163,12 @@ export interface DiveSiteRecord extends BaseRecord {
 }
 
 export interface DiveTripRecord extends BaseRecord {
+  technicalMode?: boolean;
+  maxDepthM?: number | null;
+  bottomTimeMin?: number | null;
+  plannedRuntimeMin?: number | null;
+  cylinderAssignments?: import('./technical-workspace').PlannedCylinderAssignment[] | undefined;
+  decoSchedule?: Array<{depthM:number|null;durationMin:number|null;gas?:string}> | undefined;
 
   name: string;
 

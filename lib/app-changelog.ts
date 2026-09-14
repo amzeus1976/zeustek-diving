@@ -1,6 +1,31 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.21',
+    date: '2026-09-14',
+    title: 'Trips — compact sections & selected files',
+    changes: [
+      'Trips show the first four linked Dive Sites, with a keyboard- and touch-friendly … more / … less disclosure for the rest.',
+      'All existing canonical Site references and deep links remain intact; this is a display-only change.',
+      'Trip photos marked Photo / video have clickable thumbnails and image browsing, while document categories remain compact.',
+      'Shared media galleries support stable-ID multi-selection, shared caption/category editing and confirmed per-file deletion with retained filename-specific failures.',
+      'Trip sections collapse without losing drafts. Long notes initially show five lines with Show more / Show less, and the old Trip upload banner is removed.',
+      'Retained the Technical Workspace, private Trip/itinerary resources and additive multi-file uploads introduced in 1.0.20.',
+    ],
+  },
+  {
+    version: '1.0.20',
+    date: '2026-09-14',
+    title: 'Technical Workspace & Trip resources',
+    changes: [
+      'Added a Technical Workspace using canonical Skills, recorded configuration and gas evidence, and immutable captured pathway/reference versions; readiness is advisory, never diving authorisation.',
+      'Technical planning extends the existing Dive Plan editor with recorded cylinder references, runtime and manual stop notes, without a decompression engine or replacement Plan model.',
+      'Trips and individual itinerary events now retain separate private documents, media and safe links, with compact explicit document opening and stable original attachment IDs.',
+      'Existing collection uploaders support additive selections, staged removal, independent per-file results and retry without losing successful uploads; Wishlist cover selection remains supported.',
+      'Preserved canonical Dive, Site, Person, Equipment, Plan and Trip identities, offline event/outbox saves, backups and historical evidence.',
+    ],
+  },
+  {
     version: '1.0.19',
     date: '2026-09-14',
     title: 'Skills & Currency — shared catalogue groups',

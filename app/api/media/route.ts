@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       { error: 'File and owner are required' },
       { status: 400 },
     );
-  const conservationFile = ['conservation_activity','site-overhead-profile','dive-trip','gas-analysis'].includes(ownerKind) && ['application/pdf','text/plain'].includes(file.type);
+  const conservationFile = ['conservation_activity','site-overhead-profile','dive-trip','dive-trip-itinerary','gas-analysis'].includes(ownerKind) && ['application/pdf','text/plain'].includes(file.type);
   if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !conservationFile)
     return Response.json(
       { error: 'Choose an image or video' },
@@ -80,7 +80,14 @@ export async function POST(request: Request) {
     const gear = await env.DB.prepare("SELECT user_id AS ownerUserId FROM dive_records WHERE id=? AND kind IN ('equipment','equipment-set') AND deleted_at IS NULL").bind(ownerId).first<{ownerUserId:string}>();
     if (gear && !(await householdCanEditGear(env,user,gear.ownerUserId))) return Response.json({error:'Shared gear access denied'},{status:403});
   }
-  const id = crypto.randomUUID();
+  const uploadId = String(form.get('uploadId') ?? '');
+  if (uploadId && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadId)) return Response.json({error:'Invalid upload ID'},{status:400});
+  const id = uploadId || crypto.randomUUID();
+  if (uploadId) {
+    const existing = await env.DB.prepare('SELECT user_id AS userId,owner_kind AS ownerKind,owner_id AS ownerId FROM dive_media WHERE id=?').bind(id).first<{userId:string;ownerKind:string;ownerId:string}>();
+    if (existing) return existing.userId === user.userId && existing.ownerKind === ownerKind && existing.ownerId === ownerId
+      ? Response.json({id}, {status:200}) : Response.json({error:'Upload ID already used'},{status:409});
+  }
   const key = `dive-media/${user.userId}/${id}/${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
   await env.FILES.put(key, await file.arrayBuffer(), {
     httpMetadata: { contentType: file.type },
@@ -115,4 +122,21 @@ export async function DELETE(request: Request) {
   await env.FILES.delete(row.objectKey);
   await env.DB.prepare('DELETE FROM dive_media WHERE id=?').bind(id).run();
   return Response.json({ deleted: true });
+}
+
+export async function PATCH(request: Request) {
+  const user = await getChatGPTUser();
+  if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
+  let input: { id?: unknown; ownerKind?: unknown; ownerId?: unknown; caption?: unknown };
+  try { input = await request.json(); } catch { return Response.json({ error: 'Invalid request' }, { status: 400 }); }
+  if (!input || typeof input.id !== 'string' || typeof input.ownerKind !== 'string' || typeof input.ownerId !== 'string' || typeof input.caption !== 'string' || input.caption.length > 1000)
+    return Response.json({ error: 'A caption of at most 1000 characters and an attachment scope are required' }, { status: 400 });
+  await schema();
+  await registerHouseholdUser(env, user);
+  const row = await env.DB.prepare('SELECT user_id AS ownerUserId,owner_kind AS ownerKind,owner_id AS ownerId FROM dive_media WHERE id=?').bind(input.id).first<{ ownerUserId: string; ownerKind: string; ownerId: string }>();
+  if (!row || row.ownerKind !== input.ownerKind || row.ownerId !== input.ownerId) return Response.json({ updated: false }, { status: 404 });
+  if (row.ownerUserId !== user.userId && !(sharedGearKinds.has(row.ownerKind) && await householdCanEditGear(env, user, row.ownerUserId)) && !(row.ownerKind === 'album' && await albumAccess(user, row.ownerId, true)))
+    return Response.json({ updated: false }, { status: 404 });
+  await env.DB.prepare('UPDATE dive_media SET caption=? WHERE id=? AND user_id=? AND owner_kind=? AND owner_id=?').bind(input.caption, input.id, row.ownerUserId, row.ownerKind, row.ownerId).run();
+  return Response.json({ updated: true, id: input.id });
 }

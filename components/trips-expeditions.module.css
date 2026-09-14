@@ -26,6 +26,15 @@
 .detail { width: min(72rem, calc(100vw - 2rem)); max-height: min(92vh, 64rem); overflow: auto; }
 .detail > section { margin: 1rem 0; padding-top: 0.8rem; border-top: 1px solid var(--border, rgba(255,255,255,.12)); }
 .hero { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.sectionDisclosure > summary { display: flex; align-items: center; gap: .65rem; min-height: 44px; cursor: pointer; padding: .2rem 0; }
+.sectionDisclosure > summary::before { content: '›'; font-size: 1.5rem; color: var(--accent, #ff8000); }
+.sectionDisclosure[open] > summary::before { transform: rotate(90deg); }
+.sectionDisclosure > summary h3 { margin: 0; font-size: 1.1rem; }
+.sectionDisclosure > summary:focus-visible { outline: 2px solid #00d9f5; outline-offset: 3px; }
+.sectionContents { padding-top: .5rem; min-width: 0; }
+.shortNote { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+.shortNote, .fullNote { white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; margin: .35rem 0; }
+.notePreview { min-width: 0; }
 .hero p { margin: 0.25rem 0 0; }
 .stack { display: grid; gap: 0.65rem; }
 .stack article { display: grid; gap: 0.2rem; padding: 0.7rem; border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: 0.75rem; }
@@ -39,12 +48,19 @@
 .complete { outline: 1px solid rgba(73, 197, 151, .3); }
 .linkColumns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .linkColumns > div { display: grid; align-content: start; gap: 0.45rem; }
+.linkedSitesDisclosure summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--accent, #ff8000); width: fit-content; padding: 0 0.5rem; border-radius: 0.35rem; }
+.linkedSitesDisclosure summary:focus-visible { outline: 2px solid var(--cyan, #16c5ed); outline-offset: 3px; }
+.linkedSitesDisclosure .lessSites { display: none; }
+.linkedSitesDisclosure[open] .moreSites { display: none; }
+.linkedSitesDisclosure[open] .lessSites { display: inline; }
+.remainingSites { display: grid; gap: 0.45rem; }
+.screenReaderOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .packing { display: grid; gap: 0.5rem; margin-top: 0.65rem; }
 .packing label { display: flex; gap: 0.65rem; align-items: start; padding: 0.55rem; border-radius: 0.65rem; background: rgba(255,255,255,.035); }
 .packing label span { display: grid; }
 .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
 .notes h3 { grid-column: 1 / -1; }
-.notes div { padding: 0.65rem; border-radius: 0.65rem; background: rgba(255,255,255,.035); }
+.notes > div { padding: 0.65rem; border-radius: 0.65rem; background: rgba(255,255,255,.035); }
 .notes p { white-space: pre-wrap; }
 .editor { width: min(76rem, calc(100vw - 2rem)); max-height: 94vh; overflow: auto; }
 .choiceSection, .repeatSection, .safetyNotes { margin: 0.9rem 0; }

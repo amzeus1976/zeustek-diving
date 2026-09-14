@@ -86,6 +86,9 @@ import { SkillCatalogue } from '@/components/skill-catalogue';
 import { TripsExpeditions } from '@/components/trips-expeditions';
 import { LoadoutsGas } from '@/components/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
+import { TechnicalWorkspace } from '@/components/technical-workspace';
+import { TechnicalPlanFields } from '@/components/technical-plan-fields';
+import { uploadMediaBatch } from '@/lib/media-batch';
 import {
   BackupsScreen,
   PlatformHeaderStatus,
@@ -234,6 +237,7 @@ const navigation = [
   ['Conservation & AWARE', Leaf],
   ['Training', ShieldCheck],
   ['Skills & Currency', ShieldCheck],
+  ['Technical Diving', Gauge],
   ['Course Map', GraduationCap],
   ['Dive News', Newspaper],
   ['Dive Media', BookMarked],
@@ -550,6 +554,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Conservation & AWARE' && <ConservationPage go={go} />}{' '}
           {active === 'Training' && <TrainingV2 go={go} />}{' '}
           {active === 'Skills & Currency' && <SkillsCurrency go={go} />}{' '}
+          {active === 'Technical Diving' && <TechnicalWorkspace go={go} />}{' '}
           {active === 'Course Map' && <CourseMapPage go={go} />}{' '}
           {active === 'Dive News' && <DiveNewsV2 />}{' '}
           {active === 'Dive Media' && <DiveMediaLibrary />}{' '}
@@ -2190,6 +2195,7 @@ function Trips({ convertToDive }: { convertToDive: (draft: Partial<DiveRecord>) 
   const openedPlanLink = useRef(false);
   useEffect(() => {
     if (openedPlanLink.current) return;
+    if (new URLSearchParams(window.location.search).get('newPlan') === 'technical') { openedPlanLink.current = true;setAdding(true);return; }
     const id = new URLSearchParams(window.location.search).get('planId');
     if (!id) { openedPlanLink.current = true; return; }
     const plan = items.find(candidate => candidate.entityId === id);
@@ -2453,6 +2459,7 @@ function TripForm({
   close: () => void;
   saved: () => void;
 }) {
+  const [technical,setTechnical] = useState<import('@/lib/offline/technical-workspace').TechnicalPlanExtension>(() => ({technicalMode:item?.technicalMode ?? new URLSearchParams(window.location.search).get('newPlan') === 'technical',maxDepthM:item?.maxDepthM ?? null,bottomTimeMin:item?.bottomTimeMin ?? null,plannedRuntimeMin:item?.plannedRuntimeMin ?? null,cylinderAssignments:item?.cylinderAssignments ?? [],decoSchedule:item?.decoSchedule ?? []}));
   const [name, setName] = useState(item?.name ?? '');
   const [start, setStart] = useState(item?.startAt ?? item?.startDate ?? '');
   const [end, setEnd] = useState(item?.endAt ?? item?.endDate ?? '');
@@ -2484,6 +2491,7 @@ function TripForm({
   async function submit() {
     if (!name.trim()) return;
     await saveDiveTrip({
+      ...technical,
       ...(item ? { entityId: item.entityId } : {}),
       name: name.trim(),
       planType,
@@ -2598,6 +2606,7 @@ function TripForm({
           Notes
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        <TechnicalPlanFields value={technical} change={setTechnical}/>
       </div>
       <footer>
         <button className="focus-secondary" onClick={close}>
@@ -3772,6 +3781,8 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
   );
   const [adding, setAdding] = useState(false);
   const [viewing, setViewing] = useState<Stored<CertificationRecord> | null>(null);
+  const certificationLinkOpened = useRef(false);
+  useEffect(() => { if(certificationLinkOpened.current)return;const id=new URLSearchParams(window.location.search).get('certificationId');if(!id){certificationLinkOpened.current=true;return;}const record=items.find(item=>item.entityId===id);if(record){certificationLinkOpened.current=true;setViewing(record);}},[items]);
   const refresh = useCallback(() => {
     void Promise.all([listCertifications(), listCatalogOptions(), listPeople()]).then(
       ([nextItems, nextOptions, nextPeople]) => {
@@ -4747,14 +4758,35 @@ function GearWishlistCard({ item, stores, refresh, edit, toggleSavings }: { item
 }
 
 function GearWishlistForm({ item, groups, close, saved }: { item: Stored<GearWishlistRecord> | null; groups: Array<Stored<GearWishlistGroupRecord>>; close: () => void; saved: () => void }) {
+  const draftEntityId = useRef(item?.entityId ?? '');const uploadIds = useRef(new WeakMap<File,string>());const [uploadMessage,setUploadMessage] = useState('');
+  useEffect(()=>{if(uploadMessage)window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:uploadMessage}}));},[uploadMessage]);
   const [itemType, setItemType] = useState(item?.itemType ?? (DEFAULT_GEAR_CATEGORIES[0] ?? 'Other')); const [model, setModel] = useState(item?.model ?? ''); const [brand, setBrand] = useState(item?.brand ?? ''); const [links, setLinks] = useState(item?.links?.length ? item.links : [{ url: '', description: '' }]); const [approximateCost, setApproximateCost] = useState(item?.originalApproximateCost || item?.approximateCost || ''); const [description, setDescription] = useState(item?.description ?? ''); const [why, setWhy] = useState(item?.why ?? ''); const [status, setStatus] = useState<GearWishlistRecord['status']>(item?.status ?? 'researching');
   const [includeInSavings, setIncludeInSavings] = useState(item?.includeInSavings ?? false); const [wishlistGroupId, setWishlistGroupId] = useState(item?.wishlistGroupId ?? ''); const [catalogOptions, setCatalogOptions] = useState<Array<Stored<CatalogOptionRecord>>>([]);
   const [imageUrls, setImageUrls] = useState<string[]>(item?.imageUrls ?? []); const [imageUrlDraft, setImageUrlDraft] = useState(''); const [existingUploads, setExistingUploads] = useState<Array<{ id: string; fileName: string }>>([]); const [newImages, setNewImages] = useState<File[]>([]); const [coverImage, setCoverImage] = useState(item?.coverImage ?? ''); const [saving, setSaving] = useState(false);
   useEffect(() => { void listCatalogOptions().then(setCatalogOptions); if (!item) return; void fetch(`/api/media?kind=gear-wishlist&ownerId=${encodeURIComponent(item.entityId)}`, { cache: 'no-store' }).then((response) => response.json() as Promise<{ items?: Array<{ id: string; fileName: string; contentType: string }> }>).then((result) => setExistingUploads((result.items ?? []).filter((media) => media.contentType.startsWith('image/')))); }, [item]);
   const itemTypes = [...new Set([...DEFAULT_GEAR_CATEGORIES, ...catalogOptions.filter((option) => option.group === 'category').map((option) => option.value), ...(itemType ? [itemType] : [])])].sort();
   const data = (cover: string, cost: Awaited<ReturnType<typeof normaliseWishlistCost>>) => ({ itemType: itemType.trim(), model: model.trim(), brand: brand.trim(), links: links.filter((link) => link.url.trim()).map((link) => ({ url: link.url.trim(), description: link.description.trim() })), ...cost, description: description.trim(), why: why.trim(), status, imageUrls, includeInSavings, wishlistGroupId, ...(cover ? { coverImage: cover } : {}) });
-  async function submit() { if (!itemType.trim() || (!model.trim() && !brand.trim()) || saving) return; setSaving(true); try { const cost = await normaliseWishlistCost(approximateCost); const initial = await saveGearWishlist({ ...(item ? { entityId: item.entityId } : {}), ...data(coverImage.startsWith('new:') ? '' : coverImage, cost) }); const entityId = item?.entityId ?? initial.id; const uploadedIds: string[] = []; for (const file of newImages) { const form = new FormData(); form.set('file', file); form.set('ownerKind', 'gear-wishlist'); form.set('ownerId', entityId); const response = await fetch('/api/media', { method: 'POST', body: form }); if (!response.ok) throw new Error('Image upload failed'); uploadedIds.push(((await response.json()) as { id: string }).id); } const finalCover = coverImage.startsWith('new:') ? `media:${uploadedIds[Number(coverImage.slice(4))]}` : coverImage; await saveGearWishlist({ entityId, ...data(finalCover, cost) }); saved(); close(); } finally { setSaving(false); } }
+  async function submit() {
+    if (!itemType.trim() || (!model.trim() && !brand.trim()) || saving) return;
+    setSaving(true);setUploadMessage('');
+    try {
+      const cost = await normaliseWishlistCost(approximateCost);const initial = await saveGearWishlist({ ...(draftEntityId.current ? {entityId:draftEntityId.current}:{}), ...data(coverImage.startsWith('new:') ? '' : coverImage,cost) });
+      const entityId = draftEntityId.current || initial.id;draftEntityId.current = entityId;
+      const selected = newImages.map(file=>{let id=uploadIds.current.get(file);if(!id){id=crypto.randomUUID();uploadIds.current.set(file,id);}return {id,file};});
+      const result = await uploadMediaBatch(selected,'gear-wishlist',entityId);
+      const desired = coverImage.startsWith('new:') ? selected[Number(coverImage.slice(4))] : undefined;
+      const selectedCover = desired && result.uploaded.find(asset=>asset.id===desired.id);
+      const finalCover = selectedCover ? `media:${selectedCover.id}` : coverImage.startsWith('new:') ? '' : coverImage;
+      setExistingUploads(current=>[...current,...result.uploaded.filter(asset=>!current.some(item=>item.id===asset.id))]);
+      setNewImages(result.failed.map(item=>item.file));
+      if(selectedCover)setCoverImage(finalCover);else if(desired)setCoverImage(`new:${result.failed.findIndex(item=>item.id===desired.id)}`);
+      await saveGearWishlist({entityId,...data(finalCover,cost)});saved();
+      if(result.failed.length){setUploadMessage(result.failed.map(item=>`${item.file.name}: ${item.error}`).join(' '));return;}
+      close();
+    } catch(error){setUploadMessage(error instanceof Error?error.message:'Save failed; files and existing references are retained.');}finally{setSaving(false);}
+  }
   async function removeUpload(id: string) { if (!confirm('Remove this wishlist image?')) return; const response = await fetch(`/api/media?id=${encodeURIComponent(id)}`, { method: 'DELETE' }); if (response.ok) { setExistingUploads((current) => current.filter((image) => image.id !== id)); if (coverImage === `media:${id}`) setCoverImage(''); } }
+  useEffect(()=>{if(!newImages.length)return;const protect=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',protect);return()=>window.removeEventListener('beforeunload',protect);},[newImages.length]);
   const addImageUrl = () => { const url = externalUrl(imageUrlDraft); if (!url || imageUrls.includes(url)) return; setImageUrls((current) => [...current, url]); if (!coverImage) setCoverImage(url); setImageUrlDraft(''); };
   const imageEditor = <div className="record-wide wishlist-image-editor"><div className="wishlist-image-editor-head"><span>Images (optional)</span><label className="focus-secondary file-action"><ImagePlus size={15}/> Upload images<input type="file" accept="image/*" multiple onChange={(event) => { const files = Array.from(event.target.files ?? []); setNewImages((current) => [...current, ...files]); if (!coverImage && files.length) setCoverImage(`new:${newImages.length}`); event.target.value = ''; }}/></label></div><div className="wishlist-url-add"><input type="url" value={imageUrlDraft} onChange={(event) => setImageUrlDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addImageUrl(); } }} placeholder="Paste an image URL…"/><button type="button" className="focus-secondary" onClick={addImageUrl}><Plus size={14}/> Add URL</button></div>{(imageUrls.length > 0 || existingUploads.length > 0 || newImages.length > 0) && <div className="wishlist-image-options">{imageUrls.map((url) => <label key={url}><img src={url} alt="Wishlist reference"/><span><input type="radio" name="wishlist-cover" checked={coverImage === url} onChange={() => setCoverImage(url)}/> Show on card</span><button type="button" className="focus-icon" onClick={() => { setImageUrls((current) => current.filter((value) => value !== url)); if (coverImage === url) setCoverImage(''); }} aria-label="Remove image URL"><X size={14}/></button></label>)}{existingUploads.map((image) => <label key={image.id}><img src={`/api/media?id=${encodeURIComponent(image.id)}`} alt={image.fileName}/><span><input type="radio" name="wishlist-cover" checked={coverImage === `media:${image.id}`} onChange={() => setCoverImage(`media:${image.id}`)}/> Show on card</span><button type="button" className="focus-icon" onClick={() => void removeUpload(image.id)} aria-label={`Remove ${image.fileName}`}><Trash2 size={14}/></button></label>)}{newImages.map((file, index) => <label key={`${file.name}-${file.lastModified}-${index}`}><span className="wishlist-new-image"><FileImage size={22}/>{file.name}</span><span><input type="radio" name="wishlist-cover" checked={coverImage === `new:${index}`} onChange={() => setCoverImage(`new:${index}`)}/> Show on card</span><button type="button" className="focus-icon" onClick={() => { setNewImages((current) => current.filter((_, position) => position !== index)); if (coverImage === `new:${index}`) setCoverImage(''); }} aria-label={`Remove ${file.name}`}><X size={14}/></button></label>)}</div>}<small>Choose one image to display on the wishlist card. Other images stay attached to this item.</small></div>;
   return <Card className="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT GEAR IDEA' : 'NEW GEAR IDEA'}</span><h3>{item ? 'Update wishlist item' : 'Add to gear wishlist'}</h3></div><button className="focus-icon" aria-label="Close editor" onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Item type<select value={itemType} onChange={(event) => setItemType(event.target.value)}>{itemTypes.map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label>Group / subgroup<select value={wishlistGroupId} onChange={(event) => setWishlistGroupId(event.target.value)}><option value="">Unsorted</option>{groups.map((group) => <option key={group.entityId} value={group.entityId}>{wishlistGroupPath(group, groups)}</option>)}</select></label><label>Brand<input value={brand} onChange={(event) => setBrand(event.target.value)}/></label><label>Model<input value={model} onChange={(event) => setModel(event.target.value)}/></label><label>Approximate cost<input value={approximateCost} onChange={(event) => setApproximateCost(event.target.value)} placeholder="e.g. £650"/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as GearWishlistRecord['status'])}><option value="researching">Researching</option><option value="shortlisted">Shortlisted</option><option value="purchased">Purchased</option></select></label><label className="wishlist-saving-toggle form-toggle"><input type="checkbox" checked={includeInSavings} onChange={(event) => setIncludeInSavings(event.target.checked)}/><span>Count toward savings total</span></label><label className="record-wide">Description<textarea value={description} onChange={(event) => setDescription(event.target.value)}/></label><label className="record-wide">Why I want it<textarea value={why} onChange={(event) => setWhy(event.target.value)}/></label><div className="record-wide wishlist-links-editor"><span>Links</span>{links.map((link, index) => <div key={index}><input type="url" value={link.url} onChange={(event) => setLinks((current) => current.map((value, position) => position === index ? { ...value, url: event.target.value } : value))} placeholder="https://…"/><input value={link.description} onChange={(event) => setLinks((current) => current.map((value, position) => position === index ? { ...value, description: event.target.value } : value))} placeholder="Shop, review or manufacturer"/><button className="focus-icon" onClick={() => setLinks((current) => current.filter((_, position) => position !== index))}><X size={14}/></button></div>)}<button className="focus-secondary" onClick={() => setLinks((current) => [...current, { url: '', description: '' }])}><Plus size={14}/> Add another link</button></div>{imageEditor}</div><footer><button className="focus-secondary" onClick={close}>Cancel</button><button className="focus-primary" disabled={saving} onClick={() => void submit()}>{saving ? 'Saving…' : 'Save wishlist item'}</button></footer></Card>;

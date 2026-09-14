@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { useRecordRefresh } from './record-status';
 import {
@@ -122,6 +122,15 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
     (item) => !resolveCanonicalSkillReference(item.skillKey, skills),
   );
   const [detail, setDetail] = useState<CanonicalSkillRecord | null>(null);
+  const evidenceLinkOpened = useRef(false);
+  useEffect(() => {
+    if (evidenceLinkOpened.current) return;
+    const id = new URLSearchParams(window.location.search).get('evidenceId');
+    if (!id) { evidenceLinkOpened.current = true; return; }
+    const linked = evidence.find(item => item.entityId === id);
+    const skill = linked && resolveCanonicalSkillReference(linked.skillKey,skills);
+    if (skill) { evidenceLinkOpened.current = true;setDetail(skill); }
+  }, [evidence,skills]);
   const [policySkill, setPolicySkill] = useState<CanonicalSkillRecord | null>(
     null,
   );
