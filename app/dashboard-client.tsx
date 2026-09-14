@@ -82,6 +82,8 @@ import { ConservationPage } from '@/components/conservation-page';
 import { SiteOverheadSection } from '@/components/site-overhead-profile';
 import { ProfilePicture } from '@/components/profile-picture';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
+import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
+import equipmentEditorStyles from '@/components/equipment-editor.module.css';
 import { SkillCatalogue } from '@/components/skill-catalogue';
 import { TripsExpeditions } from '@/components/trips-expeditions';
 import { LoadoutsGas } from '@/components/loadouts-gas';
@@ -193,6 +195,7 @@ import {
 import {
   equipmentDiveCount,
   equipmentServiceStatus,
+  overviewServiceItems,
 } from '@/lib/offline/equipment-usage';
 import { formatDiveDuration } from '@/lib/dive-duration';
 import { MediaGallery } from '@/components/media-gallery';
@@ -1013,20 +1016,20 @@ function Overview({
             </div>
             <Wrench />
           </div>
-          {equipment.slice(0, 2).map((item) => (
+          {overviewServiceItems(equipment, dives, 8).map((item) => (
             <StatusRow
               key={item.entityId}
               title={item.name}
               meta={
                 equipmentServiceStatus(item, dives).dateDue
                   ? `Next service ${new Date(`${equipmentServiceStatus(item, dives).dateDue}T12:00:00`).toLocaleDateString()}`
-                  : 'No service date set'
+                  : ''
               }
               warn={equipmentServiceStatus(item, dives).state !== 'current'}
             />
           ))}
-          {!equipment.length && (
-            <p className="focus-copy">No equipment added yet.</p>
+          {!overviewServiceItems(equipment, dives, 8).length && (
+            <p className="focus-copy">No scheduled-service items with a due date.</p>
           )}
           <button className="focus-link" onClick={() => go('Equipment')}>
             View equipment
@@ -1390,6 +1393,7 @@ function Equipment() {
         setDives(nextDives);
         setSets(nextSets);
         setCatalogOptions(nextCatalogOptions);
+        setViewing(current => current ? nextItems.find(item => item.entityId === current.entityId) ?? current : null);
       },
     );
   }, []);
@@ -1600,7 +1604,9 @@ function Equipment() {
             ['Next service', equipmentServiceStatus(viewing, dives).dateDue],
             ['Notes', viewing.notes],
           ]}
-        />
+        >
+          <EquipmentMaintenanceLog equipment={viewing} onEquipmentChanged={refresh} />
+        </RecordDetail>
       )}
       <EquipmentSets items={items} sets={sets} saved={refresh} />
     </>
@@ -1703,7 +1709,8 @@ function EquipmentForm({
           <X size={17} />
         </button>
       </div>
-      <div className="record-fields">
+      <div className={`record-fields equipment-form-fields ${equipmentEditorStyles.fields}`}>
+        <div className="record-wide"><h3>Identity & item details</h3></div>
         <label>
           Name
           <input
@@ -1752,9 +1759,10 @@ function EquipmentForm({
             onChange={(e) => setPurchased(e.target.value)}
           />
         </label>
-        <label className="record-check record-wide">
+        <div className="record-wide"><h3>Servicing</h3></div>
+        <label className={`record-check record-wide equipment-toggle ${equipmentEditorStyles.toggle}`}>
           <input type="checkbox" checked={serviceRequired} onChange={(e) => setServiceRequired(e.target.checked)} />
-          This item requires scheduled servicing
+          <span>This item requires scheduled servicing</span>
         </label>
         {serviceRequired && <>
         <label>
@@ -1797,17 +1805,19 @@ function EquipmentForm({
           — whichever comes first.
         </p>
         </>}
-        <label className="record-wide">
-          Notes
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </label>
-        <label className="record-check">
+        <div className="record-wide"><h3>Status</h3></div>
+        <label className={`record-check record-wide equipment-toggle ${equipmentEditorStyles.toggle}`}>
           <input
             type="checkbox"
             checked={retired}
             onChange={(e) => setRetired(e.target.checked)}
           />{' '}
-          Retired / no longer in use
+          <span>Retired / no longer in use</span>
+        </label>
+        <div className="record-wide"><h3>Notes</h3></div>
+        <label className="record-wide">
+          Notes
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
       </div>
       <footer>

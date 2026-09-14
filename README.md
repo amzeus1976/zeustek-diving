@@ -2,6 +2,21 @@
 
 Editable source for the ZeusTek dive logbook, planning dashboard, and offline PWA.
 
+## Current verified baseline for pre-coding
+
+- Live application: **1.0.23 / Sites90**.
+- Canonical production: https://zeustek-dashboard.amzeus.chatgpt.site/; PWA start URL `/?source=pwa` on the same origin.
+- Canonical Sites project: `appgprj_6a91926878b48191a80d70f1681ef135`.
+- Published source: `487ab0bfd36dd04323ad96b7ac674a59f842a04d`.
+- Production deployment: `appgdep_6aa874f286888191b17686ee44eb2144`.
+- Verified gate: 255 tests / 50 files, TypeScript and production/PWA build PASS; production smoke PASS; all 66 Logbook entries retained.
+
+GitHub main is the source baseline for new pre-coded candidates. The application source matches the verified production release; documentation includes post-publication evidence. Use the current files rather than an older Sites snapshot or draft PR. No secrets, live databases, credentials, user uploads or synthetic test files are included.
+
+T00–T07 are complete. The three Equipment owner snags are released and await owner/Gemma acceptance. **T08 is preserved but BLOCKED_DEPLOYMENT**: its separate rolled-back 1.0.22 candidate overflowed the phone pathway selector. T08 implementation is not part of this healthy baseline; syncing GitHub does not repair or accept it. No later roadmap task is started by this sync.
+
+See [the pre-coding source contract](docs/PRECODING_BASELINE.md), [Equipment release evidence](docs/equipment-owner-snags-release.md), and `ZEUSTEK_Diving_Upgrade_Progress.md` before preparing a candidate.
+
 ## Source import
 
 Imported from the original Sites Git repository, using the exact source commit for version 78:
