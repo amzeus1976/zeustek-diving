@@ -13,7 +13,7 @@ Editable source for the ZeusTek dive logbook, planning dashboard, and offline PW
 
 GitHub main is the source baseline for new pre-coded candidates. The application source matches the verified production release; documentation includes post-publication evidence. Use the current files rather than an older Sites snapshot or draft PR. No secrets, live databases, credentials, user uploads or synthetic test files are included.
 
-T00–T07 are complete. The three Equipment owner snags are released and await owner/Gemma acceptance. **T08 production acceptance PASS; GitHub Gate2 pending**: preserved Professional Development was recovered additively into the current Equipment baseline and the phone Pathway/editor overflow repaired. Versioned requirements and evidence save/reopen pass without rewriting canonical Dive references. See the release evidence for the historical rolled-back failure. T09 has not started.
+**T00–T08 COMPLETE. GitHub Gate2 PASS:** PR11/main `31559a59a5e2179055b06dfb70dd41147fcd10f1` contains the exact verified T08 production source plus post-smoke evidence. Preserved Professional Development was recovered additively into the current Equipment baseline and the phone Pathway/editor overflow repaired. Versioned requirements and evidence save/reopen pass without rewriting canonical Dive references. The three Equipment owner snags are released and await owner/Gemma acceptance. See the release evidence for the historical rolled-back failure. T09 has not started.
 
 See [the pre-coding source contract](docs/PRECODING_BASELINE.md), [T08 release evidence](docs/T08-release-record.md), [Equipment release evidence](docs/equipment-owner-snags-release.md), and `ZEUSTEK_Diving_Upgrade_Progress.md` before preparing a candidate.
 

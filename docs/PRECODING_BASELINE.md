@@ -4,7 +4,7 @@ Start each candidate from the current GitHub main commit and record that SHA. Th
 
 ## Verified source and release
 
-- GitHub Gate2 pending exact verified T08 source sync. Preceding healthy-baseline PR9/PR10 sync mainb0adfa02777c2f28bd7432a62462c4afedf7a280 verified. Older candidate PR5/PR8 closed as superseded, not blindly merged.
+- GitHub Gate2 PASS: PR11/main31559a59a5e2179055b06dfb70dd41147fcd10f1, snapshot7ba34ed2bfdf83f148835d9e3e9b2c3fd4b87e9c. Read-only fetched tree b04937c77fe6b83239833ee671b56b8a45edfdd5 exactly matches reviewed acceptance source; all16 changed blobs verified. Subsequent completion audit documents may be newer without changing product source. Preceding healthy-baseline PR9/PR10 sync retained; older candidate PR5/PR8 closed as superseded, not blindly merged.
 
 - Repository: amzeus1976/zeustek-diving.
 - Published application source: 7c11d76ce7ff32bf8a7c523a6b1193174466a42a.
@@ -34,7 +34,7 @@ The GitHub synchronization commit has only GitHub's existing main as its parent;
 
 - T00–T07 complete, including the Trip resources/media/compact sections and Technical Workspace release.
 - Equipment SNAG-EQUIP-001/002/003 implemented, tested and production-smoked; owner acceptance and Gemma's signed-in shared-history UI check remain pending.
-- T08 production acceptance PASS, final COMPLETE pending GitHub Gate2. Preserved e4ca3e531acf6d353853a880ea6d89d1c92b88dd carried forward additively, not an old-source reset. The real app22/Sites89 phone overflow was repaired only with scoped native-select/container shrinking; original failure/rollback history remains in docs/T08-release-record.md.
+- T08 COMPLETE, production acceptance and GitHub Gate2 PASS. Preserved e4ca3e531acf6d353853a880ea6d89d1c92b88dd carried forward additively, not an old-source reset. The real app22/Sites89 phone overflow was repaired only with scoped native-select/container shrinking; original failure/rollback history remains in docs/T08-release-record.md.
 - Production phone selector/editor fit, save/reopen, original PDF/photo, v1/v2 immutable evidence links and retained-route/all66 Logbook checks PASS.
 - T09 and later tasks remain unstarted. Actual account/project usage NOT_EXPOSED; do not invent it. No Astra without explicit owner approval.
 
