@@ -4,7 +4,7 @@ import {zeustekDb} from '../lib/offline/db';
 import {configureDiveStore,listLocalDiveRecords,saveLocalRecord} from '../lib/offline/dive-store';
 import {localBackupPayload,restoreLocalPayload} from '../lib/offline/local-backup';
 import {DIVE_RECORD_KINDS,recordIdentity} from '../lib/record-identity';
-import {deleteDiveExpeditionTrip,editableDiveExpeditionTrip,listDiveExpeditionTrips,saveDiveExpeditionTrip,tripReadiness,type DiveExpeditionTripInput} from '../lib/offline/trips-expeditions';
+import {deleteDiveExpeditionTrip,editableDiveExpeditionTrip,listDiveExpeditionTrips,normaliseTripGuestParticipants,saveDiveExpeditionTrip,tripOrganiserReferences,tripReadiness,type DiveExpeditionTripInput} from '../lib/offline/trips-expeditions';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore('t04-test');await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
 afterEach(()=>vi.unstubAllGlobals());
 const base=():DiveExpeditionTripInput=>({name:'UK day trip',status:'draft',startsOn:'2026-10-01',endsOn:'2026-10-01',teamPersonIds:[],siteIds:[],planIds:[],packingEquipmentSetIds:[],documentAttachmentIds:[],itinerary:[],bookings:[],packingItems:[],gasLogistics:[]});
@@ -37,5 +37,44 @@ describe('T04 canonical offline persistence',()=>{
     const backup=await localBackupPayload();for(const table of zeustekDb.tables)await table.clear();await restoreLocalPayload(backup);
     expect((await listDiveExpeditionTrips())[0]).toMatchObject({entityId:'historical-trip',futureFact:{keep:true},planIds:['unavailable-plan'],documentAttachmentIds:['original-file'],itinerary:[{title:'Day two'}],bookings:[{paid:true}],gasLogistics:[{plannedFillBar:200}],notes:'Edited offline'});
     configureDiveStore('other-person');expect(await listDiveExpeditionTrips()).toHaveLength(0);
+  });
+  it('keeps account and Person organiser references mutually exclusive through save and reopen',async()=>{
+    const account=tripOrganiserReferences({kind:'account',id:'t04-test'});
+    const saved=await saveDiveExpeditionTrip({...base(),...account});
+    let trip=(await listDiveExpeditionTrips())[0]!;
+    expect(trip).toMatchObject({entityId:saved.id,organiserUserId:'t04-test',organiserPersonId:''});
+    const person=tripOrganiserReferences({kind:'person',id:'person-1'});
+    await saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),...person});
+    trip=(await listDiveExpeditionTrips())[0]!;
+    expect(trip).toMatchObject({organiserUserId:'',organiserPersonId:'person-1'});
+    await saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),...tripOrganiserReferences({kind:'none'})});
+    expect((await listDiveExpeditionTrips())[0]).toMatchObject({organiserUserId:'',organiserPersonId:''});
+  });
+  it('saves, edits and removes guests and new itinerary kinds without creating People',async()=>{
+    await saveDiveExpeditionTrip({...base(),guestParticipants:[
+      {id:'blank',name:'   ',role:'non-diver'},
+      {id:'guest-1',name:'  Alex Brown  ',role:'family-guest',notes:'  Surface support  '},
+    ],itinerary:[
+      {id:'activity',kind:'activity',title:'Desert camel safari'},
+      {id:'meal',kind:'meal',title:'Group dinner'},
+      {id:'rest',kind:'rest',title:'Recovery afternoon'},
+    ]});
+    zeustekDb.close();await zeustekDb.open();
+    let trip=(await listDiveExpeditionTrips())[0]!;
+    expect(trip.guestParticipants).toEqual([{id:'guest-1',name:'Alex Brown',role:'family-guest',notes:'Surface support'}]);
+    expect(trip.itinerary.map((entry)=>entry.kind)).toEqual(['activity','meal','rest']);
+    expect(await listLocalDiveRecords('person')).toHaveLength(0);
+    await saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),guestParticipants:[{...trip.guestParticipants![0]!,role:'driver'}]});
+    trip=(await listDiveExpeditionTrips())[0]!;
+    expect(trip.guestParticipants).toMatchObject([{id:'guest-1',role:'driver'}]);
+    await saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),guestParticipants:[]});
+    expect((await listDiveExpeditionTrips())[0]!.guestParticipants).toEqual([]);
+    expect(await listLocalDiveRecords('person')).toHaveLength(0);
+  });
+  it('opens a legacy Trip without guest data as an editable empty collection',async()=>{
+    await saveLocalRecord('dive-trip',{...base(),entityId:'legacy-trip',guestParticipants:undefined});
+    const legacy=(await listDiveExpeditionTrips())[0]!;
+    expect(editableDiveExpeditionTrip(legacy).guestParticipants).toEqual([]);
+    expect(normaliseTripGuestParticipants(undefined)).toEqual([]);
   });
 });

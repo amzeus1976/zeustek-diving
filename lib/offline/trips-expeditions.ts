@@ -8,8 +8,26 @@ export type DiveExpeditionTripStatus =
   | 'completed'
   | 'cancelled';
 
-export type TripItineraryKind = 'travel' | 'accommodation' | 'dive' | 'transfer' | 'other';
+export type TripItineraryKind =
+  | 'travel'
+  | 'accommodation'
+  | 'dive'
+  | 'transfer'
+  | 'meal'
+  | 'activity'
+  | 'training'
+  | 'meeting'
+  | 'rest'
+  | 'other';
 export type TripBookingKind = 'travel' | 'accommodation' | 'operator' | 'dive' | 'other';
+export type TripGuestRole = 'non-diver' | 'family-guest' | 'surface-support' | 'driver' | 'photographer' | 'other';
+
+export interface TripGuestParticipant {
+  id: string;
+  name: string;
+  role: TripGuestRole;
+  notes?: string;
+}
 
 export interface TripItinerarySegment {
   id: string;
@@ -62,8 +80,13 @@ export interface DiveExpeditionTripRecord {
   startsOn?: string | null;
   endsOn?: string | null;
   status: DiveExpeditionTripStatus;
+  /** Existing saved-Person organiser reference. */
   organiserPersonId?: string;
+  /** Signed-in ZeusTek account organiser; avoids duplicating the owner into People. */
+  organiserUserId?: string;
   teamPersonIds: string[];
+  /** Trip-local people who are not Dive buddies/instructors. Legacy Trips may omit this. */
+  guestParticipants?: TripGuestParticipant[];
   siteIds: string[];
   planIds: string[];
   accommodation?: string;
@@ -85,10 +108,40 @@ export type DiveExpeditionTripInput = Omit<DiveExpeditionTripRecord, 'createdAt'
   entityId?: string;
 };
 
+export type TripOrganiserSelection =
+  | { kind: 'none' }
+  | { kind: 'account'; id: string }
+  | { kind: 'person'; id: string };
+
+export function tripOrganiserReferences(selection: TripOrganiserSelection) {
+  if (selection.kind === 'account') {
+    return { organiserUserId: selection.id, organiserPersonId: '' };
+  }
+  if (selection.kind === 'person') {
+    return { organiserUserId: '', organiserPersonId: selection.id };
+  }
+  return { organiserUserId: '', organiserPersonId: '' };
+}
+
+export function normaliseTripGuestParticipants(
+  guests: TripGuestParticipant[] | undefined,
+): TripGuestParticipant[] {
+  return (guests ?? [])
+    .filter((guest) => guest.name.trim())
+    .map((guest) => ({
+      ...guest,
+      name: guest.name.trim(),
+      notes: guest.notes?.trim() || '',
+    }));
+}
+
 export const listDiveExpeditionTrips = () => listRecords<DiveExpeditionTripRecord>('dive-trip');
 
 export const saveDiveExpeditionTrip = (input: DiveExpeditionTripInput) =>
-  saveRecord('dive-trip', input);
+  saveRecord('dive-trip', {
+    ...input,
+    guestParticipants: normaliseTripGuestParticipants(input.guestParticipants),
+  });
 
 export const deleteDiveExpeditionTrip = removeRecord;
 
@@ -96,7 +149,11 @@ export function editableDiveExpeditionTrip(
   record: Stored<DiveExpeditionTripRecord>,
 ): DiveExpeditionTripInput {
   const { entityId, createdAt: _createdAt, modifiedAt: _modifiedAt, ...editable } = record;
-  return { entityId, ...editable };
+  return {
+    entityId,
+    ...editable,
+    guestParticipants: editable.guestParticipants ?? [],
+  };
 }
 
 const normalise = (value: unknown) =>
@@ -144,6 +201,7 @@ export function tripReadiness(
     | 'planIds'
     | 'siteIds'
     | 'teamPersonIds'
+    | 'guestParticipants'
     | 'itinerary'
     | 'bookings'
     | 'packingEquipmentSetIds'
@@ -155,6 +213,7 @@ export function tripReadiness(
   const datesValid = Boolean(
     trip.startsOn && trip.endsOn && trip.startsOn <= trip.endsOn,
   );
+  const guests = (trip.guestParticipants ?? []).filter((guest) => guest.name.trim());
   const checks: TripReadinessCheck[] = [
     {
       id: 'dates',
@@ -180,8 +239,11 @@ export function tripReadiness(
     {
       id: 'team',
       label: 'Team',
-      complete: trip.teamPersonIds.length > 0,
-      detail: trip.teamPersonIds.length ? 'Team recorded.' : 'Add the known team when useful.',
+      complete: trip.teamPersonIds.length > 0 || guests.length > 0,
+      detail:
+        trip.teamPersonIds.length > 0 || guests.length > 0
+          ? 'Trip participants recorded.'
+          : 'Add the known team or guests when useful.',
     },
     {
       id: 'logistics',

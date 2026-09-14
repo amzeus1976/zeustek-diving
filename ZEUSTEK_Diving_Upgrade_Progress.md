@@ -1,10 +1,34 @@
 # ZeusTek Diving Upgrade Progress
 
+## T06 COMPLETE — final authoritative checkpoint 2026-09-14
+
+App1.0.19 / Sites86, saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_e4e6783d1d8c8191acd1f5e6b65ccacb; published source bc771bfba0642041ad4f893776d50bb533e03329; deployment appgdep_6aa83eb6f0008191b58f1ad0c267bedc SUCCEEDED2026-09-14T18:36:55.612512+00:00, same canonical production origin and env revision3. Native archive sha256:eeadd3068fb17986b85a0ca1cb3b3809f4357ceb805bba6f6b76588f1a5069ec,183 files/20899840 bytes. Focused T0613 PASS; metadata+T0615 PASS; full41 files/204 tests PASS; typecheck/build PASS/PWA70 entries. Production smoke PASS: v19, exact ordered Settings/Skills group parity (52 current synced groups in each, not an invented54; regression covers54 configured groups), Wreck Penetration filtering, preserved synthetic canonical Dive64 evidence/Foundation/confidence0/environment and disabled90/14 policy, protected editor Escape/Cancel focus, all66 Logbook cards, existing7 Plans, redsea2027 Trip, Equipment/Loadouts/Gas, SS Thistlegorm deep link/media/dated profile, child Escape closes only profile/restores Edit wreck profile then parent Escape closes Site, mobile390 PWA real Open menu/onscreen Skills/no overflow/44px new controls/focus, tablet820 and desktop1280 no overflow, unrelated Dive News20 stories. Canonical offline/event/outbox/backup/reference invariants PASS; no migration/duplicate Skill catalogue or certification-authorisation claim. Existing explicitly synthetic acceptance Skill/evidence retained; not real diving practice. Original app18/Sites85 group defect was rolled back immediately and repaired only after owner explicit continue; history retained below. Immediate rollback retained Sites84/app17 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_4246114357dc819197c0abd730712d4e; rollback health previously verified66 Dives. Desktop and repository copies genuinely updated/read back. Actual usage NOT_EXPOSED. No Sol High/Astra recommended. Next T07 — Technical Workspace, planning65, NOT_STARTED. OWNER_BUDGET_CHECK_REQUIRED.
+
+## T06 corrected group candidate — 2026-09-14
+
+T06 IN_PROGRESS, corrected app1.0.19 candidate. Owner found a genuine acceptance defect in app1.0.18/Sites85: Group used a fixed12-name shortlist instead of the configured Settings groups. Candidate source3827d6c085d645355ca41b289e273e25f3505664 / deployment appgdep_6aa83bb5989c81918973f3019a63525b was immediately rolled back to saved Sites84/app1.0.17 by deployment appgdep_6aa83cf4f124819194cbc34e444d547f, SUCCEEDED2026-09-14T18:29:20.131817+00:00. Fresh production verification confirmed v1.0.17 and all66 Logbook entries; stale first PWA shells were distinguished from deployment health. Owner explicitly authorised implementing the narrow repair without stopping. Settings and Skills & Currency now share canonicalSkillGroups over the same canonical Skills, including archived-only/custom/future groups; no stored Skills/evidence/IDs changed. Local custom-group filter and no-overflow check PASS. Focused T0613 PASS; full41 files/204 tests PASS; typecheck PASS; metadata+T0615 PASS; final production build PASS/PWA70 entries. Only version/changelog and documentation followed the full gate. Immediate rollback remains saved Sites84 appgprj_6a91926878b48191a80d70f1681ef135~appgver_4246114357dc819197c0abd730712d4e. Repaired publication/smoke pending, NOT COMPLETE. Actual usage NOT_EXPOSED; no Sol High/Astra. T07 planning65 NOT_STARTED. This checkpoint supersedes older current-state fields.
+
+## T06 passing release candidate — 2026-09-14
+
+T06 IN_PROGRESS, app1.0.18 candidate, same canonical Sites project. Integrated v1.13 candidate using canonical skill/skill_evidence plus additive currency-policy; no migration/duplicate store. Focused11 PASS; full41 files/202 tests PASS; metadata+T06 13 PASS; final typecheck/build PASS/PWA70 entries. Local policy and evidence save/reopen/full-reload persistence, competence/confidence/environment history, derived Current, keyboard focus/contained editor dismissal and 390/820/1280 reflow PASS. No product changes followed the full gate; only version/changelog metadata and documentation. Production remains app1.0.17/Sites84; native latest84 and source main2228b12 reconfirmed before publication. Immediate rollback saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_4246114357dc819197c0abd730712d4e / appgdep_6aa79e3e3634819197db466afdf6951d. Same-project push/save/publish/production smoke pending; T06 is NOT COMPLETE. Actual usage NOT_EXPOSED. No Sol High/Astra. T07 planning65 NOT_STARTED. Both Desktop/repository copies genuinely updated.
+
+## T06 IN_PROGRESS — 2026-09-14 resume gate
+
+Owner authorised T06 only; planning envelope60 relative complexity, actual usage NOT_EXPOSED. Clean app1.0.17 worktree2228b12 preserves T00–T05. Native evidence reconfirmed Sites84/source5176279b4e8bdaaabc34a41cbeee90b43e329aa2; saved rollback appgprj_6a91926878b48191a80d70f1681ef135~appgver_4246114357dc819197c0abd730712d4e; healthy deployment appgdep_6aa79e3e3634819197db466afdf6951d. Production remains app1.0.17/Sites84. v1.13 T06 candidate reviewed; additive integration/testing pending. No T07/Astra. This checkpoint supersedes historical current-task fields below. Desktop and repository copies genuinely updated.
+
+## T05 COMPLETE — final authoritative checkpoint 2026-09-14
+
+T05 COMPLETE — app1.0.17 / Sites84; published source5176279b4e8bdaaabc34a41cbeee90b43e329aa2; saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_4246114357dc819197c0abd730712d4e; deployment appgdep_6aa79e3e3634819197db466afdf6951d SUCCEEDED2026-09-14T07:12:12.589141+00:00. FocusedT0514 PASS, final full38files/191tests PASS, typecheck/build PASS, PWA70 entries. Production smoke PASS: version17, canonical Equipment/legacy loadouts, test loadout create/save/reopen/edit/full-reload retention, per-instance override control and unchanged existing Plan choices, test cylinder fill1/current analysis→newer fill/stale analysis→explicit latest analysis/current, history retained after reload, phone390 PWA real Open menu→onscreen navigation→Loadouts/editor no horizontal overflow, desktop1280 Trips/Egypt2027, existing Plans, canonical SS Thistlegorm/dated overhead/media/map/deep link, child-editor Escape leaves Site open and restores Edit wreck profile focus, all66 Logbook cards, unrelated Dive News. Canonical offline/outbox/backup/historical Dive invariants PASS in targeted tests; local Plan application PASS. No real production Plan/Dive/Site/Trip edits. Two clearly labelled acceptance fixtures (one loadout and one cylinder with synthetic evidence) remain; not real equipment/fills. Immediate rollback saved Sites83/app16 appgprj_6a91926878b48191a80d70f1681ef135~appgver_385737197a4881918533e6f676a890e0 / appgdep_6aa7310f7b408191a75bf6202f97e6dc; Sites82 retained. No rollback needed. Newer owner source33f09eb/documentationb7bdaac preserved. No D1 migration; additive cylinder-fill/gas-analysis, equipment-set/trip/dive-trip/site-overhead-profile unchanged. Actual usage NOT_EXPOSED. No Sol High/Astra recommended. T06 Skills & Currency planning60 NOT_STARTED. OWNER_BUDGET_CHECK_REQUIRED.
+
+## T05 final release checkpoint — 2026-09-14
+
+T05 IN_PROGRESS, candidate app1.0.17; full38 files/191 tests, typecheck and build PASS after preserving newer owner fixes33f09eb and documentation b7bdaac. No product changes followed that gate. Production advanced independently to app1.0.16/Sites83: saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_385737197a4881918533e6f676a890e0, deployment appgdep_6aa7310f7b408191a75bf6202f97e6dc, source33f09eb762149bc0e7b662a7de38b27506a44341. Native saved/deployment evidence PASS; authenticated production version16, Trip editor with new owner controls and all66 Logbook cards PASS. This saved Sites83 is the immediate T05 rollback target; owner-accepted Sites82 also retained. Previous checkpoint statements about unchanged Sites82 are historical, superseded here. Same-project publication/smoke pending; T06 NOT_STARTED. Actual usage NOT_EXPOSED. Desktop checkpoint updated genuinely in both copies.
+
 > Work agent: resolve the Windows Desktop path with `[Environment]::GetFolderPath('Desktop')` and maintain this file as `ZEUSTEK_Diving_Upgrade_Progress.md`. Update atomically after every subtask. If local Desktop access is unavailable, maintain the same file at repository root, set `Desktop sync: PENDING`, and copy it to Desktop as soon as local access becomes available. Never claim it is on the Desktop unless the write succeeded.
 
-**Project status:** T04 COMPLETE — app1.0.15/Sites82 live and smoke PASS; owner budget boundary
-**Current app version:** production 1.0.15 / Sites82 — existing canonical project
-**Current task:** T04 COMPLETE; T05–T13 NOT_STARTED
+**Project status:** T06 COMPLETE — app1.0.19/Sites86 production smoke PASS
+**Current app version:** production 1.0.19 / Sites86 — existing canonical project
+**Current task:** T00–T06 COMPLETE; T07–T13 NOT_STARTED; OWNER_BUDGET_CHECK_REQUIRED
 **Primary task planning envelopes:** 820 credits / planning estimate £24.24
 **Normal contingency:** 82 credits / planning estimate £2.43
 **Astra rescue reserve:** 60 credits / planning estimate £1.78
@@ -14,10 +38,12 @@
 **Cumulative observed planning £:** NOT_EXPOSED
 **Budget trend:** NOT_EXPOSED — no inferred allowance percentages or billing guarantees; bounded workflow only
 **Authoritative account usage checked by owner:** NOT_RECORDED
-**Current known-good production version/deployment:** 1.0.15 / Sites82 / appgdep_6aa6f54f5bfc819186816052ee6ea995 — succeeded 2026-09-13T19:11:28.586797+00:00; Trip/canonical refs, T03 Escape, phone/PWA,66 Logbook cards and Dive News smoke PASS
-**Current release candidate:** NONE —1.0.15 accepted from a6852fcdb4edd16e0427beb7843cc17d9af208a7; saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_5b831d4952108191b8397c59675095d9. Actual usage NOT_EXPOSED.
-**Last rollback reference:** pre-T04 app1.0.14/Sites81 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_d799b0d2bb508191a275f75ec7f9da10 / deployment appgdep_6aa6ef025a2481918534d9af9bafdfe7; older Sites79/78 retained
-**Desktop sync:** VERIFIED — real Windows Desktop C:/Users/amzeu/OneDrive/Desktop; current T04 summaries maintained in both copies
+**Current known-good production version/deployment:** 1.0.19 / Sites86 / appgdep_6aa83eb6f0008191b58f1ad0c267bedc — SUCCEEDED2026-09-14T18:36:55.612512+00:00; T06 and existing routes/PWA/66 Logbook cards smoke PASS
+**Current release candidate:** none — app1.0.19/Sites86 published and verified; sourcebc771bfba0642041ad4f893776d50bb533e03329. Immediate rollback Sites84/app17; exact saved ID in final checkpoint. Actual usage NOT_EXPOSED.
+**Desktop sync:** VERIFIED — real Windows Desktop C:/Users/amzeu/OneDrive/Desktop; current T06 summaries maintained in both copies
+**Last rollback reference:** app1.0.17/Sites84 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_4246114357dc819197c0abd730712d4e; healthy rollback deployment appgdep_6aa83cf4f124819194cbc34e444d547f; older retained versions unchanged
+**Current production deployment:** 1.0.16 / Sites83 / appgdep_6aa7310f7b408191a75bf6202f97e6dc — deployment succeeded 2026-09-13T23:26:23.735549+00:00; native release/version verification PASS; authenticated interaction BLOCKED_ACCESS
+**Last rollback reference:** owner-accepted app1.0.15/Sites82 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_5b831d4952108191b8397c59675095d9 / deployment appgdep_6aa6f54f5bfc819186816052ee6ea995; older Sites81/79/78 retained
 
 | ID | Task | Status | Planning credits | Planning £ | Observed credits | Observed £ | Published version | Commit/deploy |
 |---|---|---|---:|---:|---:|---:|---|---|
@@ -26,8 +52,8 @@
 | T02 | Conservation & AWARE | COMPLETE | 35 | £1.03 | NOT_EXPOSED | NOT_EXPOSED | 1.0.5 / Sites70 | e96905315fd5fa7e5294dab0f98cb77178050c5c / appgdep_6aa65cb51fd88191b36c7126cd078338 |
 | T03 | Wreck & Overhead | COMPLETE | 40 | £1.18 | NOT_EXPOSED | NOT_EXPOSED | 1.0.14 / Sites81 | d4734b9a6ce5952e7d724eaf4330471d5a60a7a7 / appgdep_6aa6ef025a2481918534d9af9bafdfe7 |
 | T04 | Trips & Expeditions | COMPLETE | 45 | £1.33 | NOT_EXPOSED | NOT_EXPOSED | 1.0.15 / Sites82 | a6852fcdb4edd16e0427beb7843cc17d9af208a7 / appgdep_6aa6f54f5bfc819186816052ee6ea995 |
-| T05 | Reusable Loadouts + Gas/Cylinder Foundation | NOT_STARTED | 55 | £1.63 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
-| T06 | Skills & Currency | NOT_STARTED | 60 | £1.77 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
+| T05 | Reusable Loadouts + Gas/Cylinder Foundation | COMPLETE | 55 | £1.63 | NOT_EXPOSED | NOT_EXPOSED | 1.0.17 / Sites84 | 5176279b4e8bdaaabc34a41cbeee90b43e329aa2 / appgdep_6aa79e3e3634819197db466afdf6951d |
+| T06 | Skills & Currency | COMPLETE | 60 | £1.77 | NOT_EXPOSED | NOT_EXPOSED | 1.0.19 / Sites86 | 204 tests/typecheck/build/smoke PASS; Sites84 rollback |
 | T07 | Technical Diving Workspace | NOT_STARTED | 65 | £1.92 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T08 | Professional Development / PADI Pro | NOT_STARTED | 70 | £2.07 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T09 | Experience & Analytics | NOT_STARTED | 75 | £2.22 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
@@ -52,6 +78,18 @@ Next action: owner must provide a scheduler-backed execution project that genuin
 Next implementation task remains T02 — Conservation & AWARE; planning envelope35, relative complexity only. Paid immediate authorization was T01 only. Overnight scope T02–T13 is conditional on genuine scheduling access; read persisted map/current task only, complete one task's entire gate before considering the next, bounded initial + at most two materially different repairs, ChatGPT review before any owner-approved Astra, stop at blocked task without bypassing it. Run C must add MORNING_STATUS if actually executed. Actual usage: NOT_EXPOSED; cannot enforce or guarantee included-only allowance. No ChatGPT review/Astra escalation is recommended for this access limitation.
 
 ## Full subtask job list
+
+### T05 start — 2026-09-14 Europe/London
+
+Owner authorises T05 only. Planning envelope55 is relative complexity; actual usage NOT_EXPOSED. Clean source50b12c2c9f2d3bf9317623516dce954894421945 has exact tree equivalence to GitHub main79f842c4274d88e6b6e3e2195881bf0024399904; app1.0.15. Sites82 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_5b831d4952108191b8397c59675095d9 and deployment appgdep_6aa6f54f5bfc819186816052ee6ea995 confirmed succeeded before edits. Immediate T05 rollback is that saved Sites82/app1.0.15; older Sites81 retained. Existing equipment-set/trip/site-overhead-profile/dive-trip and canonical IDs/history must remain intact. v1.11 precode aid inspected; no T06/T07/T12 code opened, no Astra.
+
+### T04 owner-snag corrective — 2026-09-13
+
+App1.0.16/Sites83 was deployed from exact tested source 33f09eb762149bc0e7b662a7de38b27506a44341. Saved version appgprj_6a91926878b48191a80d70f1681ef135~appgver_385737197a4881918533e6f676a890e0; deployment appgdep_6aa7310f7b408191a75bf6202f97e6dc succeeded 2026-09-13T23:26:23.735549+00:00. Archive sha256:6907e594c51ee32b29237f963723447c79ea594406725785697b1d8cd6ea8237, 183 files/20695040 bytes. Sites82 remains the owner-accepted rollback checkpoint.
+
+SNAG-TRIP-001..004 are IMPLEMENTED_PENDING_OWNER_ACCEPTANCE, not CLOSED. The owner-snag PR was inspected against current Sites source and manually integrated because GitHub and canonical Sites histories diverged while the relevant base files were byte-identical. Choice-card layout uses checkbox plus minmax(0,1fr), normal wrapping and a single-column tablet breakpoint. Organiser Me stores the stable account ID, mutually exclusive with Person organiser, without creating a Person. Trip-local guests use optional dive-trip fields and never enter People. Existing itinerary kinds remain and meal/activity/training/meeting/rest were added with human labels. Legacy trip Dive Plans are unchanged.
+
+Focused Trip owner-snag/T04/offline tests: 4 files/22 tests PASS. Full regression: 35 files/177 tests PASS. TypeScript PASS. Production build PASS; PWA precache70 entries. Native Sites deployment/version verification PASS. Managed preview was running, but the permitted browser URL returned ERR_BLOCKED_BY_CLIENT; authenticated production interaction therefore remains BLOCKED_ACCESS and owner acceptance is required. No production test records were created. No rollback was required. Astra usage NONE. Actual usage NOT_EXPOSED. Evidence: docs/T04-owner-snag-release-record.md.
 
 ### T04 COMPLETE — 2026-09-13 Europe/London
 
@@ -147,20 +185,20 @@ Local canonical Site/profile save and deep-link reopen PASS; original Site histo
 | T04 | Plan/Site/Person/equipment/document links | COMPLETE | 8 | NOT_EXPOSED | Live canonical links + local document reopen PASS |
 | T04 | Packing/logistics/readiness + responsive/offline | COMPLETE | 6 | NOT_EXPOSED | Local persistence/reflow PASS; derived advisory only |
 | T04 | Tests/regression/publish | COMPLETE | 8 | NOT_EXPOSED | 169/full/typecheck/build + Sites82 smoke PASS |
-| T05 | Locate Equipment/Equipment Set/Cylinder flows | NOT_STARTED | 4 | NOT_EXPOSED |  |
-| T05 | Loadout + cylinder fill/analysis schema/migration | NOT_STARTED | 12 | NOT_EXPOSED |  |
-| T05 | Reusable loadout list/detail/editor | NOT_STARTED | 11 | NOT_EXPOSED |  |
-| T05 | Cylinder fill/analysis history UI | NOT_STARTED | 9 | NOT_EXPOSED |  |
-| T05 | Apply-to-plan/dive references + overrides | NOT_STARTED | 8 | NOT_EXPOSED |  |
-| T05 | Responsive/offline/history compatibility | NOT_STARTED | 4 | NOT_EXPOSED |  |
-| T05 | Tests/regression/publish | NOT_STARTED | 7 | NOT_EXPOSED |  |
-| T06 | Locate Training/Skills/certification flows | NOT_STARTED | 4 | NOT_EXPOSED |  |
-| T06 | Skill evidence + currency-policy schema/migration | NOT_STARTED | 12 | NOT_EXPOSED |  |
-| T06 | Skills dashboard/detail/evidence timeline UI | NOT_STARTED | 13 | NOT_EXPOSED |  |
-| T06 | Deterministic currency projection/policy logic | NOT_STARTED | 10 | NOT_EXPOSED |  |
-| T06 | Dive/Debrief/training evidence linking | NOT_STARTED | 8 | NOT_EXPOSED |  |
-| T06 | Responsive/offline/a11y | NOT_STARTED | 5 | NOT_EXPOSED |  |
-| T06 | Tests/regression/publish | NOT_STARTED | 8 | NOT_EXPOSED |  |
+| T05 | Locate Equipment/Equipment Set/Cylinder flows | COMPLETE | 4 | NOT_EXPOSED | v1.11 additive anchors |
+| T05 | Loadout + cylinder fill/analysis schema/migration | COMPLETE | 12 | NOT_EXPOSED | equipment-set retained; two evidence kinds; no migration |
+| T05 | Reusable loadout list/detail/editor | COMPLETE | 11 | NOT_EXPOSED | local save/reopen/clone tests PASS |
+| T05 | Cylinder fill/analysis history UI | COMPLETE | 9 | NOT_EXPOSED | current to stale GUI PASS |
+| T05 | Apply-to-plan/dive references + overrides | COMPLETE | 8 | NOT_EXPOSED | local Plan application and historical Dive/revision tests PASS |
+| T05 | Responsive/offline/history compatibility | COMPLETE | 4 | NOT_EXPOSED | phone/tablet reflow, keyboard, offline backup/event tests PASS |
+| T05 | Tests/regression/publish | COMPLETE | 7 | NOT_EXPOSED | focused14/final191/typecheck/build and Sites84 production smoke PASS |
+| T06 | Locate Training/Skills/certification flows | COMPLETE | 4 | NOT_EXPOSED | Existing canonical Skill/evidence/catalogue reused |
+| T06 | Skill evidence + currency-policy schema/migration | COMPLETE | 12 | NOT_EXPOSED | Additive currency-policy; no D1 migration or duplicate store |
+| T06 | Skills dashboard/detail/evidence timeline UI | COMPLETE | 13 | NOT_EXPOSED | Canonical Settings groups; detail/history/confidence/environment |
+| T06 | Deterministic currency projection/policy logic | COMPLETE | 10 | NOT_EXPOSED | Four states; advisory policy and exact reference conflict handling |
+| T06 | Dive/Debrief/training evidence linking | COMPLETE | 8 | NOT_EXPOSED | Existing canonical Dive64 evidence adapter; original IDs retained |
+| T06 | Responsive/offline/a11y | COMPLETE | 5 | NOT_EXPOSED | 390/820/1280 reflow, focus/protected editors, canonical persistence/outbox/backup |
+| T06 | Tests/regression/publish | COMPLETE | 8 | NOT_EXPOSED | Focused13/full204/typecheck/build and Sites86 production smoke PASS |
 | T07 | Locate shared Plan/Skill/Equipment/Gas sources | NOT_STARTED | 4 | NOT_EXPOSED |  |
 | T07 | Versioned pathway/reference mapping | NOT_STARTED | 10 | NOT_EXPOSED |  |
 | T07 | Technical workspace/readiness UI | NOT_STARTED | 15 | NOT_EXPOSED |  |

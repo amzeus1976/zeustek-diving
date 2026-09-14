@@ -49,19 +49,58 @@
 .editor { width: min(76rem, calc(100vw - 2rem)); max-height: 94vh; overflow: auto; }
 .choiceSection, .repeatSection, .safetyNotes { margin: 0.9rem 0; }
 .choiceSection .focus-card-head > div { display: flex; gap: 0.5rem; align-items: center; }
-.choiceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 0.5rem; max-height: 18rem; overflow: auto; margin-top: .5rem; }
-.choiceGrid label { display: flex; gap: 0.6rem; align-items: start; padding: 0.55rem; border: 1px solid var(--border, rgba(255,255,255,.1)); border-radius: 0.65rem; }
-.choiceGrid label span { display: grid; }
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 0.5rem;
+  max-height: 18rem;
+  overflow: auto;
+  margin-top: .5rem;
+}
+.choiceGrid label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid var(--border, rgba(255,255,255,.1));
+  border-radius: 0.65rem;
+}
+.choiceGrid label > input[type='checkbox'] { flex: none; }
+.choiceGrid label span {
+  display: grid;
+  min-width: 0;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.choiceGrid label span b, .choiceGrid label span small {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
+}
 .repeatRow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.65rem; padding: 0.8rem; border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: 0.75rem; }
 .repeatRow label { display: grid; gap: 0.3rem; }
 .repeatRow :global(.record-wide) { grid-column: 1 / -1; }
 .safetyNotes p { display: flex; gap: 0.4rem; align-items: center; }
+.guestList { display: grid; gap: 0.45rem; margin-top: 0.65rem; }
+.guestList article { display: grid; gap: 0.18rem; padding: 0.6rem; border-radius: 0.65rem; background: rgba(255,255,255,.035); }
+.guestList small { opacity: .72; }
+.itineraryKind { color: var(--accent, #ff7a00); font-size: .78em; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 
 .editor button, .detail button, .tripCard button:not(:global(.card-hit)) { min-width: 44px; min-height: 44px; }
 .editor input:not([type=checkbox]), .editor select, .toolbar input, .toolbar select { min-height: 44px; }
 .editor :focus-visible, .detail :focus-visible, .tripCard :focus-visible, .toolbar :focus-visible { outline: 2px solid #00d9f5; outline-offset: 3px; }
-.chips a { min-height: 44px; overflow-wrap: anywhere; }
-.detail, .editor { box-sizing: border-box; overflow-wrap: anywhere; }
+.chips a { min-height: 44px; overflow-wrap: break-word; word-break: normal; }
+.detail, .editor { box-sizing: border-box; overflow-wrap: break-word; word-break: normal; }
+
+/* Tablet/iPad: favour readable selector rows over dense multi-column cards. */
+@media (max-width: 1100px) {
+  .choiceGrid { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 780px) {
   .toolbar, .linkColumns, .notes, .repeatRow { grid-template-columns: 1fr; }

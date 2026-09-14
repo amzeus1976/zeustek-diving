@@ -84,6 +84,8 @@ import { ProfilePicture } from '@/components/profile-picture';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { SkillCatalogue } from '@/components/skill-catalogue';
 import { TripsExpeditions } from '@/components/trips-expeditions';
+import { LoadoutsGas } from '@/components/loadouts-gas';
+import { SkillsCurrency } from '@/components/skills-currency';
 import {
   BackupsScreen,
   PlatformHeaderStatus,
@@ -221,6 +223,7 @@ const navigation = [
   ['Overview', House],
   ['Logbook', BookOpen],
   ['Equipment', Wrench],
+  ['Loadouts & Gas', Cylinder],
   ['Gear Wishlist', ShoppingBag],
   ['Sites', MapPin],
   ['Dive Site Map', Compass],
@@ -230,6 +233,7 @@ const navigation = [
   ['Albums', Images],
   ['Conservation & AWARE', Leaf],
   ['Training', ShieldCheck],
+  ['Skills & Currency', ShieldCheck],
   ['Course Map', GraduationCap],
   ['Dive News', Newspaper],
   ['Dive Media', BookMarked],
@@ -534,6 +538,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Changelog' && <AppChangelog />}
           {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} />}
           {active === 'Equipment' && <Equipment />}{' '}
+          {active === 'Loadouts & Gas' && <LoadoutsGas />}{' '}
           {active === 'Gear Wishlist' && <GearWishlist />}{' '}
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
@@ -544,6 +549,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Albums' && <Albums />}{' '}
           {active === 'Conservation & AWARE' && <ConservationPage go={go} />}{' '}
           {active === 'Training' && <TrainingV2 go={go} />}{' '}
+          {active === 'Skills & Currency' && <SkillsCurrency go={go} />}{' '}
           {active === 'Course Map' && <CourseMapPage go={go} />}{' '}
           {active === 'Dive News' && <DiveNewsV2 />}{' '}
           {active === 'Dive Media' && <DiveMediaLibrary />}{' '}

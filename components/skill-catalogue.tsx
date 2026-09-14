@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Archive, Download, FileUp, Pencil, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
 import {
-  CANONICAL_SKILL_GROUPS, CANONICAL_SKILLS_CHANGED_EVENT, createCanonicalSkill, createCanonicalSkills,
+  CANONICAL_SKILL_GROUPS, CANONICAL_SKILLS_CHANGED_EVENT, canonicalSkillGroups, createCanonicalSkill, createCanonicalSkills,
   deleteUnusedArchivedSkills, listCanonicalSkills, listSkillEvidence, previewCanonicalSkillBatch,
   previewUnusedArchivedSkills, resolveCanonicalSkillReference, setCanonicalSkillArchived, skillRecordGroup,
   skillRecordName, updateCanonicalSkill, type ArchivedSkillCleanupPreview, type CanonicalSkillRecord,
@@ -112,7 +112,7 @@ export function SkillCatalogue() {
   const [editor, setEditor] = useState<CanonicalSkillRecord | null | undefined>(undefined); const [bulkOpen, setBulkOpen] = useState(false); const [csvOpen, setCsvOpen] = useState(false); const [cleanupOpen, setCleanupOpen] = useState(false); const [busyId, setBusyId] = useState(''); const [message, setMessage] = useState('Loading Skill Catalogue…');
   const load = useCallback(async () => { const [definitions, evidence] = await Promise.all([listCanonicalSkills(), listSkillEvidence()]); const counts = new Map<string, number>(); for (const item of evidence) { const resolved = resolveCanonicalSkillReference(item.skillKey, definitions); if (resolved) counts.set(resolved.entityId, (counts.get(resolved.entityId) ?? 0) + 1); } setSkills(definitions); setUsage(counts); setMessage(`${definitions.length} canonical Skill${definitions.length === 1 ? '' : 's'} available on this device.`); }, []);
   useEffect(() => { const changed = () => { void load(); }; void load().then(() => Promise.all([refreshDiveRecords('skill'), refreshDiveRecords('skill_evidence')])).then(load).catch(() => setMessage('Showing locally available Skills. Cloud refresh is currently unavailable.')); window.addEventListener(CANONICAL_SKILLS_CHANGED_EVENT, changed); return () => window.removeEventListener(CANONICAL_SKILLS_CHANGED_EVENT, changed); }, [load]);
-  const groups = [...new Set(skills.map(skillRecordGroup))].sort((a, b) => a.localeCompare(b, 'en-GB'));
+  const groups = canonicalSkillGroups(skills);
   const selectedGroupSet = useMemo(() => new Set(selectedGroups), [selectedGroups]);
   const filteredGroups = groups.filter(group => group.toLocaleLowerCase('en-GB').includes(groupQuery.trim().toLocaleLowerCase('en-GB')));
   const groupSelectionLabel = selectedGroups.length === 0 ? 'No Skill Groups selected' : selectedGroups.length === groups.length ? 'All Skill Groups' : selectedGroups.length === 1 ? selectedGroups[0] : `${selectedGroups.length} Skill Groups selected`;
