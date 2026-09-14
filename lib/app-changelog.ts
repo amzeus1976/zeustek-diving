@@ -1,6 +1,51 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.19',
+    date: '2026-09-14',
+    title: 'Skills & Currency — shared catalogue groups',
+    changes: [
+      'Skills & Currency now uses the same live Skill Catalogue groups as Settings, including custom, archived-only and future groups rather than a fixed shortlist.',
+      'Retained canonical evidence, editable currency policies, offline persistence and all existing personal Dive history.',
+      'Corrected the group-filter acceptance failure from the rolled-back 1.0.18 candidate without changing Skill identities or stored evidence.',
+    ],
+  },
+  {
+    version: '1.0.18',
+    date: '2026-09-14',
+    title: 'Skills & Currency — rolled-back candidate',
+    changes: [
+      'Added a responsive Skills & Currency development centre using the existing canonical Skill Catalogue and Dive evidence.',
+      'Current, Due soon, Needs practice and Not assessed are derived from recorded practice and editable currency policies, never certification expiry or authorisation.',
+      'Evidence history retains competence, confidence, evaluator, environment and original Dive, equipment and attachment references.',
+      'Currency policies save offline through existing events, sync and backups; unknown references require review rather than name-based remapping.',
+      'Preserved catalogue editing, CSV tools, protected cleanup, Plans, Sites, Trips, Loadouts and historical Logbook records.',
+    ],
+  },
+  {
+    version: '1.0.17',
+    date: '2026-09-14',
+    title: 'Reusable Loadouts & Gas',
+    changes: [
+      'Extended existing Equipment Sets with semantic slots, clone, validation and per-Dive or Plan application overrides.',
+      'Applied equipment references and slot snapshots remain historical; creating a Dive from a Plan retains its loadout references and immutable Plan provenance.',
+      'Physical cylinders remain Equipment; fill and analysis histories save offline through existing events, sync and backups.',
+      'A newer fill visibly makes an older analysis stale until an analysis explicitly links to the new fill; partial gas readings are never displayed as a fully known mix.',
+      'Added phone-safe cylinder profiles, fill/analysis forms and common private evidence attachments while preserving existing Sites, Trips and Logbook behaviour.',
+    ],
+  },
+  {
+    version: '1.0.16',
+    date: '2026-09-13',
+    title: 'Trip owner corrections',
+    changes: [
+      'Made Team, Site, Dive Plan and reusable-loadout choices readable at phone, tablet and desktop widths without character-by-character wrapping.',
+      'Added Me (this account) as an organiser using the signed-in account reference, while keeping saved-Person organisers and avoiding duplicate People records.',
+      'Added Trip-local non-diving participants with roles and notes; blank rows are discarded and guests remain separate from canonical Dive People.',
+      'Added Meal, Activity / excursion, Training, Meeting and Rest / free time itinerary events while preserving every existing event type.',
+    ],
+  },
+  {
     version: '1.0.15',
     date: '2026-09-13',
     title: 'Trips & Expeditions',

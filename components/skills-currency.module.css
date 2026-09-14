@@ -1,0 +1,320 @@
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.heading h1 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  margin: 0.1rem 0;
+}
+.heading p {
+  color: #aab5bb;
+  max-width: 62rem;
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  padding: 0.2rem !important;
+  margin-bottom: 0.8rem;
+}
+.summary button {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  border: 0;
+  border-right: 1px solid #23343b;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 1rem;
+  cursor: pointer;
+}
+.summary button:last-child {
+  border-right: 0;
+}
+.summary svg {
+  grid-row: 1/3;
+  color: #20c8ff;
+}
+.summary strong {
+  font-size: 1.75rem;
+}
+.summary span {
+  grid-column: 2/4;
+  color: #a9b5bb;
+}
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 0.7rem;
+  align-items: end;
+  margin-bottom: 0.9rem;
+}
+.filters label,
+.policyFields label,
+.evidenceFields label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+}
+.check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem !important;
+  min-height: 2.5rem;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(18rem, 1fr);
+  gap: 0.85rem;
+}
+.skillGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: 0.65rem;
+}
+.skillCard {
+  display: grid;
+  gap: 0.65rem;
+  text-align: left;
+  background: #0b1114;
+  border: 1px solid #22343c;
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  color: inherit;
+  cursor: pointer;
+}
+.skillCard > div:first-child {
+  display: grid;
+}
+.skillCard > div:first-child span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #8ca0aa;
+}
+.skillCard > div:first-child b {
+  font-size: 1.05rem;
+}
+.skillCard em {
+  justify-self: start;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.73rem;
+  font-style: normal;
+}
+.skillCard dl {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+.skillCard dl div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+}
+.skillCard dt {
+  color: #8e9da5;
+}
+.skillCard dd {
+  margin: 0;
+}
+.skillCard small {
+  color: #a5b1b7;
+}
+.current {
+  --skill-status: #31d88d;
+  border-color: #1d6f52 !important;
+}
+.due {
+  --skill-status: #ffae26;
+  border-color: #775410 !important;
+}
+.needs {
+  --skill-status: #ff655c;
+  border-color: #7d302c !important;
+}
+.unknown {
+  --skill-status: #80909a;
+}
+.skillCard em,
+.statusHero strong {
+  color: var(--skill-status);
+}
+.side {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+}
+.side h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  color: #ff8b1f;
+}
+.side article {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid #24343b;
+}
+.side article span {
+  color: #a7b3b9;
+  font-size: 0.85rem;
+}
+.side article div {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.detail {
+  width: min(72rem, 95vw);
+}
+.statusHero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+.statusHero > div {
+  border: 1px solid #24363e;
+  border-radius: 0.6rem;
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.25rem;
+}
+.statusHero strong {
+  font-size: 1.35rem;
+}
+.statusHero span {
+  color: #a7b3b9;
+}
+.timeline {
+  display: grid;
+  gap: 0.55rem;
+}
+.timeline article {
+  border-left: 3px solid #1aaad7;
+  padding: 0.55rem 0.7rem;
+  background: #0b1114;
+  display: grid;
+  gap: 0.3rem;
+}
+.timeline article > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.timeline span,
+.timeline small {
+  color: #9fadb5;
+}
+.timeline p {
+  margin: 0.2rem 0;
+}
+.policyFields {
+  display: grid;
+  gap: 0.7rem;
+}
+.evidenceDialog {
+  width: min(65rem, 95vw);
+}
+.evidenceFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+.span2 {
+  grid-column: 1/-1;
+}
+@media (max-width: 900px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .summary button:nth-child(2) {
+    border-right: 0;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .heading > button {
+    align-self: flex-start;
+  }
+  .summary {
+    grid-template-columns: 1fr;
+  }
+  .summary button {
+    border-right: 0;
+    border-bottom: 1px solid #23343b;
+  }
+  .filters,
+  .evidenceFields {
+    grid-template-columns: 1fr;
+  }
+  .span2 {
+    grid-column: auto;
+  }
+  .side {
+    grid-template-columns: 1fr;
+  }
+  .statusHero {
+    grid-template-columns: 1fr;
+  }
+  .timeline article > div {
+    display: grid;
+  }
+  .skillGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.layout > * {
+  min-width: 0;
+}
+.skillCard,
+.timeline article,
+.statusHero span {
+  overflow-wrap: anywhere;
+}
+.heading button,
+.summary button,
+.side button,
+.detail button,
+.evidenceDialog button {
+  min-height: 44px;
+}
+.skillCard:focus-visible,
+.summary button:focus-visible,
+.side button:focus-visible {
+  outline: 3px solid #20c8ff;
+  outline-offset: 3px;
+}
+.filters input,
+.filters select,
+.policyFields input,
+.policyFields select,
+.policyFields textarea,
+.evidenceFields input,
+.evidenceFields select,
+.evidenceFields textarea {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+}
+.check input {
+  min-height: initial;
+  width: 1.25rem;
+  flex: 0 0 1.25rem;
+}

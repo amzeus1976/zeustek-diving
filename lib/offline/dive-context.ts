@@ -61,6 +61,8 @@ export type DiveSkillEvidenceInput = Omit<SkillEvidenceRecord, 'entityId' | 'use
 export const skillRecordKey = (skill: CanonicalSkillRecord) => skill.skillKey || skill.key || skill.entityId;
 export const skillRecordName = (skill: CanonicalSkillRecord) => skill.name || skill.title || 'Unnamed skill';
 export const skillRecordGroup = (skill: CanonicalSkillRecord) => skill.group?.trim() || 'Uncategorised';
+export const canonicalSkillGroups = (skills: readonly CanonicalSkillRecord[]) =>
+  [...new Set(skills.map(skillRecordGroup))].sort((a, b) => a.localeCompare(b, 'en-GB'));
 export const skillRecordLabel = (skill: CanonicalSkillRecord) => `${skillRecordGroup(skill)} — ${skillRecordName(skill)}`;
 export const normaliseCanonicalSkillName = (value: string) => value.normalize('NFKC').trim().replace(/\s+/g, ' ');
 const skillNameIdentity = (value: string) => normaliseCanonicalSkillName(value).toLocaleLowerCase('en-GB');
@@ -298,6 +300,10 @@ export async function createDiveDraftFromPlan(planId: string): Promise<Partial<D
     timeIn: start?.includes('T') ? start.slice(11, 16) : '',
     notes: [plan.notes, `Created from dive plan: ${plan.name}`].filter(Boolean).join('\n\n'),
     source: 'manual', gas: 'Air',
+    ...('equipmentIds' in plan && Array.isArray(plan.equipmentIds) ? { equipmentIds: [...plan.equipmentIds] as string[] } : {}),
+    ...('equipmentSetIds' in plan && Array.isArray(plan.equipmentSetIds) ? { equipmentSetIds: [...plan.equipmentSetIds] as string[] } : {}),
+    ...('equipmentSetId' in plan && typeof plan.equipmentSetId === 'string' ? { equipmentSetId: plan.equipmentSetId } : {}),
+    ...('equipmentSetApplications' in plan && Array.isArray(plan.equipmentSetApplications) ? { equipmentSetApplications: structuredClone(plan.equipmentSetApplications) as NonNullable<DiveRecord['equipmentSetApplications']> } : {}),
   };
 }
 

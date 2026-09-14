@@ -145,6 +145,7 @@ export interface DiveRecord {
   gas: string; notes: string; source: 'manual' | 'oceanic-plus' | 'padi' | 'image-import';
 
   equipmentIds?: string[]; equipmentSetId?: string; equipmentSetIds?: string[]; hireGear?: boolean;
+  equipmentSetApplications?: import('./loadouts-gas').LoadoutApplication[];
 
   createdAt: string; modifiedAt: string;
 
