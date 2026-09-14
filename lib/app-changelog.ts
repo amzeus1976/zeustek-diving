@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.24',
+    date: '2026-09-15',
+    title: 'Professional Development — phone-safe pathways',
+    changes: [
+      'Restored the preserved Professional Development workspace alongside the verified Equipment servicing and history corrections.',
+      'Pathway and requirement-snapshot selectors stay inside their phone/PWA containers, including the pathway editor, without dropping or shortening saved labels.',
+      'Professional pathways and repeatable experience link canonical Dives, Skills, People, Sites and private files; readiness remains advisory and Unknown is not inferred.',
+      'Captured standards versions remain immutable; later evaluations create new links without rewriting historical evidence or original Dive records.',
+      'Retained generic local-first events, sync, backups and completed T03–T07 functionality without a database migration or duplicate store.',
+    ],
+  },
+  {
     version: '1.0.23',
     date: '2026-09-14',
     title: 'Equipment — servicing and owner history',
