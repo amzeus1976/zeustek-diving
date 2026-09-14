@@ -10,7 +10,7 @@ async function key(passphrase: string, salt: Uint8Array, usage: KeyUsage[]) {
   return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:salt.slice().buffer,iterations:250000},material,{name:'AES-GCM',length:256},false,usage);
 }
 export async function checkDiveCloud() {
-  const entries = await Promise.all(['dive','equipment','equipment-event','cylinder-fill','gas-analysis','site','trip','dive-trip','certification','currency-policy','reference-requirement-set'].map(async kind => {
+  const entries = await Promise.all(['dive','equipment','equipment-event','cylinder-fill','gas-analysis','site','trip','dive-trip','certification','currency-policy','reference-requirement-set','professional-pathway','professional-evidence'].map(async kind => {
     const response = await fetch(`/api/dive-data?kind=${kind}`, {cache:'no-store'});
     if (!response.ok) throw new Error('Cloud account unavailable');
     const result = await response.json() as {items?:unknown[]}; return [kind,result.items?.length ?? 0] as const;

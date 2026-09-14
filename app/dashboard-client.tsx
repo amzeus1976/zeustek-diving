@@ -89,6 +89,7 @@ import { TripsExpeditions } from '@/components/trips-expeditions';
 import { LoadoutsGas } from '@/components/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
+import { ProfessionalDevelopment } from '@/components/professional-development';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
 import {
@@ -241,6 +242,7 @@ const navigation = [
   ['Training', ShieldCheck],
   ['Skills & Currency', ShieldCheck],
   ['Technical Diving', Gauge],
+  ['Professional Development', GraduationCap],
   ['Course Map', GraduationCap],
   ['Dive News', Newspaper],
   ['Dive Media', BookMarked],
@@ -558,6 +560,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Training' && <TrainingV2 go={go} />}{' '}
           {active === 'Skills & Currency' && <SkillsCurrency go={go} />}{' '}
           {active === 'Technical Diving' && <TechnicalWorkspace go={go} />}{' '}
+          {active === 'Professional Development' && <ProfessionalDevelopment go={go} />}{' '}
           {active === 'Course Map' && <CourseMapPage go={go} />}{' '}
           {active === 'Dive News' && <DiveNewsV2 />}{' '}
           {active === 'Dive Media' && <DiveMediaLibrary />}{' '}

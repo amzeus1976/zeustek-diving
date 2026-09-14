@@ -1,4 +1,4 @@
-export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-event','equipment-set','cylinder-fill','gas-analysis','site','site-overhead-profile','trip','dive-trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','skill','skill_evidence','currency-policy','reference-requirement-set','conservation_activity','conservation-programme'] as const;
+export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-event','equipment-set','cylinder-fill','gas-analysis','site','site-overhead-profile','trip','dive-trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','skill','skill_evidence','currency-policy','reference-requirement-set','professional-pathway','professional-evidence','conservation_activity','conservation-programme'] as const;
 export function normaliseText(value: unknown) { return typeof value === 'string' ? value.normalize('NFKC').trim().toLocaleLowerCase('en-GB').replace(/\s+/g, ' ') : ''; }
 export function canonicalUrl(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) return '';
@@ -15,6 +15,7 @@ export function recordIdentity(kind: string, input: object) {
   if (kind === 'skill') return t('name') || t('title') || t('skillKey');
   if (kind === 'currency-policy') return t('skillKey');
   if (kind === 'reference-requirement-set') return t('agency') && t('pathwayKey') && t('versionLabel') ? `${t('agency')}|${t('pathwayKey')}|${t('versionLabel')}` : '';
+  if (kind === 'professional-pathway') return t('agency') && t('pathwayKey') ? `${t('agency')}|${t('pathwayKey')}` : '';
   if (kind === 'dive') return t('date') && t('timeIn') && t('site') ? `${t('date')}|${t('timeIn')}|${t('site')}|${record.maxDepthM}` : '';
   if (kind === 'equipment') return t('serialNumber') ? `${t('manufacturer')}|${t('serialNumber')}` : '';
   if (kind === 'person') return t('email') || (t('agency') && t('membershipNumber') ? `${t('agency')}|${t('membershipNumber')}` : '');
