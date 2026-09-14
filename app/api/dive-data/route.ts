@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     return Response.json({ error: 'Unsupported record type' }, { status: 400 });
   await ensureSchema();
   await registerHouseholdUser(env, user);
-  const sharedGear = kind === 'equipment' || kind === 'equipment-set';
+  const sharedGear = kind === 'equipment' || kind === 'equipment-set' || kind === 'equipment-event';
   const collaborativeAlbums = kind === 'album' || kind === 'dive-media';
   const householdIds = sharedGear ? await householdUserIds(env, user) : collaborativeAlbums ? await householdAreaUserIds(env,user,'albums') : [user.userId];
   const placeholders = householdIds.map(() => '?').join(',');
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Record is too large' }, { status: 413 });
   await ensureSchema();
   await registerHouseholdUser(env, user);
-  const sharedGear = kind === 'equipment' || kind === 'equipment-set';
+  const sharedGear = kind === 'equipment' || kind === 'equipment-set' || kind === 'equipment-event';
   const collaborativeAlbums = kind === 'album' || kind === 'dive-media';
   const existing = await env.DB.prepare(
     sharedGear || collaborativeAlbums ? 'SELECT id,user_id AS ownerUserId,created_at AS createdAt,updated_at AS updatedAt,deleted_at AS deletedAt,kind,data_json AS dataJson FROM dive_records WHERE id=?' : 'SELECT id,user_id AS ownerUserId,created_at AS createdAt,updated_at AS updatedAt,deleted_at AS deletedAt,kind,data_json AS dataJson FROM dive_records WHERE id=? AND user_id=?',
@@ -117,6 +117,17 @@ export async function POST(request: Request) {
   if (existing && collaborativeAlbums && !(await householdAreaAccess(env,user,existing.ownerUserId,'albums',true))) return Response.json({error:'Shared album access denied'},{status:403});
   const ownerUserId = existing?.ownerUserId ?? user.userId;
   if(existing && existing.kind!==kind)return Response.json({error:'Record type cannot be changed.'},{status:400});
+  if (kind === 'equipment-event' && body.data) {
+    const eventData = body.data as Record<string, unknown>;
+    if (typeof eventData.equipmentId !== 'string' || !eventData.equipmentId)
+      return Response.json({error:'Equipment event requires its canonical Equipment reference.'},{status:400});
+    if (existing && JSON.parse(existing.dataJson).equipmentId !== eventData.equipmentId)
+      return Response.json({error:'Equipment event association cannot be changed.'},{status:400});
+    const parent = await env.DB.prepare("SELECT user_id AS ownerUserId FROM dive_records WHERE id=? AND kind='equipment' AND deleted_at IS NULL")
+      .bind(eventData.equipmentId).first<{ownerUserId:string}>();
+    if (!parent || !(await householdCanEditGear(env,user,parent.ownerUserId)))
+      return Response.json({error:'Shared equipment access required for this history.'},{status:403});
+  }
   now=Math.max(now,(existing?.updatedAt??0)+1);
   if (!existing && body.data) {
     const identity = recordIdentity(kind, body.data as Record<string, unknown>);
@@ -172,7 +183,7 @@ export async function DELETE(request: Request) {
   await ensureSchema();
   await registerHouseholdUser(env,user);
   const record = await env.DB.prepare('SELECT user_id AS ownerUserId,kind FROM dive_records WHERE id=?').bind(id).first<{ownerUserId:string;kind:string}>();
-  const sharedGear = record?.kind === 'equipment' || record?.kind === 'equipment-set';
+  const sharedGear = record?.kind === 'equipment' || record?.kind === 'equipment-set' || record?.kind === 'equipment-event';
   const collaborativeAlbums = record?.kind === 'album' || record?.kind === 'dive-media';
   if (!record || (record.ownerUserId !== user.userId && !(sharedGear && await householdCanEditGear(env,user,record.ownerUserId)) && !(collaborativeAlbums && await householdAreaAccess(env,user,record.ownerUserId,'albums',true)))) return Response.json({deleted:false},{status:404});
   const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?').bind(Date.now(),Date.now(),id).run();

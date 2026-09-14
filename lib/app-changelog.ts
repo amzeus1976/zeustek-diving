@@ -1,6 +1,28 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.23',
+    date: '2026-09-14',
+    title: 'Equipment — servicing and owner history',
+    changes: [
+      'Overview servicing includes only service-required, non-retired Equipment with a recorded or computable service due date, ordered by servicing urgency.',
+      'Equipment editing groups identity, servicing, status and notes, with attached keyboard- and touch-friendly checkbox labels.',
+      'Equipment history retains dated issues, faults, damage, inspections, maintenance, services, repairs and notes; Monitoring and resolution update the same canonical event.',
+      'Only an explicit Service action updates the scheduled-service baseline, including existing time- and Dive-use intervals; the history retains an applied-baseline marker.',
+      'History uses existing local-first event/outbox saves, generic sync, backups and shared-gear permissions without replacing Equipment IDs, loadouts or historical Dive usage.',
+      'Professional Development remains the preserved, blocked 1.0.22 work; this corrective release extends the verified 1.0.21 production source only.',
+    ],
+  },
+  {
+    version: '1.0.22',
+    date: '2026-09-14',
+    title: 'Professional Development — rolled-back candidate',
+    changes: [
+      'Production phone smoke found a pathway-selector overflow; this candidate was restored to the preceding verified app1.0.21/Sites88 release.',
+      'Professional Development implementation and test evidence remain preserved on their original source branch; no recovery is included in the Equipment corrective pass.',
+    ],
+  },
+  {
     version: '1.0.21',
     date: '2026-09-14',
     title: 'Trips — compact sections & selected files',

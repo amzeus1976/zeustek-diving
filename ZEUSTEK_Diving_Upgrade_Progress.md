@@ -1,5 +1,51 @@
 # ZeusTek Diving Upgrade Progress
 
+## Equipment owner snags v1.0 — RELEASED / READY_FOR_OWNER_ACCEPTANCE
+
+SNAG-EQUIP-001, SNAG-EQUIP-002 and SNAG-EQUIP-003 implemented and production-smoked. Owner acceptance PENDING; these snags are not self-accepted. Actual usage NOT_EXPOSED. No Astra, roadmap work or blocked T08 recovery.
+
+Live app1.0.23 / Sites90; canonical project appgprj_6a91926878b48191a80d70f1681ef135. Published source487ab0bfd36dd04323ad96b7ac674a59f842a04d; saved version appgprj_6a91926878b48191a80d70f1681ef135~appgver_c323cf4d7adc8191a6b55c832e9f29b5; deployment appgdep_6aa874f286888191b17686ee44eb2144 SUCCEEDED2026-09-14T22:28:19.488741+00:00/env3. Production origin unchanged: https://zeustek-dashboard.amzeus.chatgpt.site/ and same-origin /?source=pwa. Saved archive sha256:81a9918bb92f53654ccfc8fb5eea3f9031dda5a905523f55a635334faf83f154,183 files/21053440 bytes; local gzip sha256:c23e285937d5d722dae1a5e739b5fbc3253c48668dec82676a03406c01d29dd9.
+
+Retained known-good rollback app1.0.21/Sites88 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_b55f093aaab881919f69a5e731fff72e, healthy deployment appgdep_6aa86d96ec6081918f2ee780cff8b6a7. No candidate smoke failure or rollback was required for this Equipment release.
+
+Source isolation: bounded equipment-owner-snags-20260914 branch extends verified Sites88 production-aligned2a0ad96aa02ef254895fcf3f41e815695c0c9e5a. Original blocked T08 e4ca3e531acf6d353853a880ea6d89d1c92b88dd remains intact on zeustek-t03-v17. Its ancestry is retained with an ours merge (no source reset/force push); T08 product code is not republished, recovered or newly edited. Draft GitHub PR8 head3e6f6d486a1ee45a5c749b95f302ffeef758c68f was reviewed as a candidate, not merged. Its guarded apply stopped before product changes at a CRLF anchor; manual additive integration preserved T03–T07. GitHub T08 Gate2 remains NOT_RUN; no new GitHub sync claimed in this corrective pass.
+
+Local gate PASS: focused6 files/36 tests, full50 files/255 tests, typecheck, production build/PWA70 precache. Final version/changelog/cache verification2 files/4 PASS and rebuilt app1.0.23 artifact PASS. New focused domain/component/test lint PASS; inherited shared dashboard/route lint debt and non-failing alias/deprecation/chunk warnings retained without unrelated refactoring. The first full-gate output was unavailable after context rollover; one observed rerun produced the recorded255/typecheck/build evidence, not a guessed result. Official packaging succeeded through Git Bash with /c paths; no WSL installation, new package manager or product source workaround.
+
+Production smoke PASS: fresh PWA version1.0.23; Overview servicing excludes unconfigured/non-service inventory, displays Back up G260 due03/09/2028 then synthetic configured item due14/09/2028 in date order; Equipment original16 plus one synthetic fixture. Four editor groups, independent checkbox states, attached 44px labels, visible keyboard focus and retained servicing intervals; desktop1280/tablet768/phone390 fit without horizontal scrolling. Synthetic Item8760091b-c8c8-49b5-88f7-5984110aa692 only; no owner Equipment/service baseline edited. Same Issuee000003f-3e66-469b-93a7-2de7f37f5bb0 persisted Open→Monitoring→Resolved14/09/2026 with software-only notes. Service OFF leaves purchase baseline/2026-01-01 due unchanged; explicit Service ON records provider/GBP12.50/applied marker and next2028-09-14, preserves10-use interval. Latest5→full6, Note filter1, Resolved filter1/same ID, fresh production page reopen retains all6 and baseline. Phone full history/filter controls stay inside390px; actual Open menu→visible Equipment/Trips navigation works. Original PWA tab had a separate426px viewport; responsive checks used existing QA tab with actual390/768/1280 DOM measurements.
+
+Compatibility smoke PASS: all3 existing Equipment sets/loadouts and4 referenced regulator/wing slots remain available; all8 canonical Plans and66 Logged Dive targets selectable, unsaved test target change discarded through existing confirmation with no application write. Existing Sites1345, SS Thistlegorm original facts/media2/dated observation1 retained; profile-first Escape leaves Site open, restores Edit wreck profile focus, second Escape closes parent normally. Actual Logbook66 cards retained, Trips route works. Initial hydration/closed-menu and unsaved-draft confirmation were treated as normal browser state, not application defects. Temporary viewport reset.
+
+Additive runtime kind equipment-event uses generic canonical saveRecord/saveLocalRecord→mutateEntity→event/outbox→/api/dive-data sync and existing backup. Shared-gear owner/edit scope plus canonical Equipment-parent validation; no D1 migration, direct event/outbox UI writes, copied historical references, second inventory or persistence backend.
+
+Remaining acceptance: owner reviews the three snags and synthetic software-only item/history; Gemma signs in to verify shared history reading/creation/status changes on permitted shared gear. No authenticated partner session was available; tests cover canonical permission integration/sync, not an impersonated partner browser check. Offline pending/flush/backup retention are automated canonical-path tests; no unavailable browser network-switch claim. Synthetic production fixture and6 events retained for review, not silently deleted. Next action: OWNER_BUDGET_CHECK_REQUIRED; no further feature/roadmap task starts.
+
+Desktop sync: actual repository and resolved OneDrive Desktop tracker write completed. Release report: docs/equipment-owner-snags-release.md.
+
+## T08 BLOCKED_DEPLOYMENT — responsive smoke failure / immediate rollback 2026-09-14
+
+T08 failed candidate app1.0.22/Sites89, source025647e2b22a16ba7c227beec4856ef5d0e8532f; saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_fc2b73b1462c819182a2c54ae8ab1fcf; deployment appgdep_6aa86cc26efc8191b0fc5dc3411258e2 succeeded2026-09-14T21:53:42.515572+00:00/env3. Full263/typecheck/build and focused25 passed; metadata4/final build passed. These gates do not override a real responsive production failure.
+
+Exact failing step: change affected Professional evidence detail/workspace to phone390x844, then measure visible layout. DOM viewport390, documentElement.scrollWidth546, underlying Pathway SELECT right545.4470062255859 / width532.4503173828125. Option text: T08 SYNTHETIC ACCEPTANCE ONLY · T08 SYNTHETIC WORKSPACE ONLY. Other right-overflowing visible elements absent from the filtered DOM report. Candidate's .pathwayBar label bounds/wrapping do not constrain the native select's intrinsic option width. Expected all supported pathway names fit the phone width without horizontal scrolling. Actual valid long pathway name exceeds viewport. Screenshot captured in the task. This is a reproducible T08 responsive defect, not a stale shell, closed menu, authentication or weakened selector issue.
+
+Immediately restored known-good app1.0.21/Sites88 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_b55f093aaab881919f69a5e731fff72e. Rollback deployment appgdep_6aa86d96ec6081918f2ee780cff8b6a7 SUCCEEDED2026-09-14T21:57:10.657892+00:00/env3. Fresh PWA UI v1.0.21 verified; all66 Logbook buttons retained; actual phone Open menu→Close menu/visible Trips→Trips & expeditions/Red Sea 2027 health PASS. Temporary viewport reset. All T08 source/synthetic evidence preserved. No production original deleted and no new Dive created. Verified before failure: v22/deep PWA entry, create/save synthetic pathway with existing mentor, canonical66 Dive projection, immutable syntheticv1, existing Dive candidate→lightweight stable-ID link, typed workshop with existing certification/two Skill Evidence/Site/Person IDs survives reopening, independent PDF/photo upload started. Remaining acceptance NOT passed: final attachment reopening, v2 production history, tablet, all unrelated candidate route checks. Local v1/v2/offline/backup passed as documented.
+
+GitHub Gate1 remains PASS, main24a6122cf3b84f4de424cf03806fc1a60ab3988c; Gate2 NOT_RUN because T08 was not production-verified. No failed T08 source pushed to GitHub. T09 forbidden. Actual usage NOT_EXPOSED; no Astra or speculative repair. STOP after verified rollback health. Exact next owner-authorised recovery: constrain only .pathwayBar select to its container with min-width:0/max-width:100%/width:100% (and preserve parent shrink/wrap), targeted long-name phone/tablet test, then required candidate gate/new semantic release, canonical publish/smoke and GitHub Gate2. Do not implement this repair during the mandated failure stop.
+
+## T08 publish gate — app1.0.22 / Sites89 candidate 2026-09-14
+
+Focused3 files/25 PASS; full51 files/263 PASS; typecheck PASS; build PASS/PWA70. Metadata-only2 files/4 PASS and final rebuilt artefact PASS. Canonical published source025647e2b22a16ba7c227beec4856ef5d0e8532f; saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_fc2b73b1462c819182a2c54ae8ab1fcf / Sites89; deployment appgdep_6aa86cc26efc8191b0fc5dc3411258e2 publishing/env3. Archive sha256:143d039108ffc69d46375e1b75a55b26c8c71d85bdb675b9c8576ca198cb5f34,183 files/21135360 bytes. Same project/origin/audience. Production smoke NOT yet passed; prior healthy Sites88 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_b55f093aaab881919f69a5e731fff72e is immediate rollback. T08 IN_PROGRESS; T09 untouched. GitHub current main24a6122cf3b84f4de424cf03806fc1a60ab3988c reconfirmed; Gate2 awaits verified production. Actual usage NOT_EXPOSED. No Astra.
+
+## T08 IN_PROGRESS — post-GitHub Gate1 checkpoint 2026-09-14
+
+T07 COMPLETE/GitHub Gate1 PASS. Current source app1.0.21/Sites88, published25f23c1b413bb34f2f7cac207f04a603c6f5a925; current local2a0ad96aa02ef254895fcf3f41e815695c0c9e5a plus Gate1 evidence-only edits. T08 Professional Development planning70 relative only; Actual usage NOT_EXPOSED. Current healthy rollback: Sites88 saved appgprj_6a91926878b48191a80d70f1681ef135~appgver_b55f093aaab881919f69a5e731fff72e / deployment appgdep_6aa86748e17081919c04ab3a56b01466. Preserve T03–T07 and all66 logs; T09 forbidden. Read only T08 specification/precode/direct dependencies. Next: additive candidate integration, focused persistence/readiness/UI checks, one full gate, canonical publish/smoke, GitHub Gate2. No Astra.
+
+## GitHub Gate1 PASS — verified T07 production source 2026-09-14
+
+Established PR workflow completed: https://github.com/amzeus1976/zeustek-diving/pull/7 merged. GitHub main HEAD24a6122cf3b84f4de424cf03806fc1a60ab3988c verified by native fetch_commit; release commit07ac8f864bef1835567783d1f58df94f24f84a42. All34 changed GitHub blob SHAs and full tree59e9124a6e1245b170f67bc98517ab6173ce3538 match local evidence commit2a0ad96aa02ef254895fcf3f41e815695c0c9e5a. Published product source25f23c1b413bb34f2f7cac207f04a603c6f5a925 is identical except post-smoke progress/release documents. App1.0.21/Sites88 deployment appgdep_6aa86748e17081919c04ab3a56b01466;238 tests/typecheck/build/smoke PASS;66 logs retained. No T08 code, secrets or private binary/test files included.
+
+T07 COMPLETE and Gate1 PASS. Owner explicitly authorises T08 — Professional Development next, planning70 relative only; T09 forbidden. Actual usage NOT_EXPOSED. Next action read ONLY T08 specification/precode/current directly relevant files; implement one task, full gate/publish/smoke/GitHub Gate2 then STOP OWNER_BUDGET_CHECK_REQUIRED.
+
 ## T07 COMPLETE — verified app1.0.21 / Sites88 2026-09-14
 
 T07-A Technical Workspace and T07-B Trip/itinerary attachments, safe links and site-wide additive multi-upload COMPLETE. Owner additions COMPLETE: linked Sites4→40→4, collapsible Trip sections/editor groups, five-line/full note previews, Trip-only removal of old upload banner, explicit photo thumbnail/browsing privacy, and shared caption/category multi-edit plus confirmed independent deletion. No bulk colour adjustment. T08 remains unopened/NOT_STARTED until GitHub Gate1 succeeds; T09 forbidden. Planning65 relative only; Actual usage NOT_EXPOSED.
@@ -129,7 +175,7 @@ T05 IN_PROGRESS, candidate app1.0.17; full38 files/191 tests, typecheck and buil
 | T05 | Reusable Loadouts + Gas/Cylinder Foundation | COMPLETE | 55 | £1.63 | NOT_EXPOSED | NOT_EXPOSED | 1.0.17 / Sites84 | 5176279b4e8bdaaabc34a41cbeee90b43e329aa2 / appgdep_6aa79e3e3634819197db466afdf6951d |
 | T06 | Skills & Currency | COMPLETE | 60 | £1.77 | NOT_EXPOSED | NOT_EXPOSED | 1.0.19 / Sites86 | 204 tests/typecheck/build/smoke PASS; Sites84 rollback |
 | T07 | Technical Diving Workspace | NOT_STARTED | 65 | £1.92 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
-| T08 | Professional Development / PADI Pro | NOT_STARTED | 70 | £2.07 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
+| T08 | Professional Development / PADI Pro | BLOCKED_DEPLOYMENT | 70 | £2.07 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED | Sites89 mobile Pathway select overflow; immediate Sites88 rollback. GitHub Gate2 NOT_RUN. |
 | T09 | Experience & Analytics | NOT_STARTED | 75 | £2.22 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T10 | Dive Planning Centre | NOT_STARTED | 85 | £2.51 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T11 | Question Bank Review, Diagnostics & AI Study Workflow | NOT_STARTED | 95 | £2.81 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
@@ -280,13 +326,13 @@ Local canonical Site/profile save and deep-link reopen PASS; original Site histo
 | T07 | Tec-plan progressive disclosure integration | NOT_STARTED | 10 | NOT_EXPOSED |  |
 | T07 | Gas/deco evidence boundaries + responsive | NOT_STARTED | 6 | NOT_EXPOSED |  |
 | T07 | Tests/regression/publish | NOT_STARTED | 10 | NOT_EXPOSED |  |
-| T08 | Locate Training/Development/evidence sources | NOT_STARTED | 4 | NOT_EXPOSED |  |
-| T08 | Pathway/evidence/reference schema/migration | NOT_STARTED | 12 | NOT_EXPOSED |  |
-| T08 | Professional readiness workspace UI | NOT_STARTED | 16 | NOT_EXPOSED |  |
-| T08 | Requirement/evidence matrix + drill-down | NOT_STARTED | 13 | NOT_EXPOSED |  |
-| T08 | Existing Dive/Skill/Person/Site evidence links | NOT_STARTED | 9 | NOT_EXPOSED |  |
-| T08 | Versioned standards + responsive/offline | NOT_STARTED | 6 | NOT_EXPOSED |  |
-| T08 | Tests/regression/publish | NOT_STARTED | 10 | NOT_EXPOSED |  |
+| T08 | Locate Training/Development/evidence sources | COMPLETE | 4 | NOT_EXPOSED | Exact candidate/shared sources reused. |
+| T08 | Pathway/evidence/reference schema/migration | COMPLETE | 12 | NOT_EXPOSED | Generic kinds; no migration; immutable shared snapshots. |
+| T08 | Professional readiness workspace UI | COMPLETE | 16 | NOT_EXPOSED | Typed evidence, expandable history, advisory summary. |
+| T08 | Requirement/evidence matrix + drill-down | COMPLETE | 13 | NOT_EXPOSED | Unknown/manual retained; stable-ID candidates and append-only evaluation links. |
+| T08 | Existing Dive/Skill/Person/Site evidence links | COMPLETE | 9 | NOT_EXPOSED | Canonical references/offline tests; no copied entities. |
+| T08 | Versioned standards + responsive/offline | BLOCKED_DEPLOYMENT | 6 | NOT_EXPOSED | Offline/backup/version history PASS; production phone select overflow, tablet pending. |
+| T08 | Tests/regression/publish | BLOCKED_DEPLOYMENT | 10 | NOT_EXPOSED | Focused25/full263/typecheck/build PASS; Sites89 smoke failed, Sites88 restore requested; Gate2 NOT_RUN. |
 | T09 | Locate canonical Dive/Site/Equipment evidence sources | NOT_STARTED | 4 | NOT_EXPOSED |  |
 | T09 | Define metric denominators/unknown/provenance rules | NOT_STARTED | 12 | NOT_EXPOSED |  |
 | T09 | Derived projection/query implementation | NOT_STARTED | 15 | NOT_EXPOSED |  |
