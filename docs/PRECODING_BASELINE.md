@@ -4,6 +4,8 @@ Start each candidate from the current GitHub main commit and record that SHA. Th
 
 ## Verified source and release
 
+- GitHub healthy-baseline sync: PR9 merged, main72d4b71f96bfd2a53aed9899f11f27a32c1f1c12; exact snapshot tree f465db9359077a750484e1fbd0aaeb50a74030b6 verified. Older candidate PR5/PR8 closed as superseded, not blindly merged. Owner subsequently authorised the preserved T08 narrow repair; this baseline is the preceding healthy release, not that candidate.
+
 - Repository: amzeus1976/zeustek-diving.
 - Published application source: 487ab0bfd36dd04323ad96b7ac674a59f842a04d.
 - Source with production acceptance documentation: 8b643250a2e0baab800f5af7076a3eb3fcd40e41.

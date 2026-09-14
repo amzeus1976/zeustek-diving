@@ -1,5 +1,13 @@
 # ZeusTek Diving Upgrade Progress
 
+## GitHub healthy-baseline sync COMPLETE — 2026-09-15
+
+Verified PR9 merged: https://github.com/amzeus1976/zeustek-diving/pull/9. GitHub main72d4b71f96bfd2a53aed9899f11f27a32c1f1c12; snapshot commit d6ec988692f48b43f45ccd8852e2054646756719. Read-only fetch verified main and tree f465db9359077a750484e1fbd0aaeb50a74030b6 exactly match the locally reviewed snapshot. All19 changed blobs verified by Git SHA; product source is identical to published487ab0bfd36dd04323ad96b7ac674a59f842a04d. App1.0.23/Sites90/deployment appgdep_6aa874f286888191b17686ee44eb2144 remains live; full255/typecheck/build/production smoke and66 Logbook entries are the existing verified release evidence, not newly rerun checks. README and docs/PRECODING_BASELINE.md establish the current pre-coding baseline. No Sites history, T08 candidate, secrets or private attachments imported; no deployment performed.
+
+Older candidate PR5 (Trip owner snags) and PR8 (Equipment owner snags) closed as superseded without merging their old snapshots. Current source already contains their integrated released changes; Equipment owner/Gemma acceptance remains pending. T08 GitHub Gate2 remains NOT_RUN until repaired T08 passes publication/smoke. Owner now explicitly authorises completing the preserved T08 responsive repair; no T09/Astra. Actual usage NOT_EXPOSED. Historical sections below remain unchanged evidence.
+
+
+
 ## Equipment owner snags v1.0 — RELEASED / READY_FOR_OWNER_ACCEPTANCE
 
 SNAG-EQUIP-001, SNAG-EQUIP-002 and SNAG-EQUIP-003 implemented and production-smoked. Owner acceptance PENDING; these snags are not self-accepted. Actual usage NOT_EXPOSED. No Astra, roadmap work or blocked T08 recovery.
