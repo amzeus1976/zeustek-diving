@@ -1,5 +1,15 @@
 # T08 — Professional Development
 
+## T08 COMPLETE — GitHub Gate2 PASS — app1.0.24 / Sites91 — 2026-09-15
+
+All required T08 gates and actual production acceptance PASS. GitHub PR11 merged https://github.com/amzeus1976/zeustek-diving/pull/11; main31559a59a5e2179055b06dfb70dd41147fcd10f1 / snapshot7ba34ed2bfdf83f148835d9e3e9b2c3fd4b87e9c. Read-only fetch verifies this HEAD and tree b04937c77fe6b83239833ee671b56b8a45edfdd5 exactly match reviewed local acceptance snapshot5171c136072414fb79145e8d69be8fe815d1f999. All16 changed blob SHAs individually verified. Product is byte-identical to production-published7c11d76ce7ff32bf8a7c523a6b1193174466a42a; later differences are README/progress/release documents only. Repository protections respected through PR/merge, no force push or separate Sites history import.
+
+Final app1.0.24 / Sites91 / deployment appgdep_6aa87f5d55588191bd830b1eb4df1440 SUCCEEDED, native site latest91/active/public/current canonical URL reconfirmed after sync. Focused27/full282/53 files/typecheck/build/PWA70 PASS; actual phone390/tablet820/desktop1280/full T08 production smoke PASS; all66 Dive logs retained. professional-pathway/professional-evidence/versioned requirements and existing PDF/photo save/reopen/history verified. Original Pathway overflow is repaired in CURRENT release, not inferred from Equipment health. No candidate rollback required; healthy app1.0.23/Sites90 rollback retained.
+
+Changed T08 product files: app/dashboard-client.tsx; app/api/media/route.ts; components/professional-development.tsx and .module.css; lib/offline/professional-development.ts; lib/record-identity.ts; lib/offline/cloud-platform.ts; lib/app-changelog.ts; package.json. Focused tests: professional-development.test.ts, professional-development-shell.test.ts, t08-persistence.test.ts. No Equipment implementation file changed; no database migration/duplicate store. Additive professional-pathway/professional-evidence kinds, common reference-requirement-set retained; immutable canonical references/event/outbox/backup preserved. Historical failed app22/Sites89 record remains below, superseded by this verified completion.
+
+Actual repository/OneDrive Desktop progress copies synchronised and hash-verified. Equipment owner/Gemma acceptance is separately pending, not self-accepted. Actual usage NOT_EXPOSED. No Astra recommended. T09 NOT_STARTED. STOP OWNER_BUDGET_CHECK_REQUIRED.
+
 ## T08 production acceptance PASS — app1.0.24 / Sites91 — 2026-09-15
 
 Current T08 implementation and production acceptance PASS; GitHub Gate2 PENDING, so final COMPLETE awaits exact-source GitHub verification. T09 remains NOT_STARTED. Sites90 did NOT contain T08 or its repair: source487ab0bfd36dd04323ad96b7ac674a59f842a04d had no Professional Development component/domain/kind registrations. Preserved T08 was carried into that newer Equipment baseline additively. The original Sites89 failure was a real native-select intrinsic sizing defect, repaired with scoped select containment and shrinkable editor labels/fieldsets, not a weakened smoke assertion.
