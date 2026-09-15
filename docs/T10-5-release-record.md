@@ -61,6 +61,12 @@
 
 ## GitHub synchronisation
 
-Pending exact verified release source synchronisation.
+PASS through verified release PR17: https://github.com/amzeus1976/zeustek-diving/pull/17
+
+- Release commit: `ca67b2e4aefac83fda7d72ee3af61e24bdfcf544`
+- Merged main commit: `464796086b7a79322204ff65fc1bec5a30a8ad85`
+- Read-only verification: app1.0.27, all six workflow navigation groups, legacy aliases and this T10.5 release evidence are present on main
+- Excluded: secrets, credentials, private attachments, test media and the local untracked deployment archive
 
 T11 is not started.
+
