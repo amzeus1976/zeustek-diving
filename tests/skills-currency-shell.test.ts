@@ -29,9 +29,11 @@ describe('T06 shell integration', () => {
     expect(dashboard).toContain(
       "import { SkillsCurrency } from '@/components/skills-currency'",
     );
-    expect(dashboard).toContain("['Skills & Currency', ShieldCheck]");
+    expect(dashboard).toContain("'Skills & Currency': ListChecks");
+    expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Skills & Currency', label: 'Dive Skills'");
     expect(dashboard).toContain(
-      "active === 'Skills & Currency' && <SkillsCurrency go={go} />",
+      "active === 'Skills & Currency' && <CollapsibleWorkCard",
     );
+    expect(dashboard).toContain('<SkillsCurrency go={go} />');
   });
 });

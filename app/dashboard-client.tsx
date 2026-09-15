@@ -55,6 +55,7 @@ import {
   Waves,
   Wrench,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScreenTiming } from '@/components/screen-timing';
@@ -74,7 +75,6 @@ import { parseMediaRecommendations } from '@/lib/media-import';
 import { configureDiveStore,currentDiveAccount,refreshDiveRecords,hasCloudSnapshot,diveOperation } from '@/lib/offline/dive-store';
 import { zeustekDb } from '@/lib/offline/db';
 import { RecordOperationStatus, useRecordRefresh } from '@/components/record-status';
-import { KnowledgeCentre } from '@/components/knowledge-centre';
 import { CertificationImages, CardImageView } from '@/components/certification-images';
 import { imageSource, storeDiveImage, type CardImage } from '@/lib/offline/dive-images';
 import { InteractiveDiveSiteMap } from '@/components/dive-site-map';
@@ -93,6 +93,11 @@ import { TechnicalWorkspace } from '@/components/technical-workspace';
 import { ProfessionalDevelopment } from '@/components/professional-development';
 import { DivePlanningCentre } from '@/components/dive-planning-centre';
 import { ExperienceAnalytics } from '@/components/experience-analytics';
+import { CollapsibleWorkCard } from '@/components/workflow/collapsible-work-card';
+import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-review';
+import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
+import { WorkflowPlaceholder } from '@/components/workflow/workflow-placeholder';
+import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, resolveWorkflowRoute, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
 import {
@@ -229,30 +234,20 @@ import {
 } from '@/lib/training-course-maps';
 import { MANUAL_SITE_CATALOG, manualSiteRecord } from '@/lib/manual-site-catalog';
 
-const navigation = [
-  ['Overview', House],
-  ['Logbook', BookOpen],
-  ['Equipment', Wrench],
-  ['Loadouts & Gas', Cylinder],
-  ['Gear Wishlist', ShoppingBag],
-  ['Sites', MapPin],
-  ['Dive Site Map', Compass],
-  ['Dive Plans', CalendarDays],
-  ['Insights', BarChart3],
-  ['Trips', ShipWheel],
-  ['People', Users],
-  ['Albums', Images],
-  ['Conservation & AWARE', Leaf],
-  ['Training', ShieldCheck],
-  ['Skills & Currency', ShieldCheck],
-  ['Technical Diving', Gauge],
-  ['Professional Development', GraduationCap],
-  ['Course Map', GraduationCap],
-  ['Dive News', Newspaper],
-  ['Dive Media', BookMarked],
-  ['Data & Backups', Database],
-  ['Settings', Settings2],
-] as const;
+const workflowIcons: Record<string, LucideIcon> = {
+  Overview: House, Insights: BarChart3, Equipment: Wrench, 'Loadouts & Gas': Cylinder,
+  'Gear Wishlist': ShoppingBag, Logbook: BookOpen, 'Dive Computer Imports': Download,
+  Sites: MapPin, 'Dive Site Map': Compass, People: Users, Albums: Images,
+  'Diving Calendar & Bookings': CalendarDays, Trips: ShipWheel, 'Dive Plans': CalendarDays,
+  'Technical Diving': Gauge, 'Gas Planning': Cylinder, 'Dive Bucket List': Star,
+  Training: ShieldCheck, 'Course Map': GraduationCap, 'Skills & Currency': ListChecks,
+  'Conservation & AWARE': Leaf, 'Dive Knowledge': BookOpen, 'Dive Media': BookMarked,
+  'Dive News': Newspaper, 'Professional Development': GraduationCap, Admin: ListChecks,
+  Settings: Settings2, 'Data & Backups': Database, 'Diver Summary Export': Download,
+};
+const quickNavigation = ['Overview', 'Logbook', 'Equipment', 'Dive Site Map', 'Data & Backups']
+  .map((route) => WORKFLOW_ROUTES.find((item) => item.route === route))
+  .filter((item): item is (typeof WORKFLOW_ROUTES)[number] => Boolean(item));
 type AdminLogEntry = { timestamp: string; category: string; status: 'updated' | 'skipped' | 'info'; subject: string; detail: string };
 const ADMIN_LOG_KEY = 'zeustek-admin-diagnostics';
 function appendAdminLogs(entries: AdminLogEntry[]) {
@@ -262,9 +257,29 @@ function appendAdminLogs(entries: AdminLogEntry[]) {
     localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify([...entries, ...current].slice(0, 2000)));
   } catch { /* diagnostics must never interrupt the main operation */ }
 }
-const mobileNavigation = navigation.filter(([label]) =>
-  ['Overview', 'Logbook', 'Equipment', 'Dive Site Map', 'Data & Backups'].includes(label),
-);
+function WorkflowNavigation({ active, go }: { active: string; go: (route: string) => void }) {
+  const [navigationState, setNavigationState] = useState(() => ({
+    active,
+    openSections: new Set(['overview', WORKFLOW_ROUTES.find((route) => route.route === active)?.section].filter((value): value is string => Boolean(value))),
+  }));
+  if (navigationState.active !== active) {
+    const activeSection = WORKFLOW_ROUTES.find((route) => route.route === active)?.section;
+    setNavigationState({
+      active,
+      openSections: activeSection ? new Set([...navigationState.openSections, activeSection]) : navigationState.openSections,
+    });
+  }
+  const openSections = navigationState.openSections;
+  return <nav aria-label="ZeusTek workflow navigation">
+    {WORKFLOW_SECTIONS.map((section) => {
+      const routes = workflowRoutesForSection(section.key);
+      return <details className="workflow-nav-group" key={section.key} open={openSections.has(section.key)} onToggle={(event) => { const isOpen = event.currentTarget.open; setNavigationState((current) => { const next = new Set(current.openSections); if (isOpen) next.add(section.key); else next.delete(section.key); return { ...current, openSections: next }; }); }}>
+        <summary>{section.label}<ChevronDown size={15}/></summary>
+        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><Icon size={18}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
+      </details>;
+    })}
+  </nav>;
+}
 
 function Heading({
   eyebrow,
@@ -461,8 +476,9 @@ export default function DiveApp({ userId }: { userId: string }) {
   const [draftDive, setDraftDive] = useState<(Partial<DiveRecord> & { entityId?: string }) | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const go = (next: string) => {
-    setDestinationTab(next);
-    setActive(({ 'Admin': 'Settings', 'Imports': 'Data & Backups', 'Sync': 'Data & Backups', 'Backups': 'Data & Backups', 'Dive Bucket List': 'Dive Plans' } as Record<string,string>)[next] ?? next);
+    const resolved = resolveWorkflowRoute(next);
+    setDestinationTab(resolved === 'Diver Summary Export' ? 'Diver summary' : next);
+    setActive(resolved === 'Diver Summary Export' ? 'Data & Backups' : resolved);
     setMenuOpen(false);
   };
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[active]);
@@ -500,18 +516,7 @@ export default function DiveApp({ userId }: { userId: string }) {
             <X size={17} />
           </button>
         </div>
-        <nav>
-          {navigation.map(([label, Icon]) => (
-            <button
-              key={label}
-              className={active === label ? 'active' : ''}
-              onClick={() => go(label)}
-            >
-              <Icon size={18} />
-              {label}
-            </button>
-          ))}
-        </nav>
+        <WorkflowNavigation active={active} go={go}/>
         <div className="focus-private">
           <ShieldCheck size={16} />
           <div>
@@ -549,59 +554,87 @@ export default function DiveApp({ userId }: { userId: string }) {
             <Overview openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />
           )}
           {active === 'Changelog' && <AppChangelog />}
-          {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} />}
+          {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />}
           {active === 'Equipment' && <Equipment />}{' '}
           {active === 'Loadouts & Gas' && <LoadoutsGas />}{' '}
           {active === 'Gear Wishlist' && <GearWishlist />}{' '}
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
-          {active === 'Dive Plans' && <DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} />}{' '}
+          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
-          {active === 'Trips' && <TripsExpeditions />}{' '}
+          {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
           {active === 'People' && <People />}{' '}
           {active === 'Albums' && <Albums />}{' '}
           {active === 'Conservation & AWARE' && <ConservationPage go={go} />}{' '}
           {active === 'Training' && <TrainingV2 go={go} />}{' '}
-          {active === 'Skills & Currency' && <SkillsCurrency go={go} />}{' '}
+          {active === 'Skills & Currency' && <CollapsibleWorkCard id="dive-skills-workspace" title="Dive Skills workspace" eyebrow="DIVING CPD" status="Evidence, competence and currency"><SkillsCurrency go={go} /></CollapsibleWorkCard>}{' '}
           {active === 'Technical Diving' && <TechnicalWorkspace go={go} />}{' '}
           {active === 'Professional Development' && <ProfessionalDevelopment go={go} />}{' '}
-          {active === 'Course Map' && <CourseMapPage go={go} />}{' '}
+          {active === 'Course Map' && <CollapsibleWorkCard id="planned-training-workspace" title="Planned Training workspace" eyebrow="DIVING CPD" status="Pathways and course planning"><CourseMapPage go={go} /></CollapsibleWorkCard>}{' '}
           {active === 'Dive News' && <DiveNewsV2 />}{' '}
-          {active === 'Dive Media' && <DiveMediaLibrary />}{' '}
+          {active === 'Dive Media' && <DiveMediaLibrary go={go} />}{' '}
           {active === 'Admin' && <AdminPanel />}{' '}
           {active === 'Data & Backups' && <DataCentre initialTab={destinationTab} />}
           {active === 'Imports' && <Imports />}
           {active === 'Sync' && <SyncCentre />}{' '}
           {active === 'Backups' && <BackupsScreen />}{' '}
-          {active === 'Settings' && (
-            <>
-              <AdminPanel />
-              <HouseholdSettings />
-              <SkillCatalogue />
-              <PlatformSettings />
-              <DashboardAwardsSettings />
-              <NewsSourceSettings />
-              <PriceStoreSettings />
-            </>
-          )}
+          {active === 'Settings' && <SiteConfiguration go={go} />}
+          {['Dive Computer Imports','Diving Calendar & Bookings','Gas Planning','Dive Knowledge'].includes(active) && <WorkflowPlaceholder route={active} go={go}/>}
         </ScreenTiming></div>
       </section>
       <nav className="focus-mobile-nav">
-        {mobileNavigation.map(([label, Icon]) => (
+        {quickNavigation.map((item) => { const Icon = workflowIcons[item.route] ?? ChevronRight; return (
           <button
-            key={label}
-            className={active === label ? 'active' : ''}
-            onClick={() => setActive(label)}
+            key={item.route}
+            className={active === item.route ? 'active' : ''}
+            onClick={() => go(item.route)}
           >
             <Icon size={19} />
-            <span>{label}</span>
+            <span>{item.label}</span>
           </button>
-        ))}
+        );})}
       </nav>
       {showAdd && <DiveModal item={draftDive} close={() => { setShowAdd(false); setDraftDive(null); }} />}
     </main>
   );
+}
+
+const configurationLinks = [
+  ['settings-overview', 'Settings overview'],
+  ['household-setup', 'Household setup and configuration'],
+  ['skill-catalogue', 'Skill Catalogue'],
+  ['equipment-training-lists', 'Equipment & training lists'],
+  ['equipment-category-icons', 'Equipment category icons'],
+  ['training-agency-logos', 'Training agency logos'],
+  ['overview-layout-awards', 'Overview layout / dashboard awards'],
+  ['dive-news-settings', 'Dive News settings'],
+  ['wishlist-price-search', 'Wishlist price search'],
+  ['acceptance-fixture-review', 'Acceptance fixture review'],
+  ['other-site-data-tools', 'Other site data tools'],
+] as const;
+
+function SiteConfiguration({ go }: { go: (next: string) => void }) {
+  useEffect(() => {
+    const target = new URLSearchParams(window.location.search).get('config');
+    if (!target) return;
+    const frame = requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView({ block: 'start' }));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return <>
+    <Heading eyebrow="ADMIN · CONFIGURATION" title="Site Configuration" copy="Manage ZeusTek in compact sections; minimise anything you do not need today." action={<button className="focus-secondary" onClick={() => go('Data & Backups')}><Database size={15}/>Data & Backups</button>}/>
+    <nav className="site-configuration-directory" aria-label="Site Configuration sections">{configurationLinks.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
+    <div className="site-configuration-grid">
+      <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage, controlled lists, equipment icons and agency logos"><PlatformSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="skill-catalogue" defaultMinimized className="site-configuration-card" title="Skill Catalogue" eyebrow="DIVING CPD" status="Canonical groups, CSV and evidence definitions"><SkillCatalogue /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Overview layout / dashboard awards" eyebrow="OVERVIEW" status="Choose the awards shown at a glance"><DashboardAwardsSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><NewsSourceSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="wishlist-price-search" defaultMinimized className="site-configuration-card" title="Wishlist price search" eyebrow="GEAR" status="Stores used by online price checks"><PriceStoreSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Acceptance fixture review" eyebrow="OWNER CONFIRMATION" status="Clearly labelled test records only" alert="No automatic deletion"><SyntheticFixtureReview /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="other-site-data-tools" defaultMinimized className="site-configuration-card" title="Other site data tools" eyebrow="ADMIN" status="Diagnostics and records needing attention"><AdminPanel /></CollapsibleWorkCard>
+    </div>
+  </>;
 }
 
 type HouseholdState = {
@@ -933,6 +966,8 @@ function Overview({
   const nextDaily = nextSite ? forecasts[nextSite.entityId]?.daily : undefined;
   const nextDateIndex = nextTrip?.startDate && nextDaily?.time ? nextDaily.time.indexOf(nextTrip.startDate) : -1;
   const nextWeatherIndex = nextDateIndex != null && nextDateIndex >= 0 ? nextDateIndex : 0;
+  const serviceOverviewItems = overviewServiceItems(equipment, dives, 8);
+  const serviceWarningCount = serviceOverviewItems.filter((item) => equipmentServiceStatus(item, dives).state !== 'current').length;
   async function saveHomeWeatherSelection(nextIds: string[]) {
     if (nextIds.length > 6 || weatherSelectionSaving) return;
     const current = awardSettings;
@@ -977,6 +1012,7 @@ function Overview({
           </button>
         }
       />
+      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Trips & Expeditions',route:'Trips'}]} current="Overview" next={[{label:'Insights',route:'Insights'},{label:'Data & Backups',route:'Data & Backups'}]} go={go}/>
       <div className="dive-hero">
         <div className="depth-ring">
           <img src="/zeustek-rebreather-emblem.png" alt="Cyber diver emblem" />
@@ -1016,15 +1052,8 @@ function Overview({
         </div>
       </div>
       <div className="focus-grid">
-        <Card>
-          <div className="focus-card-head">
-            <div>
-              <span className="focus-eyebrow">KIT STATUS</span>
-              <h3>Equipment</h3>
-            </div>
-            <Wrench />
-          </div>
-          {overviewServiceItems(equipment, dives, 8).map((item) => (
+        <CollapsibleWorkCard id="overview-equipment-status" title="Equipment status" eyebrow="KIT STATUS" status={`${serviceWarningCount} item${serviceWarningCount===1?'':'s'} need attention`} alert={serviceWarningCount?'Service review required':undefined} rowCount={serviceOverviewItems.length} previewLimit={5} onOpenDetail={()=>go('Equipment')}>
+          {({expanded,previewLimit}) => <><div className="focus-card-head"><Wrench /><span className="focus-copy">Service schedule</span></div>{serviceOverviewItems.slice(0,expanded?undefined:previewLimit).map((item) => (
             <StatusRow
               key={item.entityId}
               title={item.name}
@@ -1036,13 +1065,13 @@ function Overview({
               warn={equipmentServiceStatus(item, dives).state !== 'current'}
             />
           ))}
-          {!overviewServiceItems(equipment, dives, 8).length && (
+          {!serviceOverviewItems.length && (
             <p className="focus-copy">No scheduled-service items with a due date.</p>
           )}
           <button className="focus-link" onClick={() => go('Equipment')}>
             View equipment
-          </button>
-        </Card>
+          </button></>}
+        </CollapsibleWorkCard>
       </div>
       <section className="home-weather-section">
         <div className="focus-card-head"><div><span className="focus-eyebrow">HOME DIVE FORECASTS</span><h2>Seven-day conditions</h2><p className="focus-copy">Choose up to six saved sites, or show no forecast cards.</p></div><button className="focus-secondary" aria-expanded={weatherPickerOpen} onClick={() => setWeatherPickerOpen((current) => !current)}>{weatherPickerOpen ? 'Close selector' : 'Choose sites'}</button></div>
@@ -1102,7 +1131,7 @@ function AdminPanel() {
   </>;
 }
 
-function Logbook({ openLog }: { openLog: () => void }) {
+function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => void }) {
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>(
     [],
   );
@@ -1237,6 +1266,7 @@ function Logbook({ openLog }: { openLog: () => void }) {
         copy="Every dive saves to your private account with its source preserved."
         action={<div className="record-actions logbook-actions"><button className="focus-secondary" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(!toolsOpen)}><Settings2 size={16}/>Tools</button><button className="focus-primary" onClick={openLog}><Plus size={16}/>Log dive</button></div>}
       />
+      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Dive Computer Imports',route:'Dive Computer Imports'}]} current="Logbook" next={[{label:'Dive Skills',route:'Skills & Currency'},{label:'Albums',route:'Albums'},{label:'Insights',route:'Insights'}]} go={go}/>
       <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Calculate missing SAC / RMV'}</button>
           <button className="focus-secondary" onClick={() => void fillMissingTemperatures()}>
             <CloudRain size={16} /> Fill missing temperatures
@@ -3833,7 +3863,7 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
     <>
       <Heading
         eyebrow="ANY AGENCY · CERTIFICATES · EXPIRY"
-        title="Training & certifications"
+        title="Certifications"
         copy="Record qualifications from any training agency, including numbers, dates, instructors and certificate images."
         action={
           <button
@@ -4157,7 +4187,7 @@ function Training() {
     <>
       <Heading
         eyebrow="QUALIFICATIONS & READINESS"
-        title="Training"
+        title="Planned Training"
         copy="Certifications, medical dates and practice goals with private reminders."
       />
       <div className="focus-grid">
@@ -4630,7 +4660,7 @@ function DiveBucketList() {
   const refresh = useCallback(() => { void listBucketList().then(setItems); }, []);
   useRecordRefresh(refresh);
   return <>
-    <Heading eyebrow="DREAM · RESEARCH · PLAN" title="Dive bucket list" copy="Keep future dive locations, liveaboards and dive safaris together until they become real plans." action={<button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add bucket-list dive</button>} />
+    <Heading eyebrow="DREAM · RESEARCH · PLAN" title="Bucket List" copy="Keep future dive locations, liveaboards and dive safaris together until they become real plans." action={<button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add bucket-list dive</button>} />
     {adding && <RevealOnMount><BucketListForm item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}
     <div className="wishlist-grid">{items.sort((a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name)).map((item) => <Card key={item.entityId} className="wish-card"><div className="focus-card-head"><div><span className="focus-eyebrow">{item.kind.replaceAll('-', ' ')} · {item.status}</span><h2>{item.name}</h2></div><div className="record-actions"><button onClick={() => { setEditing(item); setAdding(true); }}><Pencil size={15}/></button><button onClick={() => { if (confirm(`Delete ${item.name}?`)) void deleteBucketList(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><p>{item.country}</p><p className="focus-copy">{item.description || item.why}</p><div className="wish-meta">{item.targetDate && <span>Target {item.targetDate}</span>}{item.approximateCost && <span>{item.approximateCost}</span>}</div>{externalUrl(item.url) && <a className="focus-link" href={externalUrl(item.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open research link</a>}</Card>)}</div>
     {!items.length && !adding && <Card className="focus-empty"><ListChecks size={32}/><h2>Your bucket list is empty</h2><p>Add the wreck, reef, liveaboard or safari you keep thinking about.</p></Card>}
@@ -5037,8 +5067,7 @@ function NewsSourceSettings() {
   return <Card className="news-source-settings"><span className="focus-eyebrow">DIVE NEWS SETTINGS</span><h2>Feeds and newsletters</h2><p className="focus-copy">Disable sources you do not want, restore them later, or add another public HTTPS RSS/Atom feed or newsletter signup page.</p><div className="news-source-list">{items.map((item) => <div key={item.entityId}><span><b>{item.name}</b><small>{item.type} · {item.url}</small></span><button className={item.enabled ? 'focus-secondary' : 'focus-primary'} onClick={() => void saveNewsSource({ entityId: item.entityId, name: item.name, url: item.url, type: item.type, enabled: !item.enabled, description: item.description }).then(refresh)}>{item.enabled ? 'Remove' : 'Restore'}</button>{!DEFAULT_NEWS_SOURCES.some((source) => source.url === item.url) && <button className="focus-icon" onClick={() => void deleteNewsSource(item.entityId).then(refresh)}><Trash2 size={15}/></button>}</div>)}</div><div className="news-source-add"><label>Name<input value={name} onChange={(event) => setName(event.target.value)}/></label><label>Type<select value={type} onChange={(event) => setType(event.target.value as NewsSourceRecord['type'])}><option value="rss">RSS / Atom feed</option><option value="site-review">Dive-site reviews</option><option value="newsletter">Newsletter signup</option></select></label><label className="record-wide">HTTPS URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)} /></label><label className="record-wide">Description<input value={description} onChange={(event) => setDescription(event.target.value)}/></label><button className="focus-primary" disabled={!name.trim() || !externalUrl(url)} onClick={() => void add()}><Plus size={15}/> Add source</button></div></Card>;
 }
 
-function DiveMediaLibrary() {
-  const [testing,setTesting]=useState(false);
+function DiveMediaLibrary({ go }: { go: (next: string) => void }) {
   const [viewing, setViewing] = useState<Stored<DiveMediaRecord> | null>(null);
   const [author, setAuthor] = useState(''); const [topic, setTopic] = useState('');
   const [items, setItems] = useState<Array<Stored<DiveMediaRecord>>>([]); const [editing, setEditing] = useState<Stored<DiveMediaRecord> | null>(null); const [adding, setAdding] = useState(false); const [status, setStatus] = useState('all'); const [message, setMessage] = useState('');
@@ -5082,9 +5111,8 @@ function DiveMediaLibrary() {
       });
     }catch(error){setMessage(error instanceof Error?error.message:'Media import failed.');}
   }
-  if (testing) return <KnowledgeCentre close={() => setTesting(false)} openMedia={item => {setTesting(false);setViewing(item);}} />;
   const visible = items.filter((item) => (status === 'all' || item.status === status) && (!author || item.creator === author) && (!topic || item.topics.includes(topic)));
-  return <><Heading eyebrow="READ · WATCH · LISTEN · LEARN" title="Dive media" copy="Track diving books, videos, podcasts, articles, courses and documentaries you have consumed or want to explore." action={<div className="record-actions"><button className="focus-secondary" onClick={() => setTesting(true)}>Take a test</button><button className="focus-secondary" onClick={() => void diveOperation('export-media','Exporting media context…',exportAiContext)}><Download size={15}/> Export for AI</button><label className="focus-secondary file-action"><Upload size={15}/> Import recommendations<input type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importRecommendations(file); event.target.value = ''; }}/></label><button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add media</button></div>}/>{message && <div className="focus-notice"><BookMarked size={15}/>{message}</div>}<Card className="media-status-filter"><button className={status === 'all' ? 'active' : ''} onClick={() => setStatus('all')}>All <b>{items.length}</b></button><button className={status === 'planned' ? 'active' : ''} onClick={() => setStatus('planned')}>Want to consume <b>{items.filter((item) => item.status === 'planned').length}</b></button><button className={status === 'in-progress' ? 'active' : ''} onClick={() => setStatus('in-progress')}>In progress <b>{items.filter((item) => item.status === 'in-progress').length}</b></button><button className={status === 'consumed' ? 'active' : ''} onClick={() => setStatus('consumed')}>Consumed <b>{items.filter((item) => item.status === 'consumed').length}</b></button></Card>{adding && <RevealOnMount><DiveMediaForm item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}{(author || topic) && <div className="focus-notice">{author && `Author: ${author}`} {topic && `Topic: ${topic}`}<button className="focus-secondary" onClick={() => {setAuthor('');setTopic('');}}>Clear filters</button></div>}{viewing && <RecordDetail title={viewing.title} eyebrow={`${viewing.format} · ${viewing.status}`} ownerKind="dive-media" ownerId={viewing.entityId} close={() => setViewing(null)} edit={() => {setEditing(viewing);setViewing(null);setAdding(true);}} rows={[["Author",viewing.creator],["Status",viewing.status],["Priority",viewing.priority ?? 'normal'],["Knowledge growth / 10",viewing.knowledgeGrowth ?? 'Not rated'],["Interest / 10",viewing.interestScore ?? 'Not rated'],["Topics",viewing.topics.join(', ')],["Notes",viewing.notes],["Recommended for",viewing.recommendedFor]]} links={[["Open media",viewing.url],...(viewing.sources ?? []).map(source => [source.source,source.link] as [string,string])]} />}<div className="media-library-grid">{visible.map((item) => <MediaLibraryCard key={item.entityId} item={item} setViewing={setViewing} setEditing={setEditing} setAdding={setAdding} setAuthor={setAuthor} setTopic={setTopic} refresh={refresh}/>)}</div>{!visible.length && <Card className="focus-empty"><BookMarked size={32}/><h2>No media in this list</h2><p>Add something you want to read, watch or listen to—or import AI recommendations.</p></Card>}</>;
+  return <><Heading eyebrow="READ · WATCH · LISTEN · LEARN" title="Dive Bibliography" copy="Track diving books, videos, podcasts, articles, courses and documentaries you have consumed or want to explore." action={<div className="record-actions"><button className="focus-secondary" onClick={() => go('Dive Knowledge')}>Dive Knowledge</button><button className="focus-secondary" onClick={() => void diveOperation('export-media','Exporting media context…',exportAiContext)}><Download size={15}/> Export for AI</button><label className="focus-secondary file-action"><Upload size={15}/> Import recommendations<input type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importRecommendations(file); event.target.value = ''; }}/></label><button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add media</button></div>}/>{message && <div className="focus-notice"><BookMarked size={15}/>{message}</div>}<Card className="media-status-filter"><button className={status === 'all' ? 'active' : ''} onClick={() => setStatus('all')}>All <b>{items.length}</b></button><button className={status === 'planned' ? 'active' : ''} onClick={() => setStatus('planned')}>Want to consume <b>{items.filter((item) => item.status === 'planned').length}</b></button><button className={status === 'in-progress' ? 'active' : ''} onClick={() => setStatus('in-progress')}>In progress <b>{items.filter((item) => item.status === 'in-progress').length}</b></button><button className={status === 'consumed' ? 'active' : ''} onClick={() => setStatus('consumed')}>Consumed <b>{items.filter((item) => item.status === 'consumed').length}</b></button></Card>{adding && <RevealOnMount><DiveMediaForm item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}{(author || topic) && <div className="focus-notice">{author && `Author: ${author}`} {topic && `Topic: ${topic}`}<button className="focus-secondary" onClick={() => {setAuthor('');setTopic('');}}>Clear filters</button></div>}{viewing && <RecordDetail title={viewing.title} eyebrow={`${viewing.format} · ${viewing.status}`} ownerKind="dive-media" ownerId={viewing.entityId} close={() => setViewing(null)} edit={() => {setEditing(viewing);setViewing(null);setAdding(true);}} rows={[["Author",viewing.creator],["Status",viewing.status],["Priority",viewing.priority ?? 'normal'],["Knowledge growth / 10",viewing.knowledgeGrowth ?? 'Not rated'],["Interest / 10",viewing.interestScore ?? 'Not rated'],["Topics",viewing.topics.join(', ')],["Notes",viewing.notes],["Recommended for",viewing.recommendedFor]]} links={[["Open media",viewing.url],...(viewing.sources ?? []).map(source => [source.source,source.link] as [string,string])]} />}<div className="media-library-grid">{visible.map((item) => <MediaLibraryCard key={item.entityId} item={item} setViewing={setViewing} setEditing={setEditing} setAdding={setAdding} setAuthor={setAuthor} setTopic={setTopic} refresh={refresh}/>)}</div>{!visible.length && <Card className="focus-empty"><BookMarked size={32}/><h2>No media in this list</h2><p>Add something you want to read, watch or listen to—or import AI recommendations.</p></Card>}</>;
 }
 
 function MediaLibraryCard({item,setViewing,setEditing,setAdding,setAuthor,setTopic,refresh}:{item:Stored<DiveMediaRecord>;setViewing:(item:Stored<DiveMediaRecord>)=>void;setEditing:(item:Stored<DiveMediaRecord>)=>void;setAdding:(value:boolean)=>void;setAuthor:(value:string)=>void;setTopic:(value:string)=>void;refresh:()=>void}) {
@@ -5141,7 +5169,7 @@ function DataCentre({initialTab}:{initialTab:string}) {
   const tabs=['Imports','Sync','Backups','Diver summary','Site coordinates'];
   const [tab, setTab] = useState(tabs.includes(initialTab)?initialTab:'Imports');
   useEffect(()=>{if(tabs.includes(initialTab))setTab(initialTab);},[initialTab]);
-  return <><Heading eyebrow="YOUR DATA" title="Data & backups" copy="Import records, check synchronisation and protect your data." /><div className="section-tabs" role="tablist" aria-label="Data tools">{tabs.map(name => <button key={name} role="tab" aria-selected={tab === name} onClick={() => setTab(name)}>{name}</button>)}</div><div role="tabpanel">{tab === 'Imports' ? <Imports /> : tab === 'Sync' ? <SyncCentre /> : tab === 'Diver summary' ? <DiverSummaryExport/> : tab === 'Site coordinates' ? <SiteCoordinateAudit onUpdated={()=>void refreshDiveRecords('site',true)}/> : <BackupsScreen />}</div></>;
+  return <><Heading eyebrow="YOUR DATA" title="Data & backups" copy="Import records, check synchronisation and protect your data." /><div className="section-tabs" role="tablist" aria-label="Data tools">{tabs.map(name => <button key={name} role="tab" aria-selected={tab === name} onClick={() => setTab(name)}>{name}</button>)}</div><CollapsibleWorkCard id={`data-tools-${tab.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`} title={tab} eyebrow="DATA TOOL" status="Local-first data remains available while this card is minimised"><div role="tabpanel">{tab === 'Imports' ? <Imports /> : tab === 'Sync' ? <SyncCentre /> : tab === 'Diver summary' ? <DiverSummaryExport/> : tab === 'Site coordinates' ? <SiteCoordinateAudit onUpdated={()=>void refreshDiveRecords('site',true)}/> : <BackupsScreen />}</div></CollapsibleWorkCard></>;
 }
 
 function Imports() {

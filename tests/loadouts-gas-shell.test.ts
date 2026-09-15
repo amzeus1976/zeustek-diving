@@ -23,7 +23,8 @@ describe('T05 shell and compatibility integration', () => {
   it('mounts Loadouts & Gas as a shared Equipment workspace rather than another inventory', () => {
     const dashboard = read('app/dashboard-client.tsx');
     expect(dashboard).toContain("import { LoadoutsGas } from '@/components/loadouts-gas'");
-    expect(dashboard).toContain("['Loadouts & Gas', Cylinder]");
+    expect(dashboard).toContain("'Loadouts & Gas': Cylinder");
+    expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Loadouts & Gas', label: 'Loadouts & Cylinder Gas'");
     expect(dashboard).toContain("active === 'Loadouts & Gas' && <LoadoutsGas />");
     const domain = read('lib/offline/loadouts-gas.ts');
     expect(domain).toContain("listRecords<ReusableLoadoutRecord>('equipment-set')");

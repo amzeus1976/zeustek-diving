@@ -220,7 +220,7 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
       <header className={styles.heading}>
         <div>
           <span className="focus-eyebrow">DEVELOPMENT CENTRE</span>
-          <h1>Skills &amp; Currency</h1>
+          <h1>Dive Skills</h1>
           <p>
             Track repeatable ability, evidence and recency independently from
             certification cards.
