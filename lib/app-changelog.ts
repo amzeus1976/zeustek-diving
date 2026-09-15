@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.31',
+    date: '2026-09-15',
+    title: 'Dive computer data & profile import',
+    changes: [
+      'Added Dive Computer Imports as a standalone Dive Data workspace with local UDDF staging, explicit match decisions and a review-before-commit workflow.',
+      'Added Oceanic+ UDDF parsing with strict XML safety, source fingerprinting, preserved raw timestamps and auditable timestamp normalisation without treating missing values as zero.',
+      'Added explicit field-level import decisions, conservative duplicate handling, multi-segment linking and revision-aware rebasing that requires changed owner fields to be confirmed again.',
+      'Stored source and profile evidence privately with SHA-256 integrity checks, offline backup/restore coverage and cleanup when an atomic import fails.',
+      'Added accessible imported computer-profile summaries and expandable sample tables while preserving canonical Dive identities and existing manual field provenance.',
+      'Reused the canonical local-first entity/event/outbox and generic sync architecture; no parallel Dive store, dedicated database table or destructive migration was introduced.',
+    ],
+  },
+  {
     version: '1.0.30',
     date: '2026-09-15',
     title: 'Dive Knowledge review & study workflow',

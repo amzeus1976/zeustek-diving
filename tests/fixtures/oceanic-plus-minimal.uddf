@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<uddf version="3.2.1" xmlns="http://www.streit.cc/uddf/3.2/">
+  <generator>
+    <manufacturer><contact><homepage>https://www.oceanicworldwide.com/it/oceanic-plus/</homepage></contact></manufacturer>
+    <version>0.0.1</version>
+    <datetime>2026-09-13T13:41:27.008Z</datetime>
+  </generator>
+  <divesite>
+    <site id="site_test_uk"><name>site_test_uk</name><geography><location>site_test_uk</location><latitude>55.0000</latitude><longitude>-2.0000</longitude><altitude>0</altitude></geography></site>
+    <site id="site_test_eg"><name>site_test_eg</name><geography><location>site_test_eg</location><latitude>27.8000</latitude><longitude>34.2000</longitude><altitude>0</altitude></geography></site>
+  </divesite>
+  <gasdefinitions>
+    <mix id="air"><name>air</name><o2>0.21</o2><n2>0.79</n2></mix>
+    <mix id="nitrox_test"><name>nitrox</name><o2>0.33</o2><n2>0.67</n2></mix>
+  </gasdefinitions>
+  <profiledata>
+    <repetitiongroup id="rg_test_uk">
+      <dive id="dive_test_uk">
+        <informationbeforedive><link ref="site_test_uk"/><datetime>2026-09-05T11:58:12.000+00:01</datetime><altitude>0</altitude></informationbeforedive>
+        <samples>
+          <waypoint><depth>0</depth><divetime>0</divetime><switchmix ref="air"/><divemode type="opencircuit"/></waypoint>
+          <waypoint><depth>10.0</depth><divetime>15</divetime><temperature>287.15</temperature></waypoint>
+          <waypoint><depth>9.5</depth><divetime>30</divetime><temperature>286.15</temperature></waypoint>
+        </samples>
+        <tankdata id="tank_test_uk"><link ref="air"/><tankpressurebegin>20000000</tankpressurebegin><tankpressureend>10000000</tankpressureend></tankdata>
+        <informationafterdive><lowesttemperature>286.15</lowesttemperature><greatestdepth>10.2</greatestdepth><diveduration>20</diveduration><equipmentused><leadquantity>8</leadquantity></equipmentused></informationafterdive>
+      </dive>
+    </repetitiongroup>
+    <repetitiongroup id="rg_test_eg">
+      <dive id="dive_test_eg">
+        <informationbeforedive><link ref="site_test_eg"/><datetime>2026-07-10T09:00:00.000+00:03</datetime><altitude>0</altitude></informationbeforedive>
+        <samples>
+          <waypoint><depth>0</depth><divetime>0</divetime><switchmix ref="nitrox_test"/><divemode type="opencircuit"/></waypoint>
+          <waypoint><depth>0.1</depth><divetime>15</divetime><temperature>299.15</temperature></waypoint>
+        </samples>
+        <tankdata id="tank_test_eg"><link ref="nitrox_test"/></tankdata>
+        <informationafterdive><lowesttemperature>299.15</lowesttemperature><greatestdepth>0.1</greatestdepth><diveduration>15</diveduration><equipmentused><leadquantity>0</leadquantity></equipmentused></informationafterdive>
+      </dive>
+    </repetitiongroup>
+  </profiledata>
+</uddf>

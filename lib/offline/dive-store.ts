@@ -4,6 +4,7 @@ import { mutateEntity } from './mutations';
 import type { JsonValue } from './types';
 import { recordIdentity } from '../record-identity';
 import { prepareCardImages } from './dive-images';
+import { flushComputerEvidenceAttachments } from './evidence-attachments';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
@@ -174,6 +175,7 @@ export async function flushDiveChanges() {
         } else if(next) await zeustekDb.settings.put({...latest!,value:{...next,baseModifiedAt:new Date(result.updatedAt).toISOString()} as unknown as JsonValue});
       });
     }
+    await flushComputerEvidenceAttachments(account);
     changed();
   })().catch(error => { window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); }).finally(()=>{flushing=null;});
   return flushing;
