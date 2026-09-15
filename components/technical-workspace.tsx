@@ -3,6 +3,7 @@
 import { AlertTriangle, CheckCircle2, ClipboardCheck, Cylinder, Gauge, Plus, Settings2, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { useRecordRefresh } from './record-status';
 import { listDives, type DiveRecord } from '../lib/offline/dives';
 import { canonicalSkillGroups, skillRecordGroup, listCanonicalSkills, listSkillEvidence, skillRecordName, type CanonicalSkillRecord, type SkillEvidenceRecord } from '../lib/offline/dive-context';
@@ -43,7 +44,7 @@ export function TechnicalWorkspace({go}:{go?:(section:string)=>void}){
  return <>
   <p>Readiness is advisory, not certification, medical clearance or instructor authorisation. Recorded / imported metrics only.</p>
   <label>Canonical Skill Group<select value={group} onChange={event=>setGroup(event.target.value)}><option value="">Detected technical drills</option>{canonicalSkillGroups(skills).map(name=><option key={name}>{name}</option>)}</select></label>
-  <header className={styles.heading}><div><span className="focus-eyebrow">TECHNICAL DIVING</span><h1>Technical Diving</h1><p>A derived workspace over your Dives, Plans, Skills, loadouts and gas evidence — never a second technical logbook.</p></div><a className="focus-primary" href="/?section=Dive%20Plans&newPlan=technical"><Plus size={17}/>New tec plan</a></header>
+  <header className={styles.heading}><div className="focus-heading-title"><ZeusTekIcon id="technical-diving" size="heading"/><div><span className="focus-eyebrow">TECHNICAL DIVING</span><h1>Technical Diving</h1><p>A derived workspace over your Dives, Plans, Skills, loadouts and gas evidence — never a second technical logbook.</p></div></div><a className="focus-primary" href="/?section=Dive%20Plans&newPlan=technical"><Plus size={17}/>New tec plan</a></header>
   <section className={styles.pathways}><h2>Progression pathway</h2><div>{pathwayCards.map(entry=><Card key={entry.starter.key} className={styles.pathwayCard}><span className="focus-eyebrow">REFERENCE NOT CAPTURED</span><h3>{entry.starter.label}</h3><p>No agency requirement numbers are bundled. Capture a dated source snapshot before ZeusTek claims readiness.</p><button className="focus-secondary" onClick={()=>setEditingReference(null)}>Capture reference snapshot</button></Card>)}</div></section>
   <div className={styles.dashboard}>
    <Card><h2>Current gas evidence · recorded</h2>{latestPlan?.cylinderAssignments?.map((gas,index)=>{const state=deriveCylinderCurrentState({},gasEvidence.fills.filter(fill=>fill.cylinderEquipmentId===gas.cylinderEquipmentId),gasEvidence.analyses.filter(analysis=>analysis.cylinderEquipmentId===gas.cylinderEquipmentId));return <article className={styles.gas} key={gas.id??index}><div><b>{gas.role||`Cylinder ${index+1}`}</b><span>Current analysis: {state.analysisState}</span><span>{gas.analysisId&&gas.analysisId!==state.currentAnalysis?.entityId?'Selected historical analysis is not current for the latest fill.':state.analysedMixLabel}</span></div></article>;})}<p>Declared Plan gases above are not a substitute for current fill-linked analysis. Historical evidence is retained.</p></Card>

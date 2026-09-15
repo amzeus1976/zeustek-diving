@@ -476,3 +476,24 @@ body,.focus-app{font-size:1rem}
 @media(max-width:1000px){.focus-sidebar{width:min(88vw,330px)}.workflow-nav-group>summary{min-height:44px}.focus-sidebar nav .workflow-nav-group button{min-height:44px}}
 @media(max-width:680px){.site-configuration-directory{display:grid;grid-template-columns:minmax(0,1fr)}.site-configuration-directory a{min-height:44px}.fixture-list>label{grid-template-columns:auto minmax(0,1fr)}.fixture-list>label button{grid-column:1/-1;justify-self:stretch}.site-configuration-card .option-groups,.site-configuration-card .equipment-icon-settings-grid,.site-configuration-card .agency-logo-settings-grid{grid-template-columns:minmax(0,1fr)!important}}
 .density-symbol{display:inline-grid!important;place-items:center;min-width:44px;min-height:44px;padding:.35rem!important;font-size:1.45rem;line-height:1}
+.focus-heading-title {
+  display: flex;
+  align-items: center;
+  gap: clamp(.75rem, 2vw, 1.25rem);
+  min-width: 0;
+}
+
+.focus-heading-title > div { min-width: 0; }
+
+.icon-title {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  min-width: 0;
+}
+
+.icon-title > span { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 480px) {
+  .focus-heading-title { align-items: flex-start; }
+}

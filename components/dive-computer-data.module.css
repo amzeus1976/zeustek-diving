@@ -707,3 +707,5 @@
     flex-direction: column;
   }
 }
+.iconHeading { display:flex; align-items:center; gap:clamp(.75rem,2vw,1.25rem); min-width:0; }
+.iconHeading > div { min-width:0; }

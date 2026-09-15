@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { useRecordRefresh } from './record-status';
 import {
@@ -138,13 +139,13 @@ export function LoadoutsGas() {
 
   return <>
     <header className={styles.heading}>
-      <div><span className="focus-eyebrow">EQUIPMENT</span><h1>Reusable Loadouts &amp; Gas</h1><p>Build configurations from your existing Equipment, then track physical cylinders, fills and gas analyses as separate evidence.</p></div>
+      <div className={styles.iconHeading}><ZeusTekIcon id="equipment" size="heading"/><div><span className="focus-eyebrow">EQUIPMENT</span><h1>Reusable Loadouts &amp; Gas</h1><p>Build configurations from your existing Equipment, then track physical cylinders, fills and gas analyses as separate evidence.</p></div></div>
       <button className="focus-primary" onClick={() => tab === 'loadouts' ? setEditing(null) : setTab('cylinders')}><Plus size={17}/>{tab === 'loadouts' ? 'New loadout' : 'Cylinders'}</button>
     </header>
 
     <div className={styles.tabs} role="group" aria-label="Loadouts and gas sections">
-      <button aria-pressed={tab === 'loadouts'} className={tab === 'loadouts' ? styles.activeTab : ''} onClick={() => setTab('loadouts')}><Wrench size={17}/>Reusable loadouts</button>
-      <button aria-pressed={tab === 'cylinders'} className={tab === 'cylinders' ? styles.activeTab : ''} onClick={() => setTab('cylinders')}><Cylinder size={17}/>Cylinders / gas</button>
+      <button aria-pressed={tab === 'loadouts'} className={tab === 'loadouts' ? styles.activeTab : ''} onClick={() => setTab('loadouts')}><ZeusTekIcon id="equipment" size="chip"/>Reusable loadouts</button>
+      <button aria-pressed={tab === 'cylinders'} className={tab === 'cylinders' ? styles.activeTab : ''} onClick={() => setTab('cylinders')}><ZeusTekIcon id="dive-cylinder" size="chip"/>Cylinders / gas</button>
       <label className={styles.search}>Search<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'loadouts' ? 'Search loadouts' : 'Search cylinders'} /></label>
     </div>
 
@@ -153,7 +154,7 @@ export function LoadoutsGas() {
         const validation = validateReusableLoadout(item, equipment);
         return <Card key={item.entityId} className={styles.loadoutCard}>
           <div className={styles.cardActions}><button className="focus-icon" title="Clone loadout" aria-label={`Clone ${item.name}`} onClick={() => void cloneReusableLoadout(item).then(refresh)}><Copy size={16}/></button><button className="focus-icon" aria-label={`Edit ${item.name}`} onClick={() => setEditing(item)}><Pencil size={16}/></button><button className="focus-icon danger" aria-label={`Delete ${item.name}`} onClick={() => void removeLoadout(item)}><Trash2 size={16}/></button></div>
-          <span className="focus-eyebrow">{item.intendedUse || 'REUSABLE LOADOUT'}</span><h2>{item.name}</h2><p>{item.description || item.notes || 'No description recorded.'}</p>
+          <span className="focus-eyebrow">{item.intendedUse || 'REUSABLE LOADOUT'}</span><h2 className={styles.iconTitle}><ZeusTekIcon id={item.intendedUse?.toLowerCase().includes('sidemount') ? 'sidemount' : item.intendedUse?.toLowerCase().includes('twin') ? 'twinset' : item.intendedUse?.toLowerCase().includes('rebreather') || item.intendedUse?.toLowerCase().includes('ccr') ? 'ccr-rebreather' : 'equipment'} size="card"/><span>{item.name}</span></h2><p>{item.description || item.notes || 'No description recorded.'}</p>
           <div className={styles.chips}><span>{validation.referencedItemCount} items</span>{(item.environmentTags ?? []).slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}</div>
           {validation.warnings.length ? <div className={styles.warning}><AlertTriangle size={16}/><span>{validation.warnings[0]}</span></div> : <div className={styles.ok}><CheckCircle2 size={16}/><span>All referenced items available</span></div>}
           <button className="focus-primary" onClick={() => setApplying(item)}>Apply to Dive / Plan</button>
@@ -164,7 +165,7 @@ export function LoadoutsGas() {
       {visibleCylinders.map((item) => {
         const state = deriveCylinderCurrentState(item, fills.filter((fill) => fill.cylinderEquipmentId === item.entityId), analyses.filter((analysis) => analysis.cylinderEquipmentId === item.entityId));
         return <Card key={item.entityId} className={styles.cylinderCard}>
-          <span className="focus-eyebrow">PHYSICAL CYLINDER</span><h2>{item.name}</h2><p>{[item.manufacturer, item.model, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(' · ') || 'Equipment record'}</p>
+          <span className="focus-eyebrow">PHYSICAL CYLINDER</span><h2 className={styles.iconTitle}><ZeusTekIcon id="dive-cylinder" size="card"/><span>{item.name}</span></h2><p>{[item.manufacturer, item.model, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(' · ') || 'Equipment record'}</p>
           <dl><div><dt>Volume / working pressure</dt><dd>{item.waterVolumeLiters ?? '—'} L · {item.workingPressureBar ?? '—'} bar</dd></div><div><dt>Latest fill</dt><dd>{state.latestFill ? `${state.latestFill.pressureBar ?? '—'} bar · ${state.declaredMixLabel}` : 'No fill recorded'}</dd></div><div><dt>Analysis</dt><dd className={state.analysisState === 'current' ? styles.current : state.analysisState === 'stale' ? styles.stale : ''}>{state.analysedMixLabel}</dd></div></dl>
           <button className="focus-primary" onClick={() => setCylinder(item)}>Open cylinder</button>
         </Card>;

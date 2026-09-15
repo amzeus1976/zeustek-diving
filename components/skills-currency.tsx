@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { useRecordRefresh } from './record-status';
 import {
   canonicalSkillGroups,
@@ -218,13 +219,16 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
         Manage Skill Catalogue and CSV
       </button>
       <header className={styles.heading}>
-        <div>
+        <div className="focus-heading-title">
+          <ZeusTekIcon id="dive-skills" size="heading" />
+          <div>
           <span className="focus-eyebrow">DEVELOPMENT CENTRE</span>
           <h1>Dive Skills</h1>
           <p>
             Track repeatable ability, evidence and recency independently from
             certification cards.
           </p>
+          </div>
         </div>
         <button
           className="focus-primary"

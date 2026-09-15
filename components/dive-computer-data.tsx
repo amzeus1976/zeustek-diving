@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { ImportedComputerProfiles } from './imported-computer-profiles';
 import { useRecordRefresh } from './record-status';
 import { listDives, type DiveRecord } from '../lib/offline/dives';
@@ -122,13 +123,16 @@ export function DiveComputerData({ evidenceStore }: Props) {
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
-        <div>
+        <div className={styles.iconHeading}>
+          <ZeusTekIcon id="dive-computer" size="hero" />
+          <div>
           <span className="focus-eyebrow">DIVE DATA</span>
           <h1>Dive Computer Imports</h1>
           <p>
             Import every new computer profile first, then review and link it to
             a Dive log when you are ready.
           </p>
+          </div>
         </div>
         <div className={styles.heroQuote}>
           Your data.

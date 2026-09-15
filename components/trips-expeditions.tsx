@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { TripResources, TripLinksEditor } from './trip-resources';
 import { TripLinkedSites } from './trip-linked-sites';
 import { TripNote, TripSection } from './trip-disclosure';
 import { WorkflowContextStrip } from './workflow/workflow-context-strip';
+import { resolveZeusTekIconId } from '../lib/zeustek-icons';
 import { cleanupTripMedia } from '../lib/offline/trip-attachments';
 import { useRecordRefresh } from './record-status';
 import {
@@ -196,8 +198,8 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
 
   return <>
     <header className="focus-heading">
-      <div><span>TRAVEL · DIVING · LOGISTICS</span><h1>Trips &amp; expeditions</h1>
-        <p>Keep your travel, plans, team and packing together.</p></div>
+      <div className="focus-heading-title"><ZeusTekIcon id="liveaboard" size="heading"/><div><span>TRAVEL · DIVING · LOGISTICS</span><h1>Trips &amp; expeditions</h1>
+        <p>Keep your travel, plans, team and packing together.</p></div></div>
       <button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
     </header>
     <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
@@ -220,7 +222,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
         const participantCount = item.teamPersonIds.length + (item.guestParticipants?.filter((guest) => guest.name.trim()).length ?? 0);
         return <Card key={item.entityId} className={`${styles.tripCard} clickable-card`}>
           <button className="card-hit" aria-label={`Open ${item.name}`} onClick={() => setViewing(item)}/>
-          <div className="focus-card-head"><ShipWheel className="focus-accent"/><div className="record-actions">
+          <div className="focus-card-head"><ZeusTekIcon id={resolveZeusTekIconId(`${item.name} ${item.destination}`, 'dive-plan')} size="card"/><div className="record-actions">
             <button aria-label={`Edit ${item.name}`} onClick={() => { setEditing(item); setAdding(true); }}><Pencil size={15}/></button>
             <button aria-label={`Delete ${item.name}`} onClick={() => void remove(item)}><Trash2 size={15}/></button>
           </div></div>

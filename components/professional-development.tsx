@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { useRecordRefresh } from './record-status';
 import { listDives, type DiveRecord } from '../lib/offline/dives';
@@ -244,7 +245,9 @@ export function ProfessionalDevelopment({ go }: Props) {
   return (
     <main className={styles.page}>
       <header className={styles.heading}>
-        <div>
+        <div className="focus-heading-title">
+          <ZeusTekIcon id="divemaster-pro" size="heading" />
+          <div>
           <span className="focus-eyebrow">PROFESSIONAL DEVELOPMENT</span>
           <h1>Professional Development</h1>
           <p>
@@ -252,6 +255,7 @@ export function ProfessionalDevelopment({ go }: Props) {
             evidence already held in ZeusTek. Unknown stays unknown until you
             record or link evidence. Readiness is advisory, not agency certification or permission to dive.
           </p>
+          </div>
         </div>
         <button
           className="focus-primary"
