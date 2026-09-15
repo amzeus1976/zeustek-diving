@@ -1,0 +1,21 @@
+# T11 Dive Knowledge release record
+
+- Status: COMPLETE; GitHub synchronisation pending at the time of this record.
+- Release: app 1.0.30 / Sites98.
+- Canonical project: `appgprj_6a91926878b48191a80d70f1681ef135`.
+- Saved version: `appgprj_6a91926878b48191a80d70f1681ef135~appgver_bcb6bc0fe6ec8191bed25ea8a2396309`.
+- Deployment: `appgdep_6aa950fc27c8819186a87182f0c44d7c` (SUCCEEDED).
+- Published source: `76b2d4d2f72abfa79cdf2887860bcacfd986bb00`.
+- Sites archive: `sha256:ac70391d5bf743506fc19662d867a4d12d2e7e2994b5f16edcebf6bb904e83c0` (22,067,200 bytes / 183 files).
+- Immediate rollback: app 1.0.29 / Sites97 / `appgdep_6aa941e6d96c819199f74f50ea064801`.
+- Owner-directed emergency rollback: app 1.0.28 / Sites96 / `appgdep_6aa93726debc8191a2d32b41359ab655`.
+- Focused gate: 7 files / 40 tests passed.
+- Full gate: 67 files / 352 tests passed; TypeScript passed; production build passed; PWA precache 70 entries; PWA/version gate 2 files / 4 tests passed; strict targeted lint passed.
+- Production T11 data: 141 reviewed banks, 1,692 active questions, 71 diagnostic groups and immutable historical attempts.
+- Suppression/reversal: future-test eligibility changed 1,692 → 1,691 → 1,692; bank content and historical attempt snapshots were unchanged.
+- AI export: incremental artifact creation preceded checkpoint advance; previous-advice continuity retained. Domain tests cover failed-export checkpoint stability.
+- Study pack: invalid synthetic ZIP was rejected without an import action or record change; manifest/hash/preflight and atomic rollback are covered by passing domain tests.
+- Responsive/accessibility: standalone page, compact navigation, 390/820/1024/default desktop no-overflow, keyboard/touch, dialog containment, Escape and focus restoration passed.
+- Retained smoke: T09 Insights, T10 Dive Planning Centre, Site Configuration/data controls and exactly 66 Logbook Dives passed. Browser console errors: none.
+- Data architecture: additive `question-review-state`, `learning-ai-checkpoint` and `learning-ai-advice` records use the existing canonical local-first mutation/event/outbox path; no second question/attempt store, D1 table or destructive migration.
+- Actual usage: NOT_EXPOSED. Max/Astra: not recommended. T12: not started.

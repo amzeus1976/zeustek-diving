@@ -1,4 +1,4 @@
-export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-event','equipment-set','cylinder-fill','gas-analysis','site','site-overhead-profile','trip','dive-trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','skill','skill_evidence','currency-policy','reference-requirement-set','professional-pathway','professional-evidence','conservation_activity','conservation-programme'] as const;
+export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-event','equipment-set','cylinder-fill','gas-analysis','site','site-overhead-profile','trip','dive-trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','question-review-state','learning-ai-checkpoint','learning-ai-advice','skill','skill_evidence','currency-policy','reference-requirement-set','professional-pathway','professional-evidence','conservation_activity','conservation-programme'] as const;
 export function normaliseText(value: unknown) { return typeof value === 'string' ? value.normalize('NFKC').trim().toLocaleLowerCase('en-GB').replace(/\s+/g, ' ') : ''; }
 export function canonicalUrl(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) return '';
@@ -7,11 +7,15 @@ export function canonicalUrl(value: unknown) {
 export function recordIdentity(kind: string, input: object) {
   const record=input as Record<string,unknown>;
   const t = (key: string) => normaliseText(record[key]);
+  const setVersion = typeof record.setVersion === 'number' || typeof record.setVersion === 'string' ? String(record.setVersion) : '';
   if (kind === 'site-overhead-profile') return typeof record.siteId==='string' ? record.siteId : '';
   if (kind === 'dive-media') return canonicalUrl(record.url) || (t('title') ? `${t('title')}|${t('creator')}|${t('format')}` : '');
   if (kind === 'news-article') return canonicalUrl(record.link);
   if (kind === 'training-progress') return `${t('agency')}|${t('courseId')}`;
   if (kind === 'question-set') return `${t('setId')}|${record.version}`;
+  if (kind === 'question-review-state') return t('setId') && setVersion && t('questionId') ? `${t('setId')}|${setVersion}|${t('questionId')}` : '';
+  if (kind === 'learning-ai-checkpoint') return t('checkpointKey');
+  if (kind === 'learning-ai-advice') return t('adviceId');
   if (kind === 'skill') return t('name') || t('title') || t('skillKey');
   if (kind === 'currency-policy') return t('skillKey');
   if (kind === 'reference-requirement-set') return t('agency') && t('pathwayKey') && t('versionLabel') ? `${t('agency')}|${t('pathwayKey')}|${t('versionLabel')}` : '';

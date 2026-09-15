@@ -63,7 +63,8 @@ const SEARCHABLE_KEYS = new Set([
 
 const PROTECTED_DELETE_KINDS = new Set([
   'dive', 'test-attempt', 'reference-requirement-set', 'professional-evidence',
-  'equipment-event', 'cylinder-fill', 'gas-analysis',
+  'equipment-event', 'cylinder-fill', 'gas-analysis', 'question-review-state',
+  'learning-ai-checkpoint', 'learning-ai-advice',
 ]);
 
 const IMMUTABLE_EDIT_KINDS = new Set([...PROTECTED_DELETE_KINDS, 'question-set']);
@@ -109,6 +110,9 @@ const KIND_DESTINATIONS: Record<string, [string, string]> = {
   'dive-media': ['Dive Media', 'Dive Bibliography'],
   'question-set': ['Dive Knowledge', 'Dive Knowledge'],
   'test-attempt': ['Dive Knowledge', 'Dive Knowledge attempts'],
+  'question-review-state': ['Dive Knowledge', 'Question review states'],
+  'learning-ai-checkpoint': ['Dive Knowledge', 'AI review checkpoints'],
+  'learning-ai-advice': ['Dive Knowledge', 'AI study advice'],
   skill: ['Skills & Currency', 'Dive Skills'],
   skill_evidence: ['Skills & Currency', 'Dive Skill evidence'],
   'currency-policy': ['Skills & Currency', 'Dive Skill currency'],

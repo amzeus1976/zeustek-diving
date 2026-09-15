@@ -1,5 +1,15 @@
 # ZeusTek Diving Upgrade Progress
 
+## T11 COMPLETE — GitHub PENDING — Dive Knowledge / Question Bank Review Diagnostics AI Study Workflow — app1.0.30 / Sites98 — 2026-09-15
+
+Owner authorised T11 only from `ZEUSTEK_T11_SINGLE_RUN_BUNDLE_v1.0.zip`; T12 remains NOT_STARTED. Source guard PASS before product edits: local app 1.0.29 contains the completed T10.6B source, Git status is understood (`.artifacts/` only, excluded from release), and native Sites confirms the same canonical public project is active at Sites97. Known-good production/rollback recorded as app1.0.29 / Sites97 / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_583de89943f081919dbc2e699bbb230f` / deployment `appgdep_6aa941e6d96c819199f74f50ea064801` / published source `76d80e4fab13ea43ff173373bf00cc804a039294`; emergency owner-directed rollback is app1.0.28 / Sites96 / deployment `appgdep_6aa93726debc8191a2d32b41359ab655`. Full regression baseline 339 tests; production retention target 66 Dives. Planning envelope 95 relative only. Actual usage NOT_EXPOSED. Max/Astra not invoked.
+
+Candidate app1.0.30 local release gate PASS: focused T11/review/workflow compatibility 7 files / 40 tests; full regression 67 files / 352 tests; TypeScript PASS; production build PASS; PWA precache 70 entries; PWA/version gate 2 files / 4 tests; strict targeted lint PASS. Local interaction acceptance PASS: Dive Knowledge is a standalone Diving CPD page; local-only question bank import and bank review work; suppression changes future selection from 3 to 2 active questions without changing the bank or historical model; reversal restores 3 active questions; Study Pack and AI Review dialogs contain focus, Escape closes only the active dialog and restores focus; card minimise/restore and 390/820/1024/1440px reflow have no horizontal overflow. Study-pack hash/preflight/atomic rollback and AI checkpoint failure semantics are covered by passing domain tests. No owner production data was changed during local acceptance.
+
+Same-project publication PASS: app1.0.30 / Sites98 / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_bcb6bc0fe6ec8191bed25ea8a2396309` / deployment `appgdep_6aa950fc27c8819186a87182f0c44d7c` SUCCEEDED / published source `76b2d4d2f72abfa79cdf2887860bcacfd986bb00` / Sites archive `sha256:ac70391d5bf743506fc19662d867a4d12d2e7e2994b5f16edcebf6bb904e83c0` (22,067,200 bytes / 183 files). Canonical origin and Sites project are unchanged. Immediate pre-task rollback is app1.0.29 / Sites97 / deployment `appgdep_6aa941e6d96c819199f74f50ea064801`; owner-directed emergency rollback app1.0.28 / Sites96 is also retained. No rollback was required.
+
+Production acceptance PASS: standalone Dive Knowledge opens under Diving CPD with 141 reviewed banks, 1,692 active questions, historical attempts and 71 diagnostic groups. Suppression reduced future-test eligibility from 1,692 to 1,691 without rewriting the bank or attempt snapshots; reversal restored 1,692 and left the question `Reviewed · active`. Attempt detail retained its original 18 question snapshots and 17/18 score. Topic/objective drill-down exposes evidence, denominator and latest-per-question provenance. Incremental AI export created its artifact before advancing the successful checkpoint and preserved previous-advice continuity; the last successful export now records 2026-09-15 15:08:36. An invalid synthetic ZIP produced no import action, selected zero banks and left all 141 banks unchanged; domain tests cover hash/manifest/preflight validation and atomic rollback. Responsive acceptance at 390/820/1024/default desktop has no horizontal overflow; compact navigation, touch controls, dialog containment, Escape and focus restoration pass. T09 Insights, T10 Dive Planning Centre and Site Configuration/data controls remain usable. The Logbook exposes exactly 66 Dive records. Production browser console errors: none. GitHub exact-source synchronisation is the only remaining release-administration step; T12 remains NOT_STARTED. Actual usage NOT_EXPOSED; Max and Astra are not recommended.
+
 ## T10.6B COMPLETE — GitHub PASS — User Data Controls & Workflow UX Correction — app1.0.29 / Sites97 — 2026-09-15
 
 Owner authorised T10.6B only; T11 remains paused and NOT_STARTED. Source guard PASS: current checkout contains the verified app1.0.28/Sites96 T10.6A product source and final GitHub evidence. Known-good production/rollback for this corrective pass is app1.0.28 / Sites96 / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_f761ea5b99948191bd0577afe56850f1` / deployment `appgdep_6aa93726debc8191a2d32b41359ab655` / published source `7aeb35f0496d21769ba44b6aa352225dc5c5c0f8` / GitHub main `1fec06f809af570d8dffd3d81360551af2f51ceb`. Full regression baseline 334 tests; production retention target 66 Dives. Actual usage NOT_EXPOSED. No Max/Astra.
@@ -10,7 +20,7 @@ Same-project publication and production acceptance PASS: app1.0.29 / Sites97 / s
 
 Production smoke PASS on the authenticated responsive site and same-origin PWA entry: version 1.0.29 loaded; workflow disclosure starts compact/closed and opens normally; visible `+`/`−` minimise controls operate with accessible names; all 6,176 records across 37 canonical kinds and all nine retained fixtures remain reviewable with matched field, dependency, safe action and exact reason; zero fixtures are selected by default; protected history exposes archive/suppress or manual review instead of unsafe deletion. At 390px the page has no horizontal overflow. T09 Insights reloaded real analytics, T10 Dive Planning Centre reloaded existing plans, and the populated Logbook retains all 66 Dives. No production owner data was changed or deleted in this pass. Existing third-party Google Maps and chart sizing warnings are unchanged/non-blocking; no T10.6B runtime failure was observed.
 
-GitHub exact verified production-source synchronisation PASS through PR21 (`https://github.com/amzeus1976/zeustek-diving/pull/21`): release commit `121d1320127f3f3111b4978332c10e88b0a941cc` merged to main as `b7e49dbedc28bf46dca9b10a3f8b8744f8f864f7`. The release branch was built from GitHub main and its 21-file tree exactly matches the production-smoked local source, excluding `.artifacts/`. No secret, credential, private attachment, test media or deployment archive was included. T11 remains NOT_STARTED. Actual usage NOT_EXPOSED; Max/Astra are not recommended.
+GitHub exact verified production-source synchronisation PASS through PR21 (`https://github.com/amzeus1976/zeustek-diving/pull/21`): release commit `121d1320127f3f3111b4978332c10e88b0a941cc` merged to main as `b7e49dbedc28bf46dca9b10a3f8b8744f8f864f7`. Documentation-only evidence PR22 (`https://github.com/amzeus1976/zeustek-diving/pull/22`) merged successfully; final read-only verified GitHub main is `c7e6d60a273c6c226fee5f4968b17d7a4f456b4e`, reports app1.0.29 and contains the production-smoked T10.6B source. The release branch was built from GitHub main and its 21-file tree exactly matches the production-smoked local source, excluding `.artifacts/`. No secret, credential, private attachment, test media or deployment archive was included. T11 remains NOT_STARTED. Actual usage NOT_EXPOSED; Max/Astra are not recommended.
 
 ## T10.6 COMPLETE — GitHub PASS — Synthetic Data Cleanup & Universal Edit/Delete Controls — app1.0.28 / Sites96 — 2026-09-15
 
@@ -272,9 +282,9 @@ T05 IN_PROGRESS, candidate app1.0.17; full38 files/191 tests, typecheck and buil
 
 > Work agent: resolve the Windows Desktop path with `[Environment]::GetFolderPath('Desktop')` and maintain this file as `ZEUSTEK_Diving_Upgrade_Progress.md`. Update atomically after every subtask. If local Desktop access is unavailable, maintain the same file at repository root, set `Desktop sync: PENDING`, and copy it to Desktop as soon as local access becomes available. Never claim it is on the Desktop unless the write succeeded.
 
-**Project status:** T07 IN_PROGRESS — passing app1.0.21 owner addition candidate; final smoke/GitHub Gate1 pending
-**Current app version:** production 1.0.19 / Sites86 — existing canonical project
-**Current task:** T00–T06 COMPLETE; T07 final publication/smoke/GitHub Gate1 pending; T08 authorised only after Gate1; T09–T13 NOT_STARTED
+**Project status:** T11 COMPLETE — app1.0.30 / Sites98 production-smoked; GitHub release sync pending
+**Current app version:** production 1.0.30 / Sites98 — existing canonical project
+**Current task:** T00–T11 COMPLETE; T12–T13 NOT_STARTED
 **Primary task planning envelopes:** 820 credits / planning estimate £24.24
 **Normal contingency:** 82 credits / planning estimate £2.43
 **Astra rescue reserve:** 60 credits / planning estimate £1.78
@@ -300,11 +310,11 @@ T05 IN_PROGRESS, candidate app1.0.17; full38 files/191 tests, typecheck and buil
 | T04 | Trips & Expeditions | COMPLETE | 45 | £1.33 | NOT_EXPOSED | NOT_EXPOSED | 1.0.15 / Sites82 | a6852fcdb4edd16e0427beb7843cc17d9af208a7 / appgdep_6aa6f54f5bfc819186816052ee6ea995 |
 | T05 | Reusable Loadouts + Gas/Cylinder Foundation | COMPLETE | 55 | £1.63 | NOT_EXPOSED | NOT_EXPOSED | 1.0.17 / Sites84 | 5176279b4e8bdaaabc34a41cbeee90b43e329aa2 / appgdep_6aa79e3e3634819197db466afdf6951d |
 | T06 | Skills & Currency | COMPLETE | 60 | £1.77 | NOT_EXPOSED | NOT_EXPOSED | 1.0.19 / Sites86 | 204 tests/typecheck/build/smoke PASS; Sites84 rollback |
-| T07 | Technical Diving Workspace | NOT_STARTED | 65 | £1.92 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
-| T08 | Professional Development / PADI Pro | BLOCKED_DEPLOYMENT | 70 | £2.07 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED | Sites89 mobile Pathway select overflow; immediate Sites88 rollback. GitHub Gate2 NOT_RUN. |
-| T09 | Experience & Analytics | NOT_STARTED | 75 | £2.22 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
-| T10 | Dive Planning Centre | NOT_STARTED | 85 | £2.51 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
-| T11 | Question Bank Review, Diagnostics & AI Study Workflow | NOT_STARTED | 95 | £2.81 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
+| T07 | Technical Diving Workspace | COMPLETE | 65 | £1.92 | NOT_EXPOSED | NOT_EXPOSED | 1.0.21 / Sites88 | appgdep_6aa86748e17081919c04ab3a56b01466 |
+| T08 | Professional Development / PADI Pro | COMPLETE | 70 | £2.07 | NOT_EXPOSED | NOT_EXPOSED | 1.0.24 / Sites91 | appgdep_6aa87f5d55588191bd830b1eb4df1440 |
+| T09 | Experience & Analytics | COMPLETE | 75 | £2.22 | NOT_EXPOSED | NOT_EXPOSED | 1.0.25 / Sites92 | appgdep_6aa903fc83248191a927b8f5704052f5 |
+| T10 | Dive Planning Centre | COMPLETE | 85 | £2.51 | NOT_EXPOSED | NOT_EXPOSED | 1.0.26 / Sites93 | appgdep_6aa912f2d2b4819199e1029b0a75867f |
+| T11 | Question Bank Review, Diagnostics & AI Study Workflow | COMPLETE | 95 | £2.81 | NOT_EXPOSED | NOT_EXPOSED | 1.0.30 / Sites98 | 76b2d4d2f72abfa79cdf2887860bcacfd986bb00 / appgdep_6aa950fc27c8819186a87182f0c44d7c |
 | T12 | Dive Computer Data & Profile Import | NOT_STARTED | 110 | £3.25 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 | T13 | Final Navigation / Settings UX Tidy | NOT_STARTED | 40 | £1.18 | NOT_EXPOSED | NOT_EXPOSED | NOT_EXPOSED |  |
 
@@ -473,13 +483,13 @@ Local canonical Site/profile save and deep-link reopen PASS; original Site histo
 | T10 | Plan→Dive promotion + plan-vs-actual integrity | NOT_STARTED | 12 | NOT_EXPOSED |  |
 | T10 | Responsive/offline/progressive disclosure | NOT_STARTED | 8 | NOT_EXPOSED |  |
 | T10 | Tests/regression/publish | NOT_STARTED | 12 | NOT_EXPOSED |  |
-| T11 | Locate canonical question/bank/attempt/topic services | NOT_STARTED | 6 | NOT_EXPOSED |  |
-| T11 | Suppression/review metadata + historical integrity | NOT_STARTED | 12 | NOT_EXPOSED |  |
-| T11 | ⚠ review/suppress UI + reason workflow | NOT_STARTED | 10 | NOT_EXPOSED |  |
-| T11 | Required sort + topic/subtopic diagnostic drill-down | NOT_STARTED | 18 | NOT_EXPOSED |  |
-| T11 | Incremental AI export + previous-advice continuity | NOT_STARTED | 16 | NOT_EXPOSED |  |
-| T11 | Study-pack ZIP validation/import/export | NOT_STARTED | 15 | NOT_EXPOSED |  |
-| T11 | Tests/regression/publish | NOT_STARTED | 18 | NOT_EXPOSED |  |
+| T11 | Locate canonical question/bank/attempt/topic services | COMPLETE | 6 | NOT_EXPOSED | Existing question-bank and immutable attempt stores retained. |
+| T11 | Suppression/review metadata + historical integrity | COMPLETE | 12 | NOT_EXPOSED | Reversible additive review state; future selection only. |
+| T11 | ⚠ review/suppress UI + reason workflow | COMPLETE | 10 | NOT_EXPOSED | Reason selector, notes, suppress/restore and accessible detail flow. |
+| T11 | Required sort + topic/subtopic diagnostic drill-down | COMPLETE | 18 | NOT_EXPOSED | Required sort and denominator/provenance detail implemented. |
+| T11 | Incremental AI export + previous-advice continuity | COMPLETE | 16 | NOT_EXPOSED | Checkpoint advances only after artifact creation. |
+| T11 | Study-pack ZIP validation/import/export | COMPLETE | 15 | NOT_EXPOSED | Manifest/hash/preflight/atomic import and safe export complete. |
+| T11 | Tests/regression/publish | COMPLETE | 18 | NOT_EXPOSED | 40 focused; 352 full; typecheck/build/PWA/lint and Sites98 smoke PASS. |
 | T12 | Locate Dive import/profile/attachment infrastructure | NOT_STARTED | 8 | NOT_EXPOSED |  |
 | T12 | Import/profile schema + adapter contract | NOT_STARTED | 15 | NOT_EXPOSED |  |
 | T12 | Source hash/store + adapter detection/idempotency | NOT_STARTED | 15 | NOT_EXPOSED |  |
