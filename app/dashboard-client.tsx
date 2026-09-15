@@ -5,6 +5,7 @@ import {
   Thermometer,
   Hash,
   Archive,
+  BarChart3,
   ArrowDown,
   ArrowUp,
   BookOpen,
@@ -90,6 +91,7 @@ import { LoadoutsGas } from '@/components/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
 import { ProfessionalDevelopment } from '@/components/professional-development';
+import { ExperienceAnalytics } from '@/components/experience-analytics';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
 import {
@@ -235,6 +237,7 @@ const navigation = [
   ['Sites', MapPin],
   ['Dive Site Map', Compass],
   ['Dive Plans', CalendarDays],
+  ['Insights', BarChart3],
   ['Trips', ShipWheel],
   ['People', Users],
   ['Albums', Images],
@@ -552,6 +555,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
           {active === 'Dive Plans' && <PlanningCentre initialTab={destinationTab==='Dive Bucket List'?'Bucket list':'Plans'} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} />}{' '}
+          {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
           {active === 'People' && <People />}{' '}

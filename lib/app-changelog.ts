@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.25',
+    date: '2026-09-15',
+    title: 'Experience & Analytics',
+    changes: [
+      'Added a responsive Insights dashboard with seven interactive KPIs plus depth, environment, SAC/RMV, Equipment Set, Site, qualifying-Dive and readiness analysis.',
+      'Analysis Scope filters dates, Pool and Training activity, dive mode, water type, Site and Equipment Set as derived presentation state without changing canonical Dive records.',
+      'Every headline metric explains its denominator, exclusions, unknown values, calculation basis and source record IDs; missing depth or gas evidence is never converted to zero.',
+      'Kept water type separate from dive environment/activity and reports L/min only where qualifying surface-volume/RMV evidence exists, never by relabelling pressure SAC.',
+      'Readiness reuses captured Skill currency, Technical and Professional requirement evidence; unconfigured requirements remain Not configured or Unknown rather than fabricated failures.',
+      'Export Insights creates a derived, timestamped report with scope, metrics, denominators, readiness and provenance while preserving the existing local-first Dive, Site, Equipment and evidence stores.',
+    ],
+  },
+  {
     version: '1.0.24',
     date: '2026-09-15',
     title: 'Professional Development — phone-safe pathways',
