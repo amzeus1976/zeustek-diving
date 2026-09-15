@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.28',
+    date: '2026-09-15',
+    title: 'Synthetic data cleanup & record controls',
+    changes: [
+      'Expanded Site Configuration data tools to scan every canonical record kind and identify explicitly labelled acceptance fixtures in common and nested fields.',
+      'Added dependency-aware recommendations for safe deletion, archival/suppression, relationship unlinking or manual review, with no automatic or preselected removal.',
+      'Added searchable all-user-data controls with record details, owning-page links and conservative edit, delete, archive or unlink actions through the existing local-first history and sync path.',
+      'Protected Dives, evidence, requirement versions and other historical records from destructive generic edits; record identities and canonical relationships remain unchanged.',
+      'Added exact typed confirmation, optional safe-child inclusion, compact lists and accessible desktop, tablet and phone/PWA dialogs with no horizontal overflow.',
+      'Preserved all T03–T10 features, existing record kinds, offline event/outbox behaviour, backups and canonical Dive records without a database migration or parallel store.',
+    ],
+  },
+  {
     version: '1.0.27',
     date: '2026-09-15',
     title: 'Workflow, navigation & page density',

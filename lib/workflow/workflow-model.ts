@@ -99,12 +99,4 @@ export const SITE_CONFIGURATION_SECTIONS = [
   'Other site data tools',
 ] as const;
 
-export const SYNTHETIC_FIXTURE_TERMS = ['PRODUCTION ACCEPTANCE ONLY', 'SYNTHETIC TEST ONLY', 'TEST FIXTURE', 'ACCEPTANCE FIXTURE'];
-
-export function looksLikeSyntheticFixture(record: Record<string, unknown>) {
-  const text = ['name', 'title', 'label', 'notes']
-    .map((key) => typeof record[key] === 'string' ? record[key] : '')
-    .join(' ')
-    .toLocaleUpperCase('en-GB');
-  return SYNTHETIC_FIXTURE_TERMS.some((term) => text.includes(term));
-}
+export { looksLikeSyntheticFixture } from './synthetic-fixtures';
