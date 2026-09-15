@@ -94,6 +94,7 @@ import { ProfessionalDevelopment } from '@/components/professional-development';
 import { DivePlanningCentre } from '@/components/dive-planning-centre';
 import { ExperienceAnalytics } from '@/components/experience-analytics';
 import { KnowledgeCentre } from '@/components/knowledge-centre';
+import { DiveComputerData } from '@/components/dive-computer-data';
 import { CollapsibleWorkCard } from '@/components/workflow/collapsible-work-card';
 import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-review';
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
@@ -576,13 +577,14 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Dive News' && <DiveNewsV2 />}{' '}
           {active === 'Dive Media' && <DiveMediaLibrary go={go} />}{' '}
           {active === 'Dive Knowledge' && <KnowledgeCentre go={go} />}{' '}
+          {active === 'Dive Computer Imports' && <DiveComputerData go={go} />}{' '}
           {active === 'Admin' && <AdminPanel />}{' '}
           {active === 'Data & Backups' && <DataCentre initialTab={destinationTab} />}
           {active === 'Imports' && <Imports />}
           {active === 'Sync' && <SyncCentre />}{' '}
           {active === 'Backups' && <BackupsScreen />}{' '}
           {active === 'Settings' && <SiteConfiguration go={go} />}
-          {['Dive Computer Imports','Diving Calendar & Bookings','Gas Planning'].includes(active) && <WorkflowPlaceholder route={active} go={go}/>}
+          {['Diving Calendar & Bookings','Gas Planning'].includes(active) && <WorkflowPlaceholder route={active} go={go}/>}
         </ScreenTiming></div>
       </section>
       <nav className="focus-mobile-nav">

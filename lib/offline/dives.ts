@@ -146,6 +146,9 @@ export interface DiveRecord {
 
   equipmentIds?: string[]; equipmentSetId?: string; equipmentSetIds?: string[]; hireGear?: boolean;
   equipmentSetApplications?: import('./loadouts-gas').LoadoutApplication[];
+  computerProfileIds?: string[];
+  computerImportIds?: string[];
+  lastComputerImportAt?: string;
 
   createdAt: string; modifiedAt: string;
 

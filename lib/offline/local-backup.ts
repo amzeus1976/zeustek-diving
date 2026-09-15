@@ -1,7 +1,7 @@
-import { zeustekDb, type DiveImageRow } from './db';
+import { zeustekDb, type AttachmentRow, type DiveImageRow } from './db';
 import { currentDiveAccount, flushDiveChanges } from './dive-store';
 import { DIVE_RECORD_KINDS } from '../record-identity';
-import { recordHash } from './canonical';
+import { recordHash, sha256Hex } from './canonical';
 import type { JsonValue } from './types';
 
 const base64 = (bytes: Uint8Array) => {
@@ -13,17 +13,18 @@ export async function localBackupPayload() {
   const account = currentDiveAccount();
   if (!account) throw new Error('Sign in before creating a backup.');
   const module = `dive:${account}`;
-  const snapshot = await zeustekDb.transaction('r', [zeustekDb.entities, zeustekDb.events, zeustekDb.diveImages, zeustekDb.settings, zeustekDb.entityHeads], async () => {
+  const snapshot = await zeustekDb.transaction('r', [zeustekDb.entities, zeustekDb.events, zeustekDb.attachments, zeustekDb.diveImages, zeustekDb.settings, zeustekDb.entityHeads], async () => {
     const entities = await zeustekDb.entities.where('module').equals(module).toArray();
     return { entities,
       events: await zeustekDb.events.filter(event => event.module === module).toArray(),
       heads: await zeustekDb.entityHeads.where('entityId').anyOf(entities.map(row => row.entityId)).toArray(),
+      attachments: await zeustekDb.attachments.filter(row => row.entityId.startsWith(`${module}:`)).toArray(),
       images: await zeustekDb.diveImages.where('account').equals(account).toArray(),
       pending: await zeustekDb.settings.where('key').startsWith(`pending:${module}:`).toArray(),
       reviews: await zeustekDb.settings.filter(row=>row.key.startsWith(`conflict-archive:${module}:`)||row.key.startsWith(`backup-review:${module}:`)).toArray() };
   });
   return { format: 'zeustek-dive-local-data', version: 2, account, exportedAt: new Date().toISOString(),
-    coverage: 'Records, history, pending edits and card/profile images available on this device. Gallery media stored only in the cloud is not included.',
+    coverage: 'Records, history, pending edits, card/profile images and locally staged/imported computer evidence available on this device. Gallery media stored only in the cloud is not included.',
     ...snapshot, images: await Promise.all(snapshot.images.map(async ({ blob, ...image }) => ({ ...image, mimeType: blob.type, bytes: base64(new Uint8Array(await blob.arrayBuffer())) }))) };
 }
 export async function restoreLocalPayload(value: unknown) {
@@ -31,7 +32,7 @@ export async function restoreLocalPayload(value: unknown) {
   const account = currentDiveAccount(); const module = `dive:${account}`;
   const invalid = () => new Error('The backup contains invalid data. No records have been restored.');
   if (!data || data.format !== 'zeustek-dive-local-data' || data.version !== 2 || data.account !== account) throw new Error('Invalid backup, or it belongs to a different signed-in account.');
-  if (![data.entities, data.images, data.events, data.pending, data.heads].every(Array.isArray) || data.entities.length > 100000) throw invalid();
+  if (![data.entities, data.images, data.events, data.pending, data.heads].every(Array.isArray) || (data.attachments !== undefined && !Array.isArray(data.attachments)) || data.entities.length > 100000) throw invalid();
   const ids = new Set<string>();
   for (const row of data.entities) {
     if (!row || row.module !== module || typeof row.entityId !== 'string' || !row.entityId.startsWith(`${module}:`) || ids.has(row.entityId) || !(DIVE_RECORD_KINDS as readonly string[]).includes(row.entityType) || ![0,1].includes(row.deleted) || (row.record === null ? row.deleted !== 1 : typeof row.record !== 'object' || Array.isArray(row.record))) throw invalid();
@@ -49,13 +50,23 @@ export async function restoreLocalPayload(value: unknown) {
   const images: DiveImageRow[] = [];
   const imageIds = new Set<string>();
   for (const image of data.images) {
-    if (!image || typeof image.id !== 'string' || imageIds.has(image.id) || image.account !== account || typeof image.bytes !== 'string' || image.bytes.length > 18_000_000 || !['image/jpeg','image/png','image/webp'].includes(image.mimeType)) throw invalid();
+    if (!image || typeof image.id !== 'string' || imageIds.has(image.id) || image.account !== account || typeof image.bytes !== 'string' || image.bytes.length > 45_000_000 || !['image/jpeg','image/png','image/webp','application/xml','text/xml','application/json','application/octet-stream'].includes(image.mimeType)) throw invalid();
     let binary: string; try { binary = atob(image.bytes); } catch { throw invalid(); }
     images.push({ id: image.id, account, name: String(image.name), blob: new Blob([Uint8Array.from(binary, char => char.charCodeAt(0))], { type: image.mimeType }), createdAt: String(image.createdAt), ...(image.remoteKey ? {remoteKey:image.remoteKey} : {}) });
     imageIds.add(image.id);
   }
+  const attachments: AttachmentRow[] = [];
+  const attachmentIds = new Set<string>();
+  for (const attachment of data.attachments ?? []) {
+    if (!attachment || typeof attachment.attachmentId !== 'string' || attachmentIds.has(attachment.attachmentId) || !imageIds.has(attachment.attachmentId) || typeof attachment.entityId !== 'string' || !attachment.entityId.startsWith(`${module}:`) || typeof attachment.fileName !== 'string' || typeof attachment.mimeType !== 'string' || !Number.isSafeInteger(attachment.byteLength) || attachment.byteLength < 0 || typeof attachment.sha256 !== 'string' || !/^[0-9a-f]{64}$/i.test(attachment.sha256) || !['pending','acknowledged'].includes(attachment.state)) throw invalid();
+    const image = images.find((candidate) => candidate.id === attachment.attachmentId);
+    if (!image) throw invalid();
+    const bytes = new Uint8Array(await image.blob.arrayBuffer());
+    if (bytes.byteLength !== attachment.byteLength || await sha256Hex(bytes) !== attachment.sha256) throw invalid();
+    attachments.push(attachment as AttachmentRow); attachmentIds.add(attachment.attachmentId);
+  }
   let restored = 0, skipped = 0, conflicts = 0;
-  await zeustekDb.transaction('rw', [zeustekDb.entities, zeustekDb.events, zeustekDb.entityHeads, zeustekDb.eventParents, zeustekDb.diveImages, zeustekDb.settings, zeustekDb.syncState], async () => {
+  await zeustekDb.transaction('rw', [zeustekDb.entities, zeustekDb.events, zeustekDb.entityHeads, zeustekDb.eventParents, zeustekDb.attachments, zeustekDb.diveImages, zeustekDb.settings, zeustekDb.syncState], async () => {
     for(const review of data.reviews??[]) {
       const existing=await zeustekDb.settings.get(review.key);
       if(!existing)await zeustekDb.settings.add(review);
@@ -65,6 +76,11 @@ export async function restoreLocalPayload(value: unknown) {
       const existing = await zeustekDb.diveImages.get(image.id);
       if (existing && existing.account !== account) throw invalid();
       if (!existing) await zeustekDb.diveImages.add(image);
+    }
+    for (const attachment of attachments) {
+      const existing = await zeustekDb.attachments.get(attachment.attachmentId);
+      if (existing && JSON.stringify(existing) !== JSON.stringify(attachment)) throw invalid();
+      if (!existing) await zeustekDb.attachments.add(attachment);
     }
     const accepted = new Set<string>();
     for (const [index, row] of data.entities.entries()) {

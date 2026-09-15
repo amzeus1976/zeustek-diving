@@ -34,7 +34,7 @@ describe('T04 Trips & Expeditions shell integration', () => {
     expect(source).toContain('<AccessibleDialog editable dirty={dirty}');
     expect(source).toContain('<TripResources');
     expect(read('components/trip-resources.tsx')).toContain('acceptFiles retainOfflineMetadata accessibleViewer');
-    const mediaKinds = read('app/api/media/route.ts').match(/const conservationFile = \[([^\]]+)\]\.includes\(ownerKind\)/)?.[1] ?? '';
+    const mediaKinds = read('app/api/media/route.ts').match(/const documentFile = \[([^\]]+)\]\.includes\(ownerKind\)/)?.[1] ?? '';
     for (const kind of ['conservation_activity','site-overhead-profile','dive-trip','gas-analysis']) expect(mediaKinds).toContain(`'${kind}'`);
     expect(read('components/site-overhead-profile.tsx')).toContain('onKeyDown={handleOverheadEscape}');
   });

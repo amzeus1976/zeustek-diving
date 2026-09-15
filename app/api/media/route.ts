@@ -62,8 +62,11 @@ export async function POST(request: Request) {
       { error: 'File and owner are required' },
       { status: 400 },
     );
-  const conservationFile = ['conservation_activity','site-overhead-profile','dive-trip','dive-trip-itinerary','gas-analysis','professional-evidence'].includes(ownerKind) && ['application/pdf','text/plain'].includes(file.type);
-  if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !conservationFile)
+  const documentFile = ['conservation_activity','site-overhead-profile','dive-trip','dive-trip-itinerary','gas-analysis','professional-evidence'].includes(ownerKind) && ['application/pdf','text/plain'].includes(file.type);
+  const computerEvidence = ownerKind === 'computer-import'
+    ? ['application/xml','text/xml','application/octet-stream'].includes(file.type)
+    : ownerKind === 'computer-profile' && file.type === 'application/json';
+  if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !documentFile && !computerEvidence)
     return Response.json(
       { error: 'Choose an image or video' },
       { status: 415 },

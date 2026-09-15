@@ -37,9 +37,9 @@ describe('T10.5 workflow components', () => {
   });
 
   it('keeps future destinations honest and does not create records', () => {
-    const html = renderToStaticMarkup(createElement(WorkflowPlaceholder, { route: 'Dive Computer Imports', go: () => {} }));
-    expect(html).toContain('Dive Computer Imports');
-    expect(html).toContain('Coming in T12');
+    const html = renderToStaticMarkup(createElement(WorkflowPlaceholder, { route: 'Diving Calendar & Bookings', go: () => {} }));
+    expect(html).toContain('Diving Calendar &amp; Bookings');
+    expect(html).toContain('Coming in Future roadmap');
     expect(html).toContain('No data has been created or migrated');
   });
 });

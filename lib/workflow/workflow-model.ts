@@ -27,7 +27,7 @@ export const WORKFLOW_ROUTES: WorkflowRoute[] = [
   { route: 'Loadouts & Gas', label: 'Loadouts & Cylinder Gas', legacyLabels: ['Reusable Loadouts'], section: 'gear', implemented: true, description: 'Reusable equipment sets plus current cylinder fill/analysis state.' },
   { route: 'Gear Wishlist', label: 'Gear Wishlist', legacyLabels: [], section: 'gear', implemented: true, description: 'Gear options and research before purchase.' },
   { route: 'Logbook', label: 'Logbook', legacyLabels: ['Dive Logbook'], section: 'dive-data', implemented: true, description: 'Rich dive records, debrief, story and linked evidence.' },
-  { route: 'Dive Computer Imports', label: 'Dive Computer Imports', legacyLabels: ['Dive Computer Data'], section: 'dive-data', implemented: false, futureTask: 'T12', description: 'Staged computer source evidence and profile import.' },
+  { route: 'Dive Computer Imports', label: 'Dive Computer Imports', legacyLabels: ['Dive Computer Data'], section: 'dive-data', implemented: true, description: 'Staged computer source evidence and profile import.' },
   { route: 'Sites', label: 'Sites', legacyLabels: [], section: 'dive-data', implemented: true, description: 'Detailed dive site records.' },
   { route: 'Dive Site Map', label: 'Dive Location Map', legacyLabels: ['Dive Site Map'], section: 'dive-data', implemented: true, description: 'Map of sites and where the diver has dived.' },
   { route: 'People', label: 'People & Operators', legacyLabels: ['People'], section: 'dive-data', implemented: true, description: 'Buddies, guides, instructors, centres and operators.' },
