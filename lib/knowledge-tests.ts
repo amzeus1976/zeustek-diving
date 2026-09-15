@@ -6,13 +6,14 @@ export const KNOWLEDGE_RANKS = ['Unknown','New diver','Foundation','Beginner','D
 export type QuestionDifficulty = typeof QUESTION_DIFFICULTIES[number] | 'introductory' | 'intermediate';
 export type QuestionType = 'single-choice'|'multiple-response'|'missing-word'|'diagram-labels'|'scenario-response'|'multiple-choice'|'fill-gap';
 export type Question = {
-  id:string; topic:string; exactTopic?:string; type:QuestionType; difficulty:QuestionDifficulty;
+  id:string; topic:string; exactTopic?:string; objective?:string; type:QuestionType; difficulty:QuestionDifficulty;
   prompt:string; options?:string[]; answers:string[]; explanation:string;
   incorrectExplanations?:Record<string,string>; studySources?:string[]; diagramImage?:string; provenance:string;
 };
 export type QuestionSet = { format:'zeustek-question-set'; schemaVersion:1; setId:string; version:number; title:string; createdAt:string; provenance:string; reviewed:boolean; questions:Question[] };
 export type AttemptQuestion = Question & {setId:string;setVersion:number;response:string|string[];correct:boolean};
 export type TestAttempt = { startedAt:string; completedAt:string; inputs:{training:string[];media:string[];plan:string[];focus:string}; questions:AttemptQuestion[]; correct:number; total:number; diagnostic:boolean };
+export type QuestionReviewStateLike = {setId:string;setVersion:number;questionId:string;usageState:'active'|'suppressed'};
 export { questionSetSchema };
 
 const normal=(value:string)=>value.normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ');
@@ -52,22 +53,25 @@ export function relevantTopics(texts:string[],topics:string[]) {
   const context=texts.join(' ').toLowerCase();return topics.filter(topic=>context.includes(topic.toLowerCase())||topic.toLowerCase().split(/[\s-]+/).some(word=>word.length>4&&context.includes(word)));
 }
 type SelectedQuestion=Question&{setId:string;setVersion:number};
-export function reviewedQuestions(sets:QuestionSet[]):SelectedQuestion[]{return sets.filter(set=>set.reviewed).flatMap(set=>set.questions.map(question=>({...normalizedQuestion(question),setId:set.setId,setVersion:set.version})));}
-export function chooseQuestions(sets:QuestionSet[],topics:string[],count=12,random=()=>crypto.getRandomValues(new Uint32Array(1))[0]!/4294967296){
-  const pool=reviewedQuestions(sets).filter(question=>!topics.length||topics.includes(question.topic));const groups=new Map<string,typeof pool>();
+export function reviewedQuestions(sets:QuestionSet[],reviewStates:QuestionReviewStateLike[]=[]):SelectedQuestion[]{
+  const suppressed=new Set(reviewStates.filter(row=>row.usageState==='suppressed').map(row=>`${row.setId}|${row.setVersion}|${row.questionId}`));
+  return sets.filter(set=>set.reviewed).flatMap(set=>set.questions.map(question=>({...normalizedQuestion(question),setId:set.setId,setVersion:set.version}))).filter(question=>!suppressed.has(`${question.setId}|${question.setVersion}|${question.id}`));
+}
+export function chooseQuestions(sets:QuestionSet[],topics:string[],count=12,random=()=>crypto.getRandomValues(new Uint32Array(1))[0]!/4294967296,reviewStates:QuestionReviewStateLike[]=[]){
+  const pool=reviewedQuestions(sets,reviewStates).filter(question=>!topics.length||topics.includes(question.topic));const groups=new Map<string,typeof pool>();
   for(const question of pool){const list=groups.get(question.topic)??[];list.push(question);groups.set(question.topic,list);}
   const shuffle=<T,>(items:T[])=>{for(let i=items.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[items[i],items[j]]=[items[j]!,items[i]!];}return items;};
   const buckets=shuffle([...groups.values()]).map(items=>shuffle(items).sort((a,b)=>difficultyIndex(a.difficulty)-difficultyIndex(b.difficulty)));const result:typeof pool=[];
   while(result.length<count&&buckets.some(bucket=>bucket.length)){for(const bucket of buckets){const question=bucket.shift();if(question&&result.length<count)result.push(question);}}
   return result.sort((a,b)=>difficultyIndex(a.difficulty)-difficultyIndex(b.difficulty));
 }
-export function chooseDiagnosticQuestions(sets:QuestionSet[],attempts:TestAttempt[],count=18){
-  const all=reviewedQuestions(sets);const answered=new Set(attempts.filter(attempt=>attempt.diagnostic).flatMap(attempt=>attempt.questions.map(question=>`${question.topic}\u0000${difficultyIndex(question.difficulty)}`)));
+export function chooseDiagnosticQuestions(sets:QuestionSet[],attempts:TestAttempt[],count=18,reviewStates:QuestionReviewStateLike[]=[]){
+  const all=reviewedQuestions(sets,reviewStates);const answered=new Set(attempts.filter(attempt=>attempt.diagnostic).flatMap(attempt=>attempt.questions.map(question=>`${question.topic}\u0000${difficultyIndex(question.difficulty)}`)));
   const ordered=[...all].sort((a,b)=>difficultyIndex(a.difficulty)-difficultyIndex(b.difficulty));
   const selected:SelectedQuestion[]=[];const coveredTopics=new Set<string>();
   for(const question of ordered){if(!coveredTopics.has(question.topic)&&!answered.has(`${question.topic}\u0000${difficultyIndex(question.difficulty)}`)){selected.push(question);coveredTopics.add(question.topic);}}
   for(const question of ordered){if(selected.length>=count)break;const key=`${question.topic}\u0000${difficultyIndex(question.difficulty)}`;if(!answered.has(key)&&!selected.includes(question))selected.push(question);}
-  if(!selected.length)return chooseQuestions(sets,[],count);
+  if(!selected.length)return chooseQuestions(sets,[],count,undefined,reviewStates);
   return selected.slice(0,count).sort((a,b)=>difficultyIndex(a.difficulty)-difficultyIndex(b.difficulty));
 }
 export function diagnosticCoverage(attempts:TestAttempt[],topics:string[]){

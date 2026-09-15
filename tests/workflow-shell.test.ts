@@ -16,8 +16,9 @@ describe('T10.5 application shell integration', () => {
     }
   });
 
-  it('mounts honest T11/T12 and future workflow destinations', () => {
-    expect(dashboard).toContain("['Dive Computer Imports','Diving Calendar & Bookings','Gas Planning','Dive Knowledge']");
+  it('mounts Dive Knowledge while keeping T12 and future workflow destinations honest', () => {
+    expect(dashboard).toContain("active === 'Dive Knowledge' && <KnowledgeCentre go={go}");
+    expect(dashboard).toContain("['Dive Computer Imports','Diving Calendar & Bookings','Gas Planning']");
     expect(dashboard).toContain('<WorkflowPlaceholder route={active} go={go}/>');
   });
 

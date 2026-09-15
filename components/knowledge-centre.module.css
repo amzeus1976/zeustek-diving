@@ -1,0 +1,155 @@
+.page {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.snapshot {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid #2b3f49;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0b1418, #111);
+  overflow: hidden;
+}
+.snapshot div {
+  min-width: 0;
+  min-height: 100px;
+  display: grid;
+  place-content: center;
+  gap: 0.25rem;
+  text-align: center;
+  padding: 0.8rem;
+  border-right: 1px solid #2b3f49;
+}
+.snapshot div:last-child {
+  border-right: 0;
+}
+.snapshot b {
+  font-size: 1.6rem;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.snapshot span {
+  font-size: 0.78rem;
+  color: #9aabb3;
+}
+.bankList {
+  display: grid;
+  gap: 0.5rem;
+}
+.bankRow {
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  text-align: left;
+  border: 1px solid #234453;
+  border-radius: 9px;
+  background: #081115;
+  color: #e7edf0;
+  padding: 0.7rem 0.8rem;
+}
+.bankRow:hover,
+.bankRow:focus-visible {
+  border-color: #08baf2;
+  background: #0a1a21;
+}
+.bankRow:focus-visible {
+  outline: 2px solid #ff8a00;
+  outline-offset: 2px;
+}
+.bankRow span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.bankRow b,
+.bankRow small {
+  overflow-wrap: anywhere;
+}
+.bankRow small {
+  color: #92a4ad;
+}
+.bankRow em {
+  font-style: normal;
+  color: #ff9f3e;
+  font-size: 0.75rem;
+}
+.testGrid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: end;
+}
+.testGrid label {
+  display: grid;
+  gap: 0.35rem;
+}
+.testGrid select {
+  width: 100%;
+  min-width: 0;
+}
+.bankDialog {
+  width: min(850px, calc(100vw - 20px));
+  max-height: min(90vh, 920px);
+  overflow: auto;
+}
+.bankQuestions {
+  display: grid;
+  gap: 0.5rem;
+}
+.bankQuestions details {
+  border: 1px solid #29424d;
+  border-radius: 8px;
+  padding: 0.6rem;
+}
+.bankQuestions summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.bankQuestions small {
+  display: block;
+  color: #8fa3ac;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .snapshot div {
+    border-bottom: 1px solid #2b3f49;
+  }
+  .snapshot div:nth-child(2n) {
+    border-right: 0;
+  }
+  .snapshot div:last-child {
+    grid-column: 1/-1;
+    border-bottom: 0;
+  }
+  .testGrid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 460px) {
+  .snapshot {
+    grid-template-columns: 1fr;
+  }
+  .snapshot div,
+  .snapshot div:nth-child(2n) {
+    border-right: 0;
+    border-bottom: 1px solid #2b3f49;
+  }
+  .snapshot div:last-child {
+    grid-column: auto;
+    border-bottom: 0;
+  }
+  .bankRow {
+    grid-template-columns: 1fr;
+  }
+  .bankDialog {
+    width: calc(100vw - 12px);
+  }
+}

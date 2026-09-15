@@ -42,7 +42,7 @@ export const WORKFLOW_ROUTES: WorkflowRoute[] = [
   { route: 'Course Map', label: 'Planned Training', legacyLabels: ['Planned Training'], section: 'diving-cpd', implemented: true, description: 'Training pathway and course planning view.' },
   { route: 'Skills & Currency', label: 'Dive Skills', legacyLabels: ['Skills and Currency', 'Dive Skills'], section: 'diving-cpd', implemented: true, description: 'Skill evidence, competence and currency.' },
   { route: 'Conservation & AWARE', label: 'Conservation & AWARE', legacyLabels: ['Conservation'], section: 'diving-cpd', implemented: true, description: 'Conservation activity and evidence.' },
-  { route: 'Dive Knowledge', label: 'Dive Knowledge', legacyLabels: ['Diving Knowledge', 'Knowledge Centre', 'Dive knowledge quizzes'], section: 'diving-cpd', implemented: false, futureTask: 'T11', description: 'Question banks, diagnostics and AI study workflow.' },
+  { route: 'Dive Knowledge', label: 'Dive Knowledge', legacyLabels: ['Diving Knowledge', 'Knowledge Centre', 'Dive knowledge quizzes'], section: 'diving-cpd', implemented: true, description: 'Question banks, diagnostics and AI study workflow.' },
   { route: 'Dive Media', label: 'Dive Bibliography', legacyLabels: ['Dive Bibliography'], section: 'diving-cpd', implemented: true, description: 'Books, articles, podcasts, videos and learning media.' },
   { route: 'Dive News', label: 'Dive News', legacyLabels: [], section: 'diving-cpd', implemented: true, description: 'News sources and archive.' },
   { route: 'Professional Development', label: 'Professional Development', legacyLabels: ['Dive Professional Development'], section: 'diving-cpd', implemented: true, description: 'Professional readiness and evidence.' },

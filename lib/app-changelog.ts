@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.30',
+    date: '2026-09-15',
+    title: 'Dive Knowledge review & study workflow',
+    changes: [
+      'Added Dive Knowledge as a standalone Diving CPD page for question banks, diagnostic tests, question-quality management and evidence-led study.',
+      'Question suppression is reversible and affects future test selection only; immutable historical attempt snapshots, scores, wording and provenance remain reproducible.',
+      'Added Needs review-first management with reasoned review states plus topic, subtopic and objective diagnostics that explain Strength, Weakness and Insufficient evidence denominators.',
+      'Added incremental AI review export with previous-advice continuity and a checkpoint that advances only after the derived artifact is successfully created.',
+      'Added portable study-pack ZIP import/export with manifest and SHA-256 verification, strict limits, full preflight validation and atomic no-partial-write commit behaviour.',
+      'Reused the canonical local-first event/outbox/sync architecture and existing question/test stores; no parallel bank, attempt store, analytics table or data migration was introduced.',
+    ],
+  },
+  {
     version: '1.0.29',
     date: '2026-09-15',
     title: 'Workflow and user-data controls refinement',
