@@ -97,10 +97,11 @@ import { DivePlanningCentre } from '@/components/dive-planning-centre';
 import { ExperienceAnalytics } from '@/components/experience-analytics';
 import { KnowledgeCentre } from '@/components/knowledge-centre';
 import { DiveComputerData } from '@/components/dive-computer-data';
+import { DivingCalendarBookings } from '@/components/planning/diving-calendar-bookings';
+import { GasPlanning } from '@/components/planning/gas-planning';
 import { CollapsibleWorkCard } from '@/components/workflow/collapsible-work-card';
 import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-review';
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
-import { WorkflowPlaceholder } from '@/components/workflow/workflow-placeholder';
 import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, resolveWorkflowRoute, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
@@ -570,7 +571,9 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Gear Wishlist' && <GearWishlist />}{' '}
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
+          {active === 'Diving Calendar & Bookings' && <DivingCalendarBookings go={go} />}{' '}
           {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
+          {active === 'Gas Planning' && <GasPlanning go={go} />}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
@@ -592,7 +595,6 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sync' && <SyncCentre />}{' '}
           {active === 'Backups' && <BackupsScreen />}{' '}
           {active === 'Settings' && <SiteConfiguration go={go} />}
-          {['Diving Calendar & Bookings','Gas Planning'].includes(active) && <WorkflowPlaceholder route={active} go={go}/>}
         </ScreenTiming></div>
       </section>
       <nav className="focus-mobile-nav">

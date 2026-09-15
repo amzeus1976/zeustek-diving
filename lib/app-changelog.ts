@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.34',
+    date: '2026-09-15',
+    title: 'Diving calendar, bookings & gas planning',
+    changes: [
+      'Replaced the two remaining Planning roadmap placeholders with dedicated Diving Calendar & Bookings and Gas Planning workspaces across desktop, tablet and phone/PWA layouts.',
+      'Added calendar, list and bookings views with event-type filters, upcoming-event details and additive create, edit, complete, cancel and archive actions through the existing local-first history/outbox path.',
+      'Connected bookings to existing Trips, Dive Plans, Gas Planning and Planned Training without creating a second planning system or duplicating canonical records.',
+      'Added lightweight gas planning linked to canonical Dive Plans, cylinders, fills and analyses, with real Logbook RMV provenance, manual overrides, basic gas-needed/available estimates and explicit incomplete-evidence warnings.',
+      'Saved gas-plan records through the generic sync architecture and optional stable Plan references without overwriting Dive fields, changing existing Plan IDs or adding a database table.',
+      'Preserved the compact ZeusTek workflow controls, old section aliases, transparent icon language and all existing T09–T12.2 behaviour.',
+    ],
+  },
+  {
     version: '1.0.33',
     date: '2026-09-15',
     title: 'Transparent diving icon system',

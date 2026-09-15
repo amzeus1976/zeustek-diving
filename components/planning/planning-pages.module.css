@@ -1,0 +1,565 @@
+.page {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid rgba(0, 180, 255, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(4, 10, 13, 0.98),
+    rgba(2, 33, 50, 0.84)
+  );
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.heroTitle {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.hero h1 {
+  margin: 0.1rem 0;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+}
+
+.hero p {
+  margin: 0;
+  color: #bfd0d9;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 320px;
+  gap: 12px;
+  align-items: start;
+}
+
+.sideRail,
+.detailPane,
+.workArea {
+  min-width: 0;
+}
+
+.sideRail,
+.detailCard,
+.emptyPane {
+  border: 1px solid rgba(0, 180, 255, 0.24);
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 14, 18, 0.96),
+    rgba(3, 18, 27, 0.94)
+  );
+  padding: 14px;
+}
+
+.sideRail {
+  position: sticky;
+  top: 82px;
+  display: grid;
+  gap: 10px;
+}
+
+.sideRail h2,
+.sideRail h3 {
+  margin: 0.2rem 0;
+  color: #aee8ff;
+}
+
+.sideRail ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #d5e5ec;
+  display: grid;
+  gap: 8px;
+}
+
+.sideRail button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  text-align: left;
+  border: 1px solid rgba(0, 180, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(5, 20, 30, 0.78);
+  color: #d9eaf0;
+  padding: 0.55rem 0.7rem;
+}
+
+.activePill {
+  border-color: #ff8a00 !important;
+  color: #ff9c24 !important;
+}
+
+.railNote,
+.provenance {
+  border: 1px solid rgba(0, 180, 255, 0.17);
+  border-radius: 10px;
+  background: rgba(0, 186, 242, 0.07);
+  color: #b9ccd4;
+  padding: 10px;
+  line-height: 1.45;
+}
+
+.workArea {
+  display: grid;
+  gap: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+}
+
+.tabs button,
+.toolbar select,
+.toolbar input {
+  min-height: 44px;
+  border: 1px solid rgba(0, 180, 255, 0.18);
+  border-radius: 10px;
+  background: #081116;
+  color: #eaf7fb;
+  padding: 0.6rem 0.8rem;
+}
+
+.activeTab {
+  border-color: #08baf2 !important;
+  box-shadow: inset 0 -2px 0 #08baf2;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.monthHeader {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.calendarGrid strong {
+  color: #8fa4ad;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.calendarGrid button {
+  min-width: 0;
+  min-height: 74px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: #071218;
+  color: #dfeef4;
+  text-align: left;
+  padding: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+}
+
+.calendarGrid span {
+  width: 100%;
+  font-weight: 700;
+}
+
+.outsideMonth {
+  opacity: 0.38;
+}
+
+.calendarGrid i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #08baf2;
+  box-shadow: 0 0 10px rgba(0, 186, 242, 0.6);
+}
+
+.calendarGrid i[data-kind='course'],
+.calendarGrid i[data-kind='assessment'] {
+  background: #7b61ff;
+}
+
+.calendarGrid i[data-kind='trip'],
+.calendarGrid i[data-kind='travel'] {
+  background: #27d17f;
+}
+
+.calendarGrid i[data-kind='show'] {
+  background: #ff9c24;
+}
+
+.calendarGrid i[data-kind='gear-service'] {
+  background: #ff4e6a;
+}
+
+.calendarGrid em {
+  font-style: normal;
+  color: #bcd0d8;
+  font-size: 0.72rem;
+}
+
+.eventList {
+  display: grid;
+  gap: 8px;
+}
+
+.eventList button {
+  min-width: 0;
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(0, 180, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(4, 18, 27, 0.76);
+  color: #eaf7fb;
+  text-align: left;
+  padding: 10px;
+}
+
+.eventList button:hover,
+.eventList button:focus-visible,
+.selectedRow {
+  border-color: #ff8a00 !important;
+  background: rgba(255, 138, 0, 0.08) !important;
+}
+
+.eventList span {
+  display: grid;
+  min-width: 0;
+}
+
+.eventList b,
+.eventList small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventList small {
+  color: #a1b3bc;
+}
+
+.eventList em {
+  font-style: normal;
+  color: #ff9c24;
+  font-size: 0.78rem;
+}
+
+.detailPane {
+  position: sticky;
+  top: 82px;
+}
+
+.detailCard {
+  display: grid;
+  gap: 12px;
+}
+
+.detailCard header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.detailCard h2,
+.detailCard p {
+  margin: 0.1rem 0;
+}
+
+.detailCard p {
+  color: #a9bac3;
+}
+
+.detailCard dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.detailCard div:has(> dt) {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.detailCard dt {
+  color: #8ea4ad;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.detailCard dd {
+  margin: 0;
+  color: #eefbff;
+  overflow-wrap: anywhere;
+}
+
+.linkRows,
+.actionGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.linkRows button,
+.actionGrid button {
+  justify-content: space-between;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.emptyPane {
+  text-align: center;
+  color: #a8bbc4;
+}
+
+.emptyPane svg {
+  width: 42px;
+  height: 42px;
+  color: #08baf2;
+}
+
+.emptyCopy {
+  margin: 0;
+  color: #9eb1ba;
+}
+
+.linkedPlan,
+.cylinderCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(0, 180, 255, 0.14);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(4, 18, 27, 0.76);
+}
+
+.linkedPlan span,
+.cylinderCard span {
+  display: grid;
+  min-width: 0;
+}
+
+.linkedPlan small,
+.cylinderCard small {
+  color: #9eb1ba;
+}
+
+.cylinderList {
+  display: grid;
+  gap: 8px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.summaryGrid span {
+  border: 1px solid rgba(0, 180, 255, 0.14);
+  border-radius: 10px;
+  background: #071218;
+  padding: 10px;
+  display: grid;
+}
+
+.summaryGrid small {
+  color: #91a7b0;
+}
+
+.summaryGrid b {
+  font-size: 1.1rem;
+}
+
+.warningList {
+  display: grid;
+  gap: 6px;
+  padding-left: 0;
+  list-style: none;
+  color: #ffb14a;
+}
+
+.warningList li {
+  display: flex;
+  gap: 6px;
+}
+
+.editorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.editorGrid label,
+.editorCylinderList label {
+  display: grid;
+  gap: 5px;
+}
+
+.editorGrid input,
+.editorGrid select,
+.editorGrid textarea,
+.editorCylinderList input,
+.editorCylinderList select {
+  width: 100%;
+  min-width: 0;
+}
+
+.editorGrid textarea {
+  min-height: 90px;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.editorSectionHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.editorCylinderList {
+  display: grid;
+  gap: 10px;
+  max-height: 42dvh;
+  overflow: auto;
+}
+
+.editorCylinderList fieldset {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border: 1px solid rgba(0, 180, 255, 0.18);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.editorCylinderList legend {
+  color: #ff9c24;
+  padding-inline: 4px;
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sideRail,
+  .detailPane {
+    position: static;
+  }
+
+  .sideRail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sideRail h2,
+  .sideRail h3,
+  .sideRail ul,
+  .railNote {
+    grid-column: 1 / -1;
+  }
+
+  .detailPane {
+    order: 3;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sideRail {
+    display: none;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .calendarGrid button {
+    min-height: 54px;
+    padding: 5px;
+  }
+
+  .calendarGrid i {
+    width: 7px;
+    height: 7px;
+  }
+
+  .eventList button {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .eventList button > svg:last-child {
+    display: none;
+  }
+
+  .summaryGrid,
+  .editorGrid,
+  .editorCylinderList fieldset {
+    grid-template-columns: 1fr;
+  }
+
+  .linkedPlan,
+  .cylinderCard {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .linkedPlan > :last-child,
+  .cylinderCard > :last-child {
+    grid-column: 2;
+  }
+
+  .detailPane {
+    position: static;
+  }
+}
