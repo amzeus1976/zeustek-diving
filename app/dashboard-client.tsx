@@ -91,6 +91,7 @@ import { LoadoutsGas } from '@/components/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
 import { ProfessionalDevelopment } from '@/components/professional-development';
+import { DivePlanningCentre } from '@/components/dive-planning-centre';
 import { ExperienceAnalytics } from '@/components/experience-analytics';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
@@ -554,7 +555,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Gear Wishlist' && <GearWishlist />}{' '}
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
-          {active === 'Dive Plans' && <PlanningCentre initialTab={destinationTab==='Dive Bucket List'?'Bucket list':'Plans'} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} />}{' '}
+          {active === 'Dive Plans' && <DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} />}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
