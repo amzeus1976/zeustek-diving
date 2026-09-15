@@ -2,7 +2,7 @@
 import {useEffect,useId,useRef,useState,type ReactNode} from 'react';
 export const dialogAllowsImplicitDismiss = (editable:boolean) => !editable;
 export const dialogNeedsDiscardConfirmation = (editable:boolean,dirty:boolean) => editable&&dirty;
-export function AccessibleDialog({label,className,close,editable=false,dirty=false,containDismiss=false,children}:{label:string;className:string;close:()=>void;editable?:boolean;dirty?:boolean;containDismiss?:boolean;children:ReactNode}){
+export function AccessibleDialog({label,className,close,editable=false,dirty=false,containDismiss=false,onEscape,children}:{label:string;className:string;close:()=>void;editable?:boolean;dirty?:boolean;containDismiss?:boolean;onEscape?:()=>void;children:ReactNode}){
   const ref=useRef<HTMLDialogElement>(null);
   const confirmRef=useRef<HTMLButtonElement>(null);
   const confirmTitleId=useId();
@@ -17,7 +17,7 @@ export function AccessibleDialog({label,className,close,editable=false,dirty=fal
   },[]);
   useEffect(()=>{if(confirmDiscard)confirmRef.current?.focus({preventScroll:true});},[confirmDiscard]);
   return <dialog tabIndex={-1} ref={ref} className={className} aria-label={label} data-editable={editable||undefined}
-    onCancel={event=>{event.preventDefault();if(containDismiss)event.stopPropagation();if(dialogAllowsImplicitDismiss(editable))close();}}
+    onCancel={event=>{event.preventDefault();if(containDismiss)event.stopPropagation();if(onEscape)onEscape();else if(dialogAllowsImplicitDismiss(editable))close();}}
     onInputCapture={()=>{if(editable)setInteractionDirty(true);}}
     onChangeCapture={()=>{if(editable)setInteractionDirty(true);}}
     onClickCapture={event=>{

@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.26',
+    date: '2026-09-15',
+    title: 'Dive Planning Centre',
+    changes: [
+      'Rebuilt Dive Plans as a responsive Planning Centre while preserving every existing Plan ID, deep link, offline event and immutable Plan-to-Dive revision.',
+      'Added Site and recorded-condition snapshots, team roles, human-factor risks and mitigations, emergency arrangements, readiness checks, checklists, notes and canonical Skill references.',
+      'Reusable loadouts are applied as stable Equipment IDs and slot snapshots; later Equipment edits do not rewrite the Plan, and technical gas controls reuse canonical cylinders, fills and analyses.',
+      'Technical planning remains progressive and advisory: ordinary recreational Plans do not require technical fields, while technical readiness requires recorded depth/runtime and current canonical gas evidence.',
+      'Plans can link to an existing Trip or expedition by stable ID, with the Trip back-reference updated without copying or replacing either record.',
+      'Save draft, Mark ready and Start dive retain the established local-first store, with Start dive carrying the exact immutable originating Plan revision into the existing Dive editor.',
+    ],
+  },
+  {
     version: '1.0.25',
     date: '2026-09-15',
     title: 'Experience & Analytics',
