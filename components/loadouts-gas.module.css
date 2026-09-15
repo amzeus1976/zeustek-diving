@@ -6,3 +6,6 @@
 .editorTop>*,.slotGroups>*,.overrideGrid>*,.inlineForm>*,.loadoutCard,.cylinderCard{min-width:0;overflow-wrap:anywhere}
 .heading button:focus-visible,.tabs button:focus-visible,.loadoutCard button:focus-visible,.cylinderCard button:focus-visible,.editor :focus-visible,.applyDialog :focus-visible,.cylinderDetail :focus-visible{outline:3px solid #20c8ff;outline-offset:3px}
 .loadoutCard{padding-top:3.5rem}.slotGroups label,.editorTop label,.overrideGrid label,.inlineForm label,.search{font-size:.875rem}.cylinderDetail input[type=checkbox]{min-height:20px}
+.iconHeading, .iconTitle { display:flex; align-items:center; gap:.75rem; min-width:0; }
+.iconHeading > div, .iconTitle > span { min-width:0; }
+.iconTitle > span { overflow-wrap:anywhere; }

@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.33',
+    date: '2026-09-15',
+    title: 'Transparent diving icon system',
+    changes: [
+      'Added the supplied 131 transparent ZeusTek diving icons as individually addressable PWA assets, with corrected semantic filename assignments where the original automatic crop names pointed to the wrong pictured icon.',
+      'Added one typed, fail-safe icon registry and reusable responsive component; missing or unknown mappings fall back safely without affecting the surrounding text or interaction.',
+      'Applied the icon language to high-value Overview, Logbook, Sites, Trips, Dive Planning Centre, Loadouts & Gas, Certifications, Planned Training, Dive Skills, Technical Diving, Professional Development, Conservation, Dive Knowledge, Insights and Dive Computer Imports surfaces.',
+      'Kept icons decorative beside existing visible labels, retained keyboard and screen-reader names, and constrained artwork at phone, tablet and desktop sizes without horizontal overflow.',
+      'Kept the ten large source sheets out of the runtime bundle; the application loads only the individual transparent PNG needed for each visible item.',
+      'No Dive, Site, Equipment, certification, Plan, import, question, evidence or other canonical record was changed, migrated or duplicated.',
+    ],
+  },
+  {
     version: '1.0.32',
     date: '2026-09-15',
     title: 'Dive computer import workflow correction',

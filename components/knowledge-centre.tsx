@@ -39,6 +39,7 @@ import {
 } from '@/lib/offline/learning-review';
 import { useRecordRefresh } from './record-status';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { CollapsibleWorkCard } from './workflow/collapsible-work-card';
 import { WorkflowContextStrip } from './workflow/workflow-context-strip';
 import { KnowledgeReviewWorkflow } from './knowledge-review-workflow';
@@ -499,7 +500,9 @@ export function KnowledgeCentre({ go }: { go: (route: string) => void }) {
   return (
     <section className={`knowledge-centre ${styles.page}`}>
       <header className="focus-heading">
-        <div>
+        <div className="focus-heading-title">
+          <ZeusTekIcon id="needs-review" size="heading" />
+          <div>
           <span>DIVE KNOWLEDGE</span>
           <h1>Dive Knowledge</h1>
           <p>
@@ -507,6 +510,7 @@ export function KnowledgeCentre({ go }: { go: (route: string) => void }) {
             and weaknesses, and carry focused study forward without rewriting
             test history.
           </p>
+          </div>
         </div>
         <button
           type="button"

@@ -27,6 +27,7 @@ import {
   YAxis,
 } from 'recharts';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { useRecordRefresh } from './record-status';
 import { listDives } from '../lib/offline/dives';
 import {
@@ -546,7 +547,9 @@ export function ExperienceAnalytics({ go }: Props) {
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
-        <div>
+        <div className="focus-heading-title">
+          <ZeusTekIcon id="sac-rmv" size="hero" />
+          <div>
           <span className="focus-eyebrow">ANALYTICS &amp; PROGRESS</span>
           <h1>Experience &amp; Analytics</h1>
           <p>
@@ -563,6 +566,7 @@ export function ExperienceAnalytics({ go }: Props) {
               {projection.totalAvailableDives} dives · review filters
             </button>
           )}
+          </div>
         </div>
         <div className={styles.heroQuote}>
           Better divers through

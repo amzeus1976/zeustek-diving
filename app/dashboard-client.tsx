@@ -59,9 +59,11 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScreenTiming } from '@/components/screen-timing';
+import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { AppChangelog, AppVersionLink } from '@/components/app-changelog';
 import { listOperators, saveOperator, deleteOperator, type OperatorRecord } from '@/lib/offline/dive-planning';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
+import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/lib/zeustek-icons';
 import {fillMissingGasRates} from '@/lib/gas-rates';
 import { diveHeat } from '@/lib/dive-heat';
 import { logTimeRange } from '@/lib/log-time';
@@ -288,18 +290,24 @@ function Heading({
   title,
   copy,
   action,
+  icon,
 }: {
   eyebrow: string;
   title: string;
   copy: string;
   action?: React.ReactNode;
+  icon?: string;
 }) {
+  const iconId = icon ?? resolvePageIconId(title);
   return (
     <header className="focus-heading">
-      <div>
-        <span>{eyebrow}</span>
-        <h1>{title}</h1>
-        <p>{copy}</p>
+      <div className="focus-heading-title">
+        <ZeusTekIcon id={iconId} size="heading" />
+        <div>
+          <span>{eyebrow}</span>
+          <h1>{title}</h1>
+          <p>{copy}</p>
+        </div>
       </div>
       {action}
     </header>
@@ -1298,14 +1306,14 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                 <small className="log-time" aria-label={`Time in ${dive.timeIn || 'not recorded'}, time out ${dive.timeOut || 'not recorded'}`}>{logTimeRange(dive.timeIn,dive.timeOut)}</small>
               </div>
               <div>
-                <h3>{dive.site}</h3>
+                <h3 className="icon-title"><ZeusTekIcon id={resolveDiveIconId(dive)} size={28}/><span>{dive.site}</span></h3>
                 <p>{dive.notes || 'Manual dive log'}</p>
                 <div className="log-metrics">
                   <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
                   <span className="log-metric" title="Maximum depth"><Waves size={18}/>{dive.maxDepthM ?? '—'} m</span>
                   <span className="log-metric" title="Bottom time"><Clock size={18}/>{dive.bottomTimeMin ?? '—'} min</span>
                   <span className="log-metric" title="Breathing gas"><Cylinder size={18}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><Thermometer size={18}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><Waves size={18}/>{dive.visibilityM ?? '—'} m vis</span>
-                  <span>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
+                  <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
                   <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
                 </div>
               </div>
@@ -3068,7 +3076,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
                     {(item.sourceName || 'Manual').toUpperCase()}
                   </span>
                   {(item.unconfirmed === true || (item.sourceName === 'DiveMap' && item.positionConfidence != null && item.positionConfidence < 0.5)) && <span className="site-unconfirmed">UNCONFIRMED MARK</span>}
-                  <h2>{item.name}</h2>
+                  <h2 className="icon-title"><ZeusTekIcon id={resolveZeusTekIconId(item.siteType ?? item.waterType ?? item.location, 'dive-site')} size={30}/><span>{item.name}</span></h2>
                 </div>
                 <div className="record-actions">
                   <button className={item.favourite ? 'active' : ''} onClick={() => void toggleFavourite(item)} aria-label={`${item.favourite ? 'Remove' : 'Add'} ${item.name} ${item.favourite ? 'from' : 'to'} favourites`}><Star size={15} fill={item.favourite ? 'currentColor' : 'none'} /></button>
@@ -3777,6 +3785,8 @@ function CoursePlanner({ certifications, progress, diveCount, refresh, go }: {
 }
 
 function courseArtwork(title:string,stage:string) {
+  const iconId = resolveZeusTekIconId(`${title} ${stage}`);
+  if (iconId) return `/zeustek-icons/transparent/${iconId}.png`;
   const name=title.toLowerCase();
   if(/nitrox|gas|trimix|rebreather/.test(name)) return '/course-art/enriched-air-cylinder.webp';
   if(/navigation|navigator|search/.test(name)) return '/course-art/underwater-compass.webp';
@@ -3935,7 +3945,7 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
               <span className="focus-eyebrow">
                 {item.agency || 'OTHER AGENCY'}
               </span>
-              <h2>{item.certification}</h2>
+              <h2 className="icon-title"><ZeusTekIcon id={resolveZeusTekIconId(item.certification, 'training')} size={30}/><span>{item.certification}</span></h2>
               <p>
                 {[
                   item.level,

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Leaf, Plus, Recycle, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { useRecordRefresh } from './record-status';
 import { listLocalDiveRecords } from '../lib/offline/dive-store';
@@ -95,7 +96,7 @@ export function ConservationPage({go}:{go:(section:string)=>void}) {
     finally{setActionBusy(false);}
   }
   return <section className="conservation-page">
-    <header className="focus-heading"><div><span>OCEAN STEWARDSHIP</span><h1>Conservation & AWARE</h1><p>Record observations, debris actions and conservation learning linked to your dives and sites.</p></div><button className="focus-primary" onClick={()=>openAdd('marine-life')}><Plus size={16}/> Log activity</button></header>
+    <header className="focus-heading"><div className="focus-heading-title"><ZeusTekIcon id="project-aware-specialist" size="heading"/><div><span>OCEAN STEWARDSHIP</span><h1>Conservation & AWARE</h1><p>Record observations, debris actions and conservation learning linked to your dives and sites.</p></div></div><button className="focus-primary" onClick={()=>openAdd('marine-life')}><Plus size={16}/> Log activity</button></header>
     {error&&<p role="alert">{error} <button className="focus-secondary" onClick={()=>void refresh()}>Retry activities</button></p>}
     {loading&&<p role="status">Loading local activities…</p>}
     <div className="conservation-summary" aria-label="Calculated conservation totals">

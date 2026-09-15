@@ -1,0 +1,30 @@
+.icon {
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  clip-path: inset(3% round 16%);
+  filter: drop-shadow(0 0 7px rgba(0, 210, 255, .2));
+}
+
+.chip { width: 1.35rem; height: 1.35rem; }
+.card { width: 2.5rem; height: 2.5rem; }
+.heading { width: clamp(3rem, 5vw, 4rem); height: clamp(3rem, 5vw, 4rem); }
+.hero { width: clamp(4rem, 8vw, 6.5rem); height: clamp(4rem, 8vw, 6.5rem); }
+.custom { width: var(--zeustek-icon-size); height: var(--zeustek-icon-size); }
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .icon { transition: filter 160ms ease, transform 160ms ease; }
+  a:hover .icon, button:hover .icon { filter: drop-shadow(0 0 9px rgba(255, 111, 0, .34)); }
+}
+
+@media (max-width: 480px) {
+  .heading { width: 3rem; height: 3rem; }
+  .hero { width: 4.25rem; height: 4.25rem; }
+}
