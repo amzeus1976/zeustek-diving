@@ -16,11 +16,12 @@ describe('T10.5 application shell integration', () => {
     }
   });
 
-  it('mounts Dive Knowledge and Dive Computer Imports while keeping future workflow destinations honest', () => {
+  it('mounts Dive Knowledge, Dive Computer Imports and both completed planning destinations', () => {
     expect(dashboard).toContain("active === 'Dive Knowledge' && <KnowledgeCentre go={go}");
     expect(dashboard).toContain("active === 'Dive Computer Imports' && <DiveComputerData go={go}");
-    expect(dashboard).toContain("['Diving Calendar & Bookings','Gas Planning']");
-    expect(dashboard).toContain('<WorkflowPlaceholder route={active} go={go}/>');
+    expect(dashboard).toContain("active === 'Diving Calendar & Bookings' && <DivingCalendarBookings go={go}");
+    expect(dashboard).toContain("active === 'Gas Planning' && <GasPlanning go={go}");
+    expect(dashboard).not.toContain('<WorkflowPlaceholder route={active} go={go}/>');
   });
 
   it('adds density controls without replacing the T10 planner', () => {

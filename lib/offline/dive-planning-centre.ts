@@ -34,6 +34,13 @@ export interface PlanEmergency {
   notes?: string | null;
 }
 export interface PlanChecklistItem { id: string; label: string; completed: boolean }
+export interface PlanGasReference {
+  gasPlanId: string;
+  linkedAt: string;
+  name: string;
+  notes: string;
+  warnings: string[];
+}
 export interface EnrichedDivePlanExtension {
   lifecycleStatus?: PlanLifecycleStatus;
   tripId?: string | null;
@@ -53,6 +60,7 @@ export interface EnrichedDivePlanExtension {
   emergency?: PlanEmergency;
   checklist?: PlanChecklistItem[];
   plannedSkillKeys?: string[];
+  gasPlanLinks?: PlanGasReference[];
   technicalMode?: boolean;
   decoSchedule?: Array<{ depthM: number | null; durationMin: number | null; gas?: string }>;
 }
@@ -85,7 +93,9 @@ export function normalisePlan(plan: StoredEnrichedDivePlan): StoredEnrichedDiveP
 }
 
 export async function listEnrichedDivePlans() {
-  return (await listDiveTrips()).map((plan) => normalisePlan(plan as StoredEnrichedDivePlan));
+  return (await listDiveTrips())
+    .filter((plan) => !('bookingKind' in plan))
+    .map((plan) => normalisePlan(plan as StoredEnrichedDivePlan));
 }
 
 export interface PlanReadiness {
