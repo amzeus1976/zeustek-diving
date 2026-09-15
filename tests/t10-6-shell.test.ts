@@ -16,7 +16,10 @@ describe('T10.6 universal user-data controls shell', () => {
   });
 
   it('provides details, metadata edit, delete, archive and unlink controls', () => {
-    for (const label of ['View details', 'Edit', 'Delete', 'Archive / suppress', 'Unlink only', 'Manual dependency review']) expect(dataTools).toContain(label);
+    for (const label of ['Available safe action', 'Edit', 'Delete', 'Archive / suppress', 'Unlink only', 'Manual dependency review']) expect(dataTools).toContain(label);
+    expect(dataTools).toContain('recordActionReason');
+    expect(dataTools).toContain('data-opens-detail');
+    expect(dataTools).not.toContain('View details');
     expect(dataTools).toContain('saveLocalRecord');
     expect(dataTools).toContain('deleteLocalRecord');
   });

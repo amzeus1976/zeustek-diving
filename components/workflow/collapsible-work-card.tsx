@@ -46,20 +46,18 @@ export function CollapsibleWorkCard({
 
   const canShowMore = rowCount != null && rowCount > previewLimit;
   const content = typeof children === 'function' ? children({ expanded, previewLimit }) : children;
-
   return (
     <section id={id} className={`${styles.card} ${className}`} data-minimized={minimized || undefined}>
       <header className={styles.header}>
         <div className={styles.heading}>
           {eyebrow && <span className="focus-eyebrow">{eyebrow}</span>}
-          <h2>{title}</h2>
+          <h2>{onOpenDetail ? <button type="button" className={styles.headingButton} onClick={onOpenDetail} aria-label={`Open ${title}`}>{title}</button> : title}</h2>
           {(status || alert) && <p className={styles.status}>{status}{alert && <strong>{alert}</strong>}</p>}
         </div>
         <div className={styles.controls}>
           {actions}
-          {onOpenDetail && <button type="button" className="focus-secondary" onClick={onOpenDetail} aria-label={`Open ${title} detail`}>Open detail</button>}
           {canShowMore && !minimized && <button type="button" className="focus-secondary" aria-controls={regionId} aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>{expanded ? 'Show less' : `Show more${rowCount ? ` (${rowCount - previewLimit})` : ''}`}</button>}
-          <button type="button" className="focus-secondary" aria-controls={regionId} aria-expanded={!minimized} onClick={() => setMinimized((value) => !value)}>{minimized ? 'Restore' : 'Minimise'} <span className={styles.srOnly}>{title}</span></button>
+          <button type="button" className={`${styles.densityButton} focus-secondary`} aria-controls={regionId} aria-expanded={!minimized} aria-label={`${minimized ? 'Expand' : 'Collapse'} ${title}`} title={`${minimized ? 'Expand' : 'Collapse'} ${title}`} onClick={() => setMinimized((value) => !value)}><span aria-hidden="true">{minimized ? '+' : '−'}</span></button>
         </div>
       </header>
       {!minimized && <div id={regionId} className={styles.body} data-expanded={expanded || undefined}>{content}</div>}

@@ -30,7 +30,13 @@ describe('T10.5 application shell integration', () => {
   });
 
   it('keeps alert/status content visible and prevents compact horizontal overflow', () => {
-    expect(read('components/workflow/collapsible-work-card.tsx')).toContain("(status || alert)");
+    const card = read('components/workflow/collapsible-work-card.tsx');
+    const strip = read('components/workflow/workflow-context-strip.tsx');
+    expect(card).toContain("(status || alert)");
+    expect(card).toContain("minimized ? '+' : '−'");
+    expect(card).not.toContain('>Open detail</button>');
+    expect(strip).toContain('<details');
+    expect(strip).toContain('<summary');
     expect(styles).toContain('.workflow-nav-group');
     expect(styles).toContain('overflow-x:hidden');
   });

@@ -52,6 +52,7 @@ PASS through verified release PR19: https://github.com/amzeus1976/zeustek-diving
 
 - Release commit: `01e45491abc85202d469808f40626bf863c78760`
 - Merged main commit: `fb396e5462a02a6d459661f0a7c9507f64115d32`
+- Documentation evidence PR20 merged; final verified GitHub main: `1fec06f809af570d8dffd3d81360551af2f51ceb`
 - Read-only verification: GitHub main reports app1.0.28 and contains the production-smoked fixture review/universal controls source.
 - Excluded: secrets, credentials, private attachments, test media and the local untracked deployment archive.
 
