@@ -10,7 +10,8 @@ describe('T09 shell integration', () => {
     expect(source).toContain(
       "import { ExperienceAnalytics } from '@/components/experience-analytics';",
     );
-    expect(source).toContain("['Insights', BarChart3]");
+    expect(source).toContain('Insights: BarChart3');
+    expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Insights', label: 'Insights'");
     expect(source).toContain("active === 'Insights'");
   });
   it('keeps analytics derived rather than adding a canonical analytics kind', () => {

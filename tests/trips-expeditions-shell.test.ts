@@ -16,8 +16,9 @@ describe('T04 Trips & Expeditions shell integration', () => {
   it('adds Trips as a separate navigation destination', () => {
     const dashboard = read('app/dashboard-client.tsx');
     expect(dashboard).toContain("import { TripsExpeditions } from '@/components/trips-expeditions'");
-    expect(dashboard).toContain("['Trips', ShipWheel]");
-    expect(dashboard).toContain("active === 'Trips' && <TripsExpeditions />");
+    expect(dashboard).toContain('Trips: ShipWheel');
+    expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Trips', label: 'Trips & Expeditions'");
+    expect(dashboard).toContain("active === 'Trips' && <TripsExpeditions go={go} />");
   });
 
   it('keeps document attachment ids in sync when common media is removed', () => {

@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.27',
+    date: '2026-09-15',
+    title: 'Workflow, navigation & page density',
+    changes: [
+      'Grouped navigation into Overview, Gear, Dive Data, Planning, Diving CPD and Admin while preserving legacy section deep links through compatibility aliases.',
+      'Clarified display labels for Certifications, Planned Training, Dive Skills, Dive Bibliography, Site Configuration and the Dive Planning Centre without migrating canonical record kinds or IDs.',
+      'Added reusable accessible minimise/restore, show more/show less and open-detail controls, with warnings and status retained while content is minimised.',
+      'Shortened Site Configuration into directly linked compact sections and added an owner-confirmed review for clearly labelled synthetic acceptance fixtures using the normal history and sync deletion path.',
+      'Added workflow links across Trips, Dive Planning Centre, Logbook, Sites, People, loadouts, gas, skills and media, plus honest placeholders for future Dive Knowledge and Dive Computer Imports work.',
+      'Preserved T09 Insights, T10 Plan-to-Dive provenance, offline local-first writes, responsive PWA navigation and all existing Dive records.',
+    ],
+  },
+  {
     version: '1.0.26',
     date: '2026-09-15',
     title: 'Dive Planning Centre',

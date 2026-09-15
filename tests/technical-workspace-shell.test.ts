@@ -35,7 +35,8 @@ describe('T07 shell and architecture integration', () => {
   it('mounts Technical Diving in the existing responsive shell', () => {
     const dashboard = read('app/dashboard-client.tsx');
     expect(dashboard).toContain("import { TechnicalWorkspace } from '@/components/technical-workspace'");
-    expect(dashboard).toContain("['Technical Diving', Gauge]");
+    expect(dashboard).toContain("'Technical Diving': Gauge");
+    expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Technical Diving', label: 'Technical Diving'");
     expect(dashboard).toContain("active === 'Technical Diving' && <TechnicalWorkspace go={go} />");
   });
 });

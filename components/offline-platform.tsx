@@ -624,11 +624,11 @@ export function PlatformSettings() {
       <div className="page-head">
         <div>
           <span className="eyebrow">PLAIN-LANGUAGE CONTROLS</span>
-          <h1>Settings</h1>
+          <h1>Site Configuration</h1>
           <p>See where your data lives and what this device stores.</p>
         </div>
       </div>
-      <section className="panel platform-panel">
+      <section id="settings-overview-details" className="panel platform-panel">
         <div className="panel-row">
           <div>
             <strong>Where dive data is saved</strong>
@@ -669,7 +669,7 @@ export function PlatformSettings() {
           </button>
         </div>
       </section>
-      <section className="panel option-settings">
+      <section id="equipment-training-lists" className="panel option-settings">
         <div>
           <span className="eyebrow">CONTROLLED LISTS</span>
           <h2>Equipment & training choices</h2>
@@ -758,7 +758,7 @@ export function PlatformSettings() {
           in your private cloud account and appear on every device.
         </small>
       </section>
-      <section className="panel equipment-icon-settings">
+      <section id="equipment-category-icons" className="panel equipment-icon-settings">
         <div>
           <span className="eyebrow">EQUIPMENT APPEARANCE</span>
           <h2>Equipment category icons</h2>
@@ -813,7 +813,7 @@ export function PlatformSettings() {
           neutral icon ready for your own image.
         </small>
       </section>
-      <section className="panel agency-logo-settings">
+      <section id="training-agency-logos" className="panel agency-logo-settings">
         <div>
           <span className="eyebrow">TRAINING APPEARANCE</span>
           <h2>Training agency logos</h2>
