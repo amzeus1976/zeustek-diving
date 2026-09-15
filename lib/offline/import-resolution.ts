@@ -26,10 +26,14 @@ export interface ImportFieldDecision extends ImportFieldCandidate {
 }
 export interface ImportResolutionRecord {
   importId: string;
+  sourceProfileIds?: string[];
   targetDiveId: string;
   targetRevisionEventId: string | null;
   decidedAt: string;
   decisions: ImportFieldDecision[];
+  supersededAt?: string | null;
+  archivedAt?: string | null;
+  archiveReason?: string;
   createdAt: string;
   modifiedAt: string;
 }

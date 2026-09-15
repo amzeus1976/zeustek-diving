@@ -13,6 +13,8 @@ export interface ImportMatchCandidate {
   score: number;
   confidence: 'strong' | 'possible' | 'weak';
   reasons: ImportMatchReason[];
+  sameDate: boolean;
+  timeDeltaMinutes: number | null;
 }
 const wallClock = (value: string | null | undefined) => {
   const match = value?.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/);
@@ -45,9 +47,14 @@ export function scoreImportMatch(
   let score = 0;
   const imported = wallClock(segment.normalisedTimestamp);
   const diveTime = wallClock(`${dive.date}T${dive.timeIn || '00:00'}:00`);
+  const sameDate = Boolean(
+    imported && diveTime && imported.date === diveTime.date,
+  );
+  let timeDeltaMinutes: number | null = null;
   if (imported && diveTime) {
     if (imported.date === diveTime.date) {
       const minutes = Math.abs(imported.minutes - diveTime.minutes);
+      timeDeltaMinutes = minutes;
       if (minutes <= 5) {
         score += 40;
         reasons.push({
@@ -75,6 +82,48 @@ export function scoreImportMatch(
       }
     }
   }
+  if (segment.sourceDurationSec != null && dive.bottomTimeMin != null) {
+    const minutes = segment.sourceDurationSec / 60;
+    const difference = Math.abs(minutes - dive.bottomTimeMin);
+    const points =
+      difference <= 2 ? 20 : difference <= 5 ? 12 : difference <= 10 ? 5 : 0;
+    if (points) {
+      score += points;
+      reasons.push({
+        key: 'duration',
+        label: 'Duration',
+        points,
+        detail: `${difference.toFixed(0)} min difference`,
+      });
+    }
+  }
+  const canonicalSite = dive.siteId
+    ? sites.find((site) => site.entityId === dive.siteId)
+    : undefined;
+  const sourceNames = [sourceSite?.name, sourceSite?.location]
+    .filter(Boolean)
+    .map((value) => String(value).trim().toLowerCase());
+  const diveNames = [dive.site, canonicalSite?.name, canonicalSite?.location]
+    .filter(Boolean)
+    .map((value) => String(value).trim().toLowerCase());
+  if (
+    sourceNames.some((source) =>
+      diveNames.some(
+        (target) =>
+          source === target ||
+          source.includes(target) ||
+          target.includes(source),
+      ),
+    )
+  ) {
+    score += 22;
+    reasons.push({
+      key: 'site',
+      label: 'Site',
+      points: 22,
+      detail: 'Source and Dive Site names match',
+    });
+  }
   if (segment.greatestDepthM != null && dive.maxDepthM != null) {
     const diff = Math.abs(segment.greatestDepthM - dive.maxDepthM);
     const points = diff <= 1 ? 25 : diff <= 3 ? 15 : diff <= 6 ? 6 : 0;
@@ -89,11 +138,8 @@ export function scoreImportMatch(
     }
   }
   if (sourceSite?.latitude != null && sourceSite.longitude != null) {
-    const canonical = dive.siteId
-      ? sites.find((site) => site.entityId === dive.siteId)
-      : undefined;
-    const lat = canonical?.latitude ?? dive.latitude,
-      long = canonical?.longitude ?? dive.longitude;
+    const lat = canonicalSite?.latitude ?? dive.latitude,
+      long = canonicalSite?.longitude ?? dive.longitude;
     if (lat != null && long != null) {
       const km = haversineKm(
         { latitude: sourceSite.latitude, longitude: sourceSite.longitude },
@@ -116,6 +162,8 @@ export function scoreImportMatch(
     score,
     confidence: score >= 70 ? 'strong' : score >= 40 ? 'possible' : 'weak',
     reasons,
+    sameDate,
+    timeDeltaMinutes,
   };
 }
 export function suggestExistingDives(
@@ -128,7 +176,14 @@ export function suggestExistingDives(
   return dives
     .map((dive) => scoreImportMatch(segment, dive, sourceSite, sites))
     .filter((row) => row.score > 0)
-    .sort((a, b) => b.score - a.score || a.diveId.localeCompare(b.diveId))
+    .sort(
+      (a, b) =>
+        Number(b.sameDate) - Number(a.sameDate) ||
+        (a.timeDeltaMinutes ?? Number.POSITIVE_INFINITY) -
+          (b.timeDeltaMinutes ?? Number.POSITIVE_INFINITY) ||
+        b.score - a.score ||
+        a.diveId.localeCompare(b.diveId),
+    )
     .slice(0, limit);
 }
 

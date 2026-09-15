@@ -2,20 +2,14 @@ import { mutateEntitiesAtomically } from './batch-mutations';
 import { zeustekDb } from './db';
 import { currentDiveAccount, flushDiveChanges } from './dive-store';
 import { listRecords, type DiveSiteRecord } from './dive-planning';
-import { listDives, type DiveRecord } from './dives';
+import { listDives } from './dives';
 import {
   suggestExistingDives,
   suggestSegmentGroups,
   type ImportMatchCandidate,
   type SegmentGroupSuggestion,
 } from './computer-import-matcher';
-import {
-  applyImportDecisions,
-  decisionsComplete,
-  fieldCandidatesForDive,
-  type ImportFieldDecision,
-  type ImportResolutionRecord,
-} from './import-resolution';
+import type { ImportFieldDecision } from './import-resolution';
 import {
   oceanicFileFingerprint,
   oceanicSegmentFingerprint,
@@ -39,6 +33,10 @@ export interface ComputerImportRecord {
   rawAttachmentId: string;
   importedAt: string;
   segmentHashes: string[];
+  profileIds?: string[];
+  newProfileCount?: number;
+  alreadyImportedCount?: number;
+  updatedSourceCount?: number;
   createdAt: string;
   modifiedAt: string;
 }
@@ -49,8 +47,30 @@ export interface ComputerProfileRecord {
   sourceSiteId: string | null;
   segmentHash: string;
   targetDiveId: string | null;
-  disposition: 'linked' | 'created' | 'excluded';
+  disposition: 'unlinked' | 'linked' | 'created' | 'excluded';
   sampleAttachmentId: string | null;
+  sourceFileName?: string;
+  sourceAdapterKey?: string;
+  latestImportId?: string;
+  sourceSite?: {
+    name: string;
+    location: string;
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
+  sourceGas?: {
+    name: string;
+    oxygenFraction: number | null;
+    nitrogenFraction: number | null;
+    heliumFraction: number | null;
+  } | null;
+  sourceVersions?: Array<{
+    importId: string;
+    fileHash: string;
+    segmentHash: string;
+    sampleAttachmentId: string | null;
+    importedAt: string;
+  }>;
   summary: {
     rawTimestamp: string | null;
     normalisedTimestamp: string | null;
@@ -91,6 +111,8 @@ export interface StagedComputerSegment {
   waypointCount: number;
   preview: ComputerProfileRecord['preview'];
   segmentHash: string;
+  priorProfileId?: string | null;
+  priorSegmentHash?: string | null;
   profileBlobId: string;
   dedupState: ImportDedupState;
   matchCandidates: ImportMatchCandidate[];
@@ -264,6 +286,8 @@ export async function stageOceanicImport(file: File) {
       waypointCount: segment.waypoints.length,
       preview: profilePreview(segment),
       segmentHash: hash,
+      priorProfileId: sourceChanged?.entityId ?? null,
+      priorSegmentHash: sourceChanged?.segmentHash ?? null,
       profileBlobId,
       dedupState,
       matchCandidates: suggestExistingDives(
@@ -349,28 +373,13 @@ async function evidenceBytes(stage: ComputerImportStage, id: string) {
   return new Uint8Array(await row.blob.arrayBuffer());
 }
 
-function createImportDive(segment: OceanicSegment, now: string): DiveRecord {
-  return {
-    site: 'Imported Oceanic+ dive — review Site',
-    siteId: '',
-    date:
-      segment.normalisedTimestamp?.slice(0, 10) ??
-      new Date().toISOString().slice(0, 10),
-    timeIn: segment.normalisedTimestamp?.match(/T(\d{2}:\d{2})/)?.[1] ?? '',
-    maxDepthM: null,
-    bottomTimeMin: null,
-    gas: '',
-    notes: 'Imported from reviewed Oceanic+ evidence.',
-    source: 'oceanic-plus',
-    createdAt: now,
-    modifiedAt: now,
-  };
-}
-
 export async function commitComputerImport(
   stage: ComputerImportStage,
   evidenceStore: ComputerEvidenceStore,
-  options: { failAfterMutation?: number } = {},
+  options: {
+    failAfterMutation?: number;
+    reviewedUpdatedSourceIds?: string[];
+  } = {},
 ) {
   const account = currentDiveAccount();
   if (!account || account !== stage.account)
@@ -383,85 +392,78 @@ export async function commitComputerImport(
       'Computer evidence durability is not ready: raw/profile attachments must support local backup AND cloud sync before canonical import can be committed.',
     );
   }
-  if (!stage.assignments.length)
-    throw new Error(
-      'Review every source segment and assign it to an existing Dive, create-new group, or exclude it.',
-    );
-  const assigned = stage.assignments.flatMap(
-    (assignment) => assignment.sourceDiveIds,
+  const [existingImports, existingProfiles] = await Promise.all([
+    listRecords<ComputerImportRecord>('computer-import'),
+    listRecords<ComputerProfileRecord>('computer-profile'),
+  ]);
+  const existingImport = existingImports.find(
+    (item) => item.fileHash === stage.fileHash,
   );
-  if (new Set(assigned).size !== assigned.length)
-    throw new Error(
-      'A source segment cannot appear in more than one assignment.',
-    );
-  const assignedIds = new Set(assigned);
-  if (stage.segments.some((segment) => !assignedIds.has(segment.sourceDiveId)))
-    throw new Error(
-      'One or more source segments still need an explicit owner decision.',
-    );
+  const reviewedUpdates = new Set(options.reviewedUpdatedSourceIds ?? []);
+  const selected = stage.segments.filter(
+    (segment) =>
+      segment.dedupState === 'new' ||
+      (segment.dedupState === 'updated-source-version' &&
+        reviewedUpdates.has(segment.sourceDiveId)),
+  );
+  if (
+    [...reviewedUpdates].some(
+      (sourceDiveId) =>
+        !stage.segments.some(
+          (segment) =>
+            segment.sourceDiveId === sourceDiveId &&
+            segment.dedupState === 'updated-source-version',
+        ),
+    )
+  )
+    throw new Error('Only reviewed updated source versions may be replaced.');
 
-  const sourceSites = new Map(stage.sites.map((site) => [site.id, site]));
-  const gases = new Map(stage.gases.map((gas) => [gas.id, gas]));
-  const prepared: Array<{
-    assignment: StagedAssignment;
-    segments: OceanicSegment[];
-  }> = [];
-  for (const assignment of stage.assignments) {
-    const staged = assignment.sourceDiveIds.map((id) =>
-      stage.segments.find((segment) => segment.sourceDiveId === id),
-    );
-    if (staged.some((segment) => !segment))
-      throw new Error('An assigned source segment is unavailable.');
-    if (
-      assignment.action !== 'exclude' &&
-      staged.some((segment) => segment?.dedupState === 'already-imported')
-    ) {
-      throw new Error(
-        'An already-imported source segment cannot be committed again.',
-      );
-    }
-    prepared.push({
-      assignment,
-      segments: await Promise.all(
-        assignment.sourceDiveIds.map((id) => readStagedSegment(stage, id)),
-      ),
-    });
+  if (!selected.length && existingImport) {
+    await deleteComputerImportStage(stage);
+    return {
+      importId: existingImport.entityId,
+      eventIds: [],
+      profiles: 0,
+      newProfiles: 0,
+      updatedProfiles: 0,
+      alreadyImported: stage.segments.filter(
+        (segment) => segment.dedupState === 'already-imported',
+      ).length,
+      resolutions: 0,
+      reusedImport: true,
+    };
   }
 
-  const importId = crypto.randomUUID();
-  const profileIds = new Map(
-    stage.segments.map((segment) => [
-      segment.sourceDiveId,
-      crypto.randomUUID(),
-    ]),
-  );
+  const importId = existingImport?.entityId ?? crypto.randomUUID();
   const createdAttachmentIds: string[] = [];
   try {
-    const rawAttachmentId = await evidenceStore.put({
-      ownerKind: 'computer-import',
-      ownerId: importId,
-      fileName: stage.fileName,
-      mimeType: 'application/xml',
-      bytes: await evidenceBytes(stage, stage.rawBlobId),
-    });
-    createdAttachmentIds.push(rawAttachmentId);
+    const rawAttachmentId =
+      existingImport?.rawAttachmentId ??
+      (await evidenceStore.put({
+        ownerKind: 'computer-import',
+        ownerId: importId,
+        fileName: stage.fileName,
+        mimeType: 'application/xml',
+        bytes: await evidenceBytes(stage, stage.rawBlobId),
+      }));
+    if (!existingImport) createdAttachmentIds.push(rawAttachmentId);
     const sampleAttachmentIds = new Map<string, string>();
-    for (const { assignment, segments } of prepared) {
-      if (assignment.action === 'exclude') continue;
-      for (const segment of segments) {
-        const staged = stage.segments.find(
-          (item) => item.sourceDiveId === segment.sourceDiveId,
-        )!;
-        const attachmentId = await evidenceStore.put({
-          ownerKind: 'computer-profile',
-          ownerId: profileIds.get(segment.sourceDiveId)!,
-          fileName: `${segment.sourceDiveId}.json`,
-          mimeType: 'application/json',
-          bytes: await evidenceBytes(stage, staged.profileBlobId),
-        });
-        sampleAttachmentIds.set(segment.sourceDiveId, attachmentId);
-        createdAttachmentIds.push(attachmentId);
-      }
+    const profileIds = new Map<string, string>();
+    for (const staged of selected) {
+      const prior = existingProfiles.find(
+        (profile) => profile.sourceDiveId === staged.sourceDiveId,
+      );
+      const profileId = prior?.entityId ?? crypto.randomUUID();
+      profileIds.set(staged.sourceDiveId, profileId);
+      const attachmentId = await evidenceStore.put({
+        ownerKind: 'computer-profile',
+        ownerId: profileId,
+        fileName: `${staged.sourceDiveId}.json`,
+        mimeType: 'application/json',
+        bytes: await evidenceBytes(stage, staged.profileBlobId),
+      });
+      sampleAttachmentIds.set(staged.sourceDiveId, attachmentId);
+      createdAttachmentIds.push(attachmentId);
     }
 
     const now = new Date().toISOString();
@@ -483,160 +485,129 @@ export async function commitComputerImport(
       } as never,
     });
     const mutations: Parameters<typeof mutateEntitiesAtomically>[0] = [];
-    const profileRecords: Array<ComputerProfileRecord & { entityId: string }> =
-      [];
-    const resolutionRecords: ImportResolutionRecord[] = [];
+    const profileRecords: Array<
+      ComputerProfileRecord & { entityId: string; isUpdate: boolean }
+    > = [];
 
-    for (const { assignment, segments } of prepared) {
-      let targetDiveId = assignment.targetDiveId;
-      let target: DiveRecord | null = null;
-      if (assignment.action === 'target-existing') {
-        if (!targetDiveId)
-          throw new Error('Existing-Dive assignment has no target.');
-        const entity = await zeustekDb.entities.get(
-          `dive:${account}:${targetDiveId}`,
-        );
-        if (
-          !entity ||
-          entity.deleted ||
-          entity.entityType !== 'dive' ||
-          !entity.record
-        )
-          throw new Error(
-            'Target Dive changed or disappeared. Reopen resolution.',
-          );
-        if (entity.updatedEventId !== assignment.targetUpdatedEventId)
-          throw new Error(`IMPORT_TARGET_CHANGED:${targetDiveId}`);
-        target = entity.record as unknown as DiveRecord;
-        const candidates = fieldCandidatesForDive(
-          target,
-          segments,
-          sourceSites,
-          gases,
-        );
-        if (!decisionsComplete(candidates, assignment.decisions))
-          throw new Error(
-            `Field resolution is incomplete for target Dive ${targetDiveId}.`,
-          );
-        const baseModifiedAt = target.modifiedAt ?? null;
-        target = applyImportDecisions(target, assignment.decisions);
-        const record = {
-          ...target,
-          entityId: targetDiveId,
-          computerProfileIds: [
-            ...new Set([
-              ...(target.computerProfileIds ?? []),
-              ...assignment.sourceDiveIds.map((id) => profileIds.get(id)!),
-            ]),
-          ],
-          computerImportIds: [
-            ...new Set([...(target.computerImportIds ?? []), importId]),
-          ],
-          lastComputerImportAt: now,
-          modifiedAt: now,
-        };
-        mutations.push({
-          entityId: `${moduleKey}:${targetDiveId}`,
-          module: moduleKey,
-          entityType: 'dive',
-          schemaVersion: 1,
-          operation: 'update',
-          record: record as never,
-          pendingSync: pending(targetDiveId, 'dive', record, baseModifiedAt),
-        });
-      } else if (assignment.action === 'create-new') {
-        targetDiveId = crypto.randomUUID();
-        const base = createImportDive(segments[0]!, now);
-        const candidates = fieldCandidatesForDive(
-          base,
-          segments,
-          sourceSites,
-          gases,
-        );
-        if (!decisionsComplete(candidates, assignment.decisions))
-          throw new Error(
-            'Field resolution is incomplete for a create-new Dive assignment.',
-          );
-        target = applyImportDecisions(base, assignment.decisions);
-        const record = {
-          ...target,
-          entityId: targetDiveId,
-          computerProfileIds: assignment.sourceDiveIds.map((id) =>
-            profileIds.get(id)!,
-          ),
-          computerImportIds: [importId],
-          lastComputerImportAt: now,
-        };
-        mutations.push({
-          entityId: `${moduleKey}:${targetDiveId}`,
-          module: moduleKey,
-          entityType: 'dive',
-          schemaVersion: 1,
-          operation: 'create',
-          record: record as never,
-          pendingSync: pending(targetDiveId, 'dive', record, null),
-        });
-      }
-
-      for (const segment of segments) {
-        const staged = stage.segments.find(
-          (item) => item.sourceDiveId === segment.sourceDiveId,
-        )!;
-        const entityId = profileIds.get(segment.sourceDiveId)!;
-        profileRecords.push({
-          entityId,
-          importId,
-          sourceDiveId: segment.sourceDiveId,
-          sourceSiteId: segment.sourceSiteId,
-          segmentHash: staged.segmentHash,
-          targetDiveId: assignment.action === 'exclude' ? null : targetDiveId,
-          disposition:
-            assignment.action === 'exclude'
-              ? 'excluded'
-              : assignment.action === 'create-new'
-                ? 'created'
-                : 'linked',
-          sampleAttachmentId:
-            sampleAttachmentIds.get(segment.sourceDiveId) ?? null,
-          summary: {
-            rawTimestamp: segment.rawTimestamp,
-            normalisedTimestamp: segment.normalisedTimestamp,
-            greatestDepthM: segment.greatestDepthM,
-            sourceDurationSec: segment.sourceDurationSec,
-            finalSampleElapsedSec: segment.finalSampleElapsedSec,
-            minimumTemperatureC: segment.minimumTemperatureC,
-            ballastKg: segment.ballastKg,
-            gasId: segment.gasId,
-            tankPressureBeginBar: segment.tankPressureBeginBar,
-            tankPressureEndBar: segment.tankPressureEndBar,
-            waypointCount: segment.waypoints.length,
-          },
-          preview: profilePreview(segment),
-          createdAt: now,
-          modifiedAt: now,
-        });
-      }
-      if (assignment.action !== 'exclude' && targetDiveId)
-        resolutionRecords.push({
-          importId,
-          targetDiveId,
-          targetRevisionEventId: assignment.targetUpdatedEventId,
-          decidedAt: now,
-          decisions: assignment.decisions,
-          createdAt: now,
-          modifiedAt: now,
-        });
+    for (const staged of selected) {
+      const segment = await readStagedSegment(stage, staged.sourceDiveId);
+      const existing = existingProfiles.find(
+        (profile) => profile.sourceDiveId === segment.sourceDiveId,
+      );
+      const sourceSite = segment.sourceSiteId
+        ? (stage.sites.find((site) => site.id === segment.sourceSiteId) ?? null)
+        : null;
+      const sourceGas = segment.gasId
+        ? (stage.gases.find((gas) => gas.id === segment.gasId) ?? null)
+        : null;
+      const entityId = profileIds.get(segment.sourceDiveId)!;
+      const version = {
+        importId,
+        fileHash: stage.fileHash,
+        segmentHash: staged.segmentHash,
+        sampleAttachmentId:
+          sampleAttachmentIds.get(segment.sourceDiveId) ?? null,
+        importedAt: now,
+      };
+      const priorVersions = existing
+        ? [
+            ...(existing.sourceVersions ?? []),
+            ...(!(existing.sourceVersions ?? []).some(
+              (item) => item.segmentHash === existing.segmentHash,
+            )
+              ? [
+                  {
+                    importId: existing.latestImportId ?? existing.importId,
+                    fileHash: '',
+                    segmentHash: existing.segmentHash,
+                    sampleAttachmentId: existing.sampleAttachmentId,
+                    importedAt: existing.modifiedAt,
+                  },
+                ]
+              : []),
+          ]
+        : [];
+      profileRecords.push({
+        ...existing,
+        entityId,
+        importId: existing?.importId ?? importId,
+        latestImportId: importId,
+        sourceDiveId: segment.sourceDiveId,
+        sourceSiteId: segment.sourceSiteId,
+        segmentHash: staged.segmentHash,
+        targetDiveId: existing?.targetDiveId ?? null,
+        disposition: existing?.disposition ?? 'unlinked',
+        sampleAttachmentId:
+          sampleAttachmentIds.get(segment.sourceDiveId) ?? null,
+        sourceFileName: stage.fileName,
+        sourceAdapterKey: stage.adapterKey,
+        sourceSite: sourceSite
+          ? {
+              name: sourceSite.name,
+              location: sourceSite.location,
+              latitude: sourceSite.latitude,
+              longitude: sourceSite.longitude,
+            }
+          : null,
+        sourceGas: sourceGas
+          ? {
+              name: sourceGas.name,
+              oxygenFraction: sourceGas.oxygenFraction,
+              nitrogenFraction: sourceGas.nitrogenFraction,
+              heliumFraction: sourceGas.heliumFraction,
+            }
+          : null,
+        sourceVersions: [...priorVersions, version],
+        summary: {
+          rawTimestamp: segment.rawTimestamp,
+          normalisedTimestamp: segment.normalisedTimestamp,
+          greatestDepthM: segment.greatestDepthM,
+          sourceDurationSec: segment.sourceDurationSec,
+          finalSampleElapsedSec: segment.finalSampleElapsedSec,
+          minimumTemperatureC: segment.minimumTemperatureC,
+          ballastKg: segment.ballastKg,
+          gasId: segment.gasId,
+          tankPressureBeginBar: segment.tankPressureBeginBar,
+          tankPressureEndBar: segment.tankPressureEndBar,
+          waypointCount: segment.waypoints.length,
+        },
+        preview: profilePreview(segment),
+        createdAt: existing?.createdAt ?? now,
+        modifiedAt: now,
+        isUpdate: Boolean(existing),
+      });
     }
 
     const importRecord = {
+      ...existingImport,
       adapterKey: stage.adapterKey,
       sourceFileName: stage.fileName,
       fileHash: stage.fileHash,
       byteLength: stage.byteLength,
       rawAttachmentId,
       importedAt: now,
-      segmentHashes: stage.segments.map((segment) => segment.segmentHash),
-      createdAt: now,
+      segmentHashes: [
+        ...new Set([
+          ...(existingImport?.segmentHashes ?? []),
+          ...stage.segments.map((segment) => segment.segmentHash),
+        ]),
+      ],
+      profileIds: [
+        ...new Set([
+          ...(existingImport?.profileIds ?? []),
+          ...profileRecords.map((profile) => profile.entityId),
+        ]),
+      ],
+      newProfileCount:
+        (existingImport?.newProfileCount ?? 0) +
+        profileRecords.filter((profile) => !profile.isUpdate).length,
+      alreadyImportedCount: stage.segments.filter(
+        (segment) => segment.dedupState === 'already-imported',
+      ).length,
+      updatedSourceCount: stage.segments.filter(
+        (segment) => segment.dedupState === 'updated-source-version',
+      ).length,
+      createdAt: existingImport?.createdAt ?? now,
       modifiedAt: now,
       entityId: importId,
     };
@@ -645,38 +616,34 @@ export async function commitComputerImport(
       module: moduleKey,
       entityType: 'computer-import',
       schemaVersion: 1,
-      operation: 'create',
+      operation: existingImport ? 'update' : 'create',
       record: importRecord as never,
-      pendingSync: pending(importId, 'computer-import', importRecord, null),
+      pendingSync: pending(
+        importId,
+        'computer-import',
+        importRecord,
+        existingImport?.modifiedAt ?? null,
+      ),
     });
-    for (const profile of profileRecords)
+    for (const { isUpdate, ...profile } of profileRecords)
       mutations.push({
         entityId: `${moduleKey}:${profile.entityId}`,
         module: moduleKey,
         entityType: 'computer-profile',
         schemaVersion: 1,
-        operation: 'create',
+        operation: isUpdate ? 'update' : 'create',
         record: profile as never,
         pendingSync: pending(
           profile.entityId,
           'computer-profile',
           profile,
-          null,
+          isUpdate
+            ? (existingProfiles.find(
+                (item) => item.entityId === profile.entityId,
+              )?.modifiedAt ?? null)
+            : null,
         ),
       });
-    for (const resolution of resolutionRecords) {
-      const entityId = crypto.randomUUID();
-      const record = { ...resolution, entityId };
-      mutations.push({
-        entityId: `${moduleKey}:${entityId}`,
-        module: moduleKey,
-        entityType: 'import-resolution',
-        schemaVersion: 1,
-        operation: 'create',
-        record: record as never,
-        pendingSync: pending(entityId, 'import-resolution', record, null),
-      });
-    }
 
     const events = await mutateEntitiesAtomically(mutations, options);
     await deleteComputerImportStage(stage);
@@ -687,7 +654,14 @@ export async function commitComputerImport(
       importId,
       eventIds: events.map((event) => event.eventId),
       profiles: profileRecords.length,
-      resolutions: resolutionRecords.length,
+      newProfiles: profileRecords.filter((profile) => !profile.isUpdate).length,
+      updatedProfiles: profileRecords.filter((profile) => profile.isUpdate)
+        .length,
+      alreadyImported: stage.segments.filter(
+        (segment) => segment.dedupState === 'already-imported',
+      ).length,
+      resolutions: 0,
+      reusedImport: Boolean(existingImport),
     };
   } catch (error) {
     if (evidenceStore.remove)

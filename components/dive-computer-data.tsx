@@ -10,11 +10,15 @@ import {
   X,
 } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { ImportedComputerProfiles } from './imported-computer-profiles';
 import { useRecordRefresh } from './record-status';
 import { listDives, type DiveRecord } from '../lib/offline/dives';
-import { listRecords, type Stored } from '../lib/offline/dive-planning';
 import {
-  assignStageSegments,
+  listRecords,
+  type DiveSiteRecord,
+  type Stored,
+} from '../lib/offline/dive-planning';
+import {
   commitComputerImport,
   listComputerImportStages,
   stageOceanicImport,
@@ -22,17 +26,7 @@ import {
   type ComputerImportRecord,
   type ComputerImportStage,
   type ComputerProfileRecord,
-  type StagedAssignment,
 } from '../lib/offline/computer-import';
-import {
-  decisionsComplete,
-  fieldCandidatesForDive,
-  rebaseImportDecisions,
-  type ImportFieldCandidate,
-  type ImportFieldDecision,
-  type ImportResolutionAction,
-} from '../lib/offline/import-resolution';
-import type { OceanicSegment } from '../lib/offline/oceanic-uddf';
 import { currentDiveAccount } from '../lib/offline/dive-store';
 import {
   createComputerEvidenceStore,
@@ -55,6 +49,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>(
     [],
   );
+  const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [stages, setStages] = useState<ComputerImportStage[]>([]);
   const [selectedProfile, setSelectedProfile] = useState('');
   const [reviewing, setReviewing] = useState<ComputerImportStage | null>(null);
@@ -66,11 +61,12 @@ export function DiveComputerData({ evidenceStore }: Props) {
   );
   const refresh = useCallback(async () => {
     void flushComputerEvidenceAttachments(currentDiveAccount());
-    const [nextImports, nextProfiles, nextDives, nextStages] =
+    const [nextImports, nextProfiles, nextDives, nextSites, nextStages] =
       await Promise.all([
         listRecords<ComputerImportRecord>('computer-import'),
         listRecords<ComputerProfileRecord>('computer-profile'),
         listDives(),
+        listRecords<DiveSiteRecord>('site'),
         listComputerImportStages(),
       ]);
     setImports(
@@ -80,6 +76,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
     );
     setProfiles(nextProfiles);
     setDives(nextDives);
+    setSites(nextSites);
     setStages(nextStages);
     const requested =
       typeof window === 'undefined'
@@ -129,8 +126,8 @@ export function DiveComputerData({ evidenceStore }: Props) {
           <span className="focus-eyebrow">DIVE DATA</span>
           <h1>Dive Computer Imports</h1>
           <p>
-            Preserve original computer exports and link imported profiles to
-            your canonical dive log.
+            Import every new computer profile first, then review and link it to
+            a Dive log when you are ready.
           </p>
         </div>
         <div className={styles.heroQuote}>
@@ -168,8 +165,8 @@ export function DiveComputerData({ evidenceStore }: Props) {
           <ShieldCheck />
           <b>Original source evidence is preserved</b>
           <p>
-            Parse and review happen locally. Canonical Dives change only after
-            explicit assignment, field decisions and a final atomic commit.
+            Parse, deduplication and preview happen locally. Importing preserves
+            evidence without assigning or overwriting a canonical Dive.
           </p>
         </aside>
       </section>
@@ -277,37 +274,29 @@ export function DiveComputerData({ evidenceStore }: Props) {
           )}
         </section>
       </section>
-      <section className={styles.recent}>
-        <header>
-          <span className="focus-eyebrow">RECENT IMPORTED PROFILES</span>
-        </header>
-        {profiles.slice(0, 8).map((row) => (
-          <button
-            key={row.entityId}
-            onClick={() => setSelectedProfile(row.entityId)}
-          >
-            <span>
-              {row.summary.normalisedTimestamp
-                ?.slice(0, 16)
-                .replace('T', ' ') || 'No timestamp'}
-            </span>
-            <b>{row.sourceDiveId}</b>
-            <span>{row.disposition}</span>
-            <em>{row.targetDiveId ? 'Linked' : 'No target'}</em>
-          </button>
-        ))}
-        {!profiles.length && <p>No committed profiles.</p>}
-      </section>
+      <ImportedComputerProfiles
+        profiles={profiles}
+        imports={imports}
+        dives={dives}
+        sites={sites}
+        selectedProfileId={selectedProfile}
+        evidenceStore={durableEvidenceStore}
+        selectProfile={setSelectedProfile}
+        refresh={refresh}
+        announce={setMessage}
+      />
       {reviewing && (
         <ImportWizard
           stage={reviewing}
-          dives={dives}
           evidenceStore={durableEvidenceStore}
           close={() => setReviewing(null)}
-          update={setReviewing}
           committed={async (result) => {
             setReviewing(null);
-            setMessage(`Import ${result.importId} committed atomically.`);
+            setMessage(
+              result.reusedImport && result.profiles === 0
+                ? `Import already complete. ${result.alreadyImported} profile(s) were not duplicated.`
+                : `Import finished: ${result.newProfiles} new and ${result.updatedProfiles} reviewed updated profile(s). Link them from Imported Profiles when ready.`,
+            );
             await refresh();
           }}
         />
@@ -434,167 +423,38 @@ function Comparison({
   );
 }
 
-function inputValue(value: unknown) {
-  if (value == null) return '';
-  if (typeof value === 'string' || typeof value === 'number')
-    return String(value);
-  return JSON.stringify(value);
-}
-
-function stagedAsSegments(stage: ComputerImportStage, selectedIds: string[]) {
-  return stage.segments
-    .filter((segment) => selectedIds.includes(segment.sourceDiveId))
-    .map(
-      (segment) => ({ ...segment, waypoints: [] }) as unknown as OceanicSegment,
-    );
-}
-
 function ImportWizard({
   stage,
-  dives,
   evidenceStore,
   close,
-  update,
   committed,
 }: {
   stage: ComputerImportStage;
-  dives: Array<DiveRecord & { entityId: string }>;
   evidenceStore: ComputerEvidenceStore;
   close: () => void;
-  update: (stage: ComputerImportStage) => void;
   committed: (result: Awaited<ReturnType<typeof commitComputerImport>>) => void;
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [step, setStep] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<string[]>(
-    stage.segments
-      .filter(
-        (segment) =>
-          segment.dedupState === 'new' ||
-          segment.dedupState === 'updated-source-version',
-      )
-      .slice(0, 1)
-      .map((segment) => segment.sourceDiveId),
-  );
-  const [action, setAction] =
-    useState<StagedAssignment['action']>('target-existing');
-  const [targetDiveId, setTargetDiveId] = useState('');
-  const [targetOverride, setTargetOverride] = useState<
-    (DiveRecord & { entityId: string }) | undefined
-  >();
-  const [decisions, setDecisions] = useState<ImportFieldDecision[]>([]);
+  const [reviewedUpdatedIds, setReviewedUpdatedIds] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
-  const selectedSegments = stage.segments.filter((segment) =>
-    selectedIds.includes(segment.sourceDiveId),
+  const newSegments = stage.segments.filter(
+    (segment) => segment.dedupState === 'new',
   );
-  const selectedDive =
-    targetOverride?.entityId === targetDiveId
-      ? targetOverride
-      : dives.find((dive) => dive.entityId === targetDiveId);
-  const fullSegments = stagedAsSegments(stage, selectedIds);
-  const first = selectedSegments[0];
-  const createBase: DiveRecord | undefined =
-    action === 'create-new' && first
-      ? {
-          site: 'Imported Oceanic+ dive — review Site',
-          siteId: '',
-          date: first.normalisedTimestamp?.slice(0, 10) || '',
-          timeIn: first.normalisedTimestamp?.match(/T(\d{2}:\d{2})/)?.[1] || '',
-          maxDepthM: null,
-          bottomTimeMin: null,
-          gas: '',
-          notes: '',
-          source: 'oceanic-plus',
-          createdAt: '',
-          modifiedAt: '',
-        }
-      : undefined;
-  const resolutionDive =
-    action === 'target-existing' ? selectedDive : createBase;
-  const candidateRows = resolutionDive
-    ? fieldCandidatesForDive(
-        resolutionDive,
-        fullSegments,
-        new Map(stage.sites.map((site) => [site.id, site])),
-        new Map(stage.gases.map((gas) => [gas.id, gas])),
-      )
-    : [];
-  const assignedIds = new Set(
-    stage.assignments.flatMap((assignment) => assignment.sourceDiveIds),
+  const updatedSegments = stage.segments.filter(
+    (segment) => segment.dedupState === 'updated-source-version',
   );
-  const unassigned = stage.segments.filter(
-    (segment) => !assignedIds.has(segment.sourceDiveId),
+  const alreadyImported = stage.segments.filter(
+    (segment) => segment.dedupState === 'already-imported',
+  );
+  const previouslyExcluded = stage.segments.filter(
+    (segment) => segment.dedupState === 'previously-excluded',
   );
   const durable =
     evidenceStore.capabilities.localBackup &&
     evidenceStore.capabilities.cloudSync;
 
-  function choose(
-    fieldPath: string,
-    selectedAction: ImportResolutionAction,
-    candidate: ImportFieldCandidate,
-  ) {
-    setDecisions((current) => [
-      ...current.filter((row) => row.fieldPath !== fieldPath),
-      {
-        ...candidate,
-        action: selectedAction,
-        committedValue:
-          selectedAction === 'manual' ? candidate.importedValue : undefined,
-      },
-    ]);
-  }
-  function changeManual(fieldPath: string, value: string) {
-    setDecisions((current) =>
-      current.map((decision) => {
-        if (decision.fieldPath !== fieldPath) return decision;
-        let committedValue: unknown = value;
-        if (typeof decision.importedValue === 'number')
-          committedValue = value === '' ? null : Number(value);
-        return { ...decision, committedValue };
-      }),
-    );
-  }
-  async function saveAssignment() {
-    if (!selectedIds.length) {
-      setMessage('Select at least one source segment.');
-      return;
-    }
-    if (action === 'target-existing' && !targetDiveId) {
-      setMessage('Choose an existing Dive target.');
-      return;
-    }
-    if (action !== 'exclude' && !decisionsComplete(candidateRows, decisions)) {
-      setMessage('Choose an owner decision for every imported field.');
-      return;
-    }
-    const next = await assignStageSegments(stage, {
-      sourceDiveIds: selectedIds,
-      action,
-      targetDiveId: action === 'target-existing' ? targetDiveId : null,
-      decisions,
-    });
-    update(next);
-    setMessage('Assignment saved in local staging.');
-    setStep(3);
-  }
-  async function excludeAlreadyImported() {
-    const ids = unassigned
-      .filter((segment) => segment.dedupState === 'already-imported')
-      .map((segment) => segment.sourceDiveId);
-    if (!ids.length) return;
-    const next = await assignStageSegments(stage, {
-      sourceDiveIds: ids,
-      action: 'exclude',
-      targetDiveId: null,
-      decisions: [],
-    });
-    update(next);
-    setMessage(
-      `${ids.length} already-imported segment(s) marked excluded from this commit.`,
-    );
-  }
   async function commit() {
     if (!durable) {
       setMessage(
@@ -604,32 +464,12 @@ function ImportWizard({
     }
     setBusy(true);
     try {
-      committed(await commitComputerImport(stage, evidenceStore));
+      committed(
+        await commitComputerImport(stage, evidenceStore, {
+          reviewedUpdatedSourceIds: reviewedUpdatedIds,
+        }),
+      );
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.startsWith('IMPORT_TARGET_CHANGED:')
-      ) {
-        const changedId = error.message.slice('IMPORT_TARGET_CHANGED:'.length);
-        const latest = (await listDives()).find(
-          (dive) => dive.entityId === changedId,
-        );
-        if (latest && changedId === targetDiveId) {
-          const refreshed = fieldCandidatesForDive(
-            latest,
-            fullSegments,
-            new Map(stage.sites.map((site) => [site.id, site])),
-            new Map(stage.gases.map((gas) => [gas.id, gas])),
-          );
-          setTargetOverride(latest);
-          setDecisions((current) => rebaseImportDecisions(current, refreshed));
-          setStep(2);
-          setMessage(
-            'The target Dive changed during review. Unchanged decisions were retained; choose again for each changed comparison, then save the assignment.',
-          );
-          return;
-        }
-      }
       setMessage(
         error instanceof Error
           ? error.message
@@ -676,12 +516,7 @@ function ImportWizard({
           </p>
         ))}
         <nav className={styles.steps} aria-label="Import review steps">
-          {[
-            'Select',
-            'Assign & resolve',
-            'Profile review',
-            'Commit preview',
-          ].map((label, index) => (
+          {['Preview', 'Finish import'].map((label, index) => (
             <button
               key={label}
               type="button"
@@ -696,31 +531,16 @@ function ImportWizard({
 
         {step === 1 && (
           <section className={styles.segmentList}>
-            <h3>1. Select source segment(s)</h3>
-            {stage.groupSuggestions.map((group) => (
-              <button
-                type="button"
-                className="focus-secondary"
-                key={group.key}
-                onClick={() => setSelectedIds(group.segmentIds)}
-              >
-                {group.segmentIds.length} adjacent segments · select suggested
-                group
-              </button>
-            ))}
+            <h3>1. Import preview</h3>
+            <p>
+              All <b>{newSegments.length}</b> new valid profiles are selected
+              automatically. No Dive assignment or field decision is required.
+            </p>
             {stage.segments.map((segment) => (
-              <label key={segment.sourceDiveId} data-state={segment.dedupState}>
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(segment.sourceDiveId)}
-                  onChange={(event) =>
-                    setSelectedIds((current) =>
-                      event.target.checked
-                        ? [...new Set([...current, segment.sourceDiveId])]
-                        : current.filter((id) => id !== segment.sourceDiveId),
-                    )
-                  }
-                />
+              <article
+                key={segment.sourceDiveId}
+                data-state={segment.dedupState}
+              >
                 <span>
                   <b>{segment.sourceDiveId}</b>
                   <small>
@@ -730,276 +550,74 @@ function ImportWizard({
                   </small>
                 </span>
                 <em>{segment.dedupState.replaceAll('-', ' ')}</em>
-              </label>
+                {segment.dedupState === 'updated-source-version' && (
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={reviewedUpdatedIds.includes(
+                        segment.sourceDiveId,
+                      )}
+                      onChange={(event) =>
+                        setReviewedUpdatedIds((current) =>
+                          event.target.checked
+                            ? [...new Set([...current, segment.sourceDiveId])]
+                            : current.filter(
+                                (id) => id !== segment.sourceDiveId,
+                              ),
+                        )
+                      }
+                    />
+                    I reviewed this updated source version; preserve the profile
+                    identity and add the new evidence version
+                    <small>
+                      Previous{' '}
+                      {segment.priorSegmentHash?.slice(0, 12) ?? 'unknown'}… →
+                      new {segment.segmentHash.slice(0, 12)}…
+                    </small>
+                  </label>
+                )}
+              </article>
             ))}
             <div className={styles.stepActions}>
-              {unassigned.some(
-                (segment) => segment.dedupState === 'already-imported',
-              ) && (
-                <button
-                  className="focus-secondary"
-                  type="button"
-                  onClick={() => void excludeAlreadyImported()}
-                >
-                  Exclude already imported from this commit
-                </button>
-              )}
               <button
                 className="focus-primary"
                 type="button"
-                disabled={!selectedIds.length}
                 onClick={() => setStep(2)}
               >
-                Continue to assignment
+                Review import summary
               </button>
             </div>
           </section>
         )}
 
         {step === 2 && (
-          <>
-            <section className={styles.assignment}>
-              <h3>2. Explicit assignment</h3>
-              <label>
-                Action
-                <select
-                  value={action}
-                  onChange={(event) => {
-                    setAction(event.target.value as StagedAssignment['action']);
-                    setTargetOverride(undefined);
-                    setDecisions([]);
-                  }}
-                >
-                  <option value="target-existing">Link to existing Dive</option>
-                  <option value="create-new">Create new Dive</option>
-                  <option value="exclude">
-                    Exclude or defer source segment
-                  </option>
-                </select>
-              </label>
-              {action === 'target-existing' && (
-                <label>
-                  Target Dive
-                  <select
-                    value={targetDiveId}
-                    onChange={(event) => {
-                      setTargetDiveId(event.target.value);
-                      setTargetOverride(undefined);
-                      setDecisions([]);
-                    }}
-                  >
-                    <option value="">Choose Dive</option>
-                    {dives.map((dive) => (
-                      <option key={dive.entityId} value={dive.entityId}>
-                        {dive.date} · {dive.site} · {dive.maxDepthM ?? '—'} m
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              {action === 'target-existing' &&
-              selectedSegments[0]?.matchCandidates?.length ? (
-                <details>
-                  <summary>Explainable match suggestions</summary>
-                  {selectedSegments[0].matchCandidates.map((row) => (
-                    <button
-                      type="button"
-                      key={row.diveId}
-                      className="focus-link"
-                      onClick={() => {
-                        setTargetDiveId(row.diveId);
-                        setDecisions([]);
-                      }}
-                    >
-                      {row.confidence} · {row.score} points ·{' '}
-                      {dives.find((dive) => dive.entityId === row.diveId)
-                        ?.site || row.diveId}
-                      <small>
-                        {row.reasons.map((reason) => reason.detail).join('; ')}
-                      </small>
-                    </button>
-                  ))}
-                </details>
-              ) : null}
-            </section>
-            {candidateRows.length > 0 && (
-              <section className={styles.resolution}>
-                <h3>Field resolution</h3>
-                {candidateRows.map((candidate) => {
-                  const selected = decisions.find(
-                    (row) => row.fieldPath === candidate.fieldPath,
-                  );
-                  return (
-                    <article key={candidate.fieldPath}>
-                      <div>
-                        <b>{candidate.fieldPath}</b>
-                        <small>
-                          ZeusTek: {JSON.stringify(candidate.zeustekValue)}
-                        </small>
-                        <small>
-                          Oceanic+: {JSON.stringify(candidate.importedValue)}
-                        </small>
-                        <small>
-                          {candidate.provenance} ·{' '}
-                          {candidate.sourceSegmentIds.length} source segment(s)
-                        </small>
-                      </div>
-                      <div>
-                        <select
-                          aria-label={`Decision for ${candidate.fieldPath}`}
-                          value={selected?.action ?? ''}
-                          onChange={(event) =>
-                            choose(
-                              candidate.fieldPath,
-                              event.target.value as ImportResolutionAction,
-                              candidate,
-                            )
-                          }
-                        >
-                          <option value="">Choose decision</option>
-                          <option value="keep-zeustek">Keep ZeusTek</option>
-                          <option value="use-imported">Use Oceanic+</option>
-                          {candidate.resolutionClass !== 'scalar' && (
-                            <option value="append">Merge / add</option>
-                          )}
-                          <option value="ignore">Ignore imported field</option>
-                          <option value="manual">Manual combined value</option>
-                        </select>
-                        {selected?.action === 'manual' && (
-                          <input
-                            aria-label={`Manual value for ${candidate.fieldPath}`}
-                            type={
-                              typeof candidate.importedValue === 'number'
-                                ? 'number'
-                                : 'text'
-                            }
-                            value={inputValue(selected.committedValue)}
-                            onChange={(event) =>
-                              changeManual(
-                                candidate.fieldPath,
-                                event.target.value,
-                              )
-                            }
-                          />
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </section>
-            )}
-            <div className={styles.stepActions}>
-              <button
-                className="focus-secondary"
-                type="button"
-                onClick={() => setStep(1)}
-              >
-                Back
-              </button>
-              <button
-                className="focus-primary"
-                type="button"
-                onClick={() => void saveAssignment()}
-              >
-                Save assignment
-              </button>
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <section className={styles.profileReview}>
-            <h3>3. Profile review</h3>
-            {selectedSegments.length ? (
-              selectedSegments.map((segment) => (
-                <article key={segment.sourceDiveId}>
-                  <h4>{segment.sourceDiveId}</h4>
-                  <ProfileChart points={segment.preview} />
-                  <dl className="detail-grid">
-                    <div>
-                      <small>Raw timestamp</small>
-                      <span>{segment.rawTimestamp ?? '—'}</span>
-                    </div>
-                    <div>
-                      <small>Normalised timestamp</small>
-                      <span>{segment.normalisedTimestamp ?? '—'}</span>
-                    </div>
-                    <div>
-                      <small>Summary max depth</small>
-                      <span>{segment.greatestDepthM ?? '—'} m</span>
-                    </div>
-                    <div>
-                      <small>Source duration</small>
-                      <span>{segment.sourceDurationSec ?? '—'} s</span>
-                    </div>
-                    <div>
-                      <small>Final sample elapsed</small>
-                      <span>{segment.finalSampleElapsedSec ?? '—'} s</span>
-                    </div>
-                    <div>
-                      <small>Waypoints</small>
-                      <span>{segment.waypointCount}</span>
-                    </div>
-                  </dl>
-                </article>
-              ))
-            ) : (
-              <p>No segment selected.</p>
-            )}
-            <div className={styles.stepActions}>
-              <button
-                className="focus-secondary"
-                type="button"
-                onClick={() => setStep(2)}
-              >
-                Back to resolution
-              </button>
-              <button
-                className="focus-primary"
-                type="button"
-                onClick={() => setStep(4)}
-              >
-                Review final commit
-              </button>
-            </div>
-          </section>
-        )}
-
-        {step === 4 && (
           <section className={styles.commitPreview}>
-            <h3>4. Commit preview</h3>
+            <h3>2. Finish import</h3>
             <p>
-              <b>{stage.assignments.length}</b> assignment group(s) saved ·{' '}
-              <b>{assignedIds.size}</b> of <b>{stage.segments.length}</b> source
-              segments reviewed.
+              <b>{newSegments.length}</b> new profile(s) will be imported ·{' '}
+              <b>{reviewedUpdatedIds.length}</b> reviewed update(s) will add a
+              new evidence version.
             </p>
-            {stage.assignments.map((assignment, index) => (
-              <article key={`${assignment.action}-${index}`}>
-                <CheckCircle2 />
-                <span>
-                  <b>
-                    {assignment.sourceDiveIds.length} segment(s) ·{' '}
-                    {assignment.action.replaceAll('-', ' ')}
-                  </b>
-                  <small>
-                    {assignment.targetDiveId
-                      ? `Canonical Dive ${assignment.targetDiveId}`
-                      : 'No existing Dive target'}{' '}
-                    · {assignment.decisions.length} field decision(s)
-                  </small>
-                </span>
-              </article>
-            ))}
-            {unassigned.length > 0 && (
-              <p role="alert" className={styles.warning}>
-                {unassigned.length} source segment(s) still need an explicit
-                assignment.
-              </p>
-            )}
+            <article>
+              <CheckCircle2 />
+              <span>
+                <b>Import all new profiles</b>
+                <small>
+                  Profiles remain unlinked. Existing Dive fields and prior owner
+                  decisions are unchanged.
+                </small>
+              </span>
+            </article>
             <p>
-              Save import writes the source, profiles, owner decisions and
-              accepted Dive changes as one local atomic batch. Full evidence
-              stays out of the canonical Dive.
+              {alreadyImported.length} already imported ·{' '}
+              {updatedSegments.length - reviewedUpdatedIds.length} updated
+              source version(s) left unchanged · {previouslyExcluded.length}{' '}
+              previously excluded/deferred.
+            </p>
+            <p>
+              The source and profiles are saved atomically through the existing
+              local-first history and sync path. Link or resolve fields later
+              from Imported Profiles.
             </p>
             <div className={styles.stepActions}>
               <button
@@ -1007,15 +625,15 @@ function ImportWizard({
                 type="button"
                 onClick={() => setStep(1)}
               >
-                Review another segment
+                Back to preview
               </button>
               <button
                 className="focus-primary"
                 type="button"
-                disabled={busy || unassigned.length > 0 || !durable}
+                disabled={busy || !durable}
                 onClick={() => void commit()}
               >
-                {busy ? 'Committing…' : 'Save import atomically'}
+                {busy ? 'Importing…' : 'Import all new profiles'}
               </button>
             </div>
             {!durable && (

@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.32',
+    date: '2026-09-15',
+    title: 'Dive computer import workflow correction',
+    changes: [
+      'Changed Dive Computer Imports to import every new valid profile before linking, so an import can finish with zero assigned Dive logs and never overwrites a canonical Dive during import.',
+      'Added a complete Imported Profiles review area with search plus linked, unlinked, excluded, date, source-file and possible-Dive filters.',
+      'Moved Dive linking after import, with same-date and nearest-time candidates first, explainable Site, duration and depth reasons, safe unlink/change actions and optional owner-approved field decisions.',
+      'Strengthened repeated-import handling so identical profiles are not duplicated, prior links and decisions are retained, and reviewed source updates keep profile identity with versioned evidence.',
+      'Added dependency-aware removal for imports and unlinked profiles with typed confirmation, linked-profile blocking and a guarantee that canonical Dive logs are never deleted.',
+      'Preserved the existing computer-import, computer-profile and import-resolution kinds, generic local-first history/outbox/sync architecture and private evidence storage without a database migration.',
+    ],
+  },
+  {
     version: '1.0.31',
     date: '2026-09-15',
     title: 'Dive computer data & profile import',
