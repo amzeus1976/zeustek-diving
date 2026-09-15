@@ -5,6 +5,7 @@ import {
   discoverFixtureCandidates,
   findFixtureMatches,
   recordDestination,
+  recordActionReason,
   unlinkTargetFromRecord,
   type CanonicalRecordSnapshot,
 } from '../lib/workflow/synthetic-fixtures';
@@ -66,6 +67,16 @@ describe('T10.6 synthetic fixture discovery and dependency safety', () => {
     expect(result.changed).toBe(true);
     expect(result.record.siteIds).toEqual(['site-2']);
     expect(result.record.notes).toBe('site-1 remains text');
+  });
+
+  it('explains each safe action and why a dependent record is blocked', () => {
+    expect(recordActionReason('equipment', [])).toContain('Owner-confirmed deletion');
+    expect(recordActionReason('dive', [])).toContain('historical or immutable evidence');
+    const supported = [{ sourceKind: 'dive-trip', sourceId: 'trip-1', sourceTitle: 'Scapa Flow', path: 'siteIds' }];
+    expect(recordActionReason('site', supported)).toContain('Unlink removes only those links');
+    const protectedReference = [{ sourceKind: 'dive', sourceId: 'dive-1', sourceTitle: 'Dive 42', path: 'siteId' }];
+    expect(recordActionReason('site', protectedReference)).toContain('Direct deletion is blocked');
+    expect(recordActionReason('site', protectedReference)).toContain('Dive 42');
   });
 
   it('routes representative user-data families to their owning page', () => {

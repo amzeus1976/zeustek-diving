@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState, type SyntheticEvent } from 'react';
-import { Archive, ExternalLink, Eye, Link2Off, Pencil, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
+import { Archive, ExternalLink, Link2Off, Pencil, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import { AccessibleDialog } from '../accessible-dialog';
 import { deleteLocalRecord, hasCloudSnapshot, listLocalDiveRecords, refreshDiveRecords, saveLocalRecord } from '../../lib/offline/dive-store';
 import {
@@ -13,6 +13,7 @@ import {
   editableRecordFields,
   FIXTURE_SCAN_KINDS,
   fixtureTitle,
+  recordActionReason,
   recordDestination,
   recommendedRecordAction,
   unlinkTargetFromRecord,
@@ -145,6 +146,7 @@ function RecordDetail({ row, go, close, edit, manage }: { row: ManagedRow; go: (
   return <AccessibleDialog label={`${row.title} record details`} className={`focus-modal ${styles.dialog}`} close={close}>
     <header><div><span className="focus-eyebrow">USER DATA</span><h2>{row.title}</h2><p>{row.destinationLabel}</p></div><button className="focus-icon" data-dialog-close aria-label="Close record details" onClick={close}><X/></button></header>
     <RecordMeta row={row}/><section><h3>Dependencies</h3><ReferenceList references={row.references}/></section>
+    <section className={styles.actionReason}><h3>Available safe action</h3><b>{actionLabel(row.action)}</b><p>{recordActionReason(row.snapshot.kind, row.references)}</p></section>
     {Boolean(record.archived || record.suppressedFromUse) && <p className="focus-notice">This record is marked archived/suppressed and retained for history.</p>}
     <footer className={styles.detailActions}><button className="focus-secondary" onClick={() => { close(); go(row.destination); }}><ExternalLink size={15}/>Open {row.destinationLabel}</button>{canEditRecordMetadata(row.snapshot.kind, record) && <button className="focus-secondary" onClick={edit}><Pencil size={15}/>Edit</button>}{isManageableAction(row.action) ? <button className={`focus-secondary ${row.action === 'delete' ? 'danger' : ''}`} onClick={() => manage(row.action as Exclude<RecordAction, 'manual-review'>)}>{actionIcon(row.action)}{actionLabel(row.action)}</button> : <span className={styles.blocked}><ShieldAlert size={15}/>Manual review required</span>}</footer>
   </AccessibleDialog>;
@@ -248,20 +250,19 @@ export function SyntheticFixtureReview({ go }: { go: (route: string) => void }) 
 
     {mode === 'fixtures' ? <>
       {fixtures.length ? <div className={styles.fixtureList}>{fixtures.map((item) => <article key={`${item.kind}:${item.entityId}`}>
-        <div className={styles.select}><input type="checkbox" aria-label={`Select fixture ${item.title}`} checked={selected.includes(item.entityId)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, item.entityId] : current.filter((id) => id !== item.entityId))}/><span><b>{item.title}</b><small>{item.kind} · {item.destinationLabel}</small></span></div>
-         <dl><div><dt>Matched field/value</dt><dd>{item.matches.map((match) => `${match.field}: “${match.value}”`).join(' · ')}</dd></div><div><dt>Created / modified</dt><dd>{item.createdAt ? new Date(item.createdAt).toLocaleString('en-GB') : 'Created not recorded'} · {item.modifiedAt ? new Date(item.modifiedAt).toLocaleString('en-GB') : 'Modified not recorded'}</dd></div><div><dt>Dependency</dt><dd>{item.dependencyStatus}</dd></div><div><dt>Recommended</dt><dd>{actionLabel(item.recommendedAction)}</dd></div></dl>
-        <div className="record-actions"><button className="focus-secondary" onClick={() => { const row = rowForFixture(item); if (row) setDetail(row); }}><Eye size={15}/>View details</button><button className="focus-secondary" onClick={() => go(item.destination)}><ExternalLink size={15}/>Open {item.destinationLabel}</button></div>
+        <div className={styles.select}><input type="checkbox" aria-label={`Select fixture ${item.title}`} checked={selected.includes(item.entityId)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, item.entityId] : current.filter((id) => id !== item.entityId))}/><button type="button" className={styles.titleButton} aria-label={`Review ${item.title}`} onClick={() => { const row = rowForFixture(item); if (row) setDetail(row); }}><span><b>{item.title}</b><small>{item.kind} · {item.destinationLabel}</small></span></button></div>
+         <dl><div><dt>Matched field/value</dt><dd>{item.matches.map((match) => `${match.field}: “${match.value}”`).join(' · ')}</dd></div><div><dt>Created / modified</dt><dd>{item.createdAt ? new Date(item.createdAt).toLocaleString('en-GB') : 'Created not recorded'} · {item.modifiedAt ? new Date(item.modifiedAt).toLocaleString('en-GB') : 'Modified not recorded'}</dd></div><div><dt>Dependency</dt><dd>{item.dependencyStatus}</dd></div><div><dt>Available safe action</dt><dd>{actionLabel(item.recommendedAction)}</dd></div><div><dt>Why</dt><dd>{item.actionReason}</dd></div></dl>
       </article>)}</div> : <p>No obvious synthetic, test or acceptance labels were found across the loaded record kinds.</p>}
       <section className={styles.selectionSummary} aria-labelledby="fixture-action-summary"><h3 id="fixture-action-summary">Selected action summary</h3><p>{selectedFixtures.length} selected fixture{selectedFixtures.length === 1 ? '' : 's'}; {deletionPlan.childIds.length} unreferenced labelled child{deletionPlan.childIds.length === 1 ? '' : 'ren'} included.</p>
         <label className={styles.inlineCheck}><input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)}/>Include unreferenced labelled fixture children</label>
-        {deletionPlan.blockers.length > 0 && <p role="alert"><ShieldAlert size={15}/>Deletion blocked by {deletionPlan.blockers.length} reference{deletionPlan.blockers.length === 1 ? '' : 's'}. Use View details to review or unlink safely.</p>}
+        {deletionPlan.blockers.length > 0 && <p role="alert"><ShieldAlert size={15}/>Deletion blocked by {deletionPlan.blockers.length} reference{deletionPlan.blockers.length === 1 ? '' : 's'}. Open the fixture card to review the dependency and safe action.</p>}
         {deletionPlan.protectedIds.length > 0 && <p role="alert"><ShieldAlert size={15}/>Historical/immutable records cannot be deleted here; archive them instead.</p>}
         <label className={styles.confirm}>To delete, type <b>{deletePhrase}</b>. To preserve and suppress the selected records, type <b>ARCHIVE {selectedFixtures.length} FIXTURES</b>.<input autoComplete="off" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} disabled={!selectedFixtures.length}/></label>
          <div className="record-actions"><button className="focus-secondary danger" disabled={busy || !scanComplete || !deletionPlan.safe || confirmation !== deletePhrase} onClick={() => void removeFixtures()}><Trash2 size={15}/>Delete fixture{includeChildren ? ' and safe children' : ''} ({deletionPlan.deleteIds.length})</button><button className="focus-secondary" disabled={busy || !scanComplete || !selectedFixtures.length || confirmation !== `ARCHIVE ${selectedFixtures.length} FIXTURES`} onClick={() => void archiveSelected()}><Archive size={15}/>Archive / suppress selected</button></div>
       </section>
     </> : <>
       <div className={styles.filters}><label><Search size={15}/>Search records<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, kind or app area"/></label><label>Record kind<select value={kind} onChange={(event) => setKind(event.target.value)}><option value="">All kinds</option>{[...new Set(rows.map((row) => row.snapshot.kind))].sort().map((value) => <option key={value}>{value}</option>)}</select></label></div>
-       <div className={styles.recordList}>{visibleRows.slice(0, showAll ? visibleRows.length : 25).map((row) => <article key={`${row.snapshot.kind}:${row.snapshot.record.entityId}`}><div><b>{row.title}</b><span>{row.snapshot.kind} · {row.destinationLabel}</span><small>{row.references.length ? `${row.references.length} reference${row.references.length === 1 ? '' : 's'}` : 'No references'} · {actionLabel(row.action)}</small></div><div className="record-actions"><button className="focus-secondary" onClick={() => setDetail(row)}><Eye size={15}/>View details</button>{canEditRecordMetadata(row.snapshot.kind, row.snapshot.record) && <button className="focus-secondary" onClick={() => setEditing(row)}><Pencil size={15}/>Edit</button>}{isManageableAction(row.action) && <button disabled={!scanComplete} className={`focus-secondary ${row.action === 'delete' ? 'danger' : ''}`} onClick={() => setPending({ action: row.action as Exclude<RecordAction, 'manual-review'>, row })}>{actionIcon(row.action)}{actionLabel(row.action)}</button>}</div></article>)}</div>
+       <div className={styles.recordList}>{visibleRows.slice(0, showAll ? visibleRows.length : 25).map((row) => <article key={`${row.snapshot.kind}:${row.snapshot.record.entityId}`}><button type="button" className={styles.titleButton} data-opens-detail="true" aria-label={`Open ${row.title} record details`} onClick={() => setDetail(row)}><span><b>{row.title}</b><small>{row.snapshot.kind} · {row.destinationLabel}</small><small>{row.references.length ? `${row.references.length} reference${row.references.length === 1 ? '' : 's'}` : 'No references'} · {actionLabel(row.action)}</small></span></button></article>)}</div>
       {visibleRows.length > 25 && <button className="focus-secondary" aria-expanded={showAll} onClick={() => setShowAll((current) => !current)}>{showAll ? 'Show less' : `Show ${visibleRows.length - 25} more`}</button>}
     </>}
     <div className="record-actions"><button className="focus-secondary" onClick={rescan}><RefreshCw size={15}/>Scan all records again</button></div>

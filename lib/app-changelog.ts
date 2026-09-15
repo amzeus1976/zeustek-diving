@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.29',
+    date: '2026-09-15',
+    title: 'Workflow and user-data controls refinement',
+    changes: [
+      'Replaced the large always-visible workflow strip with a compact, closed-by-default disclosure that still exposes the same journey links when requested.',
+      'Standardised card density controls on clear + and − symbols with accessible Expand/Collapse names, visible focus and phone-friendly touch targets.',
+      'Removed generic Open detail button clutter: supported card headings and complete user-data rows now act as the accessible primary detail control.',
+      'Expanded fixture review evidence so every candidate states its matched field, dependency status, available safe action and the reason deletion is allowed or blocked.',
+      'Kept Edit, Delete, Archive/suppress, Unlink and manual dependency review inside each record detail, with no default selection and exact destructive confirmation unchanged.',
+      'Preserved immutable Dive/history/provenance records, all canonical IDs, local-first events/outbox, backups and completed T03–T10 functionality without a migration or parallel store.',
+    ],
+  },
+  {
     version: '1.0.28',
     date: '2026-09-15',
     title: 'Synthetic data cleanup & record controls',

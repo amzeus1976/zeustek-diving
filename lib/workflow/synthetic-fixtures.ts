@@ -30,6 +30,7 @@ export interface FixtureCandidate {
   references: RecordReference[];
   dependencyStatus: string;
   recommendedAction: RecordAction;
+  actionReason: string;
 }
 
 export type FixtureDeletionPlan = {
@@ -207,6 +208,15 @@ export function recommendedRecordAction(kind: string, references: RecordReferenc
   return 'manual-review';
 }
 
+export function recordActionReason(kind: string, references: RecordReference[]) {
+  const action = recommendedRecordAction(kind, references);
+  if (action === 'delete') return 'No canonical dependencies were found. Owner-confirmed deletion is available.';
+  if (action === 'archive') return `Direct deletion is blocked because ${kind} preserves historical or immutable evidence. Archive/suppress keeps it reviewable without affecting source records.`;
+  if (action === 'unlink') return `${references.length} supported relationship${references.length === 1 ? '' : 's'} point to this record. Unlink removes only those links and keeps both canonical records.`;
+  const examples = references.slice(0, 2).map((reference) => `${reference.sourceKind} “${reference.sourceTitle}”`).join(' and ');
+  return `Direct deletion is blocked because ${references.length} canonical reference${references.length === 1 ? '' : 's'}${examples ? ` from ${examples}` : ''} cannot be removed safely as a simple relationship unlink.`;
+}
+
 export function discoverFixtureCandidates(records: CanonicalRecordSnapshot[]): FixtureCandidate[] {
   const referenceIndex = buildReferenceIndex(records);
   return records.flatMap(({ kind, record }) => {
@@ -221,6 +231,7 @@ export function discoverFixtureCandidates(records: CanonicalRecordSnapshot[]): F
       destination: destination.destination, destinationLabel: destination.label, matches, references,
       dependencyStatus: references.length ? `${references.length} reference${references.length === 1 ? '' : 's'} require review` : 'No canonical references found',
       recommendedAction: recommendedRecordAction(kind, references),
+      actionReason: recordActionReason(kind, references),
     }];
   }).sort((left, right) => left.title.localeCompare(right.title, 'en-GB'));
 }

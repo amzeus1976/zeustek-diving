@@ -14,9 +14,12 @@ describe('T10.5 workflow components', () => {
     const html = renderToStaticMarkup(createElement(CollapsibleWorkCard, props, createElement('p', null, 'Details')));
     expect(html).toContain('2 warnings');
     expect(html).toContain('Review required');
-    expect(html).toContain('Open Safety detail');
+    expect(html).toContain('aria-label="Open Safety"');
     expect(html).toContain('Show more (3)');
-    expect(html).toContain('Minimise');
+    expect(html).toContain('aria-label="Collapse Safety"');
+    expect(html).toContain('>−</span>');
+    expect(html).not.toContain('Open detail');
+    expect(html).not.toContain('>Minimise<');
     expect(html).toContain('aria-expanded="true"');
   });
 
@@ -26,6 +29,9 @@ describe('T10.5 workflow components', () => {
       next: [{ label: 'Dive Skills', route: 'Skills & Currency' }], go: () => {},
     }));
     expect(html).toContain('aria-label="Dive Planning Centre workflow"');
+    expect(html).toContain('<details');
+    expect(html).toContain('<summary');
+    expect(html).not.toContain('<details open');
     expect(html).toContain('<button');
     expect(html).toContain('Dive Skills');
   });
