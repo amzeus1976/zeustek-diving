@@ -30,4 +30,14 @@
 
 ## Production and source evidence
 
-Publication, smoke-test and GitHub evidence are recorded after the candidate passes the same-project production gate.
+- Same-project release: app 1.0.29 / Sites97.
+- Saved version: `appgprj_6a91926878b48191a80d70f1681ef135~appgver_583de89943f081919dbc2e699bbb230f`.
+- Deployment: `appgdep_6aa941e6d96c819199f74f50ea064801` — SUCCEEDED.
+- Published source: `76d80e4fab13ea43ff173373bf00cc804a039294`.
+- Archive: `sha256:0acc6331f90a4be5d1f920210da5a63572ef4a0402143ba5488920b5bc16903d`, 21,698,560 bytes / 179 files.
+- Rollback: app 1.0.28 / Sites96 / `appgdep_6aa93726debc8191a2d32b41359ab655`.
+- Production smoke: PASS for compact workflow, visible `+`/`−` controls, primary card/row detail interaction, all 37 record kinds, nine retained fixtures, dependency-aware safe actions, zero default selection, 390px/PWA no-overflow, T09 Insights, T10 Dive Planning Centre and 66 retained Dives.
+- Production data safety: no owner record changed or deleted during T10.6B acceptance.
+- GitHub source sync: PR21 (`https://github.com/amzeus1976/zeustek-diving/pull/21`), release commit `121d1320127f3f3111b4978332c10e88b0a941cc`, merged main `b7e49dbedc28bf46dca9b10a3f8b8744f8f864f7`.
+- Excluded from GitHub: secrets, credentials, private attachments, test media and `.artifacts/` deployment archives.
+- Actual usage: NOT_EXPOSED. Max/Astra: not recommended. T11: not started.
