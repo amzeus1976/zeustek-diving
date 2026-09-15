@@ -7,14 +7,11 @@ import { configureDiveStore, saveLocalRecord } from '../lib/offline/dive-store';
 import { listDives } from '../lib/offline/dives';
 import { listRecords } from '../lib/offline/dive-planning';
 import {
-  assignStageSegments,
   commitComputerImport,
   listComputerImportStages,
-  readStagedSegment,
   stageOceanicImport,
   type ComputerEvidenceStore,
   type ComputerImportRecord,
-  type ComputerImportStage,
   type ComputerProfileRecord,
 } from '../lib/offline/computer-import';
 import {
@@ -23,6 +20,13 @@ import {
   type ImportFieldCandidate,
   type ImportFieldDecision,
 } from '../lib/offline/import-resolution';
+import {
+  importRemovalSummary,
+  linkComputerProfile,
+  removeComputerImport,
+  removeComputerProfile,
+  unlinkComputerProfile,
+} from '../lib/offline/computer-profile-management';
 import {
   createComputerEvidenceStore,
   loadComputerEvidenceAttachment,
@@ -80,37 +84,6 @@ function memoryEvidenceStore() {
   return { store, evidence, removed };
 }
 
-async function reviewedStage(stage: ComputerImportStage, targetDiveId: string) {
-  const first = await readStagedSegment(stage, stage.segments[0]!.sourceDiveId);
-  const target = (await listDives()).find(
-    (dive) => dive.entityId === targetDiveId,
-  )!;
-  const candidates = fieldCandidatesForDive(
-    target,
-    [first],
-    new Map(stage.sites.map((site) => [site.id, site])),
-    new Map(stage.gases.map((gas) => [gas.id, gas])),
-  );
-  const decisions: ImportFieldDecision[] = candidates.map((candidate) => ({
-    ...candidate,
-    action:
-      candidate.fieldPath === 'maxDepthM' ? 'use-imported' : 'keep-zeustek',
-  }));
-  let next = await assignStageSegments(stage, {
-    sourceDiveIds: [stage.segments[0]!.sourceDiveId],
-    action: 'target-existing',
-    targetDiveId,
-    decisions,
-  });
-  next = await assignStageSegments(next, {
-    sourceDiveIds: [stage.segments[1]!.sourceDiveId],
-    action: 'exclude',
-    targetDiveId: null,
-    decisions: [],
-  });
-  return next;
-}
-
 beforeEach(async () => {
   vi.stubGlobal('window', new EventTarget());
   vi.stubGlobal('navigator', { onLine: false });
@@ -161,11 +134,8 @@ describe('T12 staged and atomic computer imports', () => {
   });
 
   it('rolls an injected batch failure back without partial records or orphaned evidence', async () => {
-    const saved = await saveLocalRecord('dive', existingDive);
-    const stage = await reviewedStage(
-      await stageOceanicImport(fixture()),
-      saved.id,
-    );
+    await saveLocalRecord('dive', existingDive);
+    const stage = await stageOceanicImport(fixture());
     const evidence = memoryEvidenceStore();
     const before = {
       entities: await zeustekDb.entities.count(),
@@ -193,39 +163,37 @@ describe('T12 staged and atomic computer imports', () => {
         .count(),
     }).toEqual(before);
     expect(evidence.evidence.size).toBe(0);
-    expect(evidence.removed).toHaveLength(2);
+    expect(evidence.removed).toHaveLength(3);
     expect(await listComputerImportStages()).toHaveLength(1);
   });
 
-  it('commits source, profiles, decisions and lightweight Dive references as one batch', async () => {
+  it('imports all new profiles without requiring a Dive assignment or overwriting Dive data', async () => {
     const saved = await saveLocalRecord('dive', existingDive);
-    const stage = await reviewedStage(
-      await stageOceanicImport(fixture()),
-      saved.id,
-    );
+    const stage = await stageOceanicImport(fixture());
     const evidence = memoryEvidenceStore();
     const result = await commitComputerImport(stage, evidence.store);
 
     expect(result.profiles).toBe(2);
-    expect(result.resolutions).toBe(1);
+    expect(result.newProfiles).toBe(2);
+    expect(result.resolutions).toBe(0);
     expect(
       await listRecords<ComputerImportRecord>('computer-import'),
     ).toHaveLength(1);
     const profiles =
       await listRecords<ComputerProfileRecord>('computer-profile');
     expect(profiles).toHaveLength(2);
-    expect(profiles.map((profile) => profile.disposition).sort()).toEqual([
-      'excluded',
-      'linked',
+    expect(profiles.map((profile) => profile.disposition)).toEqual([
+      'unlinked',
+      'unlinked',
     ]);
     const dive = (await listDives()).find((row) => row.entityId === saved.id)!;
     expect(dive.site).toBe('Owner Site');
     expect(dive.notes).toBe('Owner-authored note');
-    expect(dive.maxDepthM).toBe(10.2);
-    expect(dive.computerImportIds).toEqual([result.importId]);
-    expect(dive.computerProfileIds).toHaveLength(1);
+    expect(dive.maxDepthM).toBe(9);
+    expect(dive.computerImportIds).toBeUndefined();
+    expect(dive.computerProfileIds).toBeUndefined();
     expect(await listComputerImportStages()).toEqual([]);
-    expect(evidence.evidence.size).toBe(2);
+    expect(evidence.evidence.size).toBe(3);
 
     const repeated = await stageOceanicImport(fixture());
     expect(repeated.warnings.join(' ')).toMatch(
@@ -233,71 +201,193 @@ describe('T12 staged and atomic computer imports', () => {
     );
     expect(repeated.segments.map((segment) => segment.dedupState)).toEqual([
       'already-imported',
-      'previously-excluded',
+      'already-imported',
     ]);
+    const repeatedResult = await commitComputerImport(repeated, evidence.store);
+    expect(repeatedResult).toMatchObject({
+      importId: result.importId,
+      profiles: 0,
+      alreadyImported: 2,
+      reusedImport: true,
+    });
+    expect(
+      await listRecords<ComputerProfileRecord>('computer-profile'),
+    ).toHaveLength(2);
   });
 
-  it('can explicitly link multiple source segments to one canonical Dive', async () => {
+  it('links and unlinks imported profiles after import without deleting or rewriting the Dive', async () => {
     const saved = await saveLocalRecord('dive', existingDive);
-    let stage = await stageOceanicImport(fixture());
-    const segments = await Promise.all(
-      stage.segments.map((segment) =>
-        readStagedSegment(stage, segment.sourceDiveId),
-      ),
+    await commitComputerImport(
+      await stageOceanicImport(fixture()),
+      memoryEvidenceStore().store,
     );
-    const target = (await listDives()).find(
-      (dive) => dive.entityId === saved.id,
-    )!;
-    const candidates = fieldCandidatesForDive(
-      target,
-      segments,
-      new Map(stage.sites.map((site) => [site.id, site])),
-      new Map(stage.gases.map((gas) => [gas.id, gas])),
-    );
-    stage = await assignStageSegments(stage, {
-      sourceDiveIds: stage.segments.map((segment) => segment.sourceDiveId),
-      action: 'target-existing',
-      targetDiveId: saved.id,
-      decisions: candidates.map((candidate) => ({
-        ...candidate,
-        action: 'keep-zeustek' as const,
-      })),
-    });
-
-    await commitComputerImport(stage, memoryEvidenceStore().store);
-    const dive = (await listDives()).find((row) => row.entityId === saved.id)!;
+    const profiles =
+      await listRecords<ComputerProfileRecord>('computer-profile');
+    await linkComputerProfile(profiles[0]!.entityId, saved.id);
+    await linkComputerProfile(profiles[1]!.entityId, saved.id);
+    let dive = (await listDives()).find((row) => row.entityId === saved.id)!;
     expect(dive.computerProfileIds).toHaveLength(2);
+    expect(dive.site).toBe('Owner Site');
+    expect(dive.maxDepthM).toBe(9);
     expect(
       (await listRecords<ComputerProfileRecord>('computer-profile')).map(
         (profile) => profile.targetDiveId,
       ),
     ).toEqual([saved.id, saved.id]);
+    await unlinkComputerProfile(profiles[0]!.entityId);
+    dive = (await listDives()).find((row) => row.entityId === saved.id)!;
+    expect(dive.computerProfileIds).toEqual([profiles[1]!.entityId]);
+    expect(dive.site).toBe('Owner Site');
+    expect(await listDives()).toHaveLength(1);
   });
 
-  it('rejects target revision drift and removes prepared evidence', async () => {
+  it('preserves profile identity and prior linking when a reviewed source version changes', async () => {
     const saved = await saveLocalRecord('dive', existingDive);
-    const stage = await reviewedStage(
-      await stageOceanicImport(fixture()),
-      saved.id,
-    );
-    await saveLocalRecord('dive', {
-      entityId: saved.id,
-      ...existingDive,
-      notes: 'Newer owner edit',
-    });
     const evidence = memoryEvidenceStore();
-
-    await expect(commitComputerImport(stage, evidence.store)).rejects.toThrow(
-      `IMPORT_TARGET_CHANGED:${saved.id}`,
+    await commitComputerImport(
+      await stageOceanicImport(fixture()),
+      evidence.store,
     );
+    const before = (
+      await listRecords<ComputerProfileRecord>('computer-profile')
+    ).find((profile) => profile.summary.greatestDepthM === 10.2)!;
+    await linkComputerProfile(before.entityId, saved.id);
+    const updatedFile = new File(
+      [
+        readFileSync(
+          resolve(process.cwd(), 'tests/fixtures/oceanic-plus-minimal.uddf'),
+          'utf8',
+        ).replace(
+          '<greatestdepth>10.2</greatestdepth>',
+          '<greatestdepth>10.8</greatestdepth>',
+        ),
+      ],
+      'oceanic-plus-updated.uddf',
+      { type: 'application/xml' },
+    );
+    const stage = await stageOceanicImport(updatedFile);
+    expect(stage.segments.map((segment) => segment.dedupState)).toEqual([
+      'updated-source-version',
+      'already-imported',
+    ]);
+    const result = await commitComputerImport(stage, evidence.store, {
+      reviewedUpdatedSourceIds: [stage.segments[0]!.sourceDiveId],
+    });
+    expect(result).toMatchObject({ newProfiles: 0, updatedProfiles: 1 });
+    const profiles =
+      await listRecords<ComputerProfileRecord>('computer-profile');
+    expect(profiles).toHaveLength(2);
+    const updated = profiles.find(
+      (profile) => profile.entityId === before.entityId,
+    )!;
+    expect(updated.targetDiveId).toBe(saved.id);
+    expect(updated.summary.greatestDepthM).toBe(10.8);
+    expect(updated.sourceVersions).toHaveLength(2);
+    expect(
+      (await listDives()).find((dive) => dive.entityId === saved.id)?.maxDepthM,
+    ).toBe(9);
+  });
+
+  it('persists import-resolution only after explicit owner field decisions', async () => {
+    const saved = await saveLocalRecord('dive', existingDive);
+    const stage = await stageOceanicImport(fixture());
+    await commitComputerImport(stage, memoryEvidenceStore().store);
+    const profile = (
+      await listRecords<ComputerProfileRecord>('computer-profile')
+    )[0]!;
+    await linkComputerProfile(profile.entityId, saved.id);
+    expect(await listRecords('import-resolution')).toEqual([]);
+
+    const target = (await listDives()).find(
+      (dive) => dive.entityId === saved.id,
+    )!;
+    const imported = {
+      ...stage.segments[0]!,
+      waypoints: [],
+    } as never;
+    const candidates = fieldCandidatesForDive(
+      target,
+      [imported],
+      new Map(stage.sites.map((site) => [site.id, site])),
+      new Map(stage.gases.map((gas) => [gas.id, gas])),
+    );
+    await linkComputerProfile(
+      profile.entityId,
+      saved.id,
+      candidates.map((candidate) => ({
+        ...candidate,
+        action:
+          candidate.fieldPath === 'maxDepthM'
+            ? ('use-imported' as const)
+            : ('keep-zeustek' as const),
+      })),
+    );
+    const updated = (await listDives()).find(
+      (row) => row.entityId === saved.id,
+    )!;
+    expect(updated.maxDepthM).toBe(10.2);
+    expect(updated.notes).toBe('Owner-authored note');
+    expect(await listRecords('import-resolution')).toHaveLength(1);
+
+    const repeated = await stageOceanicImport(fixture());
+    await commitComputerImport(repeated, memoryEvidenceStore().store);
+    expect(await listRecords('import-resolution')).toHaveLength(1);
+    expect(
+      (await listDives()).find((dive) => dive.entityId === saved.id)?.maxDepthM,
+    ).toBe(10.2);
+  });
+
+  it('blocks linked import removal, then removes unlinked profiles without deleting the Dive', async () => {
+    const saved = await saveLocalRecord('dive', existingDive);
+    const evidence = memoryEvidenceStore();
+    const result = await commitComputerImport(
+      await stageOceanicImport(fixture()),
+      evidence.store,
+    );
+    const profiles =
+      await listRecords<ComputerProfileRecord>('computer-profile');
+    await linkComputerProfile(profiles[0]!.entityId, saved.id);
+    expect(await importRemovalSummary(result.importId)).toMatchObject({
+      linkedProfiles: 1,
+      removable: false,
+    });
+    await expect(
+      removeComputerImport(result.importId, evidence.store, true),
+    ).rejects.toThrow(/Unlink/);
+    await unlinkComputerProfile(profiles[0]!.entityId);
+    await removeComputerProfile(profiles[0]!.entityId, evidence.store, true);
+    expect(await listDives()).toHaveLength(1);
+    expect(
+      (await listDives()).find((dive) => dive.entityId === saved.id)?.site,
+    ).toBe('Owner Site');
+    expect(
+      await listRecords<ComputerProfileRecord>('computer-profile'),
+    ).toHaveLength(1);
+  });
+
+  it('removes an unlinked import only after explicit confirmation and retains every Dive', async () => {
+    await saveLocalRecord('dive', existingDive);
+    const evidence = memoryEvidenceStore();
+    const result = await commitComputerImport(
+      await stageOceanicImport(fixture()),
+      evidence.store,
+    );
+    await expect(
+      removeComputerImport(result.importId, evidence.store),
+    ).rejects.toThrow(/confirmation/);
+    const removed = await removeComputerImport(
+      result.importId,
+      evidence.store,
+      true,
+    );
+    expect(removed.removedProfiles).toBe(2);
     expect(await listRecords<ComputerImportRecord>('computer-import')).toEqual(
       [],
     );
     expect(
-      (await listDives()).find((row) => row.entityId === saved.id)?.notes,
-    ).toBe('Newer owner edit');
-    expect(evidence.evidence.size).toBe(0);
-    expect(evidence.removed).toHaveLength(2);
+      await listRecords<ComputerProfileRecord>('computer-profile'),
+    ).toEqual([]);
+    expect(await listDives()).toHaveLength(1);
   });
 
   it('backs up and restores raw/profile evidence with integrity metadata', async () => {
