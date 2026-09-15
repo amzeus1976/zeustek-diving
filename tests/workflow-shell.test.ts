@@ -38,7 +38,7 @@ describe('T10.5 application shell integration', () => {
   it('uses the canonical delete path for confirmed synthetic fixtures', () => {
     const review = read('components/workflow/synthetic-fixture-review.tsx');
     expect(review).toContain('deleteLocalRecord');
-    expect(review).toContain('I confirm I am reviewing labelled test fixtures');
-    expect(review).toContain('ZeusTek never deletes them automatically');
+    expect(review).toContain('Nothing is selected or deleted automatically');
+    expect(review).toContain('confirmation !== deletePhrase');
   });
 });

@@ -610,7 +610,7 @@ const configurationLinks = [
   ['overview-layout-awards', 'Overview layout / dashboard awards'],
   ['dive-news-settings', 'Dive News settings'],
   ['wishlist-price-search', 'Wishlist price search'],
-  ['acceptance-fixture-review', 'Acceptance fixture review'],
+  ['acceptance-fixture-review', 'Synthetic data & record controls'],
   ['other-site-data-tools', 'Other site data tools'],
 ] as const;
 
@@ -631,7 +631,7 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
       <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Overview layout / dashboard awards" eyebrow="OVERVIEW" status="Choose the awards shown at a glance"><DashboardAwardsSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><NewsSourceSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="wishlist-price-search" defaultMinimized className="site-configuration-card" title="Wishlist price search" eyebrow="GEAR" status="Stores used by online price checks"><PriceStoreSettings /></CollapsibleWorkCard>
-      <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Acceptance fixture review" eyebrow="OWNER CONFIRMATION" status="Clearly labelled test records only" alert="No automatic deletion"><SyntheticFixtureReview /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Synthetic data & record controls" eyebrow="OWNER CONFIRMATION" status="All canonical kinds, dependencies and safe actions" alert="No automatic deletion"><SyntheticFixtureReview go={go}/></CollapsibleWorkCard>
       <CollapsibleWorkCard id="other-site-data-tools" defaultMinimized className="site-configuration-card" title="Other site data tools" eyebrow="ADMIN" status="Diagnostics and records needing attention"><AdminPanel /></CollapsibleWorkCard>
     </div>
   </>;
