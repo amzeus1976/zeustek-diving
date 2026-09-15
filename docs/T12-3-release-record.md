@@ -39,7 +39,10 @@ Status: COMPLETE
 
 ## GitHub
 
-The verified app1.0.34 product source is synchronised from this release branch. Final GitHub main evidence is recorded after the merge without changing the production product tree.
+- Product-source pull request: `https://github.com/amzeus1976/zeustek-diving/pull/31`
+- Verified product merge on main: `da6667a91eb5a501b25ff42362800b454756c8d7`
+- Product-tree comparison against published Sites102 source `613f8c695d492e8d28f5bc8a6c6fb698c2a71d1c`: zero differences when release documentation is excluded.
+- `.artifacts/`, source credentials and local acceptance data were not committed.
 
 ## Next
 
