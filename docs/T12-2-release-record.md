@@ -18,6 +18,6 @@
 - Production smoke: app1.0.33 activated after the expected one-time stale PWA shell reload; Overview, Logbook, Equipment, Sites, Dive Planning Centre, Dive Skills, Certifications, Planned Training, Dive Knowledge and Dive Computer Imports passed at phone width without horizontal overflow. Desktop Planned Training passed visual and interaction checks. Representative deployed icon assets returned HTTP 200 `image/png`. Production-origin browser errors: none.
 - Retention: exactly 66 production Dive log cards remain.
 - Immediate rollback: app1.0.32 / Sites100 / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_82721151d8a48191b6af846195e0cfc5` / deployment `appgdep_6aa987d09c888191920f07575f0f483a`; app1.0.31 / Sites99 is also retained. No rollback was required.
-- GitHub sync: pending the final exact-production-source PR/merge recorded after production acceptance.
+- GitHub exact production-source sync PASS through PR29 (`https://github.com/amzeus1976/zeustek-diving/pull/29`): release branch head `6272e67fdd0ac3b6fc6268851224ad81146839f5` merged to main as `4b5c2dcd11f2913ca45d0197bf2ce47b053bc7e3`. Git comparison confirms all product/test/asset/package/hosting paths match published Sites101 source `b9f44b2173b45b2a04c5305b1abccb05b48960c1`; no source sheet, deployment archive, credential or private `.artifacts/` file was included.
 - Actual usage: NOT_EXPOSED. Max/Ultra/Astra were not invoked or recommended.
 - T13: NOT_STARTED.
