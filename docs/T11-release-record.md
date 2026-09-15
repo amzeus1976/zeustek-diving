@@ -1,6 +1,6 @@
 # T11 Dive Knowledge release record
 
-- Status: COMPLETE; GitHub synchronisation pending at the time of this record.
+- Status: COMPLETE; GitHub synchronisation passed.
 - Release: app 1.0.30 / Sites98.
 - Canonical project: `appgprj_6a91926878b48191a80d70f1681ef135`.
 - Saved version: `appgprj_6a91926878b48191a80d70f1681ef135~appgver_bcb6bc0fe6ec8191bed25ea8a2396309`.
@@ -18,4 +18,5 @@
 - Responsive/accessibility: standalone page, compact navigation, 390/820/1024/default desktop no-overflow, keyboard/touch, dialog containment, Escape and focus restoration passed.
 - Retained smoke: T09 Insights, T10 Dive Planning Centre, Site Configuration/data controls and exactly 66 Logbook Dives passed. Browser console errors: none.
 - Data architecture: additive `question-review-state`, `learning-ai-checkpoint` and `learning-ai-advice` records use the existing canonical local-first mutation/event/outbox path; no second question/attempt store, D1 table or destructive migration.
+- GitHub source sync: PR23 (`https://github.com/amzeus1976/zeustek-diving/pull/23`), release commit `2a4bd31fd19312f6b52b6a49dde69f159a16fa93`, merged main `91b15ab7ea4628cb4db60eb3de357f2dc9dcf51a`; all 19 T11 product blobs matched the verified production source at Git-object level.
 - Actual usage: NOT_EXPOSED. Max/Astra: not recommended. T12: not started.
