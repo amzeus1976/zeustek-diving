@@ -1,6 +1,6 @@
 # ZeusTek Diving Upgrade Progress
 
-## T10 production acceptance PASS — GitHub sync pending — app1.0.26 / Sites93 — 2026-09-15
+## T10 COMPLETE — GitHub PASS — app1.0.26 / Sites93 — 2026-09-15
 
 T10 Dive Planning Centre is fully implemented and production-accepted on the same canonical ZeusTek Sites project. Live application app1.0.26 / Sites93 / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_74c8d16276848191a20d9a06deff04eb` / deployment `appgdep_6aa912f2d2b4819199e1029b0a75867f` SUCCEEDED 2026-09-15T09:42:25.782846Z / published source `2133d7e26ecdabb6cf4d37a46ba7108bef0d7e40` / env revision3. Same public origin and audience retained. Immediate rollback remains app1.0.25 / Sites92 / saved `appgprj_6a91926878b48191a80d70f1681ef135~appgver_01602ff97f208191a5db926e012df87c` / deployment `appgdep_6aa903fc83248191a927b8f5704052f5` / source `716754e0e2fa015706666a7f4ae895e026621814`; no rollback was required.
 
@@ -8,7 +8,9 @@ Release gate PASS: focused T10/shared-dialog regression 5 files/15 tests; full r
 
 Production workflow PASS: synthetic Plan `T10 PRODUCTION ACCEPTANCE ONLY` created through the existing `trip` Plan path, saved, reopened, edited and synchronised; its existing Site, Person role and reusable-loadout references survive as canonical IDs/slot snapshot; readiness reports11/11 and the Ready lifecycle persists. Start Dive opens the existing Dive editor with date, Site and Equipment prefilled; it was cancelled without creating a Dive. Existing Plan cards remain present and unchanged. T09 Insights, T08 Professional Development, T07 Technical Diving, T05 Loadouts & Gas, T04 Trips & Expeditions, T03 Site detail/Wreck & Overhead surface and an unrelated Sites/Logbook route smoke PASS at phone width. Cloud sync settled with no pending change and all66 production Logbook Dive targets remain. One clearly labelled synthetic production Plan remains for release evidence; no synthetic Dive was saved and no owner record was deleted.
 
-Architecture remains compatibility-first: no record kind, table, migration, duplicate Plan catalogue, Dive store or decompression engine was added. Runtime `trip` remains Dive Plan, `dive-trip` remains Trips & Expeditions, and Plan→Dive continues through the existing immutable provenance path with originating Plan ID and exact revision. T11 remains NOT_STARTED. Actual usage NOT_EXPOSED; Max/Astra not recommended. Exact verified-source GitHub synchronisation is the sole remaining T10 gate.
+Architecture remains compatibility-first: no record kind, table, migration, duplicate Plan catalogue, Dive store or decompression engine was added. Runtime `trip` remains Dive Plan, `dive-trip` remains Trips & Expeditions, and Plan→Dive continues through the existing immutable provenance path with originating Plan ID and exact revision. T11 remains NOT_STARTED. Actual usage NOT_EXPOSED; Max/Astra not recommended.
+
+GitHub gate PASS: verified release PR15 merged at https://github.com/amzeus1976/zeustek-diving/pull/15. Release branch commit `c5577bf128ac7c6715c0ae2b158ec7478f43ec3e` and merged main commit `1e4a02007d174fe725d8501561261cdb9ed6dd31` contain the exact 12 reviewed T10 source/test/version/changelog/release-evidence files layered on the current T09-complete GitHub main. The source matches the successfully published and production-smoked Sites93 candidate; no T11 code, secret, credential, private attachment or test media was included.
 
 ## T10 IN_PROGRESS — Dive Planning Centre — 2026-09-15
 

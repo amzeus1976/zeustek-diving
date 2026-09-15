@@ -52,4 +52,12 @@ T10 additively extends the existing runtime `trip` Plan records. It does not add
 - Production Dive Logbook targets retained: 66
 - Remaining fixture: one clearly labelled synthetic production Plan, `T10 PRODUCTION ACCEPTANCE ONLY`
 
-Exact verified-source GitHub synchronisation remains pending. T11 has not started.
+## GitHub synchronisation
+
+- Pull request: https://github.com/amzeus1976/zeustek-diving/pull/15
+- Release branch commit: `c5577bf128ac7c6715c0ae2b158ec7478f43ec3e`
+- Merged main commit: `1e4a02007d174fe725d8501561261cdb9ed6dd31`
+- Exact 12-file verified Sites93 source/release set: PASS
+- No T11 code, secrets, credentials, private attachments or test media included
+
+T10 is COMPLETE. T11 has not started.
