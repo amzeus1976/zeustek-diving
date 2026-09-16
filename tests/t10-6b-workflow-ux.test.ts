@@ -33,7 +33,7 @@ describe('T10.6B workflow and data-control UX', () => {
   });
 
   it('shows fixture evidence, dependency, safe action and reason', () => {
-    for (const label of ['Matched field/value', 'Dependency', 'Available safe action', 'Why']) expect(dataTools).toContain(label);
+    for (const label of ['Matched field/value', 'References', 'Action plan', 'Inbound dependencies', 'Outbound references']) expect(dataTools).toContain(label);
     expect(dataTools).toContain('item.actionReason');
     expect(dataTools).toContain('Nothing is selected or deleted automatically');
     expect(dataTools).toContain('confirmation !== deletePhrase');

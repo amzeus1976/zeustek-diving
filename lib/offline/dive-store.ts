@@ -41,13 +41,14 @@ export async function refreshDiveRecords(kind: string, force = false) {
   inflight.set(key, work);
   return work;
 }
-export async function listLocalDiveRecords<T>(kind: string): Promise<Array<T & { entityId: string }>> {
+export async function listLocalDiveRecords<T>(kind: string, options: { includeSuppressed?: boolean } = {}): Promise<Array<T & { entityId: string }>> {
   const started = performance.now();
   const module = moduleName();
   const rows = await zeustekDb.entities.where('[module+entityType]').equals([module, kind]).toArray();
   void diagnostic(`DIVE_LOCAL_${kind}`, started);
   void refreshDiveRecords(kind);
-  return rows.filter(row => !row.deleted && row.record).map(row => row.record as unknown as T & { entityId: string });
+  return rows.filter(row => !row.deleted && row.record && (options.includeSuppressed || !(row.record as Record<string, unknown>).suppressedFromUse))
+    .map(row => row.record as unknown as T & { entityId: string });
 }
 export async function hasCloudSnapshot(kind:string){return Boolean((await zeustekDb.settings.get(`cached:${moduleName()}:${kind}`))?.value);}
 const operations = new Map<string, Promise<unknown>>();
@@ -87,7 +88,7 @@ export async function saveLocalRecord(kind: string, input: Record<string, unknow
 async function saveLocalRecordInternal(kind: string, input: Record<string, unknown> & {entityId?: string}) {
   const module = moduleName();
   const {entityId, ...data} = input;
-  const existing = await listLocalDiveRecords<Record<string, unknown>>(kind);
+  const existing = await listLocalDiveRecords<Record<string, unknown>>(kind, { includeSuppressed: true });
   const identity = recordIdentity(kind, data);
   const duplicate = !entityId && identity ? existing.find(row => recordIdentity(kind, row) === identity) : null;
   if (duplicate) throw new Error('A matching record already exists. Open it to review or edit instead of creating a duplicate.');

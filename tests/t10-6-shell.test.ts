@@ -10,7 +10,8 @@ const evidence = readFileSync(new URL('../components/dive-record-detail.tsx', im
 describe('T10.6 universal user-data controls shell', () => {
   it('has no default select-all and requires typed destructive confirmation', () => {
     expect(dataTools).toContain("useState<string[]>([])");
-    expect(dataTools).toContain('DELETE ${deletionPlan.deleteIds.length} FIXTURES');
+    expect(dataTools).toContain('DELETE ${deletionPlan.deleteIds.length} SAFE RECORDS');
+    expect(dataTools).toContain('!scanComplete || !deletionPlan.deleteIds.length');
     expect(dataTools).toContain('confirmation !== deletePhrase');
     expect(dataTools).not.toContain('Select all');
   });
