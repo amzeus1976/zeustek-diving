@@ -1,6 +1,29 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.36',
+    date: '2026-09-16',
+    title: 'Synthetic cleanup detection safety correction',
+    changes: [
+      'Limited fixture detection to explicit synthetic, acceptance, production or task-test contexts, so ordinary wreck fixtures and fittings are not treated as test data.',
+      'Removed generic service and medical test wording from synthetic candidates; bare task markers remain review-only rather than bulk-delete eligible.',
+      'Separated high-confidence cleanup from possible-synthetic owner review, while preserving recursive scanning, dependency checks and explicit action confirmation.',
+      'Preserved owner Sites, all 66 Dive logs and the local-first history/outbox path; no owner record was changed by the release.',
+    ],
+  },
+  {
+    version: '1.0.35',
+    date: '2026-09-16',
+    title: 'Synthetic data cleanup safety and review',
+    changes: [
+      'Expanded synthetic/test-marker review to every nested string field across all canonical record kinds, with matched field/value and high-confidence versus possible/ordinary classification.',
+      'Added review destinations for imported computer evidence, gas plans and Dive Knowledge advice/review records, with inbound/outbound dependency detail and owner-versus-synthetic reference indicators.',
+      'Added owner-confirmed safe group deletion, protected-record archival, individual unlink-then-delete review, clear blocked reasons and a post-cleanup count report. No destructive action is selected by default.',
+      'Excluded records explicitly marked suppressedFromUse from ordinary local-first lists and derived analytics/readiness while retaining them in history, backups and the owner review tool.',
+      'Kept immutable Dive provenance and other historical evidence protected, and preserved the existing event/outbox/sync path without new record kinds or database migration.',
+    ],
+  },
+  {
     version: '1.0.34',
     date: '2026-09-15',
     title: 'Diving calendar, bookings & gas planning',
