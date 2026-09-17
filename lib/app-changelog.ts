@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.37',
+    date: '2026-09-17',
+    title: 'Dive Plan editor and gas-planning foundation',
+    changes: [
+      'Expanded the existing Dive Plan editor with dated dive objectives, Site and team checks, equipment readiness, emergency resources and an optional linked Gas Plan while preserving Plan-to-Dive history.',
+      'Added evidence-led gas-mix, MOD, PPO₂, EAD and basic gas-volume estimates with current-fill analysis checks, explicit unknown states and no calculated decompression schedule.',
+      'Flagged recorded same-day prior dives and pressure groups without inferring residual nitrogen, plus linked-Trip flights inside a 24-hour advisory window without presenting flight clearance.',
+      'Added distinct owner-recorded PADI air, PADI EANx32, SSI Air/EANx and US Navy table references, and external Bühlmann ZH-L16C implementation/gradient-factor provenance; agency groups are never interchanged.',
+      'Made Gas Planning warnings available through a hoverable, keyboard- and touch-accessible icon, including while the summary is minimised.',
+      'Preserved canonical local-first records, IDs, event/outbox sync and existing Dive logs without a new record kind or database migration.',
+    ],
+  },
+  {
     version: '1.0.36',
     date: '2026-09-16',
     title: 'Synthetic cleanup detection safety correction',

@@ -17,6 +17,17 @@ import {
   type CylinderEquipmentRecord,
   type CylinderFillRecord,
 } from './loadouts-gas';
+import {
+  maximumOperatingDepth,
+  oxygenPartialPressure,
+  nitrogenFraction,
+  gasRequiredForSegments,
+  gasVolumeLitres,
+  validateMix,
+  type GasDepthSegment,
+  type ManualStop,
+  type PlanningGasMix,
+} from './gas-planning-foundation';
 
 export type BookingKind =
   | 'dive'
@@ -60,7 +71,15 @@ export interface GasPlanCylinder {
   cylinderEquipmentId?: string | null;
   fillId?: string | null;
   analysisId?: string | null;
-  role: 'primary' | 'backup' | 'stage' | 'deco' | 'suit' | 'other';
+  role: 'primary' | 'backup' | 'stage' | 'bottom' | 'travel' | 'deco' | 'bailout' | 'suit' | 'other';
+  gasType?: 'air' | 'nitrox' | 'trimix' | 'heliox' | 'other' | null;
+  manualOxygenFraction?: number | null;
+  manualHeliumFraction?: number | null;
+  mixSource?: 'analysis' | 'manual' | null;
+  targetPpo2?: number | null;
+  conservatismM?: number | null;
+  depthM?: number | null;
+  waterVolumeOverrideL?: number | null;
   startPressureBar?: number | null;
   endPressureBar?: number | null;
   reservePressureBar?: number | null;
@@ -73,6 +92,29 @@ export interface GasPlanRecord {
   status: GasPlanStatus;
   plannedDepthM?: number | null;
   plannedBottomTimeMin?: number | null;
+  depthSegments?: GasDepthSegment[];
+  manualStops?: ManualStop[];
+  multiLevel?: boolean;
+  ascentRateMMin?: number | null;
+  gradientFactorLow?: number | null;
+  gradientFactorHigh?: number | null;
+  /** Method provenance only. T12.5 does not calculate decompression obligations. */
+  planningMethod?: 'agency-table' | 'buhlmann-zhl16c' | null;
+  algorithmReference?: {
+    implementation: string;
+    version: string;
+    sourceNote: string;
+  } | null;
+  reserveStrategy?: 'fixed' | 'thirds' | 'custom';
+  safetyAcknowledgedAt?: string | null;
+  /** User transcription from their own agency table; not an automated lookup. */
+  tableReference?: {
+    agency: 'PADI RDP' | 'PADI RDP Air' | 'PADI RDP EANx32' | 'SSI' | 'SSI Air/EANx' | 'US Navy Air' | 'Other';
+    edition: string;
+    pressureGroup: string;
+    ndlMinutes: number | null;
+    sourceNote: string;
+  } | null;
   sacRateBarMin?: number | null;
   rmvRateLitresMin?: number | null;
   rmvSource?: GasPlanRmvSource;
@@ -198,10 +240,81 @@ export async function saveGasPlan(
     ...input,
     name: input.name.trim(),
     cylinders: input.cylinders ?? [],
+    depthSegments: input.depthSegments ?? [],
+    manualStops: input.manualStops ?? [],
     warnings: input.warnings ?? [],
     rmvSourceDiveIds: [...new Set(input.rmvSourceDiveIds ?? [])],
     notes: input.notes?.trim() ?? '',
   });
+}
+
+export interface GasCylinderProjection {
+  mix: PlanningGasMix | null;
+  mixProvenance: string;
+  analysisState: 'current' | 'stale' | 'manual' | 'unknown';
+  fillId: string | null;
+  analysisId: string | null;
+  modM: number | null;
+  ppo2AtDepth: number | null;
+  nitrogenFraction: number | null;
+  requiredLitres: number | null;
+  volume: ReturnType<typeof gasVolumeLitres>;
+  warnings: string[];
+}
+
+/** Never substitutes a previous analysis for one linked to the selected/latest fill. */
+export function projectGasCylinder(
+  cylinder: GasPlanCylinder,
+  plan: Pick<GasPlanRecord, 'plannedDepthM' | 'plannedBottomTimeMin' | 'rmvRateLitresMin' | 'depthSegments'>,
+  fills: Array<Stored<CylinderFillRecord>>,
+  analyses: Array<Stored<import('./loadouts-gas').GasAnalysisRecord>>,
+  equipment: Array<Stored<CylinderEquipmentRecord>>,
+): GasCylinderProjection {
+  const warnings: string[] = [];
+  const cylinderFills = fills.filter((row) => row.cylinderEquipmentId === cylinder.cylinderEquipmentId).sort((a, b) => b.filledAt.localeCompare(a.filledAt));
+  const fill = cylinder.fillId ? cylinderFills.find((row) => row.entityId === cylinder.fillId) ?? null : cylinderFills[0] ?? null;
+  const selectedFillIsOlder = Boolean(fill && cylinderFills[0] && fill.entityId !== cylinderFills[0].entityId);
+  const chosenAnalysis = cylinder.analysisId ? analyses.find((row) => row.entityId === cylinder.analysisId) ?? null : null;
+  const eligible = fill && !selectedFillIsOlder ? analyses.filter((row) => row.fillId === fill.entityId && row.cylinderEquipmentId === fill.cylinderEquipmentId && Date.parse(row.analysedAt) >= Date.parse(fill.filledAt)).sort((a, b) => b.analysedAt.localeCompare(a.analysedAt)) : [];
+  const analysis = chosenAnalysis ? eligible.find((row) => row.entityId === chosenAnalysis.entityId) ?? null : eligible[0] ?? null;
+  if (!fill) warnings.push('No current fill evidence.');
+  if (selectedFillIsOlder) warnings.push('Selected fill is older than the latest recorded fill; its analysis is not current evidence.');
+  if (chosenAnalysis && !analysis) warnings.push('Selected analysis is stale or belongs to another fill.');
+  const manual = cylinder.mixSource === 'manual';
+  const candidateMix = manual
+    ? { oxygenFraction: cylinder.manualOxygenFraction ?? Number.NaN, heliumFraction: cylinder.manualHeliumFraction ?? Number.NaN }
+    : analysis
+      ? { oxygenFraction: analysis.oxygenFraction ?? Number.NaN, heliumFraction: analysis.heliumFraction ?? Number.NaN }
+      : null;
+  const mix = candidateMix && validateMix(candidateMix) ? candidateMix : null;
+  const analysisState = manual ? 'manual' : analysis ? 'current' : chosenAnalysis || analyses.some((row) => row.cylinderEquipmentId === cylinder.cylinderEquipmentId) ? 'stale' : 'unknown';
+  if (!mix) warnings.push('No valid current gas analysis or explicitly recorded manual mix.');
+  if (manual) warnings.push('Manual mix is not verified analysis evidence.');
+  const depthM = cylinder.depthM ?? plan.plannedDepthM ?? null;
+  const targetPpo2 = cylinder.targetPpo2 ?? 1.4;
+  const modM = mix ? maximumOperatingDepth(mix, targetPpo2) : null;
+  const ppo2AtDepth = mix ? oxygenPartialPressure(mix, depthM) : null;
+  if (depthM != null && modM != null && depthM > modM) warnings.push('Planned depth exceeds calculated MOD for the chosen target PPO₂.');
+  if (ppo2AtDepth != null && ppo2AtDepth > targetPpo2) warnings.push('Calculated PPO₂ exceeds the chosen target.');
+  const item = equipment.find((row) => row.entityId === cylinder.cylinderEquipmentId);
+  const volume = gasVolumeLitres(cylinder.waterVolumeOverrideL ?? item?.waterVolumeLiters, cylinder.startPressureBar ?? (selectedFillIsOlder ? null : fill?.pressureBar), cylinder.reservePressureBar);
+  if (!volume) warnings.push('Cylinder water volume, start pressure or reserve is missing/invalid.');
+  const segments = plan.depthSegments?.length ? plan.depthSegments.filter((row) => !row.gasCylinderId || row.gasCylinderId === cylinder.id) : [{ id: 'single-level', depthM, minutes: plan.plannedBottomTimeMin ?? null }];
+  const requiredLitres = gasRequiredForSegments(plan.rmvRateLitresMin, segments);
+  if (requiredLitres != null && volume && requiredLitres > volume.usableLitres) warnings.push('Estimated gas required exceeds usable gas after reserve.');
+  return {
+    mix,
+    mixProvenance: manual ? 'Manual entry, not verified analysis' : analysis ? `Analysis ${analysis.entityId} · ${analysis.analysedAt}` : 'No current analysis',
+    analysisState,
+    fillId: fill?.entityId ?? null,
+    analysisId: analysis?.entityId ?? null,
+    modM,
+    ppo2AtDepth,
+    nitrogenFraction: mix ? nitrogenFraction(mix) : null,
+    requiredLitres,
+    volume,
+    warnings,
+  };
 }
 export async function deleteGasPlan(entityId: string) {
   return removeRecord(entityId);

@@ -1,18 +1,29 @@
-import { listDiveTrips, saveDiveTrip, type DiveTripRecord, type Stored } from './dive-planning';
+import { listDiveTrips, saveDiveTrip, type DiveTripRecord, type DiveSiteRecord, type Stored } from './dive-planning';
 import { createDiveDraftFromPlan } from './dive-context';
 import type { DiveRecord } from './dives';
 import type { LoadoutApplication } from './loadouts-gas';
 import type { PlannedCylinderAssignment } from './technical-workspace';
 
 export type PlanLifecycleStatus = 'draft' | 'planned' | 'ready' | 'in_progress' | 'completed' | 'cancelled';
-export interface PlanTeamMember { personId: string; role: string; notes?: string | null }
+export interface PlanTeamMember {
+  personId: string;
+  role: string;
+  notes?: string | null;
+  teamLead?: boolean;
+  rescueDiverStatus?: 'yes' | 'no' | 'unknown';
+  certifiedDepthM?: number | null;
+  capabilityEvidence?: string | null;
+  specialties?: string | null;
+}
 export interface PlanConditionSnapshot {
   capturedAt?: string | null;
-  provenance?: 'recorded' | 'imported' | 'calculated' | 'inferred';
+  provenance?: 'recorded' | 'imported' | 'calculated' | 'inferred' | 'forecast' | 'seasonal';
   weather?: string | null;
   airTemperatureC?: number | null;
   waterTemperatureC?: number | null;
   waveHeightM?: number | null;
+  visibilityM?: number | null;
+  swellHeightM?: number | null;
   currentStrength?: string | null;
   tideSummary?: string | null;
   notes?: string | null;
@@ -25,6 +36,13 @@ export interface PlanHumanFactors {
   taskLoading?: string | null;
   stopAbortCriteria?: string[];
   teamConcerns?: string[];
+  communicationPlan?: string | null;
+  decisionPoints?: string | null;
+  lostBuddyPlan?: string | null;
+  lostGasPlan?: string | null;
+  surfaceProtocol?: string | null;
+  overheadPrompt?: string | null;
+  reviewNotes?: string | null;
 }
 export interface PlanEmergency {
   oxygenFirstAid?: string | null;
@@ -32,6 +50,22 @@ export interface PlanEmergency {
   evacuation?: string | null;
   alternateSite?: string | null;
   notes?: string | null;
+  hospitalsClinics?: string | null;
+  emsNumber?: string | null;
+  searchRescueProvider?: string | null;
+  hyperbaricPathway?: string | null;
+  insuranceProvider?: string | null;
+  oxygenLocationQuantity?: string | null;
+  oxygenTrainedPersonIds?: string[];
+}
+export interface PlanEquipmentReadiness {
+  additionalItems?: string[];
+  bcdWing?: string | null;
+  regulator?: string | null;
+  exposureSuit?: string | null;
+  backupAirSource?: string | null;
+  emergencyOxygen?: string | null;
+  otherItems?: string | null;
 }
 export interface PlanChecklistItem { id: string; label: string; completed: boolean }
 export interface PlanGasReference {
@@ -45,15 +79,30 @@ export interface EnrichedDivePlanExtension {
   lifecycleStatus?: PlanLifecycleStatus;
   tripId?: string | null;
   objective?: string | null;
+  primaryObjective?: string;
+  aim?: string | null;
+  goals?: string[];
+  secondaryObjectives?: string[];
+  diveNumberOfDay?: number | null;
+  multiLevel?: boolean;
   plannedMaxDepthM?: number | null;
+  maxTotalDurationMin?: number | null;
   plannedDurationMin?: number | null;
   plannedRuntimeMin?: number | null;
   entryType?: string | null;
+  permitRequired?: boolean | null;
+  permitConfirmed?: boolean | null;
+  entryCost?: string | null;
+  minimumVisibilityM?: number | null;
+  maximumWaveHeightM?: number | null;
+  maximumSwellHeightM?: number | null;
+  unacceptableCurrent?: string | null;
   planTeam?: PlanTeamMember[];
   equipmentSetId?: string | null;
   equipmentSetIds?: string[];
   equipmentIds?: string[];
   equipmentSetApplications?: LoadoutApplication[];
+  equipmentReadiness?: PlanEquipmentReadiness;
   cylinderAssignments?: PlannedCylinderAssignment[];
   conditions?: PlanConditionSnapshot;
   humanFactors?: PlanHumanFactors;
@@ -82,6 +131,11 @@ export function normalisePlan(plan: StoredEnrichedDivePlan): StoredEnrichedDiveP
   return {
     ...plan,
     lifecycleStatus,
+    primaryObjective: plan.primaryObjective ?? 'Return safely to the surface',
+    aim: plan.aim ?? plan.objective ?? '',
+    goals: plan.goals ?? [],
+    secondaryObjectives: plan.secondaryObjectives ?? [],
+    equipmentReadiness: plan.equipmentReadiness ?? {},
     planTeam: plan.planTeam ?? [],
     equipmentSetIds: [...new Set([...(plan.equipmentSetIds ?? []), ...(plan.equipmentSetId ? [plan.equipmentSetId] : [])])],
     checklist: plan.checklist?.length ? plan.checklist : DEFAULT_PLAN_CHECKLIST.map((item) => ({ ...item })),
@@ -90,6 +144,25 @@ export function normalisePlan(plan: StoredEnrichedDivePlan): StoredEnrichedDiveP
     emergency: plan.emergency ?? {},
     conditions: plan.conditions ?? {},
   };
+}
+
+/** Advisory only: missing evidence remains unknown, never a passed check. */
+export function assessPlanSiteAndTeam(plan: EnrichedDivePlan, site?: DiveSiteRecord | null): string[] {
+  const warnings: string[] = [];
+  const depth = plan.plannedMaxDepthM;
+  if (!site) warnings.push('Site reference unavailable; Site conditions cannot be verified.');
+  if (depth == null) warnings.push('Planned maximum depth not recorded.');
+  if (depth != null && site?.maxDepthM != null && depth > site.maxDepthM) warnings.push('Planned depth exceeds the recorded Site maximum depth.');
+  const knownLimits = (plan.planTeam ?? []).filter((row) => row.certifiedDepthM != null && row.certifiedDepthM > 0);
+  if (depth != null && knownLimits.some((row) => depth > (row.certifiedDepthM ?? Infinity))) warnings.push('Planned depth exceeds a recorded team capability; confirm training evidence.');
+  if ((plan.planTeam ?? []).some((row) => row.certifiedDepthM == null)) warnings.push('At least one team depth capability is unknown.');
+  if (plan.permitRequired && !plan.permitConfirmed) warnings.push('Access permit required but not confirmed.');
+  if (plan.minimumVisibilityM != null && plan.conditions?.visibilityM != null && plan.conditions.visibilityM < plan.minimumVisibilityM) warnings.push('Expected visibility is below the plan threshold.');
+  if (plan.maximumWaveHeightM != null && plan.conditions?.waveHeightM != null && plan.conditions.waveHeightM > plan.maximumWaveHeightM) warnings.push('Expected waves exceed the plan threshold.');
+  if (plan.maximumSwellHeightM != null && plan.conditions?.swellHeightM != null && plan.conditions.swellHeightM > plan.maximumSwellHeightM) warnings.push('Expected swell exceeds the plan threshold.');
+  if (plan.unacceptableCurrent && plan.conditions?.currentStrength?.trim().toLowerCase() === plan.unacceptableCurrent.trim().toLowerCase()) warnings.push('Expected current matches the plan no-go threshold.');
+  if (!plan.emergency?.emergencyContact && !plan.emergency?.emsNumber) warnings.push('Emergency contact or local EMS number not recorded.');
+  return warnings;
 }
 
 export async function listEnrichedDivePlans() {
@@ -143,6 +216,11 @@ export async function saveEnrichedDivePlan(input: Omit<EnrichedDivePlan, 'create
     notes: input.notes?.trim() || '',
     status: legacyStatus,
     lifecycleStatus,
+    primaryObjective: 'Return safely to the surface',
+    aim: input.aim ?? input.objective ?? '',
+    goals: input.goals ?? [],
+    secondaryObjectives: input.secondaryObjectives ?? [],
+    equipmentReadiness: input.equipmentReadiness ?? {},
     planTeam: input.planTeam ?? [],
     equipmentSetIds: [...new Set([...(input.equipmentSetIds ?? []), ...(input.equipmentSetId ? [input.equipmentSetId] : [])])],
     checklist: input.checklist?.length ? input.checklist : DEFAULT_PLAN_CHECKLIST.map((item) => ({ ...item })),
