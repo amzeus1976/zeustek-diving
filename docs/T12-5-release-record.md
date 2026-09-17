@@ -23,7 +23,7 @@ The owner supplied PADI RDP Air metric and EANx32 imperial images, US Navy table
 - TypeScript: passed. Production build: passed; PWA precache: 201 entries. PWA/version gate: 2 files / 4 passed. Targeted lint and diff check: passed.
 - Local responsive acceptance: 390, 820, 1024 and 1440px with no horizontal overflow.
 - Authenticated production smoke: app version `1.0.37` visible; Gas Planning and Dive Planning Centre and both editors loaded; PWA same-origin route hydrated after its initial cached shell; 390px Gas Planning and editor did not overflow; an unrelated Overview route worked; browser-console errors: none; populated Logbook showed exactly 66 Dive cards. No test record was written to production.
-- GitHub exact-product-source sync: PENDING final merge/HEAD verification.
+- GitHub exact-product-source sync: PR35 merged to main as `e954ea4b640fc9c1b289c84028dc4617e8a3d78e`; verified zero product-file differences from published Sites105 source.
 - Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.
 
 T13 remains paused; T12.6 and T14 were not started.
