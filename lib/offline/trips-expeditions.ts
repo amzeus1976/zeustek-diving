@@ -34,6 +34,8 @@ export interface TripItinerarySegment {
   links?: import('./trip-attachments').TripResourceLink[];
   id: string;
   kind: TripItineraryKind;
+  /** Optional explicit classification; legacy free-text flight titles remain readable. */
+  travelMode?: 'flight' | 'rail' | 'road' | 'sea' | 'other' | '';
   title: string;
   startsAt?: string;
   endsAt?: string;
