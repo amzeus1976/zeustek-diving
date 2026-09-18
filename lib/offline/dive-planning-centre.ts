@@ -74,14 +74,6 @@ export interface PlanGasReference {
   name: string;
   notes: string;
   warnings: string[];
-  recreationalSummary?: {
-    model: 'ZH-L16B' | 'ZH-L16C';
-    selectedGas: string;
-    ndlMinutes: number | null;
-    gasLimitedTimeMin: number | null;
-    reserveBar: number | null;
-    limitingFactor: string;
-  };
 }
 export interface EnrichedDivePlanExtension {
   lifecycleStatus?: PlanLifecycleStatus;
