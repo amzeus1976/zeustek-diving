@@ -16,6 +16,8 @@
 .selectedPills>div{border:1px solid #1c4a59;border-radius:8px;padding:9px;background:#0b1d25;min-width:0}
 .selectedPills button{min-height:40px}
 .selectedHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;min-width:0}.selectedHeader b{overflow-wrap:anywhere}
+.weatherStatus{grid-column:1/-1;color:#a7c7d3;font-size:12px;overflow-wrap:anywhere}
+.weatherStatus svg{display:inline-block;vertical-align:middle;margin-right:6px;color:#ffae4d}.weatherStatus button{margin-left:8px;min-height:36px}.conditionWarning{display:flex;align-items:center;gap:6px;color:#ffae4d!important}
 .editorGrid fieldset>p{grid-column:1/-1;margin:2px 0;color:#b8cbd4;overflow-wrap:anywhere}
 .editorGrid a{color:#7be7ff;text-decoration:underline;text-underline-offset:3px}
 .editorGrid label:has(>input[type="checkbox"]){display:flex;align-items:center;gap:7px;min-height:40px}
@@ -23,3 +25,16 @@
 .teamDetails{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0}
 .teamRow:has(.teamDetails){grid-template-columns:1fr;grid-column:1/-1;border:1px solid #1c4a59;border-radius:8px;padding:9px}
 @media(max-width:720px){.teamDetails{grid-template-columns:1fr}}
+.gasPlanSummaries{display:grid;gap:10px;min-width:0;padding:10px}
+.gasSummary{min-width:0;border:1px solid #1d566b;border-radius:9px;padding:10px;background:#091a22;overflow-wrap:anywhere}
+.gasSummary header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;color:#f4fafc}
+.gasSummary header span{color:#9fb5be;font-size:12px}
+.gasSummaryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:9px 0}
+.gasSummaryGrid>span{display:grid;min-width:0;border:1px solid #20536a;border-radius:7px;padding:6px;background:#0e2630}
+.gasSummaryGrid small{color:#a6c0ca;font-size:10px}
+.gasSummaryGrid b{font-size:12px;overflow-wrap:anywhere}
+.gasSegments{margin:6px 0;padding-left:18px;color:#c8e2e8;font-size:11px;line-height:1.45}
+.gasWarningButton{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 10px;border:1px solid #f8a443;border-radius:8px;background:#342211;color:#ffe1b5;cursor:pointer;text-align:left}
+.gasWarningButton:hover{background:#513015}
+.gasWarningButton:focus-visible{outline:3px solid #fff11a;outline-offset:2px}
+@media(max-width:720px){.gasSummaryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
