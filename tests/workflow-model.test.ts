@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   hiddenRowCount,
@@ -21,24 +23,43 @@ describe('T10.5 workflow model', () => {
     expect(resolveWorkflowRoute('Course Map')).toBe('Course Map');
     expect(resolveWorkflowRoute('Planned Training')).toBe('Course Map');
     expect(resolveWorkflowRoute('Bucket list')).toBe('Dive Bucket List');
+    expect(resolveWorkflowRoute('Dive Bucket List')).toBe('Dive Bucket List');
+    expect(resolveWorkflowRoute('Trips')).toBe('Trips');
+    expect(resolveWorkflowRoute('Diving Calendar & Bookings')).toBe('Diving Calendar & Bookings');
+    expect(resolveWorkflowRoute('Gas Planning')).toBe('Gas Planning');
+    expect(resolveWorkflowRoute('Technical Diving')).toBe('Technical Diving');
   });
 
-  it('defines the six owner-approved workflow groups in order', () => {
+  it('separates trip/event logistics from dive-specific preparation', () => {
     expect(WORKFLOW_SECTIONS.map((section) => section.label)).toEqual([
-      'Overview', 'Gear', 'Dive Data', 'Planning', 'Diving CPD', 'Admin',
+      'Overview', 'Gear', 'Dive Data', 'Trip / Event Planning', 'Dive Preparation', 'Diving CPD', 'Admin',
     ]);
   });
 
-  it('groups planning without duplicating the operational planner', () => {
-    const planning = workflowRoutesForSection('planning').map((route) => route.label);
-    expect(planning).toContain('Dive Planning Centre');
-    expect(planning).toContain('Diving Calendar & Bookings');
-    expect(planning).toContain('Gas Planning');
-    expect(planning.filter((label) => label === 'Dive Planning Centre')).toHaveLength(1);
+  it('groups each planning destination once and moves Technical Diving into CPD', () => {
+    expect(workflowRoutesForSection('trip-event-planning').map((route) => route.label)).toEqual([
+      'Diving Calendar & Bookings', 'Trips & Expeditions', 'Bucket List',
+    ]);
+    expect(workflowRoutesForSection('dive-preparation').map((route) => route.label)).toEqual([
+      'Dive Planning Centre', 'Gas Planning',
+    ]);
+    expect(workflowRoutesForSection('diving-cpd').map((route) => route.label)).toContain('Technical Diving');
+    expect(workflowRoutesForSection('dive-preparation').map((route) => route.label)).not.toContain('Technical Diving');
   });
 
   it('has unique route identifiers', () => {
     expect(new Set(WORKFLOW_ROUTES.map((route) => route.route)).size).toBe(WORKFLOW_ROUTES.length);
+  });
+
+  it('keeps five compact mobile destinations with Dive Preparation primary, and leaves records untouched', () => {
+    const shell = readFileSync(resolve(process.cwd(), 'app/dashboard-client.tsx'), 'utf8');
+    expect(shell).toContain("['Overview', 'Logbook', 'Dive Plans', 'Equipment', 'Data & Backups']");
+    expect(shell).toContain("item.route === 'Dive Plans' ? 'Dive Prep' : item.label");
+    expect(shell).toContain("aria-label={item.route === 'Dive Plans' ? 'Dive Preparation — Dive Planning Centre' : item.label}");
+    expect(shell).toContain('workflowRoutesForSection(section.key)');
+    expect(resolveWorkflowRoute('Dive Plans')).toBe('Dive Plans');
+    expect(resolveWorkflowRoute('Technical Diving')).toBe('Technical Diving');
+    expect(readFileSync(resolve(process.cwd(), 'lib/record-identity.ts'), 'utf8')).toContain("'trip'");
   });
 
   it('supports show more, show less and minimise row rules', () => {

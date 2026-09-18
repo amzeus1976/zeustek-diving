@@ -1,4 +1,4 @@
-export type WorkflowSectionKey = 'overview' | 'gear' | 'dive-data' | 'planning' | 'diving-cpd' | 'admin';
+export type WorkflowSectionKey = 'overview' | 'gear' | 'dive-data' | 'trip-event-planning' | 'dive-preparation' | 'diving-cpd' | 'admin';
 
 export interface WorkflowRoute {
   route: string;
@@ -14,7 +14,8 @@ export const WORKFLOW_SECTIONS: Array<{ key: WorkflowSectionKey; label: string; 
   { key: 'overview', label: 'Overview', purpose: 'At-a-glance diver state and holistic insight.' },
   { key: 'gear', label: 'Gear', purpose: 'Individual equipment, loadouts, cylinder gas and purchase research.' },
   { key: 'dive-data', label: 'Dive Data', purpose: 'What happened, where, who was involved and what evidence belongs to it.' },
-  { key: 'planning', label: 'Planning', purpose: 'Plan diving activity at booking, trip, single-dive and gas levels.' },
+  { key: 'trip-event-planning', label: 'Trip / Event Planning', purpose: 'Bookings, travel, expeditions and future diving aspirations.' },
+  { key: 'dive-preparation', label: 'Dive Preparation', purpose: 'Prepare a specific dive, its team, conditions, equipment, emergency arrangements and gas.' },
   { key: 'diving-cpd', label: 'Diving CPD', purpose: 'Certifications, skills, knowledge, bibliography, news and professional development.' },
   { key: 'admin', label: 'Admin', purpose: 'Configuration, logs, backups, exports and system data tools.' },
 ];
@@ -32,15 +33,15 @@ export const WORKFLOW_ROUTES: WorkflowRoute[] = [
   { route: 'Dive Site Map', label: 'Dive Location Map', legacyLabels: ['Dive Site Map'], section: 'dive-data', implemented: true, description: 'Map of sites and where the diver has dived.' },
   { route: 'People', label: 'People & Operators', legacyLabels: ['People'], section: 'dive-data', implemented: true, description: 'Buddies, guides, instructors, centres and operators.' },
   { route: 'Albums', label: 'Albums', legacyLabels: [], section: 'dive-data', implemented: true, description: 'Images and albums linkable to records.' },
-  { route: 'Diving Calendar & Bookings', label: 'Diving Calendar & Bookings', legacyLabels: ['Bookings', 'Schedule'], section: 'planning', implemented: true, description: 'Simple booked and planned diving activity intake.' },
-  { route: 'Trips', label: 'Trips & Expeditions', legacyLabels: ['Trips'], section: 'planning', implemented: true, description: 'Travel and logistics containers linking people, sites, documents and plans.' },
-  { route: 'Dive Plans', label: 'Dive Planning Centre', legacyLabels: ['Dive Planning Centre', 'PlanningCentre'], section: 'planning', implemented: true, description: 'Operational single-dive plan and readiness workspace.' },
-  { route: 'Technical Diving', label: 'Technical Diving', legacyLabels: [], section: 'planning', implemented: true, description: 'Technical workspace and captured requirement evidence.' },
-  { route: 'Gas Planning', label: 'Gas Planning', legacyLabels: [], section: 'planning', implemented: true, description: 'Gas plan linked to a current Dive Plan.' },
-  { route: 'Dive Bucket List', label: 'Bucket List', legacyLabels: ['Bucket list'], section: 'planning', implemented: true, description: 'Future aspirations independent from operational Plans.' },
+  { route: 'Diving Calendar & Bookings', label: 'Diving Calendar & Bookings', legacyLabels: ['Bookings', 'Schedule'], section: 'trip-event-planning', implemented: true, description: 'Booked diving, courses, club events and service dates.' },
+  { route: 'Trips', label: 'Trips & Expeditions', legacyLabels: ['Trips'], section: 'trip-event-planning', implemented: true, description: 'Travel and logistics containers linking people, sites, documents and plans.' },
+  { route: 'Dive Bucket List', label: 'Bucket List', legacyLabels: ['Bucket list'], section: 'trip-event-planning', implemented: true, description: 'Future aspirations independent from operational Plans.' },
+  { route: 'Dive Plans', label: 'Dive Planning Centre', legacyLabels: ['Dive Planning Centre', 'PlanningCentre'], section: 'dive-preparation', implemented: true, description: 'Operational single-dive plan and readiness workspace.' },
+  { route: 'Gas Planning', label: 'Gas Planning', legacyLabels: [], section: 'dive-preparation', implemented: true, description: 'Gas plan linked to a current Dive Plan.' },
   { route: 'Training', label: 'Certifications', legacyLabels: ['Training completed', 'Certifications'], section: 'diving-cpd', implemented: true, description: 'Certification cards and completed training.' },
   { route: 'Course Map', label: 'Planned Training', legacyLabels: ['Planned Training'], section: 'diving-cpd', implemented: true, description: 'Training pathway and course planning view.' },
   { route: 'Skills & Currency', label: 'Dive Skills', legacyLabels: ['Skills and Currency', 'Dive Skills'], section: 'diving-cpd', implemented: true, description: 'Skill evidence, competence and currency.' },
+  { route: 'Technical Diving', label: 'Technical Diving', legacyLabels: [], section: 'diving-cpd', implemented: true, description: 'Technical training, competence, reference requirements and progression.' },
   { route: 'Conservation & AWARE', label: 'Conservation & AWARE', legacyLabels: ['Conservation'], section: 'diving-cpd', implemented: true, description: 'Conservation activity and evidence.' },
   { route: 'Dive Knowledge', label: 'Dive Knowledge', legacyLabels: ['Diving Knowledge', 'Knowledge Centre', 'Dive knowledge quizzes'], section: 'diving-cpd', implemented: true, description: 'Question banks, diagnostics and AI study workflow.' },
   { route: 'Dive Media', label: 'Dive Bibliography', legacyLabels: ['Dive Bibliography'], section: 'diving-cpd', implemented: true, description: 'Books, articles, podcasts, videos and learning media.' },

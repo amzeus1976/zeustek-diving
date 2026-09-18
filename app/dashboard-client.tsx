@@ -250,7 +250,7 @@ const workflowIcons: Record<string, LucideIcon> = {
   'Dive News': Newspaper, 'Professional Development': GraduationCap, Admin: ListChecks,
   Settings: Settings2, 'Data & Backups': Database, 'Diver Summary Export': Download,
 };
-const quickNavigation = ['Overview', 'Logbook', 'Equipment', 'Dive Site Map', 'Data & Backups']
+const quickNavigation = ['Overview', 'Logbook', 'Dive Plans', 'Equipment', 'Data & Backups']
   .map((route) => WORKFLOW_ROUTES.find((item) => item.route === route))
   .filter((item): item is (typeof WORKFLOW_ROUTES)[number] => Boolean(item));
 type AdminLogEntry = { timestamp: string; category: string; status: 'updated' | 'skipped' | 'info'; subject: string; detail: string };
@@ -603,9 +603,10 @@ export default function DiveApp({ userId }: { userId: string }) {
             key={item.route}
             className={active === item.route ? 'active' : ''}
             onClick={() => go(item.route)}
+            aria-label={item.route === 'Dive Plans' ? 'Dive Preparation — Dive Planning Centre' : item.label}
           >
             <Icon size={19} />
-            <span>{item.label}</span>
+            <span>{item.route === 'Dive Plans' ? 'Dive Prep' : item.label}</span>
           </button>
         );})}
       </nav>
