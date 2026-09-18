@@ -147,15 +147,34 @@ export function normalisePlan(plan: StoredEnrichedDivePlan): StoredEnrichedDiveP
 }
 
 /** Advisory only: missing evidence remains unknown, never a passed check. */
-export function assessPlanSiteAndTeam(plan: EnrichedDivePlan, site?: DiveSiteRecord | null): string[] {
+export function teamDepthAssessment(
+  team: PlanTeamMember[] = [],
+  people: Array<{ entityId: string; name: string }> = [],
+) {
+  const nameFor = (personId: string) => people.find((person) => person.entityId === personId)?.name || `Person ${personId.slice(-8)}`;
+  const divingTeam = team.filter((row) => (row.role ?? '').trim().toLowerCase() !== 'surface support');
+  const known = divingTeam.filter((row) => row.certifiedDepthM != null && Number.isFinite(row.certifiedDepthM) && row.certifiedDepthM > 0);
+  const limitM = known.length ? Math.min(...known.map((row) => row.certifiedDepthM!)) : null;
+  return {
+    limitM,
+    limitingDivers: limitM == null ? [] : known.filter((row) => row.certifiedDepthM === limitM).map((row) => ({ name: nameFor(row.personId), depthM: limitM, evidence: row.capabilityEvidence?.trim() || null })),
+    unknownDivers: divingTeam.filter((row) => row.certifiedDepthM == null || !Number.isFinite(row.certifiedDepthM) || row.certifiedDepthM <= 0).map((row) => nameFor(row.personId)),
+  };
+}
+
+export function assessPlanSiteAndTeam(plan: EnrichedDivePlan, site?: DiveSiteRecord | null, people: Array<{ entityId: string; name: string }> = []): string[] {
   const warnings: string[] = [];
   const depth = plan.plannedMaxDepthM;
   if (!site) warnings.push('Site reference unavailable; Site conditions cannot be verified.');
   if (depth == null) warnings.push('Planned maximum depth not recorded.');
   if (depth != null && site?.maxDepthM != null && depth > site.maxDepthM) warnings.push('Planned depth exceeds the recorded Site maximum depth.');
-  const knownLimits = (plan.planTeam ?? []).filter((row) => row.certifiedDepthM != null && row.certifiedDepthM > 0);
-  if (depth != null && knownLimits.some((row) => depth > (row.certifiedDepthM ?? Infinity))) warnings.push('Planned depth exceeds a recorded team capability; confirm training evidence.');
-  if ((plan.planTeam ?? []).some((row) => row.certifiedDepthM == null)) warnings.push('At least one team depth capability is unknown.');
+  const teamDepth = teamDepthAssessment(plan.planTeam, people);
+  if (depth != null && teamDepth.limitM != null && depth > teamDepth.limitM) warnings.push(people.length
+    ? `Planned ${depth} m exceeds limiting diver ${teamDepth.limitingDivers.map((row) => row.name).join(', ')}: recorded ${teamDepth.limitM} m (owner-entered, unverified). Confirm evidence.`
+    : 'Planned depth exceeds a recorded team capability; confirm training evidence.');
+  if (teamDepth.unknownDivers.length) warnings.push(people.length
+    ? `Unknown depth capability: ${teamDepth.unknownDivers.join(', ')}. Do not treat this as a pass.`
+    : 'At least one team depth capability is unknown.');
   if (plan.permitRequired && !plan.permitConfirmed) warnings.push('Access permit required but not confirmed.');
   if (plan.minimumVisibilityM != null && plan.conditions?.visibilityM != null && plan.conditions.visibilityM < plan.minimumVisibilityM) warnings.push('Expected visibility is below the plan threshold.');
   if (plan.maximumWaveHeightM != null && plan.conditions?.waveHeightM != null && plan.conditions.waveHeightM > plan.maximumWaveHeightM) warnings.push('Expected waves exceed the plan threshold.');
