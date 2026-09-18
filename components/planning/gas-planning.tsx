@@ -191,6 +191,7 @@ export function GasPlanning({ go }: Props) {
   const gasNeeded = projections.length === 1 ? projections[0]?.requiredLitres ?? null : null;
   const detailedWarnings = [...new Set([
     ...warnings,
+    ...(selected?.recGasPlan101?.warnings ?? []),
     ...projections.flatMap(projection => projection.warnings),
     ...(previousDive?.warning ? [previousDive.warning] : []),
     ...(flight?.warning ? [flight.warning] : []),
@@ -406,6 +407,11 @@ export function GasPlanning({ go }: Props) {
                 ><AlertTriangle size={16} aria-hidden="true" /> {detailedWarnings.length} warning(s)</button> : 'Ready to review'}
               >
                 <div className={styles.summaryGrid}>
+                  {selected.recGasPlan101 ? <>
+                    <span><small>Selected gas NDL</small><b>{selected.recGasPlan101.gasCandidates.find(row => row.selected)?.ndl.minutes ?? '—'} min</b></span>
+                    <span><small>Gas-limited time</small><b>{selected.recGasPlan101.gasCandidates.find(row => row.selected)?.gasLimitedTimeMin?.toFixed(1) ?? '—'} min</b></span>
+                    <span><small>Emergency reserve</small><b>{selected.recGasPlan101.reserve.selectedLitres?.toFixed(0) ?? '—'} L</b></span>
+                  </> : null}
                   <span>
                     <small>Planned depth</small>
                     <b>{selected.plannedDepthM ?? '—'} m</b>
@@ -448,7 +454,7 @@ export function GasPlanning({ go }: Props) {
                   . Gas available uses selected cylinder size, pressure and
                   reserve evidence.
                 </p>
-                <p className={styles.provenance}>{GAS_FORMULA_PROVENANCE} Segment estimates exclude ascent, stops and contingency gas. {NDL_UNCONFIGURED}</p>
+                <p className={styles.provenance}>{GAS_FORMULA_PROVENANCE} Segment estimates exclude ascent, stops and contingency gas. {selected.recGasPlan101 ? 'The recreational NDL is calculated by the selected Bühlmann model; table lookup is backup only.' : NDL_UNCONFIGURED}</p>
                 <p className={styles.safetyWarning}>{GAS_PLANNING_CAUTION}</p>
                 {detailedWarnings.length ? (
                   <ul className={styles.warningList}>
@@ -671,11 +677,12 @@ function GasPlanEditor({
           ? [{ label: `Analysed fill ${index + 1}`, oxygenFraction: projected.mix.oxygenFraction, source: 'analysed-fill' as const,
             analysed: true, evidence: projected.mixProvenance }] : [];
       });
-      return { snapshot: buildRecreationalGasSnapshot({ ...recInput, analysedGases }), error: null };
+      const repetitiveDive = Boolean(linkedPlan && ((linkedPlan.diveNumberOfDay ?? 1) > 1 || dives.some(dive => dive.date === linkedPlan.startDate)));
+      return { snapshot: buildRecreationalGasSnapshot({ ...recInput, analysedGases, repetitiveDive }), error: null };
     } catch (cause) {
       return { snapshot: null, error: cause instanceof Error ? cause.message : 'Recreational planner inputs are invalid.' };
     }
-  }, [recInput, draft, fills, analyses, equipment]);
+  }, [recInput, draft, fills, analyses, equipment, linkedPlan, dives]);
 
   function update(patch: Partial<GasPlanRecord>) {
     setDraft((current) => ({ ...current, ...patch }));
@@ -1147,7 +1154,7 @@ function GasPlanEditor({
           </button>
         </footer>
       </AccessibleDialog>
-      {helpTopic ? <AccessibleDialog label={`${helpTopic} help`} close={()=>setHelpTopic(null)} className="focus-modal"><header><h2>{helpTopic}</h2><button className="focus-icon" aria-label="Close help" data-dialog-close onClick={()=>setHelpTopic(null)}><X/></button></header><p>{helpTopic==='PPO₂ / MOD'?'PPO₂ is oxygen fraction × absolute pressure. MOD is the depth where the selected target PPO₂ is reached. The target is a planning input, not a guarantee of safety.':helpTopic==='EAD'?'Equivalent Air Depth compares nitrogen exposure using FN₂/0.79. It is not a decompression schedule.':helpTopic==='Gas volume'?GAS_FORMULA_PROVENANCE:helpTopic==='Bühlmann reference'?'Bühlmann ZH-L16C is a decompression model. Record the external implementation, firmware version and gradient factors used. ZeusTek stores this provenance only; it does not run a validated decompression engine or generate a schedule.':'Record the exact table family and edition with your own transcribed values. Never interchange pressure groups across PADI air, PADI EANx32, SSI or Navy tables. No table dataset is bundled, so pressure groups, residual nitrogen and NDL remain uncalculated.'}</p><p>{GAS_PLANNING_CAUTION}</p><footer><button className="focus-secondary" data-dialog-close onClick={()=>setHelpTopic(null)}>Close</button></footer></AccessibleDialog> : null}
+      {helpTopic ? <AccessibleDialog label={`${helpTopic} help`} close={()=>setHelpTopic(null)} className="focus-modal"><header><h2>{helpTopic}</h2><button className="focus-icon" aria-label="Close help" data-dialog-close onClick={()=>setHelpTopic(null)}><X/></button></header><p>{helpTopic==='PPO₂ / MOD'?'PPO₂ is oxygen fraction × absolute pressure. MOD is the depth where the selected target PPO₂ is reached. The target is a planning input, not a guarantee of safety.':helpTopic==='EAD'?'Equivalent Air Depth compares nitrogen exposure using FN₂/0.79. It is not a decompression schedule.':helpTopic==='Gas volume'?GAS_FORMULA_PROVENANCE:helpTopic==='Bühlmann reference'?'ZeusTek calculates a recreational no-stop limit at the selected depth using the chosen ZH-L16B or ZH-L16C model and gradient factors. The model, assumptions and result are saved with the Gas Plan. This is a planning aid, not a validated dive computer or a decompression schedule.':'Record the exact table family and edition with your own transcribed values. Never interchange pressure groups across PADI air, PADI EANx32, SSI or Navy tables. No table dataset is bundled; a table is lookup backup only and does not drive the calculated NDL.'}</p><p>{GAS_PLANNING_CAUTION}</p><footer><button className="focus-secondary" data-dialog-close onClick={()=>setHelpTopic(null)}>Close</button></footer></AccessibleDialog> : null}
     </div>
   );
 }

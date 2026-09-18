@@ -20,6 +20,7 @@ export interface NdlInput {
   model: BuhlmannModel; depthM: number; oxygenFraction: number; gfLow: number; gfHigh: number;
   waterType: WaterType; surfacePressureBar: number; ascentRateMMin?: number;
   priorLevels?: NdlLevel[] | undefined;
+  residualNitrogenUnknown?: boolean;
 }
 export interface NdlResult {
   state: 'available' | 'unavailable' | 'blocked'; model: BuhlmannModel; gfLow: number; gfHigh: number;
@@ -58,6 +59,7 @@ export function calculateBuhlmannNdl(input: NdlInput): NdlResult {
     unavailableReason: null, waterType, surfacePressureBar, oxygenFraction: fo2, depthM,
     restedOrResidual: input.priorLevels?.length ? 'same-dive-levels' as const : 'rested-surface-air' as const,
     engineVersion: NDL_ENGINE_VERSION, assumptions };
+  if (input.residualNitrogenUnknown) return { ...base, unavailableReason: 'Repetitive-dive tissue carryover is not supported; verify NDL with a dive computer or the applicable current table.' };
   if (!N2_A[model] || !['salt', 'fresh'].includes(waterType) || !Number.isFinite(depthM) || depthM <= 0 || depthM > 60
     || !Number.isFinite(fo2) || fo2 < .16 || fo2 >= 1 || !Number.isFinite(surfacePressureBar) || surfacePressureBar <= VAPOUR_BAR
     || !Number.isFinite(gfLow) || !Number.isFinite(gfHigh) || gfLow <= 0 || gfHigh <= 0 || gfLow > gfHigh || gfHigh > 100

@@ -18,6 +18,7 @@ export interface RecreationalGasInput {
   cylinderWaterVolumeL: number | null; startPressureBar: number | null;
   ownRmvLMin: number | null; buddyRmvLMin: number | null; reserveStrategy: ReserveStrategy;
   ascentRateMMin: number; ownerMaxDurationMin: number | null; routeSegments: RouteSegment[];
+  repetitiveDive?: boolean;
   tableProvider?: { name: string; version: string; lookup: (depthM: number, oxygenFraction: number) => number | null } | null;
 }
 export interface RecreationalGasSnapshot extends Omit<RecreationalGasInput, 'tableProvider'> {
@@ -47,6 +48,8 @@ export function buildRecreationalGasSnapshot(input: RecreationalGasInput, create
   const candidates = [...PRESETS, ...(input.analysedGases ?? []), ...(input.customGas ? [input.customGas] : [])];
   if (candidates.some(gas => !Number.isFinite(gas.oxygenFraction) || gas.oxygenFraction < .16 || gas.oxygenFraction >= 1))
     throw new Error('Candidate oxygen fractions must be between 16% and 100%.');
+  if (!candidates.some(gas => gas.label === input.selectedGasLabel))
+    throw new Error('Select a current gas candidate before saving the recreational snapshot.');
   const otherModel = input.selectedBuhlmannModel === 'ZH-L16B' ? 'ZH-L16C' : 'ZH-L16B';
   const completeLevels = input.mode === 'multilevel' && input.routeSegments.length > 0 && input.routeSegments.every(level => level.depthM != null && level.minutes != null && level.depthM >= 0 && level.minutes > 0)
     ? input.routeSegments : null;
@@ -59,6 +62,7 @@ export function buildRecreationalGasSnapshot(input: RecreationalGasInput, create
     const eadM = ((1 - fo2) / .79) * (depth + metresPerBar) - metresPerBar;
     const ndlInput = { depthM: input.mode === 'multilevel' && !completeLevels ? Number.NaN : completeLevels?.at(-1)?.depthM ?? depth, oxygenFraction: fo2, gfLow: input.gfLow, gfHigh: input.gfHigh,
       waterType: input.waterType, surfacePressureBar: input.surfacePressureBar, ascentRateMMin: input.ascentRateMMin,
+      residualNitrogenUnknown: input.repetitiveDive === true,
       priorLevels: completeLevels?.slice(0, -1).map(level => ({ depthM: level.depthM!, minutes: level.minutes! })) };
     const ndl = calculateBuhlmannNdl({ ...ndlInput, model: input.selectedBuhlmannModel });
     const otherModelNdl = input.compareOtherModel ? calculateBuhlmannNdl({ ...ndlInput, model: otherModel }) : null;

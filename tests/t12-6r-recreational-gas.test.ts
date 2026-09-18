@@ -60,6 +60,23 @@ describe('T12.6R NDL and gas planner', () => {
     expect(snapshot.gasCandidates[4]!.warnings).toContain('MOD is shallower than planned depth.');
     expect(snapshot.gasCandidates[4]!.warnings).toContain('PPO₂ exceeds the selected limit at planned depth.');
   });
+  it('rejects a stale selected gas instead of saving a snapshot without an actual gas', () => {
+    expect(() => buildRecreationalGasSnapshot({ ...input, selectedGasLabel: 'Custom EAN29', customGas: {
+      label: 'Custom EAN30', oxygenFraction: .30, source: 'custom', analysed: false,
+    } })).toThrow('Select a current gas candidate');
+    const snapshot = buildRecreationalGasSnapshot({ ...input, selectedGasLabel: 'Custom EAN30', customGas: {
+      label: 'Custom EAN30', oxygenFraction: .30, source: 'custom', analysed: false,
+    } });
+    expect(snapshot.gasCandidates.filter(candidate => candidate.selected).map(candidate => candidate.label)).toEqual(['Custom EAN30']);
+  });
+  it('withholds rested NDL for a repetitive dive when prior tissue loading is unknown', () => {
+    const snapshot = buildRecreationalGasSnapshot({ ...input, repetitiveDive: true });
+    expect(snapshot.gasCandidates.every(candidate => candidate.ndl.state === 'unavailable')).toBe(true);
+    expect(snapshot.gasCandidates[0]?.ndl.unavailableReason).toContain('Repetitive-dive tissue carryover is not supported');
+    expect(snapshot.warnings.join(' ')).toContain('Repetitive-dive tissue carryover is not supported');
+    expect(snapshot.plannedWorkingTimeMin).toBeCloseTo(snapshot.gasCandidates[0]!.gasLimitedTimeMin!, 5);
+    expect(snapshot.assumptions).toContain('Only rested surface-air or same-dive tissues are supported. No technical decompression schedule is generated.');
+  });
   it('keeps table lookup backup out of the NDL and uses route checkpoint reserves', () => {
     const route = buildRecreationalGasSnapshot({ ...input, mode: 'out-and-back', routeSegments: [
       { id: 'out', label: 'Turn', depthM: 30, minutes: 5 }, { id: 'back', label: 'Exit', depthM: 20, minutes: 5 },
