@@ -1,16 +1,6 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
-    version: '1.0.39',
-    date: '2026-09-18',
-    title: 'T12.6R recreational gas planner',
-    changes: [
-      'Added explicit ZH-L16B and ZH-L16C nitrogen no-stop NDL with gradient factors, separate gas-limited time and salt/fresh water pressure calculations.',
-      'Added gas candidate comparison, owner emergency reserve phases, rule of thirds and route checkpoint reserves with unavailable reasons.',
-      'Saved an additive recreational snapshot on existing Gas Plans and left Dive records and technical decompression scheduling unchanged.',
-    ],
-  },
-  {
     version: '1.0.37',
     date: '2026-09-17',
     title: 'Dive Plan editor and gas-planning foundation',

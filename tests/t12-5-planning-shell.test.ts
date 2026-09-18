@@ -36,16 +36,17 @@ describe('T12.5 Plan/Gas UI integration', () => {
     const model = read('lib/offline/planning-pages.ts');
     const source = read('components/planning/gas-planning.tsx');
     expect(model).toContain("'PADI RDP Air' | 'PADI RDP EANx32' | 'SSI' | 'SSI Air/EANx' | 'US Navy Air'");
-    expect(source).toContain('Legacy table transcriptions remain in older records');
-    expect(read('components/planning/recreational-gas-planner.tsx')).toContain('No backup table configured.');
+    expect(source).toContain('pressure groups are not interchangeable');
+    expect(source).toContain('No table dataset is bundled');
+    expect(source).toContain('PADI RDP (existing unspecified record)');
+    expect(source).toContain('SSI combined Air/EANx · 2206M-EAN 02/12');
   });
-  it('preserves legacy Bühlmann provenance while the recreational engine remains schedule-free', () => {
+  it('offers Bühlmann as a separate provenance method, not a calculated schedule', () => {
     const model = read('lib/offline/planning-pages.ts');
     const source = read('components/planning/gas-planning.tsx');
     expect(model).toContain("planningMethod?: 'agency-table' | 'buhlmann-zhl16c'");
-    expect(source).toContain('No decompression schedule is generated.');
-    expect(read('components/planning/recreational-gas-planner.tsx')).toContain('ZH-L16B + GF');
-    expect(read('components/planning/recreational-gas-planner.tsx')).toContain('ZH-L16C + GF');
+    expect(source).toContain('Bühlmann ZH-L16C reference only');
+    expect(source).toContain('ZeusTek does not compute tissue loading, NDL, ceilings, stops or flight clearance');
   });
   it('retains the Trip itinerary flight classification without replacing legacy text', () => {
     const source = read('components/trips-expeditions.tsx');
