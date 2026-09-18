@@ -28,6 +28,7 @@ import {
   type ManualStop,
   type PlanningGasMix,
 } from './gas-planning-foundation';
+import type { RecreationalGasSnapshot } from './recreational-gas-planner';
 
 export type BookingKind =
   | 'dive'
@@ -87,6 +88,8 @@ export interface GasPlanCylinder {
   notes?: string | null;
 }
 export interface GasPlanRecord {
+  /** Additive T12.6R snapshot in the existing gas-plan store. */
+  recGasPlan101?: RecreationalGasSnapshot | null;
   name: string;
   divePlanId?: string | null;
   status: GasPlanStatus;
@@ -458,6 +461,14 @@ export async function saveGasPlanNotesToDivePlan(
       name: gasPlan.name,
       notes: gasPlan.notes,
       warnings: [...gasPlan.warnings],
+      ...(gasPlan.recGasPlan101 ? { recreationalSummary: {
+        model: gasPlan.recGasPlan101.selectedBuhlmannModel,
+        selectedGas: gasPlan.recGasPlan101.selectedGasLabel,
+        ndlMinutes: gasPlan.recGasPlan101.gasCandidates.find(candidate => candidate.selected)?.ndl.minutes ?? null,
+        gasLimitedTimeMin: gasPlan.recGasPlan101.gasCandidates.find(candidate => candidate.selected)?.gasLimitedTimeMin ?? null,
+        reserveBar: gasPlan.recGasPlan101.reserve.selectedBar,
+        limitingFactor: gasPlan.recGasPlan101.limitingFactor,
+      } } : {}),
     },
   ];
   return saveEnrichedDivePlan({
