@@ -17,7 +17,11 @@ export interface PlanTeamMember {
 }
 export interface PlanConditionSnapshot {
   capturedAt?: string | null;
-  provenance?: 'recorded' | 'imported' | 'calculated' | 'inferred' | 'forecast' | 'seasonal';
+  provenance?: 'recorded' | 'imported' | 'calculated' | 'inferred' | 'forecast' | 'seasonal' | 'unavailable';
+  weatherAvailability?: 'available' | 'rate-limited' | 'unavailable';
+  sourceSiteId?: string | null;
+  sourceDate?: string | null;
+  sourceDetail?: string | null;
   weather?: string | null;
   airTemperatureC?: number | null;
   waterTemperatureC?: number | null;
@@ -54,6 +58,12 @@ export interface PlanEmergency {
   emsNumber?: string | null;
   searchRescueProvider?: string | null;
   hyperbaricPathway?: string | null;
+  hyperbaricFacilityName?: string | null;
+  hyperbaricFacilityPhone?: string | null;
+  hyperbaricFacilityAddress?: string | null;
+  hyperbaricAccessNotes?: string | null;
+  hyperbaricSource?: string | null;
+  hyperbaricLastChecked?: string | null;
   insuranceProvider?: string | null;
   oxygenLocationQuantity?: string | null;
   oxygenTrainedPersonIds?: string[];
@@ -74,6 +84,14 @@ export interface PlanGasReference {
   name: string;
   notes: string;
   warnings: string[];
+  recreationalSummary?: {
+    model: 'ZH-L16B' | 'ZH-L16C';
+    selectedGas: string;
+    ndlMinutes: number | null;
+    gasLimitedTimeMin: number | null;
+    reserveBar: number | null;
+    limitingFactor: string;
+  };
 }
 export interface EnrichedDivePlanExtension {
   lifecycleStatus?: PlanLifecycleStatus;

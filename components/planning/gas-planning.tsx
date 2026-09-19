@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ChevronRight,
@@ -46,12 +46,20 @@ import {
   GAS_PLANNING_CAUTION,
   NDL_UNCONFIGURED,
   type GasDepthSegment,
-  type ManualStop,
 } from '../../lib/offline/gas-planning-foundation';
 import styles from './planning-pages.module.css';
+import { RecreationalGasPlanner } from './recreational-gas-planner';
+import { buildRecreationalGasSnapshot, recreationalReadinessBlockers, type RecreationalGasInput } from '../../lib/offline/recreational-gas-planner';
 
 type Props = { go?: (route: string) => void };
 type GasPlanDraft = GasPlanRecord & { entityId?: string };
+const GAS_HELP = {
+  'Depth limits': 'Site, owner-entered user and team depth limits are separate. The lowest known limit applies, and unknown capability is not a pass. Verify training evidence independently.',
+  'Gas aggregation': 'Overall gas needed is Unknown when multiple cylinders have no explicit segment assignments; show per-cylinder values instead.',
+  'Gas needed': 'This gas estimate uses recorded RMV, depth and minutes. Missing inputs remain Unknown; ascent, stops and contingencies require separate planning.',
+  'PPO₂ / MOD': 'PPO₂ is oxygen fraction multiplied by absolute pressure. MOD is the depth where the selected target PPO₂ is reached.',
+  Reserve: 'Usable gas deducts the recorded reserve pressure. Missing size or pressure evidence remains Unknown.',
+} as const;
 
 const nowIso = () => new Date().toISOString();
 
@@ -133,6 +141,8 @@ export function GasPlanning({ go }: Props) {
   const [editing, setEditing] = useState<
     StoredGasPlanRecord | null | undefined
   >(undefined);
+  const [newGasPlanFor, setNewGasPlanFor] = useState<string | null>(null);
+  const openedDeepLink = useRef(false);
   const [query, setQuery] = useState('');
 
   const refresh = useCallback(async () => {
@@ -161,6 +171,24 @@ export function GasPlanning({ go }: Props) {
     );
   }, []);
   useRecordRefresh(refresh);
+  useEffect(() => {
+    if (openedDeepLink.current || !divePlans.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const newFor = params.get('newGasPlanFor');
+    if (newFor && divePlans.some(plan => plan.entityId === newFor)) {
+      openedDeepLink.current = true;
+      params.delete('newGasPlanFor');
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}${params.size ? `?${params}` : ''}${window.location.hash}`);
+      const frame = requestAnimationFrame(() => { setNewGasPlanFor(newFor); setEditing(null); });
+      return () => cancelAnimationFrame(frame);
+    }
+    const linkedGasId = params.get('gasPlanId');
+    if (linkedGasId && plans.some(plan => plan.entityId === linkedGasId)) {
+      openedDeepLink.current = true;
+      const frame = requestAnimationFrame(() => setSelectedId(linkedGasId));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [divePlans, plans]);
 
   const filtered = useMemo(
     () =>
@@ -188,8 +216,12 @@ export function GasPlanning({ go }: Props) {
   const availableValues = projections.map(projection => projection.volume?.usableLitres ?? null);
   const gasAvailable = availableValues.length && availableValues.every((value): value is number => value !== null) ? availableValues.reduce((sum, value) => sum + value, 0) : null;
   const gasNeeded = projections.length === 1 ? projections[0]?.requiredLitres ?? null : null;
+  const multiCylinderReason = selected && selected.cylinders.length > 1
+    ? 'Overall gas needed is Unknown for multiple cylinders without explicit depth/time segment assignments. Per-cylinder requirements are shown below; cylinders are not interchangeable.'
+    : null;
   const detailedWarnings = [...new Set([
     ...warnings,
+    ...(selected?.recGasPlan101?.warnings ?? []),
     ...projections.flatMap(projection => projection.warnings),
     ...(previousDive?.warning ? [previousDive.warning] : []),
     ...(flight?.warning ? [flight.warning] : []),
@@ -338,11 +370,7 @@ export function GasPlanning({ go }: Props) {
                   <p>Planned dive #{selectedDivePlan.diveNumberOfDay ?? 'unknown'} of the day · {selectedDivePlan.multiLevel ? 'multi-level' : 'single-level / not marked'} · Site max {selectedSite?.maxDepthM ?? 'unknown'} m · planned max {selectedDivePlan.plannedMaxDepthM ?? 'unknown'} m · total duration {selectedDivePlan.maxTotalDurationMin ?? 'unknown'} min.</p>
                   {previousDive && <p role={previousDive.warning ? 'alert' : undefined}><strong>Previous dive / pressure group:</strong> {previousDive.summary} · recorded post-dive group {previousDive.pressureGroup ?? 'Unknown'}{previousDive.dataset ? ` (${previousDive.dataset})` : ''} · estimated interval to this plan {previousDive.surfaceIntervalMin ?? 'Unknown'} min.{previousDive.warning ? ` ${previousDive.warning}` : ''}</p>}
                   {flight && <p role={flight.warning ? 'alert' : undefined} className={flight.warning ? styles.safetyWarning : undefined}><strong>Trip flight:</strong> {flight.warning ?? (flight.state === 'no-flight-recorded' ? 'No flight recorded in linked Trip; this does not establish clearance.' : `${flight.flightLabel ?? 'Flight'} appears outside the 24-hour flag window; check dive computer and medical guidance.`)}{flight.flightStartsAt ? ` · ${flight.flightStartsAt}` : ''}{flight.provenance ? ` · ${flight.provenance}` : ''}</p>}
-                  <p><strong>Planning method:</strong> {selected.planningMethod === 'buhlmann-zhl16c'
-                    ? `Bühlmann ZH-L16C reference · ${selected.algorithmReference?.implementation || 'implementation not recorded'} ${selected.algorithmReference?.version || '(version missing)'} · GF ${selected.gradientFactorLow ?? '?'}/${selected.gradientFactorHigh ?? '?'}`
-                    : selected.tableReference?.agency
-                      ? `${selected.tableReference.agency} ${selected.tableReference.edition || '(edition missing)'} · owner-recorded group ${selected.tableReference.pressureGroup || 'Unknown'} · NDL ${selected.tableReference.ndlMinutes ?? 'Unknown'} min`
-                      : NDL_UNCONFIGURED} No pressure group, NDL or decompression schedule is computed here.</p>
+                  <p><strong>Recreational no-stop model:</strong> {selected.recGasPlan101 ? `${selected.recGasPlan101.selectedBuhlmannModel} · GF ${selected.recGasPlan101.gfLow}/${selected.recGasPlan101.gfHigh} · ${selected.recGasPlan101.waterType} water · ${selected.recGasPlan101.gasCandidates.find(row => row.selected)?.ndl.minutes ?? 'NDL unavailable'} min at depth` : 'Legacy Gas Plan — open Edit to calculate the T12.6R snapshot.'} No decompression schedule is generated.</p>
                 </div> : null}
               </CollapsibleWorkCard>
 
@@ -409,6 +437,11 @@ export function GasPlanning({ go }: Props) {
                 ><AlertTriangle size={16} aria-hidden="true" /> {detailedWarnings.length} warning(s)</button> : 'Ready to review'}
               >
                 <div className={styles.summaryGrid}>
+                  {selected.recGasPlan101 ? <>
+                    <span><small>Selected gas NDL</small><b>{selected.recGasPlan101.gasCandidates.find(row => row.selected)?.ndl.minutes ?? '—'} min</b></span>
+                    <span><small>Gas-limited time</small><b>{selected.recGasPlan101.gasCandidates.find(row => row.selected)?.gasLimitedTimeMin?.toFixed(1) ?? '—'} min</b></span>
+                    <span><small>Emergency reserve</small><b>{selected.recGasPlan101.reserve.selectedLitres?.toFixed(0) ?? '—'} L</b></span>
+                  </> : null}
                   <span>
                     <small>Planned depth</small>
                     <b>{selected.plannedDepthM ?? '—'} m</b>
@@ -422,7 +455,7 @@ export function GasPlanning({ go }: Props) {
                     <b>{selected.rmvRateLitresMin ?? '—'} L/min</b>
                   </span>
                   <span>
-                    <small>Segment gas needed</small>
+                    <small title={GAS_HELP['Gas needed']}>Segment gas needed</small>
                     <b>{gasNeeded ?? '—'} L</b>
                   </span>
                   <span>
@@ -430,6 +463,7 @@ export function GasPlanning({ go }: Props) {
                     <b>{gasAvailable ?? '—'} L</b>
                   </span>
                 </div>
+                {multiCylinderReason ? <p className={styles.provenance} title={GAS_HELP['Gas aggregation']}>{multiCylinderReason}</p> : null}
                 <div className={styles.formulaResults}>
                   {selected.cylinders.map((cylinder, index) => {
                     const projection = projections[index];
@@ -451,7 +485,7 @@ export function GasPlanning({ go }: Props) {
                   . Gas available uses selected cylinder size, pressure and
                   reserve evidence.
                 </p>
-                <p className={styles.provenance}>{GAS_FORMULA_PROVENANCE} Segment estimates exclude ascent, stops and contingency gas. {NDL_UNCONFIGURED}</p>
+                <p className={styles.provenance}>{GAS_FORMULA_PROVENANCE} Segment estimates exclude ascent, stops and contingency gas. {selected.recGasPlan101 ? 'The recreational NDL is calculated by the selected Bühlmann model; table lookup is backup only.' : NDL_UNCONFIGURED}</p>
                 <p className={styles.safetyWarning}>{GAS_PLANNING_CAUTION}</p>
                 {detailedWarnings.length ? (
                   <ul className={styles.warningList}>
@@ -503,6 +537,7 @@ export function GasPlanning({ go }: Props) {
       {editing !== undefined ? (
         <GasPlanEditor
           item={editing}
+          newGasPlanFor={newGasPlanFor}
           divePlans={divePlans}
           equipment={equipment}
           fills={fills}
@@ -607,6 +642,7 @@ function GasDetail({
 
 function GasPlanEditor({
   item,
+  newGasPlanFor,
   divePlans,
   equipment,
   fills,
@@ -619,6 +655,7 @@ function GasPlanEditor({
   saved,
 }: {
   item: StoredGasPlanRecord | null;
+  newGasPlanFor: string | null;
   divePlans: StoredEnrichedDivePlan[];
   equipment: Array<Stored<CylinderEquipmentRecord>>;
   fills: Array<Stored<CylinderFillRecord>>;
@@ -633,16 +670,54 @@ function GasPlanEditor({
   const [draft, setDraft] = useState<GasPlanDraft>(() =>
     item
       ? { ...item, cylinders: item.cylinders.map((row) => ({ ...row })) }
-      : emptyPlan(divePlans[0], rmvBaseline),
+      : emptyPlan(divePlans.find(plan => plan.entityId === newGasPlanFor) ?? divePlans[0], rmvBaseline),
   );
+  const [recInput, setRecInput] = useState<RecreationalGasInput>(() => {
+    const saved = item?.recGasPlan101;
+    return {
+      mode: saved?.mode ?? (item?.multiLevel ? 'multilevel' : 'direct-ascent'),
+      selectedBuhlmannModel: saved?.selectedBuhlmannModel ?? 'ZH-L16C',
+      compareOtherModel: saved?.compareOtherModel ?? false,
+      gfLow: saved?.gfLow ?? item?.gradientFactorLow ?? 40,
+      gfHigh: saved?.gfHigh ?? item?.gradientFactorHigh ?? 85,
+      waterType: saved?.waterType ?? 'salt', surfacePressureBar: saved?.surfacePressureBar ?? 1,
+      plannedDepthM: saved?.plannedDepthM ?? item?.plannedDepthM ?? 30,
+      conservatismM: saved?.conservatismM ?? 3, maxPpo2: saved?.maxPpo2 ?? 1.4,
+      selectedGasLabel: saved?.selectedGasLabel ?? 'Air / EAN21',
+      customGas: saved?.customGas ?? null, analysedGases: saved?.analysedGases ?? [],
+      cylinderWaterVolumeL: saved?.cylinderWaterVolumeL ?? null,
+      startPressureBar: saved?.startPressureBar ?? null,
+      ownRmvLMin: saved?.ownRmvLMin ?? item?.rmvRateLitresMin ?? rmvBaseline.litresPerMinute,
+      buddyRmvLMin: saved?.buddyRmvLMin ?? null,
+      reserveStrategy: saved?.reserveStrategy ?? 'most-conservative',
+      ascentRateMMin: saved?.ascentRateMMin ?? 9,
+      ownerMaxDurationMin: saved?.ownerMaxDurationMin ?? item?.plannedBottomTimeMin ?? null,
+      routeSegments: saved?.routeSegments ?? [], tableProvider: null,
+    };
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [helpTopic, setHelpTopic] = useState<'PPO₂ / MOD' | 'EAD' | 'Gas volume' | 'Agency table' | 'Bühlmann reference' | null>(null);
+  const [draftWarningsOpen, setDraftWarningsOpen] = useState(false);
+  const [helpTopic, setHelpTopic] = useState<'PPO₂ / MOD' | 'EAD' | 'Gas volume' | 'Agency table' | 'Bühlmann reference' | 'Depth limits' | null>(null);
   const linkedPlan = divePlans.find(plan => plan.entityId === draft.divePlanId);
   const linkedTrip = linkedPlan?.tripId ? trips.find(trip => trip.entityId === linkedPlan.tripId) : null;
   const linkedSite = linkedPlan?.siteId ? sites.find(site => site.entityId === linkedPlan.siteId) : null;
   const priorDive = linkedPlan ? previousDiveContext(linkedPlan, dives) : null;
   const flight = linkedPlan ? flightProximity(linkedPlan, linkedTrip) : null;
+  const recProjection = useMemo(() => {
+    try {
+      const analysedGases = draft.cylinders.flatMap((cylinder, index) => {
+        const projected = projectGasCylinder(cylinder, draft, fills, analyses, equipment);
+        return projected.analysisState === 'current' && projected.mix && projected.mix.heliumFraction === 0
+          ? [{ label: `Analysed fill ${index + 1}`, oxygenFraction: projected.mix.oxygenFraction, source: 'analysed-fill' as const,
+            analysed: true, evidence: projected.mixProvenance }] : [];
+      });
+      const repetitiveDive = Boolean(linkedPlan && ((linkedPlan.diveNumberOfDay ?? 1) > 1 || dives.some(dive => dive.date === linkedPlan.startDate)));
+      return { snapshot: buildRecreationalGasSnapshot({ ...recInput, analysedGases, repetitiveDive }), error: null };
+    } catch (cause) {
+      return { snapshot: null, error: cause instanceof Error ? cause.message : 'Recreational planner inputs are invalid.' };
+    }
+  }, [recInput, draft, fills, analyses, equipment, linkedPlan, dives]);
 
   function update(patch: Partial<GasPlanRecord>) {
     setDraft((current) => ({ ...current, ...patch }));
@@ -656,9 +731,6 @@ function GasPlanEditor({
   }
   function updateSegment(id: string, patch: Partial<GasDepthSegment>) {
     update({ depthSegments: (draft.depthSegments ?? []).map(row => row.id === id ? { ...row, ...patch } : row) });
-  }
-  function updateStop(id: string, patch: Partial<ManualStop>) {
-    update({ manualStops: (draft.manualStops ?? []).map(row => row.id === id ? { ...row, ...patch } : row) });
   }
   function addCylinder() {
     update({
@@ -700,8 +772,15 @@ function GasPlanEditor({
     setBusy(true);
     setError('');
     try {
+      if (!recProjection.snapshot) throw new Error(recProjection.error ?? 'Complete the recreational planner first.');
+      if (draft.status === 'ready') {
+        const blockers = recreationalReadinessBlockers(recProjection.snapshot);
+        if (blockers.length) throw new Error(`Cannot mark ready: ${blockers.join(' ')}`);
+      }
       const warnings = warnGasPlan(draft, fills, equipment);
-      await saveGasPlan({ ...draft, warnings });
+      await saveGasPlan({ ...draft, plannedDepthM: recInput.plannedDepthM, rmvRateLitresMin: recInput.ownRmvLMin,
+        gradientFactorLow: recInput.gfLow, gradientFactorHigh: recInput.gfHigh,
+        recGasPlan101: recProjection.snapshot, warnings: [...new Set([...warnings, ...recProjection.snapshot.warnings])] });
       saved();
     } catch (reason) {
       setError(
@@ -735,6 +814,8 @@ function GasPlanEditor({
           </button>
         </header>
 
+        <RecreationalGasPlanner input={recInput} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => setRecInput(current => ({ ...current, ...patch }))}/>
+        {recProjection.snapshot?.warnings.length ? <button type="button" className={styles.warningIconButton} aria-label="Open draft Gas Plan warnings" aria-haspopup="dialog" title={recProjection.snapshot.warnings.join('\n')} onClick={() => setDraftWarningsOpen(true)}><AlertTriangle size={16} aria-hidden="true" /> {recProjection.snapshot.warnings.length} warning(s) · details</button> : null}
         <div className={styles.editorGrid}>
           <label>
             Name
@@ -796,7 +877,8 @@ function GasPlanEditor({
             />
           </label>
           <label className={styles.inlineCheck}><input type="checkbox" checked={Boolean(draft.multiLevel)} onChange={event=>update({multiLevel:event.target.checked})}/> Multi-level profile</label>
-          <label>Reserve strategy<select value={draft.reserveStrategy??'fixed'} onChange={event=>update({reserveStrategy:event.target.value as NonNullable<GasPlanRecord['reserveStrategy']>})}><option value="fixed">Fixed reserve per cylinder</option><option value="thirds">Rule of thirds (strategy note only)</option><option value="custom">Custom team strategy</option></select></label>
+          <label>User maximum depth (m, owner-entered) <button type="button" className={styles.infoButton} aria-label="About user depth limit" title={GAS_HELP['Depth limits']} onClick={()=>setHelpTopic('Depth limits')}>ⓘ</button><input type="number" min="0" step="0.1" value={draft.userMaxDepthM??''} onChange={event=>update({userMaxDepthM:event.target.value?Number(event.target.value):null})}/></label>
+          <label>Reserve strategy <button type="button" className={styles.infoButton} title={GAS_HELP.Reserve} aria-label="About reserve gas" onClick={()=>setHelpTopic('Gas volume')}>ⓘ</button><select value={draft.reserveStrategy??'fixed'} onChange={event=>update({reserveStrategy:event.target.value as NonNullable<GasPlanRecord['reserveStrategy']>})}><option value="fixed">Fixed reserve per cylinder</option><option value="thirds">Rule of thirds (strategy note only)</option><option value="custom">Custom team strategy</option></select></label>
           <label>Ascent rate setting (m/min; not calculated)<input type="number" min="0" step="0.1" value={draft.ascentRateMMin??''} onChange={event=>update({ascentRateMMin:event.target.value?Number(event.target.value):null})}/></label>
           <label>
             Bottom time (min)
@@ -865,22 +947,7 @@ function GasPlanEditor({
               placeholder="Reserve, turn-pressure, team and contingency notes"
             />
           </label>
-          <label className={styles.wide}>Planning method
-            <select value={draft.planningMethod ?? (draft.tableReference ? 'agency-table' : '')} onChange={event=>update({planningMethod:event.target.value ? event.target.value as NonNullable<GasPlanRecord['planningMethod']> : null})}>
-              <option value="">Not configured</option>
-              <option value="agency-table">Owner-recorded PADI / Navy / SSI table</option>
-              <option value="buhlmann-zhl16c">Bühlmann ZH-L16C reference only</option>
-            </select>
-          </label>
-          {draft.planningMethod === 'buhlmann-zhl16c' ? <fieldset className={`${styles.wide} ${styles.tableReference}`}>
-            <legend>Bühlmann ZH-L16C provenance <button type="button" className={styles.infoButton} aria-label="About Bühlmann reference" onClick={()=>setHelpTopic('Bühlmann reference')}>ⓘ</button></legend>
-            <p>Record the external planner or dive computer implementation and its version. GF settings below are stored as entered. ZeusTek does not compute tissue loading, NDL, ceilings, stops or flight clearance. Any existing table transcription is retained but inactive.</p>
-            <label>Gradient factor low (storage only)<input type="number" min="0" max="100" value={draft.gradientFactorLow??''} onChange={event=>update({gradientFactorLow:event.target.value?Number(event.target.value):null})}/></label>
-            <label>Gradient factor high (storage only)<input type="number" min="0" max="100" value={draft.gradientFactorHigh??''} onChange={event=>update({gradientFactorHigh:event.target.value?Number(event.target.value):null})}/></label>
-            <label>Computer / planner implementation<input value={draft.algorithmReference?.implementation??''} onChange={event=>update({algorithmReference:{implementation:event.target.value,version:draft.algorithmReference?.version??'',sourceNote:draft.algorithmReference?.sourceNote??''}})}/></label>
-            <label>Software / firmware version<input value={draft.algorithmReference?.version??''} onChange={event=>update({algorithmReference:{implementation:draft.algorithmReference?.implementation??'',version:event.target.value,sourceNote:draft.algorithmReference?.sourceNote??''}})}/></label>
-            <label>Source / method note<input value={draft.algorithmReference?.sourceNote??''} onChange={event=>update({algorithmReference:{implementation:draft.algorithmReference?.implementation??'',version:draft.algorithmReference?.version??'',sourceNote:event.target.value}})}/></label>
-          </fieldset> : <fieldset className={`${styles.wide} ${styles.tableReference}`}><legend>Agency table transcription <button type="button" className={styles.infoButton} aria-label="About agency table references" onClick={()=>setHelpTopic('Agency table')}>ⓘ</button></legend><p>Use your own versioned table. Keep air, EANx32 and Navy tables separate; pressure groups are not interchangeable between table families or editions. The SSI combined Air/EANx table is derived from Navy limits but uses its own group system. ZeusTek does not calculate NDL, residual nitrogen or pressure groups from these entries. {NDL_UNCONFIGURED}</p><label>Table source<select value={draft.tableReference?.agency??''} onChange={event=>update({tableReference:event.target.value?{agency:event.target.value as NonNullable<GasPlanRecord['tableReference']>['agency'],edition:draft.tableReference?.edition??'',pressureGroup:draft.tableReference?.pressureGroup??'',ndlMinutes:draft.tableReference?.ndlMinutes??null,sourceNote:draft.tableReference?.sourceNote??''}:null})}><option value="">Not configured</option><option value="PADI RDP">PADI RDP (existing unspecified record)</option><option value="PADI RDP Air">PADI RDP Air · metric</option><option value="PADI RDP EANx32">PADI RDP EANx32 · imperial</option><option value="SSI">SSI (existing unspecified record)</option><option value="SSI Air/EANx">SSI combined Air/EANx · 2206M-EAN 02/12</option><option value="US Navy Air">US Navy Air (edition required)</option><option value="Other">Other</option></select></label>{draft.tableReference&&<><label>Edition / version<input value={draft.tableReference.edition} onChange={event=>update({tableReference:{...draft.tableReference!,edition:event.target.value}})}/></label><label>Owner-recorded starting pressure group<input value={draft.tableReference.pressureGroup} onChange={event=>update({tableReference:{...draft.tableReference!,pressureGroup:event.target.value}})}/></label><label>Owner-recorded NDL (min)<input type="number" min="0" value={draft.tableReference.ndlMinutes??''} onChange={event=>update({tableReference:{...draft.tableReference!,ndlMinutes:event.target.value?Number(event.target.value):null}})}/></label><label>Page / method / source note<input value={draft.tableReference.sourceNote} onChange={event=>update({tableReference:{...draft.tableReference!,sourceNote:event.target.value}})}/></label></>}</fieldset>}
+          <p className={styles.wide}>The recreational NDL above is calculated by the explicitly selected Bühlmann model. Tables are lookup backup only. No manual NDL drives this plan. Legacy table transcriptions remain in older records but are not used here.</p>
         </div>
 
         <div className={styles.editorSectionHeading}>
@@ -999,7 +1066,7 @@ function GasPlanEditor({
               <label>Gas type<select value={cylinder.gasType??''} onChange={event=>updateCylinder(cylinder.id,{gasType:event.target.value as NonNullable<GasPlanCylinder['gasType']>})}><option value="">Not classified</option><option value="air">Air</option><option value="nitrox">Nitrox</option><option value="trimix">Trimix</option><option value="heliox">Heliox</option><option value="other">Other</option></select></label>
               <label>Mix evidence<select value={cylinder.mixSource??'analysis'} onChange={event=>updateCylinder(cylinder.id,{mixSource:event.target.value as NonNullable<GasPlanCylinder['mixSource']>})}><option value="analysis">Linked current analysis</option><option value="manual">Manual entry (unverified)</option></select></label>
               {cylinder.mixSource==='manual'&&<><label>Manual O₂ fraction (0–1)<input type="number" min="0" max="1" step="0.01" value={cylinder.manualOxygenFraction??''} onChange={event=>updateCylinder(cylinder.id,{manualOxygenFraction:event.target.value?Number(event.target.value):null})}/></label><label>Manual He fraction (0–1)<input type="number" min="0" max="1" step="0.01" value={cylinder.manualHeliumFraction??''} onChange={event=>updateCylinder(cylinder.id,{manualHeliumFraction:event.target.value?Number(event.target.value):null})}/></label></>}
-              <label>Target PPO₂ (bar) <button type="button" className={styles.infoButton} aria-label="About PPO2 and MOD" onClick={()=>setHelpTopic('PPO₂ / MOD')}>ⓘ</button><input type="number" min="0" max="2" step="0.05" value={cylinder.targetPpo2??1.4} onChange={event=>updateCylinder(cylinder.id,{targetPpo2:event.target.value?Number(event.target.value):null})}/></label>
+              <label>Target PPO₂ (bar) <button type="button" className={styles.infoButton} title={GAS_HELP['PPO₂ / MOD']} aria-label="About PPO2 and MOD" onClick={()=>setHelpTopic('PPO₂ / MOD')}>ⓘ</button><input type="number" min="0" max="2" step="0.05" value={cylinder.targetPpo2??1.4} onChange={event=>updateCylinder(cylinder.id,{targetPpo2:event.target.value?Number(event.target.value):null})}/></label>
               <label>Depth conservatism (m)<input type="number" min="0" step="0.5" value={cylinder.conservatismM??0} onChange={event=>updateCylinder(cylinder.id,{conservatismM:event.target.value?Number(event.target.value):null})}/></label>
               <label>Segment / switch depth (m)<input type="number" min="0" step="0.5" value={cylinder.depthM??''} onChange={event=>updateCylinder(cylinder.id,{depthM:event.target.value?Number(event.target.value):null})}/></label>
               <label>Water volume override (L, optional)<input type="number" min="0" step="0.1" value={cylinder.waterVolumeOverrideL??''} onChange={event=>updateCylinder(cylinder.id,{waterVolumeOverrideL:event.target.value?Number(event.target.value):null})}/></label>
@@ -1102,9 +1169,7 @@ function GasPlanEditor({
         <p className={styles.provenance}>Each segment uses its recorded depth, minutes and selected gas. These rows do not calculate decompression obligations or a no-stop limit. <button type="button" className={styles.infoButton} aria-label="About gas volume" onClick={()=>setHelpTopic('Gas volume')}>ⓘ</button></p>
         <div className={styles.editorCylinderList}>{(draft.depthSegments??[]).map((segment,index)=><fieldset key={segment.id}><legend>Segment {index+1}</legend><label>Depth (m)<input type="number" min="0" step="0.5" value={segment.depthM??''} onChange={event=>updateSegment(segment.id,{depthM:event.target.value?Number(event.target.value):null})}/></label><label>Time (min)<input type="number" min="0" value={segment.minutes??''} onChange={event=>updateSegment(segment.id,{minutes:event.target.value?Number(event.target.value):null})}/></label><label>Gas / cylinder<select value={segment.gasCylinderId??''} onChange={event=>updateSegment(segment.id,{gasCylinderId:event.target.value||null})}><option value="">Unassigned (all-gas estimate)</option>{draft.cylinders.map((row,i)=><option key={row.id} value={row.id}>{row.role} · cylinder {i+1}</option>)}</select></label><label>Segment note<input value={segment.note??''} onChange={event=>updateSegment(segment.id,{note:event.target.value})}/></label><button className="focus-secondary danger" onClick={()=>update({depthSegments:(draft.depthSegments??[]).filter(row=>row.id!==segment.id)})}>Remove segment</button></fieldset>)}</div>
 
-        <div className={styles.editorSectionHeading}><h3>Manual stop / gas-switch notes</h3><button className="focus-secondary" onClick={()=>update({manualStops:[...(draft.manualStops??[]),{id:crypto.randomUUID(),depthM:null,minutes:null,gasCylinderId:null}]})}><Plus size={14}/> Add manual stop</button></div>
-        <p className={styles.provenance}>These are owner-entered notes only. ZeusTek does not generate or validate a decompression schedule.</p>
-        <div className={styles.editorCylinderList}>{(draft.manualStops??[]).map((stop,index)=><fieldset key={stop.id}><legend>Manual stop {index+1}</legend><label>Depth (m)<input type="number" min="0" value={stop.depthM??''} onChange={event=>updateStop(stop.id,{depthM:event.target.value?Number(event.target.value):null})}/></label><label>Minutes<input type="number" min="0" value={stop.minutes??''} onChange={event=>updateStop(stop.id,{minutes:event.target.value?Number(event.target.value):null})}/></label><label>Switch gas<select value={stop.gasCylinderId??''} onChange={event=>updateStop(stop.id,{gasCylinderId:event.target.value||null})}><option value="">Not selected</option>{draft.cylinders.map((row,i)=><option key={row.id} value={row.id}>{row.role} · cylinder {i+1}</option>)}</select></label><button className="focus-secondary danger" onClick={()=>update({manualStops:(draft.manualStops??[]).filter(row=>row.id!==stop.id)})}>Remove manual stop</button></fieldset>)}</div>
+        <p className={styles.provenance}>T12.6R calculates no-stop limits only. It does not create or edit decompression schedules. Legacy manual-stop notes remain stored on older Gas Plans.</p>
 
         <p className={styles.safetyWarning}>{GAS_PLANNING_CAUTION}</p>
 
@@ -1126,7 +1191,8 @@ function GasPlanEditor({
           </button>
         </footer>
       </AccessibleDialog>
-      {helpTopic ? <AccessibleDialog label={`${helpTopic} help`} close={()=>setHelpTopic(null)} className="focus-modal"><header><h2>{helpTopic}</h2><button className="focus-icon" aria-label="Close help" data-dialog-close onClick={()=>setHelpTopic(null)}><X/></button></header><p>{helpTopic==='PPO₂ / MOD'?'PPO₂ is oxygen fraction × absolute pressure. MOD is the depth where the selected target PPO₂ is reached. The target is a planning input, not a guarantee of safety.':helpTopic==='EAD'?'Equivalent Air Depth compares nitrogen exposure using FN₂/0.79. It is not a decompression schedule.':helpTopic==='Gas volume'?GAS_FORMULA_PROVENANCE:helpTopic==='Bühlmann reference'?'Bühlmann ZH-L16C is a decompression model. Record the external implementation, firmware version and gradient factors used. ZeusTek stores this provenance only; it does not run a validated decompression engine or generate a schedule.':'Record the exact table family and edition with your own transcribed values. Never interchange pressure groups across PADI air, PADI EANx32, SSI or Navy tables. No table dataset is bundled, so pressure groups, residual nitrogen and NDL remain uncalculated.'}</p><p>{GAS_PLANNING_CAUTION}</p><footer><button className="focus-secondary" data-dialog-close onClick={()=>setHelpTopic(null)}>Close</button></footer></AccessibleDialog> : null}
+      {draftWarningsOpen && recProjection.snapshot ? <AccessibleDialog label="Draft Gas Plan warnings" close={() => setDraftWarningsOpen(false)} className="focus-modal"><header><h2>Draft Gas Plan warnings</h2><button type="button" className="focus-icon" data-dialog-close aria-label="Close draft warnings" onClick={() => setDraftWarningsOpen(false)}><X /></button></header><ul className={styles.warningList}>{recProjection.snapshot.warnings.map(warning => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDraftWarningsOpen(false)}>Close</button></footer></AccessibleDialog> : null}
+      {helpTopic ? <AccessibleDialog label={`${helpTopic} help`} close={()=>setHelpTopic(null)} className="focus-modal"><header><h2>{helpTopic}</h2><button className="focus-icon" aria-label="Close help" data-dialog-close onClick={()=>setHelpTopic(null)}><X/></button></header><p>{helpTopic==='PPO₂ / MOD'?'PPO₂ is oxygen fraction × absolute pressure. MOD is the depth where the selected target PPO₂ is reached. The target is a planning input, not a guarantee of safety.':helpTopic==='EAD'?'Equivalent Air Depth compares nitrogen exposure using FN₂/0.79. It is not a decompression schedule.':helpTopic==='Gas volume'?GAS_FORMULA_PROVENANCE:helpTopic==='Depth limits'?'Site, owner-entered user and team limits are separate. The lowest known limit applies, and unknown capability is not a pass. Verify training evidence independently.':helpTopic==='Bühlmann reference'?'ZeusTek calculates a recreational no-stop limit at the selected depth using the chosen ZH-L16B or ZH-L16C model and gradient factors. The model, assumptions and result are saved with the Gas Plan. This is a planning aid, not a validated dive computer or a decompression schedule.':'Record the exact table family and edition with your own transcribed values. Never interchange pressure groups across PADI air, PADI EANx32, SSI or Navy tables. No table dataset is bundled; a table is lookup backup only and does not drive the calculated NDL.'}</p><p>{GAS_PLANNING_CAUTION}</p><footer><button className="focus-secondary" data-dialog-close onClick={()=>setHelpTopic(null)}>Close</button></footer></AccessibleDialog> : null}
     </div>
   );
 }

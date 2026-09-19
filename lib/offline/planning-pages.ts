@@ -28,6 +28,7 @@ import {
   type ManualStop,
   type PlanningGasMix,
 } from './gas-planning-foundation';
+import type { RecreationalGasSnapshot } from './recreational-gas-planner';
 
 export type BookingKind =
   | 'dive'
@@ -87,10 +88,14 @@ export interface GasPlanCylinder {
   notes?: string | null;
 }
 export interface GasPlanRecord {
+  /** Additive T12.6R snapshot in the existing gas-plan store. */
+  recGasPlan101?: RecreationalGasSnapshot | null;
   name: string;
   divePlanId?: string | null;
   status: GasPlanStatus;
   plannedDepthM?: number | null;
+  /** Owner-entered personal limit, independent of Site and team limits. */
+  userMaxDepthM?: number | null;
   plannedBottomTimeMin?: number | null;
   depthSegments?: GasDepthSegment[];
   manualStops?: ManualStop[];
@@ -265,7 +270,7 @@ export interface GasCylinderProjection {
 /** Never substitutes a previous analysis for one linked to the selected/latest fill. */
 export function projectGasCylinder(
   cylinder: GasPlanCylinder,
-  plan: Pick<GasPlanRecord, 'plannedDepthM' | 'plannedBottomTimeMin' | 'rmvRateLitresMin' | 'depthSegments'>,
+  plan: Pick<GasPlanRecord, 'plannedDepthM' | 'plannedBottomTimeMin' | 'rmvRateLitresMin' | 'depthSegments'> & { cylinders?: GasPlanCylinder[] },
   fills: Array<Stored<CylinderFillRecord>>,
   analyses: Array<Stored<import('./loadouts-gas').GasAnalysisRecord>>,
   equipment: Array<Stored<CylinderEquipmentRecord>>,
@@ -299,8 +304,13 @@ export function projectGasCylinder(
   const item = equipment.find((row) => row.entityId === cylinder.cylinderEquipmentId);
   const volume = gasVolumeLitres(cylinder.waterVolumeOverrideL ?? item?.waterVolumeLiters, cylinder.startPressureBar ?? (selectedFillIsOlder ? null : fill?.pressureBar), cylinder.reservePressureBar);
   if (!volume) warnings.push('Cylinder water volume, start pressure or reserve is missing/invalid.');
-  const segments = plan.depthSegments?.length ? plan.depthSegments.filter((row) => !row.gasCylinderId || row.gasCylinderId === cylinder.id) : [{ id: 'single-level', depthM, minutes: plan.plannedBottomTimeMin ?? null }];
-  const requiredLitres = gasRequiredForSegments(plan.rmvRateLitresMin, segments);
+  const multiCylinder = (plan.cylinders?.length ?? 1) > 1;
+  const assignedSegments = plan.depthSegments?.length && plan.depthSegments.every((row) => row.gasCylinderId && plan.cylinders?.some((item) => item.id === row.gasCylinderId));
+  const segments = plan.depthSegments?.length
+    ? plan.depthSegments.filter((row) => multiCylinder ? row.gasCylinderId === cylinder.id : !row.gasCylinderId || row.gasCylinderId === cylinder.id)
+    : [{ id: 'single-level', depthM, minutes: plan.plannedBottomTimeMin ?? null }];
+  const requiredLitres = multiCylinder && !assignedSegments ? null : segments.length ? gasRequiredForSegments(plan.rmvRateLitresMin, segments) : null;
+  if (multiCylinder && !assignedSegments) warnings.push('Total gas needed unavailable until depth/time segments are assigned to a cylinder.');
   if (requiredLitres != null && volume && requiredLitres > volume.usableLitres) warnings.push('Estimated gas required exceeds usable gas after reserve.');
   return {
     mix,
@@ -458,6 +468,14 @@ export async function saveGasPlanNotesToDivePlan(
       name: gasPlan.name,
       notes: gasPlan.notes,
       warnings: [...gasPlan.warnings],
+      ...(gasPlan.recGasPlan101 ? { recreationalSummary: {
+        model: gasPlan.recGasPlan101.selectedBuhlmannModel,
+        selectedGas: gasPlan.recGasPlan101.selectedGasLabel,
+        ndlMinutes: gasPlan.recGasPlan101.gasCandidates.find(candidate => candidate.selected)?.ndl.minutes ?? null,
+        gasLimitedTimeMin: gasPlan.recGasPlan101.gasCandidates.find(candidate => candidate.selected)?.gasLimitedTimeMin ?? null,
+        reserveBar: gasPlan.recGasPlan101.reserve.selectedBar,
+        limitingFactor: gasPlan.recGasPlan101.limitingFactor,
+      } } : {}),
     },
   ];
   return saveEnrichedDivePlan({
@@ -465,4 +483,38 @@ export async function saveGasPlanNotesToDivePlan(
     entityId: plan.entityId,
     gasPlanLinks,
   });
+}
+
+/** Reconciles only canonical ID links. A Gas Plan linked to another Plan is never silently transferred. */
+export async function saveDivePlanWithGasLinks(
+  input: Parameters<typeof saveEnrichedDivePlan>[0],
+  gasPlans: StoredGasPlanRecord[],
+  selectedIds: string[],
+) {
+  const selected = new Set(selectedIds);
+  for (const gas of gasPlans) {
+    if (selected.has(gas.entityId) && gas.divePlanId && gas.divePlanId !== input.entityId)
+      throw new Error(`${gas.name} already belongs to another Dive Plan. Unlink it there before linking here.`);
+  }
+  const existingLinks = new Map((input.gasPlanLinks ?? []).map((link) => [link.gasPlanId, link]));
+  const linkedAt = new Date().toISOString();
+  const gasPlanLinks = [...selected].map((gasPlanId) => {
+    const gas = gasPlans.find((item) => item.entityId === gasPlanId);
+    const previous = existingLinks.get(gasPlanId);
+    return {
+      gasPlanId,
+      linkedAt: previous?.linkedAt ?? linkedAt,
+      name: gas?.name ?? previous?.name ?? 'Unavailable Gas Plan',
+      notes: gas?.notes ?? previous?.notes ?? '',
+      warnings: gas?.warnings ?? previous?.warnings ?? [],
+    };
+  });
+  const result = await saveEnrichedDivePlan({ ...input, gasPlanLinks });
+  for (const gas of gasPlans) {
+    if (selected.has(gas.entityId) && gas.divePlanId !== result.id)
+      await saveGasPlan({ ...gas, entityId: gas.entityId, divePlanId: result.id });
+    else if (!selected.has(gas.entityId) && gas.divePlanId === result.id)
+      await saveGasPlan({ ...gas, entityId: gas.entityId, divePlanId: null });
+  }
+  return result;
 }

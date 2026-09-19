@@ -1,6 +1,47 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.41',
+    date: '2026-09-19',
+    title: 'Workflow, Insights and Gear refinement',
+    changes: [
+      'Separated Trip / Event Planning from Dive Preparation in navigation and kept Technical Diving with Diving CPD while preserving existing route aliases.',
+      'Simplified Overview to Next Dive, My Profile, Top Dive Buddy, kit status and weather instead of duplicating the analytics award dashboard.',
+      'Added Site Configuration choices for 4, 8, 12, 16 or 20 Insights awards, centred them in responsive eight- or four-wide rows, and expanded filters and source-data-point exclusions without changing canonical Dive records.',
+      'Separated pressure SAC in bar/min from surface-volume RMV in L/min and added a distinct RMV trend; deferred qualifying-progress and readiness cards remain off Insights.',
+      'Separated reusable Loadouts from a dedicated Cylinders & Gas table with keyboard-openable details, service intervals, fill/analysis history and common media handling.',
+      'Preserved Equipment as the canonical individual-gear inventory and retained all local-first history, event, outbox and Plan-to-Dive provenance behaviour.',
+    ],
+  },
+  {
+    version: '1.0.40',
+    date: '2026-09-18',
+    title: 'T12.6R recreational gas planner and planning navigation',
+    changes: [
+      'Added explicit ZH-L16B and ZH-L16C nitrogen no-stop NDL with gradient factors, separate gas-limited time and salt/fresh water pressure calculations.',
+      'Added gas candidate comparison, owner emergency reserve phases, rule of thirds and route checkpoint reserves with unavailable reasons.',
+      'Saved an additive recreational snapshot on existing Gas Plans and left Dive records and technical decompression scheduling unchanged.',
+      'Separated Trip / Event Planning from Dive Preparation, moved Technical Diving to Diving CPD, and retained old route aliases and compact phone navigation.',
+      'Preserved the accepted Sites108 Plan editor, dated weather context, Gas Plan links, team and skill search controls.',
+    ],
+  },
+  {
+    version: '1.0.38',
+    date: '2026-09-17',
+    title: 'Dive Plan and Gas Planning acceptance completion',
+    changes: [
+      'Disambiguated duplicate Site names by canonical ID, retained Site location provenance, and hid map links when no usable location exists.',
+      'Made Plan-side Gas Plan selection, creation, live quantities and accessible warning details available without copying gas evidence into Dive Plans.',
+      'Named limiting divers and unknown team capability, with separate owner-entered user, team and Site depth-limit advisories.',
+      'Added structured hyperbaric facility contact, access, source and last-checked fields while preserving older emergency notes.',
+      'Kept multi-cylinder gas-needed totals unavailable until assignments support a trustworthy estimate; per-cylinder segment estimates and missing evidence remain explicit.',
+      'Improved keyboard, touch and hover help for planning terms, and consumed one-time Gas Plan creation links after use.',
+      'Corrected Plan-editor spacing and compact help controls; Site depth, water and entry facts now appear as labelled canonical references.',
+      'Added search-first People and Dive Skills pickers, with roles and capabilities edited only after a team member is added.',
+      'Added an on-demand dated Site forecast or regional-history check, with separate provider throttles, visible rate-limit status and non-blocking owner-entered manual or seasonal fallbacks; unknown marine conditions remain unknown.',
+    ],
+  },
+  {
     version: '1.0.37',
     date: '2026-09-17',
     title: 'Dive Plan editor and gas-planning foundation',
