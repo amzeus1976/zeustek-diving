@@ -1,5 +1,10 @@
 import type { DiveRecord } from './dives';
 import type { CertificationRecord, PersonRecord } from './dive-planning';
+import type { PlanTeamMember } from './dive-planning-centre';
+import {
+  diveSacBarPerMinute,
+  diveSacLitresPerMinute,
+} from './experience-analytics';
 
 export type StoredPerson = PersonRecord & { entityId: string };
 export type ProfileDerivedField =
@@ -49,6 +54,54 @@ export function hasPersonRole(
   if (role === 'instructor')
     return person.role === 'instructor' || person.role === 'both';
   return false;
+}
+
+export function personSearchText(person: PersonRecord) {
+  return [
+    personDisplayName(person),
+    person.name,
+    person.agency,
+    person.operatorName,
+    person.operatorLocation,
+    person.highestKnownQualification,
+    person.highestRecreationalCertification,
+    person.highestTechnicalCertification,
+    person.highestProfessionalCertification,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase('en-GB');
+}
+
+export function planTeamMemberFromPerson(
+  person: StoredPerson,
+): PlanTeamMember {
+  const specialties = Object.entries(person.certificationFlags ?? {})
+    .filter(([, enabled]) => enabled)
+    .map(([name]) => name)
+    .join(', ');
+  const capabilityEvidence =
+    person.certificationEvidenceNotes ||
+    person.highestKnownQualification ||
+    person.highestTechnicalCertification ||
+    person.highestRecreationalCertification ||
+    person.highestProfessionalCertification ||
+    null;
+  const role = hasPersonRole(person, 'instructor')
+    ? 'Instructor'
+    : hasPersonRole(person, 'guide')
+      ? 'Divemaster'
+      : hasPersonRole(person, 'buddy')
+        ? 'Buddy'
+        : 'Diver';
+  return {
+    personId: person.entityId,
+    role,
+    rescueDiverStatus: person.certificationFlags?.rescue ? 'yes' : 'unknown',
+    certifiedDepthM: person.maxAllowedDepthM ?? null,
+    capabilityEvidence,
+    specialties: specialties || null,
+  };
 }
 
 export function findOwnerProfile<T extends PersonRecord>(
@@ -147,7 +200,7 @@ export function derivePersonProfileStats(
       certifications,
       'pro',
     ),
-    totalLinkedDives: linked.length || null,
+    totalLinkedDives: linked.length,
     maxDepthM: linked.length
       ? Math.max(
           ...linked
@@ -155,8 +208,8 @@ export function derivePersonProfileStats(
             .filter(Number.isFinite),
         )
       : null,
-    averageSac: average(linked.map((dive) => dive.sacRate)),
-    averageRmv: average(linked.map((dive) => dive.rmvRate)),
+    averageSac: average(linked.map(diveSacBarPerMinute)),
+    averageRmv: average(linked.map(diveSacLitresPerMinute)),
     boatDives:
       linked.filter((dive) =>
         /boat/i.test([...(dive.diveTypes ?? []), dive.vessel ?? ''].join(' ')),
@@ -214,6 +267,7 @@ export function refreshPersonDerivedStats<
 
 export function sourceLabel(source?: string, overridden = false) {
   if (overridden) return 'Owner-entered · overrides auto-fill';
+  if (source === 'auto') return 'Auto-filled';
   if (source === 'auto-logbook') return 'Auto-filled from Logbook';
   if (source === 'auto-certifications' || source === 'certification-derived')
     return 'Auto-filled from Certifications';

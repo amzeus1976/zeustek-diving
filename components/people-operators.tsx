@@ -35,6 +35,7 @@ const emptyPerson = (ownerProfile = false): DraftPerson => ({
   displayName: '',
   forename: '',
   surname: '',
+  membershipId: '',
   role: 'buddy',
   roles: { ownerProfile, buddy: !ownerProfile },
   agency: '',
@@ -463,7 +464,7 @@ function ProfileDetail({
         <section>
           <h3>Contact &amp; emergency</h3>
           <p>
-            {person.contactVisibility === 'private'
+            {!person.contactVisibility || person.contactVisibility === 'private'
               ? 'Private contact details'
               : person.email || person.phone || 'Contact not recorded'}
           </p>
@@ -579,6 +580,16 @@ function ProfileEditor({
     }
     setDraft(refreshPersonDerivedStats(draft, derived, confirmOverwrite));
   }
+  function restoreAutomatic(field: Parameters<typeof manual>[0]) {
+    const derived = derivePersonProfileStats(draft, dives, certifications);
+    const withoutOverride = {
+      ...draft,
+      manualOverrideFields: (draft.manualOverrideFields ?? []).filter(
+        (entry) => entry !== field,
+      ),
+    };
+    setDraft(refreshPersonDerivedStats(withoutOverride, derived, false));
+  }
   const operatorEnabled = Boolean(
     draft.roles?.diveOperator ||
     draft.roles?.diveCentre ||
@@ -659,9 +670,12 @@ function ProfileEditor({
             <label>
               Membership / certification number
               <input
-                value={draft.membershipNumber}
+                value={draft.membershipId ?? draft.membershipNumber}
                 onChange={(event) =>
-                  update({ membershipNumber: event.target.value })
+                  update({
+                    membershipId: event.target.value,
+                    membershipNumber: event.target.value,
+                  })
                 }
               />
             </label>
@@ -814,11 +828,30 @@ function ProfileEditor({
                   ['technicalDives', 'Technical dives', ''],
                 ] as const
               ).map(([field, label, suffix]) => (
-                <div key={field}>
+                <label key={field}>
                   <span>{label}</span>
-                  <b>{valueOrUnknown(draft[field], suffix)}</b>
+                  <input
+                    type="number"
+                    min="0"
+                    step={field === 'averageSac' || field === 'averageRmv' || field === 'maxDepthM' ? '0.1' : '1'}
+                    value={draft[field] ?? ''}
+                    aria-label={`${label} manual override`}
+                    onChange={(event) =>
+                      manual(field, {
+                        [field]: event.target.value
+                          ? Number(event.target.value)
+                          : null,
+                      })
+                    }
+                  />
+                  {suffix && draft[field] != null && <em>{suffix.trim()}</em>}
                   <small>{sourceFor(draft, field)}</small>
-                </div>
+                  {draft.manualOverrideFields?.includes(field) && (
+                    <button type="button" onClick={() => restoreAutomatic(field)}>
+                      Use automatic
+                    </button>
+                  )}
+                </label>
               ))}
             </div>
             <div className={styles.refreshRow}>

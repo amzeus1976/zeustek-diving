@@ -682,6 +682,8 @@ export interface PersonRecord extends BaseRecord {
 
   agency: string;
 
+  membershipId?: string;
+
   highestQualification: string;
 
   membershipNumber: string;

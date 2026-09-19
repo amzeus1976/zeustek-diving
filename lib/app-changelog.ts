@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.43',
+    date: '2026-09-19',
+    title: 'People, operators and My Profile foundation',
+    changes: [
+      'Promoted People & Operators into the canonical profile source for My Profile, buddies, instructors, dive centres, charter operators, guides and emergency contacts without creating a second people store.',
+      'Added additive identity, role, certification, depth, contact, instructor and operator fields plus an explicit, privacy-aware derived-stat refresh from canonical Logbook and Certification evidence.',
+      'Connected Overview My Profile and Top Buddy cards to Person profiles while defaulting legacy contact visibility to private.',
+      'Kept Dive Planning search-and-add controls and now snapshots recorded rescue, depth, qualification and specialty evidence when a Person is added to a team.',
+      'Preserved all existing Person and Dive IDs, local-first event/outbox sync, Plan-to-Dive provenance, the dedicated cylinder inventory and all 66 Dive logs.',
+    ],
+  },
+  {
     version: '1.0.42',
     date: '2026-09-19',
     title: 'Dedicated cylinder inventory',
