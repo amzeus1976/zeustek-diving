@@ -62,6 +62,15 @@ describe('TWEAKS workflow, Insights and Gear acceptance', () => {
     expect(labels).toContain('Wreck penetration dives');
     expect(labels).toContain('Unknown / other dives');
     expect(labels.length).toBeGreaterThanOrEqual(20);
+    const dashboard = read('app/dashboard-client.tsx');
+    const insights = read('components/experience-analytics.tsx');
+    expect(dashboard).toContain('INSIGHT_AWARD_COUNTS.map');
+    expect(insights).not.toContain('INSIGHT_AWARD_COUNTS.map');
+    expect(insights).not.toContain('Layout choice is local to this view');
+    const styles = read('components/experience-analytics.module.css');
+    expect(styles).toContain('justify-content: center');
+    expect(styles).toContain('flex: 0 0 12.5%');
+    expect(styles).toContain('flex-basis: 25%');
   });
 
   it('keeps Overview at-a-glance without duplicating the Insights awards grid', () => {

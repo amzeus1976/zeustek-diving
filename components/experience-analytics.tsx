@@ -83,7 +83,7 @@ import {
   type ExperienceAnalyticsProjection,
 } from '../lib/offline/experience-analytics';
 import styles from './experience-analytics.module.css';
-import { INSIGHT_AWARD_COUNTS, INSIGHT_AWARD_DEFINITIONS, normaliseInsightAwardCount, type InsightAwardCount } from '../lib/insights/insight-awards';
+import { INSIGHT_AWARD_DEFINITIONS, normaliseInsightAwardCount, type InsightAwardCount } from '../lib/insights/insight-awards';
 import { selectAllDataPoints, selectNoDataPoints, toggleDataPoint } from '../lib/insights/data-point-selection';
 
 type DetailKind =
@@ -616,12 +616,6 @@ export function ExperienceAnalytics({ go }: Props) {
           Export insights
         </button>
       </div>
-
-      <section className={styles.awardSelector} aria-label="Insights awards shown">
-        <div><span className="focus-eyebrow">INSIGHTS AWARDS</span><b>Show</b></div>
-        {INSIGHT_AWARD_COUNTS.map((count) => <button type="button" key={count} aria-pressed={awardCount === count} onClick={() => setAwardCount(count)}>{count}</button>)}
-        <small>Layout choice is local to this view until saved in Site Configuration.</small>
-      </section>
 
       <section className={styles.kpis} aria-label="Headline analytics">
         {orderedAwards.map(({ id, label, value }) => {

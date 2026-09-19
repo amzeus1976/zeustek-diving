@@ -22,7 +22,7 @@
 
 | Viewport | Result | Notes |
 |---|---|---|
-| 390 × 844 | Pass | Compact header and five-item bottom navigation; award controls wrap cleanly; no document horizontal overflow (`375 <= 390`). |
+| 390 × 844 | Pass | Compact header and five-item bottom navigation; configured awards render four per row with no in-page amount selector and no document horizontal overflow (`375 <= 390`). |
 | 820 × 900 | Pass | Two-column analytics layout and compact bottom navigation; no document horizontal overflow (`805 <= 820`). |
 | 1024 × 900 | Pass | Desktop sidebar returns and analytics grid remains contained; no document horizontal overflow (`1009 <= 1024`). |
 | 1440 × 900 | Pass | Desktop hierarchy and density align with the source mockups and existing Experience & Analytics visual authority. |
@@ -30,6 +30,7 @@
 ## Interaction and accessibility
 
 - Full award cells remain keyboard/touch buttons.
+- Award quantity is configured only in Site Configuration; the Insights page centres incomplete rows and uses eight-wide desktop or four-wide compact layouts.
 - Filter dialog Escape closes only the dialog and restores focus to Analysis filters.
 - Cylinder rows are focusable and open by click, Enter or Space.
 - The mobile navigation drawer opens and closes without leaving page overflow.
