@@ -1,6 +1,6 @@
 {
   "name": "sites-project",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "engines": {

@@ -11,6 +11,7 @@ import {
   findOwnerProfile,
   hasPersonRole,
   refreshPersonDerivedStats,
+  planTeamMemberFromPerson,
 } from '../lib/offline/people-profiles';
 
 const basePerson = (patch: Partial<PersonRecord> = {}): PersonRecord => ({
@@ -104,6 +105,19 @@ describe('P01 People & Operators / owner profile foundation', () => {
     expect(reopened.operatorName).toBe('ZeusTek Test Centre');
     expect(reopened.emergencyContactNumber).toBe('111');
     expect(reopened.highestTechnicalCertification).toBe('Tec 40');
+  });
+
+  it('retains explicit legacy qualification evidence when adding a Person to a Plan', () => {
+    const legacyRescue = {
+      ...basePerson({ highestQualification: 'Rescue Diver' }),
+      entityId: 'legacy-rescue',
+    };
+    expect(planTeamMemberFromPerson(legacyRescue)).toMatchObject({
+      role: 'Buddy',
+      rescueDiverStatus: 'yes',
+      certifiedDepthM: null,
+      capabilityEvidence: 'Rescue Diver',
+    });
   });
 
   it('derives owner Logbook stats and certification tracks without turning missing evidence into zero', () => {

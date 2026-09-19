@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.44',
+    date: '2026-09-19',
+    title: 'Legacy Person evidence compatibility',
+    changes: [
+      'Carried explicit legacy Person qualification evidence into new Dive Plan team snapshots, including a recorded Rescue Diver status, without inferring an unsupported depth limit.',
+      'Retained the app1.0.43 People & Operators foundation, privacy defaults, dedicated cylinder inventory and all existing canonical records unchanged.',
+    ],
+  },
+  {
     version: '1.0.43',
     date: '2026-09-19',
     title: 'People, operators and My Profile foundation',

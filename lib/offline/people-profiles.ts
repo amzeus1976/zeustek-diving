@@ -86,7 +86,17 @@ export function planTeamMemberFromPerson(
     person.highestTechnicalCertification ||
     person.highestRecreationalCertification ||
     person.highestProfessionalCertification ||
+    person.highestQualification ||
     null;
+  const recordedQualifications = [
+    person.highestKnownQualification,
+    person.highestRecreationalCertification,
+    person.highestTechnicalCertification,
+    person.highestProfessionalCertification,
+    person.highestQualification,
+  ]
+    .filter(Boolean)
+    .join(' ');
   const role = hasPersonRole(person, 'instructor')
     ? 'Instructor'
     : hasPersonRole(person, 'guide')
@@ -97,7 +107,10 @@ export function planTeamMemberFromPerson(
   return {
     personId: person.entityId,
     role,
-    rescueDiverStatus: person.certificationFlags?.rescue ? 'yes' : 'unknown',
+    rescueDiverStatus:
+      person.certificationFlags?.rescue || /\brescue\b/i.test(recordedQualifications)
+        ? 'yes'
+        : 'unknown',
     certifiedDepthM: person.maxAllowedDepthM ?? null,
     capabilityEvidence,
     specialties: specialties || null,
