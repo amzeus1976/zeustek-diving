@@ -65,9 +65,16 @@ export const LOADOUT_SLOT_DEFINITIONS: LoadoutSlotDefinition[] = [
 ];
 
 export interface CylinderEquipmentRecord extends EquipmentRecord {
+  recordStorageKind?: 'cylinder' | 'equipment';
+  threadType?: string | null;
+  countryCode?: string | null;
   waterVolumeLiters?: number | null;
   workingPressureBar?: number | null;
+  testPressureBar?: number | null;
   cylinderMaterial?: string | null;
+  emptyWeightKg?: number | null;
+  wallThicknessMm?: number | null;
+  birthDate?: string | null;
   valveType?: string | null;
   oxygenClean?: boolean | null;
   oxygenCleanUntil?: string | null;
@@ -78,6 +85,8 @@ export interface CylinderEquipmentRecord extends EquipmentRecord {
   tareKg?: number | null;
   owner?: string | null;
   cylinderStatus?: 'active' | 'service' | 'retired' | 'unknown';
+  hydroTestStamps?: Array<{ facility: string; testedAt: string; stampMark: string; notes?: string }>;
+  visualInspection?: { inspectedAt?: string | null; dueAt?: string | null; stickerColour?: string | null; notes?: string | null };
 }
 
 export interface CylinderFillRecord {
@@ -124,10 +133,19 @@ export interface LoadoutTargetExtension {
 export type LoadoutTargetKind = 'dive' | 'trip';
 
 export const listReusableLoadouts = () => listRecords<ReusableLoadoutRecord>('equipment-set');
+export const listCylinders = () => listRecords<CylinderEquipmentRecord>('cylinder');
+export async function listCylinderInventory() {
+  const [cylinders, equipment] = await Promise.all([listCylinders(), listRecords<EquipmentRecord>('equipment')]);
+  const canonical = cylinders.map((item) => ({ ...item, recordStorageKind: 'cylinder' as const }));
+  const ids = new Set(canonical.map((item) => item.entityId));
+  const legacy = equipment.filter(isCylinderEquipment).filter((item) => !ids.has(item.entityId)).map((item) => ({ ...item, recordStorageKind: 'equipment' as const } as Stored<CylinderEquipmentRecord>));
+  return [...canonical, ...legacy];
+}
 export const listCylinderFills = () => listRecords<CylinderFillRecord>('cylinder-fill');
 export const listGasAnalyses = () => listRecords<GasAnalysisRecord>('gas-analysis');
 export const deleteCylinderFill = removeRecord;
 export const deleteGasAnalysis = removeRecord;
+export const deleteCylinder = removeRecord;
 
 const text = (value: unknown) =>
   typeof value === 'string' ? value.normalize('NFKC').trim().toLocaleLowerCase('en-GB') : '';
@@ -304,18 +322,25 @@ export async function saveGasAnalysis(input: Omit<GasAnalysisRecord, 'createdAt'
 }
 
 export async function saveCylinderProfile(
-  input: Partial<CylinderEquipmentRecord> & Pick<CylinderEquipmentRecord, 'name' | 'category'> & { entityId?: string },
+  input: Partial<CylinderEquipmentRecord> & Pick<CylinderEquipmentRecord, 'name'> & { entityId?: string },
 ) {
-  if (!input.entityId) throw new Error('Open an existing physical cylinder before editing its cylinder profile.');
-  for (const [label, value] of [['Water volume', input.waterVolumeLiters], ['Working pressure', input.workingPressureBar], ['Tare', input.tareKg]] as const) {
+  if (!input.name.trim()) throw new Error('Enter a cylinder name.');
+  for (const [label, value] of [['Water volume', input.waterVolumeLiters], ['Working pressure', input.workingPressureBar], ['Test pressure', input.testPressureBar], ['Empty weight', input.emptyWeightKg ?? input.tareKg], ['Wall thickness', input.wallThicknessMm]] as const) {
     if (value != null && (!Number.isFinite(Number(value)) || Number(value) <= 0)) throw new Error(`${label} must be a positive number or left blank.`);
   }
-  return saveRecord('equipment', {
-    ...input,
-    category: input.category || 'Cylinder',
+  const { recordStorageKind, ...storedInput } = input;
+  const storageKind = recordStorageKind === 'equipment' ? 'equipment' : 'cylinder';
+  return saveRecord(storageKind, {
+    manufacturer: '', model: '', serialNumber: '', purchasedAt: '', lastServiceAt: '', nextServiceAt: '', notes: '', retired: false,
+    ...storedInput,
+    name: input.name.trim(),
+    category: 'Cylinder',
     waterVolumeLiters: input.waterVolumeLiters == null ? null : Number(input.waterVolumeLiters),
     workingPressureBar: input.workingPressureBar == null ? null : Number(input.workingPressureBar),
-    tareKg: input.tareKg == null ? null : Number(input.tareKg),
+    testPressureBar: input.testPressureBar == null ? null : Number(input.testPressureBar),
+    emptyWeightKg: input.emptyWeightKg == null ? (input.tareKg == null ? null : Number(input.tareKg)) : Number(input.emptyWeightKg),
+    tareKg: input.emptyWeightKg == null ? (input.tareKg == null ? null : Number(input.tareKg)) : Number(input.emptyWeightKg),
+    wallThicknessMm: input.wallThicknessMm == null ? null : Number(input.wallThicknessMm),
   });
 }
 

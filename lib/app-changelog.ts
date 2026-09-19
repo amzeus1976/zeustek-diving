@@ -1,6 +1,17 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.42',
+    date: '2026-09-19',
+    title: 'Dedicated cylinder inventory',
+    changes: [
+      'Moved physical-cylinder creation and management out of Equipment and into the existing Cylinders & Gas table while keeping non-cylinder gear in Equipment.',
+      'Added cylinder identity, stamped construction, PW/PT pressure, manufacture, hydro-stamp and visual-sticker evidence fields alongside existing fill, analysis, service and media history.',
+      'Preserved legacy cylinder IDs, loadout references, fills and analyses; older Equipment-backed cylinders remain compatible while new cylinders use the additive local-first cylinder record kind.',
+      'Added dependency-aware cylinder deletion that never removes canonical Dive records or linked fill and analysis evidence.',
+    ],
+  },
+  {
     version: '1.0.41',
     date: '2026-09-19',
     title: 'Workflow, Insights and Gear refinement',
