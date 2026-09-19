@@ -84,6 +84,8 @@ import { AccessibleDialog } from '@/components/accessible-dialog';
 import { ConservationPage } from '@/components/conservation-page';
 import { SiteOverheadSection } from '@/components/site-overhead-profile';
 import { ProfilePicture } from '@/components/profile-picture';
+import { PeopleOperators } from '@/components/people-operators';
+import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
@@ -578,7 +580,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
-          {active === 'People' && <People />}{' '}
+          {active === 'People' && <PeopleOperators />}{' '}
           {active === 'Albums' && <Albums />}{' '}
           {active === 'Conservation & AWARE' && <ConservationPage go={go} />}{' '}
           {active === 'Training' && <TrainingV2 go={go} />}{' '}
@@ -918,9 +920,11 @@ function Overview({
     .sort((a, b) => certificationAwardPriority(b) - certificationAwardPriority(a))[0];
   const buddyCounts = new Map<string, number>();
   dives.forEach((dive) => (dive.buddyIds ?? []).forEach((id) => buddyCounts.set(id, (buddyCounts.get(id) ?? 0) + 1)));
-  const topBuddy = [...people]
-    .filter((person) => buddyCounts.has(person.entityId))
+  const ownerProfile = findOwnerProfile(people);
+  const derivedTopBuddy = [...people]
+    .filter((person) => hasPersonRole(person, 'buddy') && buddyCounts.has(person.entityId))
     .sort((a, b) => (buddyCounts.get(b.entityId) ?? 0) - (buddyCounts.get(a.entityId) ?? 0) || a.name.localeCompare(b.name))[0] ?? null;
+  const topBuddy = people.find((person) => person.entityId === ownerProfile?.preferredTopBuddyPersonId) ?? derivedTopBuddy;
   const nextTrip = [...trips]
     .filter((trip) => trip.status !== 'completed')
     .sort((a, b) =>
@@ -1020,8 +1024,8 @@ function Overview({
             Open dive plans <ChevronRight size={15} />
           </button>
         </div>
-        <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>My diving profile</h2><dl><div><dt>Name</dt><dd>Account diver</dd></div><div><dt>Highest recreational</dt><dd>{certificationByTrack('rec')?.certification || certificationByTrack('rec')?.level || 'Not recorded'}</dd></div><div><dt>Highest technical</dt><dd>{certificationByTrack('tec')?.certification || certificationByTrack('tec')?.level || 'Not recorded'}</dd></div><div><dt>Highest professional</dt><dd>{certificationByTrack('pro')?.certification || certificationByTrack('pro')?.level || 'Not recorded'}</dd></div></dl><button className="focus-link" onClick={() => go('Training')}>Open certifications</button></Card>
-        <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy?.name || 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestQualification || 'Not recorded'}</dd></div><div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div></dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links.</p>}<button className="focus-link" onClick={() => go('People')}>Open people</button></Card>
+        <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>{ownerProfile ? personDisplayName(ownerProfile) : 'Set up My Profile'}</h2>{ownerProfile ? <dl><div><dt>Highest recreational</dt><dd>{ownerProfile.highestRecreationalCertification || certificationByTrack('rec')?.certification || certificationByTrack('rec')?.level || 'Unknown'}</dd></div><div><dt>Highest technical</dt><dd>{ownerProfile.highestTechnicalCertification || certificationByTrack('tec')?.certification || certificationByTrack('tec')?.level || 'Unknown'}</dd></div><div><dt>Highest professional</dt><dd>{ownerProfile.highestProfessionalCertification || certificationByTrack('pro')?.certification || certificationByTrack('pro')?.level || 'Unknown'}</dd></div><div><dt>Profile source</dt><dd>{sourceLabel(ownerProfile.profileValueSources?.highestRecreationalCertification, ownerProfile.manualOverrideFields?.includes('highestRecreationalCertification'))}</dd></div></dl> : <p className="focus-copy">Create one owner Person profile to power Overview, planning and summaries. Nothing is created automatically.</p>}<button className="focus-link" onClick={() => go('People')}>{ownerProfile ? 'Open My Profile' : 'Create My Profile'}</button></Card>
+        <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy ? personDisplayName(topBuddy) : 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? topBuddy.totalLinkedDives ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestRecreationalCertification || topBuddy.highestTechnicalCertification || topBuddy.highestProfessionalCertification || topBuddy.highestQualification || 'Unknown'}</dd></div><div><dt>Last dived together</dt><dd>{topBuddy.lastDivedTogether || 'Unknown'}</dd></div>{topBuddy.contactVisibility !== 'private' && <div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div>}</dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links, unless My Profile chooses a preferred buddy.</p>}<button className="focus-link" onClick={() => go('People')}>Open people</button></Card>
       </div>
       <div className="focus-grid">
         <CollapsibleWorkCard id="overview-equipment-status" title="Equipment status" eyebrow="KIT STATUS" status={`${serviceWarningCount} item${serviceWarningCount===1?'':'s'} need attention`} alert={serviceWarningCount?'Service review required':undefined} rowCount={serviceOverviewItems.length} previewLimit={5} onOpenDetail={()=>go('Equipment')}>
