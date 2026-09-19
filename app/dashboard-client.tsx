@@ -92,6 +92,7 @@ import equipmentEditorStyles from '@/components/equipment-editor.module.css';
 import { SkillCatalogue } from '@/components/skill-catalogue';
 import { TripsExpeditions } from '@/components/trips-expeditions';
 import { CylindersGas, Loadouts } from '@/components/loadouts-gas';
+import { isCylinderEquipment } from '@/lib/offline/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
 import { ProfessionalDevelopment } from '@/components/professional-development';
@@ -1412,6 +1413,7 @@ function Equipment() {
     );
   }, []);
   useRecordRefresh(refresh);
+  const equipmentItems = useMemo(() => items.filter((item) => !isCylinderEquipment(item)), [items]);
   async function remove(item: Stored<EquipmentRecord>) {
     if (
       !window.confirm(`Delete ${item.name}? Its history remains recoverable.`)
@@ -1420,7 +1422,7 @@ function Equipment() {
     await deleteEquipment(item.entityId);
     refresh();
   }
-  const visibleItems = items
+  const visibleItems = equipmentItems
     .filter((item) => {
       const term = search.trim().toLowerCase();
       const textMatch = !term || [item.name, item.category, item.manufacturer, item.model, item.serialNumber].join(' ').toLowerCase().includes(term);
@@ -1440,7 +1442,7 @@ function Equipment() {
       <Heading
         eyebrow="SERVICE · OWNERSHIP · HISTORY"
         title="Equipment"
-        copy="Track kit, actual use per dive, saved loadouts and whichever service limit comes first."
+        copy="Track non-cylinder kit, actual use per dive, saved loadouts and whichever service limit comes first. Cylinders are managed in Cylinders & Gas."
         action={
           <button
             className="focus-primary"
@@ -1467,12 +1469,12 @@ function Equipment() {
       )}
       <div className="record-summary">
         <span>
-          <strong>{items.length}</strong> items
+          <strong>{equipmentItems.length}</strong> items
         </span>
         <span>
           <strong>
             {
-              items.filter(
+              equipmentItems.filter(
                 (item) =>
                   equipmentServiceStatus(item, dives).state === 'overdue',
               ).length
@@ -1483,7 +1485,7 @@ function Equipment() {
         <span>
           <strong>
             {
-              items.filter(
+              equipmentItems.filter(
                 (item) => equipmentServiceStatus(item, dives).state === 'due',
               ).length
             }
@@ -1491,7 +1493,7 @@ function Equipment() {
           due soon
         </span>
       </div>
-      {items.length ? (
+      {equipmentItems.length ? (
         <div className="focus-grid">
           {visibleItems.map((item) => {
             const service = equipmentServiceStatus(item, dives);
@@ -1578,7 +1580,7 @@ function Equipment() {
           <Wrench size={32} />
           <h2>No equipment added</h2>
           <p>
-            Add cylinders, regulators, BCDs, computers and exposure protection.
+            Add regulators, BCDs, computers and exposure protection. Add cylinders in Cylinders &amp; Gas.
           </p>
           <button className="focus-primary" onClick={() => setAdding(true)}>
             Add first item
@@ -1622,7 +1624,7 @@ function Equipment() {
           <EquipmentMaintenanceLog equipment={viewing} onEquipmentChanged={refresh} />
         </RecordDetail>
       )}
-      <EquipmentSets items={items} sets={sets} saved={refresh} />
+      <EquipmentSets items={equipmentItems} sets={sets} saved={refresh} />
     </>
   );
 }
@@ -1670,7 +1672,7 @@ function EquipmentForm({
         .map((option) => option.value),
       ...(category ? [category] : []),
     ]),
-  ].sort();
+  ].filter((value) => !/\b(cylinder|tank)\b/i.test(value)).sort();
   const manufacturers = [
     ...new Set([
       ...DEFAULT_GEAR_MANUFACTURERS,
@@ -1730,7 +1732,7 @@ function EquipmentForm({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="12L steel cylinder"
+            placeholder="Primary regulator"
           />
         </label>
         <label>

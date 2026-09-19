@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
 describe('T05 shell and compatibility integration', () => {
   it('keeps equipment-set as the reusable loadout base and adds only fill/analysis evidence kinds', () => {
     expect(DIVE_RECORD_KINDS).toContain('equipment-set');
+    expect(DIVE_RECORD_KINDS).toContain('cylinder');
     expect(DIVE_RECORD_KINDS).toContain('cylinder-fill');
     expect(DIVE_RECORD_KINDS).toContain('gas-analysis');
     expect(DIVE_RECORD_KINDS).toContain('site-overhead-profile');
@@ -20,7 +21,7 @@ describe('T05 shell and compatibility integration', () => {
     expect(planning).toContain("saveRecord('trip', input)");
   });
 
-  it('keeps reusable Loadouts and Cylinders & Gas as views over the canonical Equipment inventory', () => {
+  it('keeps reusable Loadouts compatible while managing new cylinders in their own canonical table', () => {
     const dashboard = read('app/dashboard-client.tsx');
     expect(dashboard).toContain("import { CylindersGas, Loadouts } from '@/components/loadouts-gas'");
     expect(dashboard).toContain("'Loadouts & Gas': Wrench");
@@ -32,7 +33,12 @@ describe('T05 shell and compatibility integration', () => {
     const domain = read('lib/offline/loadouts-gas.ts');
     expect(domain).toContain("listRecords<ReusableLoadoutRecord>('equipment-set')");
     expect(domain).toContain("saveRecord('equipment-set'");
+    expect(domain).toContain("listRecords<CylinderEquipmentRecord>('cylinder')");
     expect(domain).toContain("saveRecord('cylinder-fill'");
     expect(domain).toContain("saveRecord('gas-analysis'");
+    expect(read('components/loadouts-gas.tsx')).toContain('Add cylinder');
+    expect(read('components/loadouts-gas.tsx')).toContain('Blue quadrant sticker');
+    expect(dashboard).toContain('items.filter((item) => !isCylinderEquipment(item))');
+    expect(dashboard).not.toContain('placeholder="12L steel cylinder"');
   });
 });
