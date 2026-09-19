@@ -26,7 +26,6 @@ import {
   listPeople,
   type DiveTripRecord,
   type EquipmentRecord,
-  type EquipmentSetRecord,
   type PersonRecord,
   type Stored,
 } from '../lib/offline/dive-planning';
@@ -95,8 +94,8 @@ function withMissingEquipment(options: Array<Stored<EquipmentRecord>>, selectedI
   }))];
 }
 
-export function LoadoutsGas() {
-  const [tab, setTab] = useState<'loadouts' | 'cylinders'>('loadouts');
+function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylinders' }) {
+  const tab = initialTab;
   const [equipment, setEquipment] = useState<Array<Stored<EquipmentRecord>>>([]);
   const [loadouts, setLoadouts] = useState<Array<Stored<ReusableLoadoutRecord>>>([]);
   const [fills, setFills] = useState<Array<Stored<CylinderFillRecord>>>([]);
@@ -139,13 +138,11 @@ export function LoadoutsGas() {
 
   return <>
     <header className={styles.heading}>
-      <div className={styles.iconHeading}><ZeusTekIcon id="equipment" size="heading"/><div><span className="focus-eyebrow">EQUIPMENT</span><h1>Reusable Loadouts &amp; Gas</h1><p>Build configurations from your existing Equipment, then track physical cylinders, fills and gas analyses as separate evidence.</p></div></div>
-      <button className="focus-primary" onClick={() => tab === 'loadouts' ? setEditing(null) : setTab('cylinders')}><Plus size={17}/>{tab === 'loadouts' ? 'New loadout' : 'Cylinders'}</button>
+      <div className={styles.iconHeading}><ZeusTekIcon id={tab === 'loadouts' ? 'equipment' : 'dive-cylinder'} size="heading"/><div><span className="focus-eyebrow">GEAR</span><h1>{tab === 'loadouts' ? 'Reusable Loadouts' : 'Cylinders & Gas'}</h1><p>{tab === 'loadouts' ? 'Build reusable configurations from canonical Equipment references. Cylinder fills and analyses live in their own workspace.' : 'Review physical cylinders in one table, then open a row for service, fill, analysis, media and history.'}</p></div></div>
+      {tab === 'loadouts' && <button className="focus-primary" onClick={() => setEditing(null)}><Plus size={17}/>New loadout</button>}
     </header>
 
-    <div className={styles.tabs} role="group" aria-label="Loadouts and gas sections">
-      <button aria-pressed={tab === 'loadouts'} className={tab === 'loadouts' ? styles.activeTab : ''} onClick={() => setTab('loadouts')}><ZeusTekIcon id="equipment" size="chip"/>Reusable loadouts</button>
-      <button aria-pressed={tab === 'cylinders'} className={tab === 'cylinders' ? styles.activeTab : ''} onClick={() => setTab('cylinders')}><ZeusTekIcon id="dive-cylinder" size="chip"/>Cylinders / gas</button>
+    <div className={styles.tabs}>
       <label className={styles.search}>Search<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'loadouts' ? 'Search loadouts' : 'Search cylinders'} /></label>
     </div>
 
@@ -161,22 +158,40 @@ export function LoadoutsGas() {
         </Card>;
       })}
       {!visibleLoadouts.length && <Card className="focus-empty"><Wrench size={30}/><h2>{loadouts.length ? 'No matching loadouts' : 'No reusable loadouts yet'}</h2><p>Existing Equipment Sets remain compatible. Open one to assign semantic slots, or create a new loadout.</p><button className="focus-primary" onClick={() => setEditing(null)}>Create loadout</button></Card>}
-    </div> : <div className={styles.grid}>
-      {visibleCylinders.map((item) => {
-        const state = deriveCylinderCurrentState(item, fills.filter((fill) => fill.cylinderEquipmentId === item.entityId), analyses.filter((analysis) => analysis.cylinderEquipmentId === item.entityId));
-        return <Card key={item.entityId} className={styles.cylinderCard}>
-          <span className="focus-eyebrow">PHYSICAL CYLINDER</span><h2 className={styles.iconTitle}><ZeusTekIcon id="dive-cylinder" size="card"/><span>{item.name}</span></h2><p>{[item.manufacturer, item.model, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(' · ') || 'Equipment record'}</p>
-          <dl><div><dt>Volume / working pressure</dt><dd>{item.waterVolumeLiters ?? '—'} L · {item.workingPressureBar ?? '—'} bar</dd></div><div><dt>Latest fill</dt><dd>{state.latestFill ? `${state.latestFill.pressureBar ?? '—'} bar · ${state.declaredMixLabel}` : 'No fill recorded'}</dd></div><div><dt>Analysis</dt><dd className={state.analysisState === 'current' ? styles.current : state.analysisState === 'stale' ? styles.stale : ''}>{state.analysedMixLabel}</dd></div></dl>
-          <button className="focus-primary" onClick={() => setCylinder(item)}>Open cylinder</button>
-        </Card>;
-      })}
-      {!visibleCylinders.length && <Card className="focus-empty"><Cylinder size={30}/><h2>No cylinders found</h2><p>Add physical cylinders in Equipment using a Cylinder/Tank category. This page deliberately reuses that inventory rather than creating a second one.</p></Card>}
-    </div>}
+    </div> : <Card className={styles.tableCard}>
+      {visibleCylinders.length ? <div className={styles.tableWrap}><table className={styles.cylinderTable}>
+        <thead><tr><th>ID #</th><th>Gas</th><th>O₂ %</th><th>He %</th><th>Fill bar</th><th>Litres</th><th>O₂ cleaned</th><th>Analysis</th><th>Last fill date</th><th>Fill location</th><th>Next test</th></tr></thead>
+        <tbody>{visibleCylinders.map((item) => {
+          const itemFills = fills.filter((fill) => fill.cylinderEquipmentId === item.entityId);
+          const state = deriveCylinderCurrentState(item, itemFills, analyses.filter((analysis) => analysis.cylinderEquipmentId === item.entityId));
+          const fill = state.latestFill;
+          const analysis = state.currentAnalysis ?? state.latestAnyAnalysis;
+          const nextTest = [item.hydroDueAt, item.visualDueAt, item.oxygenCleanUntil].filter(Boolean).sort((a, b) => String(a).localeCompare(String(b)))[0] ?? null;
+          return <tr key={item.entityId} tabIndex={0} onClick={() => setCylinder(item)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setCylinder(item); } }} aria-label={`Open ${item.name} cylinder details`}>
+            <td>{item.serialNumber || item.name}</td><td>{state.declaredMixLabel}</td><td>{analysis?.oxygenFraction == null ? '—' : Math.round(analysis.oxygenFraction * 100)}</td><td>{analysis?.heliumFraction == null ? '—' : Math.round(analysis.heliumFraction * 100)}</td><td>{fill?.pressureBar ?? '—'}</td><td>{item.waterVolumeLiters ?? '—'}</td><td>{item.oxygenClean ? 'Yes' : 'No'}</td><td className={state.analysisState === 'current' ? styles.current : styles.stale}>{state.analysisState}</td><td>{fill?.filledAt ? new Date(fill.filledAt).toLocaleDateString() : '—'}</td><td>{fill?.provider || '—'}</td><td>{nextTest ? new Date(`${nextTest}T12:00:00`).toLocaleDateString() : '—'}</td>
+          </tr>;
+        })}</tbody>
+      </table></div> : <div className="focus-empty"><Cylinder size={30}/><h2>No cylinders found</h2><p>Add physical cylinders in Equipment using a Cylinder/Tank category. This workspace reuses that inventory rather than creating a second one.</p></div>}
+      <div className={styles.serviceDefaults}><b>Service defaults</b><span>Hydro: 5 years</span><span>Visual: 30 months</span><span>O₂ clean/inspection: optional 12–15 months</span></div>
+    </Card>}
 
     {editing !== undefined && <LoadoutEditor item={editing} equipment={equipment} close={() => setEditing(undefined)} saved={refresh} />}
     {applying && <ApplyLoadoutDialog loadout={applying} equipment={equipment} plans={plans} dives={dives} close={() => setApplying(null)} saved={refresh} />}
     {cylinder && <CylinderDetail item={cylinder} fills={fills.filter((fill) => fill.cylinderEquipmentId === cylinder.entityId)} analyses={analyses.filter((analysis) => analysis.cylinderEquipmentId === cylinder.entityId)} people={people} close={() => setCylinder(null)} saved={async () => { await refresh(); const latest = (await listEquipment()).find((item) => item.entityId === cylinder.entityId) as Stored<CylinderEquipmentRecord> | undefined; if (latest) setCylinder(latest); }} />}
   </>;
+}
+
+export function Loadouts() {
+  return <LoadoutsGasWorkspace initialTab="loadouts" />;
+}
+
+export function CylindersGas() {
+  return <LoadoutsGasWorkspace initialTab="cylinders" />;
+}
+
+/** @deprecated Kept for source compatibility; navigation now exposes separate workspaces. */
+export function LoadoutsGas() {
+  return <Loadouts />;
 }
 
 function LoadoutEditor({ item, equipment, close, saved }: { item: Stored<ReusableLoadoutRecord> | null; equipment: Array<Stored<EquipmentRecord>>; close: () => void; saved: () => Promise<void> | void }) {
@@ -189,7 +204,7 @@ function LoadoutEditor({ item, equipment, close, saved }: { item: Stored<Reusabl
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   const groups = [...new Set(LOADOUT_SLOT_DEFINITIONS.map((definition) => definition.group))];
   const setSlot = (key: string, next: string | string[]) => setValue((current) => ({ ...current, slots: { ...current.slots, [key]: next } }));
-  async function submit(event: React.FormEvent) {
+  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault(); if (!value.name.trim()) return; setBusy(true); setError('');
     try { await saveReusableLoadout(value); await saved(); close(); }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Loadout could not be saved.'); }
@@ -227,8 +242,8 @@ function CylinderDetail({ item, fills, analyses, people, close, saved }: { item:
   const [analysis, setAnalysis] = useState({ fillId: state.latestFill?.entityId ?? '', analysedAt: localDateTime(), oxygenPercent: '', heliumPercent: '', analysedByPersonId: '', notes: '' });
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   async function saveProfile() { setBusy(true); setError(''); try { await saveCylinderProfile({ ...item, entityId: item.entityId, waterVolumeLiters: profile.waterVolumeLiters ? Number(profile.waterVolumeLiters) : null, workingPressureBar: profile.workingPressureBar ? Number(profile.workingPressureBar) : null, cylinderMaterial: profile.cylinderMaterial, valveType: profile.valveType, oxygenClean: profile.oxygenClean, oxygenCleanUntil: profile.oxygenCleanUntil || null, hydroTestAt: profile.hydroTestAt || null, hydroDueAt: profile.hydroDueAt || null, visualTestAt: profile.visualTestAt || null, visualDueAt: profile.visualDueAt || null, tareKg: profile.tareKg ? Number(profile.tareKg) : null, owner: profile.owner, cylinderStatus: profile.cylinderStatus as NonNullable<CylinderEquipmentRecord['cylinderStatus']> }); await saved(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Cylinder profile could not be saved.'); } finally { setBusy(false); } }
-  async function addFill(event: React.FormEvent) { event.preventDefault(); setBusy(true); setError(''); try { const result = await saveCylinderFill({ cylinderEquipmentId: item.entityId, filledAt: new Date(fill.filledAt).toISOString(), pressureBar: fill.pressureBar ? Number(fill.pressureBar) : null, oxygenFraction: asFraction(fill.oxygenPercent), heliumFraction: asFraction(fill.heliumPercent), provider: fill.provider, notes: fill.notes, source: 'recorded' }); setAnalysis((current) => ({ ...current, fillId: result.id, analysedAt: localDateTime() })); setFill({ filledAt: localDateTime(), pressureBar: '', oxygenPercent: '', heliumPercent: '', provider: '', notes: '' }); await saved(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Fill could not be saved.'); } finally { setBusy(false); } }
-  async function addAnalysis(event: React.FormEvent) { event.preventDefault(); setBusy(true); setError(''); try { await saveGasAnalysis({ cylinderEquipmentId: item.entityId, fillId: analysis.fillId || null, analysedAt: new Date(analysis.analysedAt).toISOString(), oxygenFraction: asFraction(analysis.oxygenPercent), heliumFraction: asFraction(analysis.heliumPercent), analysedByPersonId: analysis.analysedByPersonId || null, attachmentIds: [], notes: analysis.notes }); setAnalysis({ fillId: state.latestFill?.entityId ?? '', analysedAt: localDateTime(), oxygenPercent: '', heliumPercent: '', analysedByPersonId: '', notes: '' }); await saved(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Analysis could not be saved.'); } finally { setBusy(false); } }
+  async function addFill(event: React.SyntheticEvent<HTMLFormElement>) { event.preventDefault(); setBusy(true); setError(''); try { const result = await saveCylinderFill({ cylinderEquipmentId: item.entityId, filledAt: new Date(fill.filledAt).toISOString(), pressureBar: fill.pressureBar ? Number(fill.pressureBar) : null, oxygenFraction: asFraction(fill.oxygenPercent), heliumFraction: asFraction(fill.heliumPercent), provider: fill.provider, notes: fill.notes, source: 'recorded' }); setAnalysis((current) => ({ ...current, fillId: result.id, analysedAt: localDateTime() })); setFill({ filledAt: localDateTime(), pressureBar: '', oxygenPercent: '', heliumPercent: '', provider: '', notes: '' }); await saved(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Fill could not be saved.'); } finally { setBusy(false); } }
+  async function addAnalysis(event: React.SyntheticEvent<HTMLFormElement>) { event.preventDefault(); setBusy(true); setError(''); try { await saveGasAnalysis({ cylinderEquipmentId: item.entityId, fillId: analysis.fillId || null, analysedAt: new Date(analysis.analysedAt).toISOString(), oxygenFraction: asFraction(analysis.oxygenPercent), heliumFraction: asFraction(analysis.heliumPercent), analysedByPersonId: analysis.analysedByPersonId || null, attachmentIds: [], notes: analysis.notes }); setAnalysis({ fillId: state.latestFill?.entityId ?? '', analysedAt: localDateTime(), oxygenPercent: '', heliumPercent: '', analysedByPersonId: '', notes: '' }); await saved(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Analysis could not be saved.'); } finally { setBusy(false); } }
   async function addAnalysisMedia(row: Stored<GasAnalysisRecord>, ids: string[], removed?: string) { await saveGasAnalysis({ ...row, entityId: row.entityId, attachmentIds: [...new Set([...(row.attachmentIds ?? []), ...ids])].filter((id) => id !== removed) }); await saved(); }
   return <div className="focus-modal-bg"><AccessibleDialog editable label={`${item.name} cylinder details`} className={`focus-modal ${styles.cylinderDetail}`} close={() => { if (!busy) close(); }}><header><div><span className="focus-eyebrow">CYLINDER / GAS</span><h2>{item.name}</h2><p>{[item.manufacturer, item.model, item.serialNumber && `S/N ${item.serialNumber}`].filter(Boolean).join(' · ')}</p></div><button className="focus-icon" data-dialog-close aria-label="Close cylinder details" onClick={close}><X/></button></header>
     <section className={styles.currentState}><div><Gauge/><small>Latest fill</small><strong>{state.latestFill ? `${state.latestFill.pressureBar ?? '—'} bar` : 'None'}</strong><span>{state.declaredMixLabel}</span></div><div className={state.analysisState === 'current' ? styles.goodPanel : styles.warnPanel}><FlaskConical/><small>Analysis</small><strong>{state.analysedMixLabel}</strong><span>{state.analysisState === 'current' ? 'Explicitly linked to latest fill' : state.analysisState === 'stale' ? 'Do not treat the previous analysis as current' : 'No analysis recorded'}</span></div><div><Cylinder/><small>Approx. surface gas</small><strong>{state.approximateSurfaceLitres == null ? '—' : `${Math.round(state.approximateSurfaceLitres).toLocaleString()} L`}</strong><span>Calculated: water volume × fill pressure</span></div></section>
@@ -240,6 +255,7 @@ function CylinderDetail({ item, fills, analyses, people, close, saved }: { item:
 
     <details open><summary>Gas analysis history</summary><form className={styles.inlineForm} onSubmit={(event) => void addAnalysis(event)}><label>Fill analysed<select value={analysis.fillId} onChange={(e) => setAnalysis((v) => ({ ...v, fillId: e.target.value }))}><option value="">No explicit fill link</option>{[...fills].sort((a,b)=>b.filledAt.localeCompare(a.filledAt)).map((row) => <option key={row.entityId} value={row.entityId}>{new Date(row.filledAt).toLocaleString('en-GB')} · {row.pressureBar ?? '—'} bar</option>)}</select></label><label>Analysed at<input type="datetime-local" required value={analysis.analysedAt} onChange={(e) => setAnalysis((v) => ({ ...v, analysedAt: e.target.value }))}/></label><label>O₂ %<input type="number" required min="0" max="100" step="0.1" value={analysis.oxygenPercent} onChange={(e) => setAnalysis((v) => ({ ...v, oxygenPercent: e.target.value }))}/></label><label>He %<input type="number" min="0" max="100" step="0.1" value={analysis.heliumPercent} onChange={(e) => setAnalysis((v) => ({ ...v, heliumPercent: e.target.value }))}/></label><label>Analysed by<select value={analysis.analysedByPersonId} onChange={(e) => setAnalysis((v) => ({ ...v, analysedByPersonId: e.target.value }))}><option value="">Not recorded</option>{people.map((person) => <option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label><label className={styles.span2}>Notes<input value={analysis.notes} onChange={(e) => setAnalysis((v) => ({ ...v, notes: e.target.value }))}/></label><button className="focus-primary" disabled={busy}>Add analysis</button></form>
       <div className={styles.history}>{[...analyses].sort((a,b)=>b.analysedAt.localeCompare(a.analysedAt)).map((row) => { const mod = maximumOperatingDepthM(row.oxygenFraction); const linkedCurrent = state.latestFill?.entityId === row.fillId; return <details key={row.entityId}><summary><b>{new Date(row.analysedAt).toLocaleString('en-GB')} · {gasMixLabel(row.oxygenFraction, row.heliumFraction)}</b><span>{linkedCurrent ? 'Current fill' : row.fillId ? 'Older fill' : 'Unlinked'} · O₂ {percent(row.oxygenFraction)} · He {percent(row.heliumFraction)}{mod != null ? ` · calculated MOD @1.4: ${Math.floor(mod)} m` : ''}</span></summary><MediaGallery ownerKind="gas-analysis" ownerId={row.entityId} accessibleViewer acceptFiles retainOfflineMetadata featuredIds={row.attachmentIds ?? []} onUploaded={(ids) => addAnalysisMedia(row, ids)} onRemoved={(id) => addAnalysisMedia(row, [], id)}/></details>; })}</div></details>
+    <details><summary>Cylinder photos &amp; videos</summary><MediaGallery ownerKind="equipment" ownerId={item.entityId} accessibleViewer acceptFiles retainOfflineMetadata /></details>
     {error && <p role="alert" className="dive-save-error">{error}</p>}<footer><span/><button className="focus-secondary" data-dialog-close onClick={close}>Close</button></footer>
   </AccessibleDialog></div>;
 }

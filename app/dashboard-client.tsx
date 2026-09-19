@@ -89,7 +89,7 @@ import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log'
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
 import { SkillCatalogue } from '@/components/skill-catalogue';
 import { TripsExpeditions } from '@/components/trips-expeditions';
-import { LoadoutsGas } from '@/components/loadouts-gas';
+import { CylindersGas, Loadouts } from '@/components/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
 import { ProfessionalDevelopment } from '@/components/professional-development';
@@ -211,7 +211,6 @@ import {
   equipmentServiceStatus,
   overviewServiceItems,
 } from '@/lib/offline/equipment-usage';
-import { formatDiveDuration } from '@/lib/dive-duration';
 import { MediaGallery } from '@/components/media-gallery';
 import { DiveRecordDetail } from '@/components/dive-record-detail';
 import { createDiveDraftFromPlan } from '@/lib/offline/dive-context';
@@ -238,9 +237,10 @@ import {
   type TrainingCourse,
 } from '@/lib/training-course-maps';
 import { MANUAL_SITE_CATALOG, manualSiteRecord } from '@/lib/manual-site-catalog';
+import { INSIGHT_AWARD_COUNTS, INSIGHT_AWARD_DEFINITIONS, normaliseInsightAwardCount } from '@/lib/insights/insight-awards';
 
 const workflowIcons: Record<string, LucideIcon> = {
-  Overview: House, Insights: BarChart3, Equipment: Wrench, 'Loadouts & Gas': Cylinder,
+  Overview: House, Insights: BarChart3, Equipment: Wrench, 'Loadouts & Gas': Wrench, 'Cylinders & Gas': Cylinder,
   'Gear Wishlist': ShoppingBag, Logbook: BookOpen, 'Dive Computer Imports': Download,
   Sites: MapPin, 'Dive Site Map': Compass, People: Users, Albums: Images,
   'Diving Calendar & Bookings': CalendarDays, Trips: ShipWheel, 'Dive Plans': CalendarDays,
@@ -567,12 +567,13 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Changelog' && <AppChangelog />}
           {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />}
           {active === 'Equipment' && <Equipment />}{' '}
-          {active === 'Loadouts & Gas' && <LoadoutsGas />}{' '}
+          {active === 'Loadouts & Gas' && <Loadouts />}{' '}
+          {active === 'Cylinders & Gas' && <CylindersGas />}{' '}
           {active === 'Gear Wishlist' && <GearWishlist />}{' '}
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
           {active === 'Diving Calendar & Bookings' && <DivingCalendarBookings go={go} />}{' '}
-          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
+          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
           {active === 'Gas Planning' && <GasPlanning go={go} />}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
@@ -622,7 +623,7 @@ const configurationLinks = [
   ['equipment-training-lists', 'Equipment & training lists'],
   ['equipment-category-icons', 'Equipment category icons'],
   ['training-agency-logos', 'Training agency logos'],
-  ['overview-layout-awards', 'Overview layout / dashboard awards'],
+  ['overview-layout-awards', 'Insights layout / awards'],
   ['dive-news-settings', 'Dive News settings'],
   ['wishlist-price-search', 'Wishlist price search'],
   ['acceptance-fixture-review', 'Synthetic data & record controls'],
@@ -643,7 +644,7 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
       <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage, controlled lists, equipment icons and agency logos"><PlatformSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="skill-catalogue" defaultMinimized className="site-configuration-card" title="Skill Catalogue" eyebrow="DIVING CPD" status="Canonical groups, CSV and evidence definitions"><SkillCatalogue /></CollapsibleWorkCard>
-      <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Overview layout / dashboard awards" eyebrow="OVERVIEW" status="Choose the awards shown at a glance"><DashboardAwardsSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Insights layout / awards" eyebrow="INSIGHTS" status="Choose 4, 8, 12, 16 or 20 analytics awards"><DashboardAwardsSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><NewsSourceSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="wishlist-price-search" defaultMinimized className="site-configuration-card" title="Wishlist price search" eyebrow="GEAR" status="Stores used by online price checks"><PriceStoreSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Synthetic data & record controls" eyebrow="OWNER CONFIRMATION" status="All canonical kinds, dependencies and safe actions" alert="No automatic deletion"><SyntheticFixtureReview go={go}/></CollapsibleWorkCard>
@@ -703,21 +704,7 @@ function HouseholdSettings() {
   </Card>;
 }
 
-const DASHBOARD_AWARDS = [
-  ['divesLogged', 'Dives logged'],
-  ['maxDepth', 'Maximum depth'],
-  ['averageDepth', 'Average depth'],
-  ['totalTime', 'Total dive time'],
-  ['longestDive', 'Longest dive'],
-  ['averageTime', 'Average dive time'],
-  ['bestSac', 'Best SAC rate'],
-  ['averageSac', 'Average SAC rate'],
-  ['highestCert', 'Highest certification'],
-  ['nightDives', 'Night dives'],
-  ['boatDives', 'Boat dives'],
-  ['freshwaterDives', 'Freshwater dives'],
-  ['technicalDives', 'Technical dives'],
-] as const;
+const DASHBOARD_AWARDS = INSIGHT_AWARD_DEFINITIONS.map(([id, label]) => [id, label] as const);
 const DEFAULT_DASHBOARD_AWARDS = [
   'divesLogged',
   'maxDepth',
@@ -744,7 +731,7 @@ function DashboardAwardsSettings() {
       const current = records[0] ?? null;
       setRecord(current);
       if (current) {
-        setMaximum(Math.min(10, Math.max(3, current.maxAwards || 8)));
+        setMaximum(normaliseInsightAwardCount(current.maxAwards));
         setDiveNumberStart(Math.max(1, current.diveNumberStart || 1));
         setSelected(current.selectedAwards?.length ? current.selectedAwards : DEFAULT_DASHBOARD_AWARDS);
         setCustomGoogleMapEmbedUrl(current.customGoogleMapEmbedUrl ?? '');
@@ -785,21 +772,21 @@ function DashboardAwardsSettings() {
   }
   return (
     <Card className="dashboard-award-settings">
-      <span className="focus-eyebrow">OVERVIEW LAYOUT</span>
-      <h2>Dashboard awards</h2>
-      <p className="focus-copy">Choose the achievements and statistics shown on Overview. The maximum prevents the dashboard becoming crowded.</p>
+      <span className="focus-eyebrow">INSIGHTS LAYOUT</span>
+      <h2>Insights awards</h2>
+      <p className="focus-copy">Choose the achievements and statistics shown in Experience &amp; Analytics. Overview remains an at-a-glance status page.</p>
       <label className="award-limit">Maximum shown<select value={maximum} onChange={(event) => {
         const next = Number(event.target.value);
         setMaximum(next);
         setSelected((current) => current.slice(0, next));
-      }}>{[3,4,5,6,7,8,9,10].map((value) => <option key={value}>{value}</option>)}</select></label>
+      }}>{INSIGHT_AWARD_COUNTS.map((value) => <option key={value}>{value}</option>)}</select></label>
       <label className="award-limit">First lifetime dive number<input type="number" min="1" value={diveNumberStart} onChange={(event) => setDiveNumberStart(Math.max(1, Number(event.target.value) || 1))} /></label>
       <label className="record-wide">Google My Maps share URL or map ID<input type="text" value={customGoogleMapEmbedUrl} onChange={(event) => setCustomGoogleMapEmbedUrl(event.target.value)} placeholder="https://www.google.com/maps/d/viewer?mid=YOUR_MAP_ID" /><small>Paste a My Maps viewer, share or embed link, or its map ID. This opens your custom map in the Google Maps view. Export KML to update its pins; changes are not automatic.</small></label>
       <label className="record-wide">Dive newsletter inbox<input type="email" value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} placeholder={DEFAULT_NEWSLETTER_EMAIL} /><small>This address is shown on Dive News for newsletter signups and can be connected through the read-only Google mailbox panel there.</small></label>
       <div className="award-choice-grid">
         {DASHBOARD_AWARDS.map(([id, label]) => <label key={id}><input type="checkbox" checked={selected.includes(id)} onChange={(event) => toggleAward(id, event.target.checked)} />{label}</label>)}
       </div>
-      <div className="award-settings-footer"><span>{message}</span><button className="focus-primary" disabled={saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save dashboard awards'}</button></div>
+      <div className="award-settings-footer"><span>{message}</span><button className="focus-primary" disabled={saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Insights awards'}</button></div>
     </Card>
   );
 }
@@ -905,6 +892,7 @@ function Overview({
   const [trips, setTrips] = useState<Array<Stored<DiveTripRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [certifications, setCertifications] = useState<Array<Stored<CertificationRecord>>>([]);
+  const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [awardSettings, setAwardSettings] = useState<DashboardSettingsRecord | null>(null);
   const [weatherPickerOpen, setWeatherPickerOpen] = useState(false);
   const [weatherSelectionSaving, setWeatherSelectionSaving] = useState(false);
@@ -914,45 +902,25 @@ function Overview({
     void listDiveTrips().then(setTrips);
     void listDiveSites().then(setSites);
     void listCertifications().then(setCertifications);
+    void listPeople().then(setPeople);
     void listDashboardSettings()
       .then((nextAwardSettings) => setAwardSettings(nextAwardSettings[0] ?? null))
       .catch(() => setAwardSettings(null));
   }, []);
   useRecordRefresh(refreshOverview);
-  const maxDepth = dives.reduce(
-    (max, dive) => Math.max(max, dive.maxDepthM ?? 0),
-    0,
-  );
-  const bottomTime = dives.reduce(
-    (total, dive) => total + (dive.totalElapsedMin ?? dive.bottomTimeMin ?? 0),
-    0,
-  );
-  const recordedDepths = dives.map((dive) => dive.averageDepthM ?? dive.maxDepthM).filter((value): value is number => value != null && value > 0);
-  const diveDurations = dives.map((dive) => dive.totalElapsedMin ?? dive.bottomTimeMin).filter((value): value is number => value != null && value > 0);
-  const sacRates = dives.flatMap((dive) => dive.cylinders?.map((cylinder) => cylinder.sacRate ?? cylinder.rmvRate).filter((value): value is number => value != null && value > 0) ?? []);
-  const highestCertification = certifications.filter((certification) => {
-    const qualification = (certification.certification || certification.level).trim().toLowerCase();
-    return qualification !== '' && qualification !== 'other' && qualification !== 'not recorded';
-  }).reduce<Stored<CertificationRecord> | null>((highest, certification) =>
-    !highest || certificationAwardPriority(certification) > certificationAwardPriority(highest) ? certification : highest, null);
-  const awardValues: Record<string, { label: string; value: string; icon: React.ReactNode }> = {
-    divesLogged: { label: 'dives logged', value: String(dives.length), icon: <BookOpen /> },
-    maxDepth: { label: 'maximum depth', value: maxDepth ? `${maxDepth.toFixed(1)}m` : '—', icon: <Gauge /> },
-    averageDepth: { label: 'average depth', value: recordedDepths.length ? `${(recordedDepths.reduce((sum, value) => sum + value, 0) / recordedDepths.length).toFixed(1)}m` : '—', icon: <Waves /> },
-    totalTime: { label: 'total dive time', value: bottomTime ? formatDiveDuration(bottomTime) : '—', icon: <CalendarDays /> },
-    longestDive: { label: 'longest dive', value: diveDurations.length ? `${Math.max(...diveDurations)} min` : '—', icon: <Gauge /> },
-    averageTime: { label: 'average dive time', value: diveDurations.length ? `${Math.round(diveDurations.reduce((sum, value) => sum + value, 0) / diveDurations.length)} min` : '—', icon: <CalendarDays /> },
-    bestSac: { label: 'best SAC rate', value: sacRates.length ? `${Math.min(...sacRates).toFixed(1)} L/min` : '—', icon: <Cylinder /> },
-    averageSac: { label: 'average SAC rate', value: sacRates.length ? `${(sacRates.reduce((sum, value) => sum + value, 0) / sacRates.length).toFixed(1)} L/min` : '—', icon: <Cylinder /> },
-    highestCert: { label: 'highest certification', value: highestCertification ? highestCertification.certification || highestCertification.level : '—', icon: <ShieldCheck /> },
-    nightDives: { label: 'night dives', value: String(dives.filter((dive) => dive.diveTypes?.some(type => type === 'Night' || type === 'Night dive')).length), icon: <Compass /> },
-    boatDives: { label: 'boat dives', value: String(dives.filter((dive) => dive.diveTypes?.includes('Boat')).length), icon: <ShipWheel /> },
-    freshwaterDives: { label: 'freshwater dives', value: String(dives.filter((dive) => dive.waterType === 'Freshwater').length), icon: <Waves /> },
-    technicalDives: { label: 'technical dives', value: String(dives.filter((dive) => dive.isTechnicalDive || dive.diveMode === 'technical' || dive.diveMode === 'technical-training').length), icon: <Gauge /> },
-  };
-  const selectedAwards = (awardSettings?.selectedAwards?.length ? awardSettings.selectedAwards : DEFAULT_DASHBOARD_AWARDS)
-    .filter((id) => id !== 'maxDepth')
-    .slice(0, awardSettings?.maxAwards || 8);
+  const certificationByTrack = (track: 'rec' | 'tec' | 'pro') => certifications
+    .filter((certification) => {
+      const title = `${certification.certification} ${certification.level}`.toLowerCase();
+      if (track === 'pro') return /divemaster|dive master|instructor|course director/.test(title);
+      if (track === 'tec') return /tec|technical|trimix|decompression|extended range|ccr|rebreather/.test(title);
+      return !/divemaster|dive master|instructor|course director|tec|technical|trimix|decompression|extended range|ccr|rebreather/.test(title);
+    })
+    .sort((a, b) => certificationAwardPriority(b) - certificationAwardPriority(a))[0];
+  const buddyCounts = new Map<string, number>();
+  dives.forEach((dive) => (dive.buddyIds ?? []).forEach((id) => buddyCounts.set(id, (buddyCounts.get(id) ?? 0) + 1)));
+  const topBuddy = [...people]
+    .filter((person) => buddyCounts.has(person.entityId))
+    .sort((a, b) => (buddyCounts.get(b.entityId) ?? 0) - (buddyCounts.get(a.entityId) ?? 0) || a.name.localeCompare(b.name))[0] ?? null;
   const nextTrip = [...trips]
     .filter((trip) => trip.status !== 'completed')
     .sort((a, b) =>
@@ -1027,21 +995,8 @@ function Overview({
           </button>
         }
       />
-      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Trips & Expeditions',route:'Trips'}]} current="Overview" next={[{label:'Insights',route:'Insights'},{label:'Data & Backups',route:'Data & Backups'}]} go={go}/>
-      <div className="dive-hero">
-        <div className="depth-ring">
-          <img src="/zeustek-rebreather-emblem.png" alt="Cyber diver emblem" />
-          <strong>{maxDepth ? `${maxDepth.toFixed(1)}m` : '—'}</strong>
-          <span>maximum logged depth</span>
-        </div>
-        <div className="hero-award-grid" aria-label="Selected dive awards">
-          {selectedAwards.map((id) => {
-            const award = awardValues[id];
-            if (!award) return null;
-            return <Card className="award-circle" key={id}>{award.icon}<strong>{award.value}</strong><span>{award.label}</span></Card>;
-          })}
-        </div>
-        <div className="next-dive-card">
+      <div className="overview-glance-grid">
+        <div className="next-dive-card overview-next-dive">
           <span className="focus-eyebrow">NEXT DIVE</span>
           <h2>{nextTrip?.name || 'No upcoming trip yet'}</h2>
           <p>
@@ -1065,6 +1020,8 @@ function Overview({
             Open dive plans <ChevronRight size={15} />
           </button>
         </div>
+        <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>My diving profile</h2><dl><div><dt>Name</dt><dd>Account diver</dd></div><div><dt>Highest recreational</dt><dd>{certificationByTrack('rec')?.certification || certificationByTrack('rec')?.level || 'Not recorded'}</dd></div><div><dt>Highest technical</dt><dd>{certificationByTrack('tec')?.certification || certificationByTrack('tec')?.level || 'Not recorded'}</dd></div><div><dt>Highest professional</dt><dd>{certificationByTrack('pro')?.certification || certificationByTrack('pro')?.level || 'Not recorded'}</dd></div></dl><button className="focus-link" onClick={() => go('Training')}>Open certifications</button></Card>
+        <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy?.name || 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestQualification || 'Not recorded'}</dd></div><div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div></dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links.</p>}<button className="focus-link" onClick={() => go('People')}>Open people</button></Card>
       </div>
       <div className="focus-grid">
         <CollapsibleWorkCard id="overview-equipment-status" title="Equipment status" eyebrow="KIT STATUS" status={`${serviceWarningCount} item${serviceWarningCount===1?'':'s'} need attention`} alert={serviceWarningCount?'Service review required':undefined} rowCount={serviceOverviewItems.length} previewLimit={5} onOpenDetail={()=>go('Equipment')}>

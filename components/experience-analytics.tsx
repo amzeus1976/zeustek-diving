@@ -32,9 +32,11 @@ import { useRecordRefresh } from './record-status';
 import { listDives } from '../lib/offline/dives';
 import {
   listCertifications,
+  listDashboardSettings,
   listDiveSites,
   listPeople,
   type CertificationRecord,
+  type DashboardSettingsRecord,
   type DiveSiteRecord,
   type PersonRecord,
   type Stored,
@@ -81,6 +83,8 @@ import {
   type ExperienceAnalyticsProjection,
 } from '../lib/offline/experience-analytics';
 import styles from './experience-analytics.module.css';
+import { INSIGHT_AWARD_COUNTS, INSIGHT_AWARD_DEFINITIONS, normaliseInsightAwardCount, type InsightAwardCount } from '../lib/insights/insight-awards';
+import { selectAllDataPoints, selectNoDataPoints, toggleDataPoint } from '../lib/insights/data-point-selection';
 
 type DetailKind =
   | 'total-dives'
@@ -89,10 +93,12 @@ type DetailKind =
   | 'average-depth'
   | 'average-sac'
   | 'best-sac'
+  | 'average-rmv'
   | 'recent-dives'
   | 'depth-bands'
   | 'environment'
   | 'sac-trend'
+  | 'rmv-trend'
   | 'equipment'
   | 'sites'
   | 'qualifying'
@@ -160,6 +166,7 @@ function analysisScopeSummary(scope: AnalysisScope) {
   if (scope.siteIds.length) parts.push(`${scope.siteIds.length} Site filter`);
   if (scope.equipmentSetIds.length)
     parts.push(`${scope.equipmentSetIds.length} Equipment Set filter`);
+  if (scope.excludedDiveIds.length) parts.push(`${scope.excludedDiveIds.length} data point${scope.excludedDiveIds.length === 1 ? '' : 's'} excluded`);
   return parts.length
     ? parts.join(' · ')
     : 'All dates and all recorded Dive types';
@@ -193,6 +200,8 @@ export function ExperienceAnalytics({ go }: Props) {
     useState<Array<Stored<ProfessionalReferenceRequirementSetRecord>>>([]);
   const [scope, setScope] = useState<AnalysisScope>(DEFAULT_ANALYSIS_SCOPE);
   const [detail, setDetail] = useState<DetailKind | null>(null);
+  const [awardCount, setAwardCount] = useState<InsightAwardCount>(8);
+  const [awardIds, setAwardIds] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     const [
@@ -208,6 +217,7 @@ export function ExperienceAnalytics({ go }: Props) {
       nextProPathways,
       nextProEvidence,
       nextProSets,
+      nextDashboardSettings,
     ] = await Promise.all([
       listDives(),
       listDiveSites(),
@@ -221,6 +231,7 @@ export function ExperienceAnalytics({ go }: Props) {
       listProfessionalPathways(),
       listProfessionalEvidence(),
       listProfessionalRequirementSets(),
+      listDashboardSettings(),
     ]);
     setDives(nextDives);
     setSites(nextSites);
@@ -234,6 +245,9 @@ export function ExperienceAnalytics({ go }: Props) {
     setProfessionalPathways(nextProPathways);
     setProfessionalEvidence(nextProEvidence);
     setProfessionalRequirementSets(nextProSets);
+    const dashboardSettings = nextDashboardSettings[0] as DashboardSettingsRecord | undefined;
+    setAwardCount(normaliseInsightAwardCount(dashboardSettings?.maxAwards));
+    setAwardIds(dashboardSettings?.selectedAwards ?? []);
   }, []);
   useRecordRefresh(refresh);
 
@@ -472,11 +486,7 @@ export function ExperienceAnalytics({ go }: Props) {
   }, [latestRequirementSets, technicalContext, scopedDives]);
 
   function exportInsights() {
-    const envelope = {
-      ...insightsExportEnvelope(projection),
-      readiness: readinessCards,
-      qualifyingDiveProgress: countProgress,
-    };
+    const envelope = insightsExportEnvelope(projection);
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(envelope, null, 2)], {
         type: 'application/json',
@@ -490,6 +500,22 @@ export function ExperienceAnalytics({ go }: Props) {
   }
 
   const h = projection.headlines;
+  const diveTypeCount = (pattern: RegExp) => scopedDives.filter((dive) => (dive.diveTypes ?? []).some((value) => pattern.test(value.toLowerCase()))).length;
+  const depths = scopedDives.map((dive) => dive.maxDepthM).filter((value): value is number => value != null);
+  const durations = scopedDives.map((dive) => dive.totalElapsedMin ?? dive.bottomTimeMin).filter((value): value is number => value != null);
+  const certificationFor = (pattern: RegExp) => certifications.find((item) => pattern.test(`${item.certification} ${item.level}`.toLowerCase()));
+  const labelCertification = (item: Stored<CertificationRecord> | undefined) => item ? item.certification || item.level : 'Not recorded';
+  const awardValues: Record<string, string> = {
+    divesLogged: String(scopedDives.length), recreationalDives: String(scopedDives.filter((dive)=>!dive.diveMode?.startsWith('technical')).length), technicalDives: String(scopedDives.filter((dive)=>dive.diveMode?.startsWith('technical')).length),
+    maxDepth: depths.length ? `${round(Math.max(...depths))} m` : '—', averageDepth: h.averageDepthM.value == null ? '—' : `${round(h.averageDepthM.value)} m`, totalTime: formatMinutes(h.totalDiveTimeMin.value), longestDive: durations.length ? `${Math.max(...durations)} min` : '—', averageTime: durations.length ? `${round(durations.reduce((sum,value)=>sum+value,0)/durations.length)} min` : '—',
+    bestSac: h.bestSacBarMin.value == null ? '—' : `${round(h.bestSacBarMin.value)} bar/min`, averageSac: h.averageSacBarMin.value == null ? '—' : `${round(h.averageSacBarMin.value)} bar/min`, bestRmv: h.bestRmvLMin.value == null ? '—' : `${round(h.bestRmvLMin.value)} L/min`, averageRmv: h.averageRmvLMin.value == null ? '—' : `${round(h.averageRmvLMin.value)} L/min`,
+    highestRecCert: labelCertification(certificationFor(/open water|advanced|rescue|master scuba/)), highestTecCert: labelCertification(certificationFor(/tec|technical|trimix|decompression|extended range|ccr/)), highestProCert: labelCertification(certificationFor(/divemaster|dive master|instructor|course director/)),
+    saltwaterDives: String(scopedDives.filter((dive)=>dive.waterType==='Saltwater').length), freshwaterDives: String(scopedDives.filter((dive)=>dive.waterType==='Freshwater').length), otherWaterDives: String(scopedDives.filter((dive)=>!['Saltwater','Freshwater'].includes(dive.waterType ?? '')).length),
+    deep20: String(depths.filter((value)=>value>=20).length), deep25: String(depths.filter((value)=>value>=25).length), deep30: String(depths.filter((value)=>value>=30).length), deep35: String(depths.filter((value)=>value>=35).length), deep40: String(depths.filter((value)=>value>=40).length), poolDives: String(diveTypeCount(/pool/)), shoreDives: String(diveTypeCount(/shore/)), boatDives: String(diveTypeCount(/boat/)), nightDives: String(diveTypeCount(/night/)), wreckDives: String(diveTypeCount(/^wreck$/)), wreckPenetrationDives: String(diveTypeCount(/wreck penetration/)), cavernDives: String(diveTypeCount(/cavern/)), caveDives: String(diveTypeCount(/^cave$/)), unknownOtherDives: String(scopedDives.filter((dive)=>!(dive.diveTypes?.length)).length),
+  };
+  const orderedAwards = [...new Set([...awardIds, ...INSIGHT_AWARD_DEFINITIONS.map(([id])=>id)])]
+    .flatMap((id) => { const definition = INSIGHT_AWARD_DEFINITIONS.find(([candidate])=>candidate===id); return definition ? [{ id, label: definition[1], value: awardValues[id] ?? '—' }] : []; })
+    .slice(0, awardCount);
   const headlineCards = [
     [
       'total-dives',
@@ -523,17 +549,17 @@ export function ExperienceAnalytics({ go }: Props) {
       'average-sac',
       Gauge,
       'Average SAC',
-      h.averageSacLMin.value == null
+      h.averageSacBarMin.value == null
         ? '—'
-        : `${round(h.averageSacLMin.value)} L/min`,
-      h.averageSacLMin,
+        : `${round(h.averageSacBarMin.value)} bar/min`,
+      h.averageSacBarMin,
     ],
     [
       'best-sac',
       BarChart3,
       'Best SAC',
-      h.bestSacLMin.value == null ? '—' : `${round(h.bestSacLMin.value)} L/min`,
-      h.bestSacLMin,
+      h.bestSacBarMin.value == null ? '—' : `${round(h.bestSacBarMin.value)} bar/min`,
+      h.bestSacBarMin,
     ],
     [
       'recent-dives',
@@ -542,6 +568,7 @@ export function ExperienceAnalytics({ go }: Props) {
       h.divesLast90Days.value == null ? '—' : String(h.divesLast90Days.value),
       h.divesLast90Days,
     ],
+    ['average-rmv', Waves, 'Average RMV', h.averageRmvLMin.value == null ? '—' : `${round(h.averageRmvLMin.value)} L/min`, h.averageRmvLMin],
   ] as const;
 
   return (
@@ -590,10 +617,21 @@ export function ExperienceAnalytics({ go }: Props) {
         </button>
       </div>
 
+      <section className={styles.awardSelector} aria-label="Insights awards shown">
+        <div><span className="focus-eyebrow">INSIGHTS AWARDS</span><b>Show</b></div>
+        {INSIGHT_AWARD_COUNTS.map((count) => <button type="button" key={count} aria-pressed={awardCount === count} onClick={() => setAwardCount(count)}>{count}</button>)}
+        <small>Layout choice is local to this view until saved in Site Configuration.</small>
+      </section>
+
       <section className={styles.kpis} aria-label="Headline analytics">
-        {headlineCards.map(([kind, Icon, label, value, observation]) => (
+        {orderedAwards.map(({ id, label, value }) => {
+          const headline = headlineCards.find(([kind]) => kind === id);
+          const Icon = headline?.[1] ?? BarChart3;
+          const observation = headline?.[4] ?? h.totalDives;
+          const kind = headline?.[0] ?? 'total-dives';
+          return (
           <button
-            key={kind}
+            key={id}
             className={styles.kpi}
             onClick={() => setDetail(kind)}
             aria-label={`${label}: ${value}. Open analysis details.`}
@@ -606,7 +644,7 @@ export function ExperienceAnalytics({ go }: Props) {
               {observation.denominator === 1 ? '' : 's'}
             </small>
           </button>
-        ))}
+        );})}
       </section>
 
       <section className={styles.grid}>
@@ -694,9 +732,9 @@ export function ExperienceAnalytics({ go }: Props) {
           title="SAC TREND"
           onOpen={() => setDetail('sac-trend')}
           trailing={
-            h.averageSacLMin.value == null
+            h.averageSacBarMin.value == null
               ? 'No valid gas data'
-              : `Avg ${round(h.averageSacLMin.value)} L/min`
+              : `Avg ${round(h.averageSacBarMin.value)} bar/min`
           }
         >
           <div className={styles.chart} aria-hidden="true">
@@ -711,7 +749,7 @@ export function ExperienceAnalytics({ go }: Props) {
                   tickFormatter={(value) => String(value).slice(2, 7)}
                 />
                 <YAxis
-                  dataKey="rmvLMin"
+                  dataKey="sacBarMin"
                   tick={{ fill: '#a7b2bc', fontSize: 10 }}
                   unit=""
                 />
@@ -731,11 +769,16 @@ export function ExperienceAnalytics({ go }: Props) {
               ? projection.sacTrend
                   .map(
                     (row) =>
-                      `${row.date}: ${round(row.rmvLMin)} litres per minute`,
+                      `${row.date}: ${round(row.sacBarMin)} bar per minute`,
                   )
                   .join('; ')
-              : 'No valid surface-volume gas-rate evidence in scope.'}
+              : 'No valid pressure SAC evidence in scope.'}
           </span>
+        </AnalyticsCard>
+
+        <AnalyticsCard title="RMV TREND" onOpen={() => setDetail('rmv-trend')} trailing={h.averageRmvLMin.value == null ? 'No valid gas data' : `Avg ${round(h.averageRmvLMin.value)} L/min`}>
+          <div className={styles.chart} aria-hidden="true"><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{ top: 10, right: 12, bottom: 0, left: -18 }}><CartesianGrid stroke="rgba(255,255,255,.08)"/><XAxis dataKey="date" tick={{ fill:'#a7b2bc',fontSize:10 }} tickFormatter={(value)=>String(value).slice(2,7)}/><YAxis dataKey="rmvLMin" tick={{ fill:'#a7b2bc',fontSize:10 }}/><Tooltip contentStyle={{background:'#0a1115',border:'1px solid #16435a'}}/><Scatter data={projection.rmvTrend} fill="#ff8b1f"/></ScatterChart></ResponsiveContainer></div>
+          <span className={styles.srOnly}>{projection.rmvTrend.length ? projection.rmvTrend.map((row)=>`${row.date}: ${round(row.rmvLMin)} litres per minute`).join('; ') : 'No valid RMV evidence in scope.'}</span>
         </AnalyticsCard>
 
         <AnalyticsCard
@@ -785,45 +828,7 @@ export function ExperienceAnalytics({ go }: Props) {
           </div>
         </AnalyticsCard>
 
-        <AnalyticsCard
-          title="QUALIFYING-DIVE PROGRESS"
-          onOpen={() => setDetail('qualifying')}
-        >
-          {countProgress.length ? (
-            <RankList
-              rows={countProgress.map((row) => ({
-                label: row.label,
-                value: `${row.current} / ${row.target}`,
-                percent: row.percent,
-              }))}
-            />
-          ) : (
-            <EmptyLine>
-              No captured count-based pathway requirements yet.
-            </EmptyLine>
-          )}
-        </AnalyticsCard>
       </section>
-
-      <button
-        className={styles.readiness}
-        onClick={() => setDetail('readiness')}
-        aria-label="Open readiness details"
-      >
-        <span className="focus-eyebrow">READINESS</span>
-        <div>
-          {readinessCards.map((row) => (
-            <article key={row.key} data-state={row.state}>
-              <b>{row.label}</b>
-              <strong>{row.valueLabel}</strong>
-              <div>
-                <i style={{ width: `${row.percent ?? 0}%` }} />
-              </div>
-              <small>{row.detail}</small>
-            </article>
-          ))}
-        </div>
-      </button>
 
       {detail && (
         <AnalyticsDetailDialog
@@ -891,10 +896,6 @@ function RankList({
     </div>
   );
 }
-function EmptyLine({ children }: { children: React.ReactNode }) {
-  return <p className={styles.empty}>{children}</p>;
-}
-
 function AnalyticsDetailDialog({
   kind,
   close,
@@ -942,10 +943,12 @@ function AnalyticsDetailDialog({
     'average-depth': 'Average-depth analysis',
     'average-sac': 'Average SAC analysis',
     'best-sac': 'Best SAC analysis',
+    'average-rmv': 'Average RMV analysis',
     'recent-dives': 'Recent diving analysis',
     'depth-bands': 'Depth bands analysis',
     environment: 'Environment analysis',
     'sac-trend': 'SAC trend analysis',
+    'rmv-trend': 'RMV trend analysis',
     equipment: 'Equipment-set usage',
     sites: 'Site frequency',
     qualifying: 'Qualifying-dive progress',
@@ -1036,26 +1039,23 @@ function AnalyticsDetailDialog({
         )}
         {kind === 'sac-trend' && (
           <section className={styles.detailPanel}>
-            <h3>Valid SAC / RMV observations</h3>
+            <h3>Pressure SAC observations</h3>
             <p>
-              {projection.headlines.averageSacLMin.denominator} valid dive
-              {projection.headlines.averageSacLMin.denominator === 1 ? '' : 's'}
-              ; {projection.headlines.averageSacLMin.missingCount} scoped dive
-              {projection.headlines.averageSacLMin.missingCount === 1
+              {projection.headlines.averageSacBarMin.denominator} valid dive
+              {projection.headlines.averageSacBarMin.denominator === 1 ? '' : 's'}
+              ; {projection.headlines.averageSacBarMin.missingCount} scoped dive
+              {projection.headlines.averageSacBarMin.missingCount === 1
                 ? ''
                 : 's'}{' '}
-              excluded because the required volume-rate evidence is missing.
+              excluded because pressure SAC evidence is missing.
             </p>
-            <p>
-              Only valid surface-volume RMV evidence is displayed in L/min.
-              Pressure SAC in bar/min is never relabelled.
-            </p>
+            <p>SAC is shown in bar/min and remains cylinder-specific. It is never relabelled as L/min.</p>
             <div className={styles.bigChart} aria-hidden="true">
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
                   <CartesianGrid stroke="rgba(255,255,255,.08)" />
                   <XAxis dataKey="date" tick={{ fill: '#a7b2bc' }} />
-                  <YAxis dataKey="rmvLMin" tick={{ fill: '#a7b2bc' }} />
+                  <YAxis dataKey="sacBarMin" tick={{ fill: '#a7b2bc' }} />
                   <Tooltip
                     contentStyle={{
                       background: '#0a1115',
@@ -1069,10 +1069,18 @@ function AnalyticsDetailDialog({
             <AccessibleRows
               rows={projection.sacTrend.map((row) => [
                 `${row.date} · ${row.site}`,
-                `${round(row.rmvLMin)} L/min`,
+                `${round(row.sacBarMin)} bar/min`,
                 `${row.waterType} · ${row.training ? 'training' : 'non-training'} · ${row.depthM == null ? 'depth unknown' : `${row.depthM} m`}`,
               ])}
             />
+          </section>
+        )}
+        {kind === 'rmv-trend' && (
+          <section className={styles.detailPanel}>
+            <h3>Surface-volume RMV observations</h3>
+            <p>{projection.headlines.averageRmvLMin.denominator} valid dives; {projection.headlines.averageRmvLMin.missingCount} missing or non-qualifying. RMV is tank-independent L/min.</p>
+            <div className={styles.bigChart} aria-hidden="true"><ResponsiveContainer width="100%" height="100%"><ScatterChart><CartesianGrid stroke="rgba(255,255,255,.08)"/><XAxis dataKey="date" tick={{fill:'#a7b2bc'}}/><YAxis dataKey="rmvLMin" tick={{fill:'#a7b2bc'}}/><Tooltip contentStyle={{background:'#0a1115',border:'1px solid #16435a'}}/><Scatter data={projection.rmvTrend} fill="#ff8b1f"/></ScatterChart></ResponsiveContainer></div>
+            <AccessibleRows rows={projection.rmvTrend.map((row)=>[`${row.date} · ${row.site}`,`${round(row.rmvLMin)} L/min`,`${row.waterType} · ${row.training?'training':'non-training'}`])}/>
           </section>
         )}
         {kind === 'environment' && (
@@ -1227,6 +1235,7 @@ function AnalyticsDetailDialog({
         {sourceDives.length > 0 && (
           <section className={styles.detailPanel}>
             <h3>Source dives</h3>
+            <DataPointSelector ids={sourceDives.map((dive) => dive.entityId)} excludedIds={scope.excludedDiveIds} apply={(excludedDiveIds) => { setScope({ ...scope, excludedDiveIds }); close(); }} />
             <div className={styles.sourceTable}>
               {sourceDives.slice(0, 60).map((dive) => (
                 <a
@@ -1262,6 +1271,18 @@ function AnalyticsDetailDialog({
   );
 }
 
+function DataPointSelector({ ids, excludedIds, apply }: { ids: string[]; excludedIds: string[]; apply: (excludedDiveIds: string[]) => void }) {
+  const selectedIds = ids.filter((id) => !excludedIds.includes(id));
+  const [selection, setSelection] = useState(() => ({ mode: selectedIds.length === ids.length ? 'all' as const : selectedIds.length === 1 ? 'one' as const : 'many' as const, selectedIds, excludedIds: ids.filter((id) => !selectedIds.includes(id)) }));
+  return <div className={styles.dataPointPicker}>
+    <span>{selection.selectedIds.length} of {ids.length} selected</span>
+    <button className="focus-secondary" onClick={() => setSelection(selectAllDataPoints(ids))}>Select all</button>
+    <button className="focus-secondary" onClick={() => setSelection(selectNoDataPoints(ids))}>Select none</button>
+    <details><summary>Choose one or many</summary><div>{ids.map((id, index) => <label key={id}><input type="checkbox" checked={selection.selectedIds.includes(id)} onChange={() => setSelection((current) => toggleDataPoint(current, id))}/>Data point {index + 1}</label>)}</div></details>
+    <button className="focus-primary" onClick={() => apply([...new Set([...excludedIds.filter((id) => !ids.includes(id)), ...selection.excludedIds])])}>Apply to dashboard</button>
+  </div>;
+}
+
 function MetricDetail({
   kind,
   projection,
@@ -1274,8 +1295,9 @@ function MetricDetail({
     'total-time': projection.headlines.totalDiveTimeMin,
     'max-depth': projection.headlines.maxDepthM,
     'average-depth': projection.headlines.averageDepthM,
-    'average-sac': projection.headlines.averageSacLMin,
-    'best-sac': projection.headlines.bestSacLMin,
+    'average-sac': projection.headlines.averageSacBarMin,
+    'best-sac': projection.headlines.bestSacBarMin,
+    'average-rmv': projection.headlines.averageRmvLMin,
     'recent-dives': projection.headlines.divesLast90Days,
   } as const;
   const value = map[kind as keyof typeof map];
@@ -1312,12 +1334,14 @@ function detailSourceIds(
     'total-time': projection.headlines.totalDiveTimeMin.sourceDiveIds,
     'max-depth': projection.headlines.maxDepthM.sourceDiveIds,
     'average-depth': projection.headlines.averageDepthM.sourceDiveIds,
-    'average-sac': projection.headlines.averageSacLMin.sourceDiveIds,
-    'best-sac': projection.headlines.bestSacLMin.sourceDiveIds,
+    'average-sac': projection.headlines.averageSacBarMin.sourceDiveIds,
+    'best-sac': projection.headlines.bestSacBarMin.sourceDiveIds,
+    'average-rmv': projection.headlines.averageRmvLMin.sourceDiveIds,
     'recent-dives': projection.headlines.divesLast90Days.sourceDiveIds,
     'depth-bands': projection.depthBands.flatMap((row) => row.diveIds),
     environment: projection.environmentSplit.flatMap((row) => row.diveIds),
     'sac-trend': projection.sacTrend.map((row) => row.diveId),
+    'rmv-trend': projection.rmvTrend.map((row) => row.diveId),
     equipment: projection.equipmentSetUsage.flatMap((row) => row.diveIds),
     sites: projection.siteUsage.flatMap((row) => row.diveIds),
     qualifying: projection.includedDiveIds,
@@ -1340,6 +1364,7 @@ function AnalysisFilters({
   loadouts: Array<Stored<ReusableLoadoutRecord>>;
 }) {
   const [draft, setDraft] = useState(value);
+  const [siteQuery, setSiteQuery] = useState('');
   const toggle = <T extends string>(items: T[], item: T) =>
     items.includes(item)
       ? items.filter((value) => value !== item)
@@ -1415,6 +1440,14 @@ function AnalysisFilters({
               />
               Include training dives
             </label>
+            {([['includeShore','Shore dives'],['includeBoat','Boat dives'],['includeNight','Night dives'],['includeUnknownOther','Unknown / other dives']] as const).map(([field,label]) => <label className="record-check" key={field}><input type="checkbox" checked={draft[field]} onChange={(event)=>setDraft({...draft,[field]:event.target.checked})}/>{label}</label>)}
+          </fieldset>
+          <fieldset>
+            <legend>Depth and time</legend>
+            <label>Minimum depth (m)<input type="number" min="0" value={draft.minDepthM ?? ''} onChange={(event)=>setDraft({...draft,minDepthM:event.target.value===''?null:Number(event.target.value)})}/></label>
+            <label>Maximum depth (m)<input type="number" min="0" value={draft.maxDepthM ?? ''} onChange={(event)=>setDraft({...draft,maxDepthM:event.target.value===''?null:Number(event.target.value)})}/></label>
+            <label>Minimum time (min)<input type="number" min="0" value={draft.minTimeMin ?? ''} onChange={(event)=>setDraft({...draft,minTimeMin:event.target.value===''?null:Number(event.target.value)})}/></label>
+            <label>Maximum time (min)<input type="number" min="0" value={draft.maxTimeMin ?? ''} onChange={(event)=>setDraft({...draft,maxTimeMin:event.target.value===''?null:Number(event.target.value)})}/></label>
           </fieldset>
           <fieldset>
             <legend>Water type</legend>
@@ -1469,25 +1502,11 @@ function AnalysisFilters({
               </label>
             ))}
           </fieldset>
-          <label>
-            Site
-            <select
-              value={draft.siteIds[0] ?? ''}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  siteIds: event.target.value ? [event.target.value] : [],
-                })
-              }
-            >
-              <option value="">All sites</option>
-              {sites.map((site) => (
-                <option key={site.entityId} value={site.entityId}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className={styles.sitePicker}>
+            <legend>Locations · one, many or all</legend>
+            <label>Type and search<input type="search" value={siteQuery} onChange={(event)=>setSiteQuery(event.target.value)} placeholder="Search Sites"/></label>
+            <div><label className="record-check"><input type="checkbox" checked={draft.siteIds.length===0} onChange={(event)=>{if(event.target.checked)setDraft({...draft,siteIds:[]});}}/>All locations</label>{sites.filter((site)=>!siteQuery.trim()||`${site.name} ${site.location??''} ${site.country??''}`.toLowerCase().includes(siteQuery.trim().toLowerCase())).slice(0,80).map((site)=><label className="record-check" key={site.entityId}><input type="checkbox" checked={draft.siteIds.includes(site.entityId)} onChange={()=>setDraft({...draft,siteIds:toggle(draft.siteIds,site.entityId)})}/><span>{site.name}<small>{site.location||site.country||'Location not recorded'}</small></span></label>)}</div>
+          </fieldset>
           <label>
             Equipment set
             <select

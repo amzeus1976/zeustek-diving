@@ -64,6 +64,7 @@
   justify-content: flex-end;
   gap: 8px;
 }
+.awardSelector{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid #16485d;border-radius:11px;background:#071014;padding:10px 12px}.awardSelector>div{display:grid;margin-right:4px}.awardSelector>div b{font-size:12px}.awardSelector button{min-width:52px;min-height:40px;border:1px solid #245267;border-radius:999px;background:#09171d;color:#61d9ff;font-weight:800}.awardSelector button[aria-pressed=true]{border-color:#ff8a00;background:#2a1707;color:#ff9b22}.awardSelector small{color:#80909a;margin-left:auto}
 .kpis {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -464,6 +465,7 @@
 .filterGrid small {
   color: #80909a;
 }
+.sitePicker>div{display:grid;max-height:240px;overflow:auto;gap:5px}.sitePicker label span{display:grid}.sitePicker label span small{font-size:10px}.dataPointPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}.dataPointPicker>span{color:#8edfff;margin-right:auto}.dataPointPicker details{width:100%;border:1px solid #24414d;border-radius:8px;padding:8px}.dataPointPicker summary{cursor:pointer;font-weight:700}.dataPointPicker details>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}.dataPointPicker label{display:flex;gap:6px;align-items:center;min-height:36px}.dataPointPicker input{width:auto}
 .scopeSummary {
   color: #8edfff;
 }
@@ -546,6 +548,7 @@
   .toolbar button {
     flex: 1;
   }
+  .awardSelector small{width:100%;margin-left:0}.dataPointPicker details>div{grid-template-columns:1fr 1fr}
   .kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     border: 0;

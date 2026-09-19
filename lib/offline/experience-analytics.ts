@@ -19,6 +19,15 @@ export interface AnalysisScope {
   waterTypes: AnalysisWaterType[];
   siteIds: string[];
   equipmentSetIds: string[];
+  excludedDiveIds: string[];
+  minDepthM: number | null;
+  maxDepthM: number | null;
+  minTimeMin: number | null;
+  maxTimeMin: number | null;
+  includeShore: boolean;
+  includeBoat: boolean;
+  includeNight: boolean;
+  includeUnknownOther: boolean;
 }
 
 export const DEFAULT_ANALYSIS_SCOPE: AnalysisScope = {
@@ -30,6 +39,15 @@ export const DEFAULT_ANALYSIS_SCOPE: AnalysisScope = {
   waterTypes: [],
   siteIds: [],
   equipmentSetIds: [],
+  excludedDiveIds: [],
+  minDepthM: null,
+  maxDepthM: null,
+  minTimeMin: null,
+  maxTimeMin: null,
+  includeShore: true,
+  includeBoat: true,
+  includeNight: true,
+  includeUnknownOther: true,
 };
 
 export interface MetricObservation {
@@ -48,6 +66,10 @@ export interface HeadlineAnalytics {
   averageDepthM: MetricObservation;
   averageSacLMin: MetricObservation;
   bestSacLMin: MetricObservation;
+  averageSacBarMin: MetricObservation;
+  bestSacBarMin: MetricObservation;
+  averageRmvLMin: MetricObservation;
+  bestRmvLMin: MetricObservation;
   divesLast90Days: MetricObservation;
 }
 
@@ -71,6 +93,18 @@ export interface EnvironmentRow {
 }
 
 export interface SacTrendPoint {
+  diveId: string;
+  date: string;
+  site: string;
+  siteId?: string;
+  depthM: number | null;
+  sacBarMin: number;
+  waterType: string;
+  training: boolean;
+  equipmentSetIds: string[];
+}
+
+export interface RmvTrendPoint {
   diveId: string;
   date: string;
   site: string;
@@ -108,6 +142,7 @@ export interface ExperienceAnalyticsProjection {
   waterTypeSplit: EnvironmentRow[];
   environmentSplit: EnvironmentRow[];
   sacTrend: SacTrendPoint[];
+  rmvTrend: RmvTrendPoint[];
   equipmentSetUsage: EquipmentSetUsageRow[];
   siteUsage: SiteUsageRow[];
 }
@@ -161,6 +196,13 @@ export function diveSacLitresPerMinute(dive: DiveRecord): number | null {
   return cylinderRates.length === 1 ? cylinderRates[0]! : null;
 }
 
+export function diveSacBarPerMinute(dive: DiveRecord): number | null {
+  const direct = (dive as DiveRecord & { sacRate?: number | null }).sacRate;
+  if (positive(direct)) return direct;
+  const cylinderRates = (dive.cylinders ?? []).map((item) => item.sacPressureBarMin).filter(positive);
+  return cylinderRates.length === 1 ? cylinderRates[0]! : null;
+}
+
 export function normalWaterType(
   value: DiveRecord['waterType'],
 ): AnalysisWaterType {
@@ -176,10 +218,22 @@ export function diveMatchesAnalysisScope(
   dive: DiveWithId,
   scope: AnalysisScope,
 ) {
+  if (scope.excludedDiveIds.includes(dive.entityId)) return false;
   if (scope.dateFrom && dive.date < scope.dateFrom) return false;
   if (scope.dateTo && dive.date > scope.dateTo) return false;
   if (!scope.includePool && isPoolDive(dive)) return false;
   if (!scope.includeTraining && isTrainingDive(dive)) return false;
+  const depth = dive.maxDepthM;
+  if (scope.minDepthM != null && (depth == null || depth < scope.minDepthM)) return false;
+  if (scope.maxDepthM != null && (depth == null || depth > scope.maxDepthM)) return false;
+  const runtime = diveRuntimeMinutes(dive);
+  if (scope.minTimeMin != null && (runtime == null || runtime < scope.minTimeMin)) return false;
+  if (scope.maxTimeMin != null && (runtime == null || runtime > scope.maxTimeMin)) return false;
+  const activities = (dive.diveTypes ?? []).map(lower);
+  if (!scope.includeShore && activities.includes('shore')) return false;
+  if (!scope.includeBoat && activities.includes('boat')) return false;
+  if (!scope.includeNight && activities.some((value) => value === 'night' || value === 'night dive')) return false;
+  if (!scope.includeUnknownOther && primaryEnvironment(dive) === 'Other / unknown') return false;
   if (
     scope.diveModes.length &&
     (!dive.diveMode || !scope.diveModes.includes(dive.diveMode))
@@ -248,6 +302,9 @@ export function headlineAnalytics(
     .filter(
       (item): item is { dive: DiveWithId; value: number } => item.value != null,
     );
+  const pressureSac = dives
+    .map((dive) => ({ dive, value: diveSacBarPerMinute(dive) }))
+    .filter((item): item is { dive: DiveWithId; value: number } => item.value != null);
   const cutoff = new Date(asOf);
   cutoff.setUTCDate(cutoff.getUTCDate() - 90);
   const cutoffDate = cutoff.toISOString().slice(0, 10);
@@ -304,6 +361,34 @@ export function headlineAnalytics(
       sac.length ? Math.min(...sac.map((item) => item.value)) : null,
       'L/min',
       'Lowest valid surface-volume gas rate (RMV L/min) in scope.',
+    ),
+    averageSacBarMin: metric(
+      dives,
+      pressureSac,
+      pressureSac.length ? pressureSac.reduce((sum, item) => sum + item.value, 0) / pressureSac.length : null,
+      'bar/min',
+      'Mean recorded pressure SAC. This remains cylinder-specific and is never relabelled as L/min.',
+    ),
+    bestSacBarMin: metric(
+      dives,
+      pressureSac,
+      pressureSac.length ? Math.min(...pressureSac.map((item) => item.value)) : null,
+      'bar/min',
+      'Lowest recorded pressure SAC in scope.',
+    ),
+    averageRmvLMin: metric(
+      dives,
+      sac,
+      sac.length ? sac.reduce((sum, item) => sum + item.value, 0) / sac.length : null,
+      'L/min',
+      'Mean valid surface-volume RMV. Missing or pressure-only evidence is excluded.',
+    ),
+    bestRmvLMin: metric(
+      dives,
+      sac,
+      sac.length ? Math.min(...sac.map((item) => item.value)) : null,
+      'L/min',
+      'Lowest valid surface-volume RMV in scope.',
     ),
     divesLast90Days: metric(
       dives,
@@ -408,7 +493,7 @@ export function waterTypeProjection(dives: DiveWithId[]): EnvironmentRow[] {
 export function sacTrendProjection(dives: DiveWithId[]): SacTrendPoint[] {
   return dives
     .map((dive) => {
-      const value = diveSacLitresPerMinute(dive);
+      const value = diveSacBarPerMinute(dive);
       if (value == null) return null;
       return {
         diveId: dive.entityId,
@@ -416,7 +501,7 @@ export function sacTrendProjection(dives: DiveWithId[]): SacTrendPoint[] {
         site: dive.site,
         ...(dive.siteId ? { siteId: dive.siteId } : {}),
         depthM: finite(dive.maxDepthM) ? dive.maxDepthM : null,
-        rmvLMin: value,
+        sacBarMin: value,
         waterType: dive.waterType || 'Unknown',
         training: isTrainingDive(dive),
         equipmentSetIds: diveEquipmentSetIds(dive),
@@ -427,6 +512,23 @@ export function sacTrendProjection(dives: DiveWithId[]): SacTrendPoint[] {
       (a, b) =>
         a.date.localeCompare(b.date) || a.diveId.localeCompare(b.diveId),
     );
+}
+
+export function rmvTrendProjection(dives: DiveWithId[]): RmvTrendPoint[] {
+  return dives
+    .map((dive) => {
+      const value = diveSacLitresPerMinute(dive);
+      if (value == null) return null;
+      return {
+        diveId: dive.entityId, date: dive.date, site: dive.site,
+        ...(dive.siteId ? { siteId: dive.siteId } : {}),
+        depthM: finite(dive.maxDepthM) ? dive.maxDepthM : null,
+        rmvLMin: value, waterType: dive.waterType || 'Unknown',
+        training: isTrainingDive(dive), equipmentSetIds: diveEquipmentSetIds(dive),
+      } satisfies RmvTrendPoint;
+    })
+    .filter((item): item is RmvTrendPoint => Boolean(item))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.diveId.localeCompare(b.diveId));
 }
 
 export function equipmentSetUsageProjection(
@@ -516,6 +618,7 @@ export function buildExperienceAnalyticsProjection(
     waterTypeSplit: waterTypeProjection(included),
     environmentSplit: environmentProjection(included),
     sacTrend: sacTrendProjection(included),
+    rmvTrend: rmvTrendProjection(included),
     equipmentSetUsage: equipmentSetUsageProjection(included, loadouts),
     siteUsage: siteUsageProjection(included, sites),
   };
@@ -541,6 +644,7 @@ export function insightsExportEnvelope(
     waterTypeSplit: projection.waterTypeSplit,
     environmentSplit: projection.environmentSplit,
     sacTrend: projection.sacTrend,
+    rmvTrend: projection.rmvTrend,
     equipmentSetUsage: projection.equipmentSetUsage,
     siteUsage: projection.siteUsage,
     provenance: {

@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.41',
+    date: '2026-09-19',
+    title: 'Workflow, Insights and Gear refinement',
+    changes: [
+      'Separated Trip / Event Planning from Dive Preparation in navigation and kept Technical Diving with Diving CPD while preserving existing route aliases.',
+      'Simplified Overview to Next Dive, My Profile, Top Dive Buddy, kit status and weather instead of duplicating the analytics award dashboard.',
+      'Added configurable 4, 8, 12, 16 or 20 Insights awards, expanded filters and source-data-point exclusions without changing canonical Dive records.',
+      'Separated pressure SAC in bar/min from surface-volume RMV in L/min and added a distinct RMV trend; deferred qualifying-progress and readiness cards remain off Insights.',
+      'Separated reusable Loadouts from a dedicated Cylinders & Gas table with keyboard-openable details, service intervals, fill/analysis history and common media handling.',
+      'Preserved Equipment as the canonical individual-gear inventory and retained all local-first history, event, outbox and Plan-to-Dive provenance behaviour.',
+    ],
+  },
+  {
     version: '1.0.40',
     date: '2026-09-18',
     title: 'T12.6R recreational gas planner and planning navigation',

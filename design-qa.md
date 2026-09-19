@@ -1,34 +1,41 @@
-# T09 Design QA — Experience & Analytics
+# TWEAKS design QA
 
-## Authority
+## Comparison authority
 
-- Reference: `C:\Users\amzeu\Documents\Codex\2026-08-29\in-app-browser-context-source-ambient\ZEUSTEK-T09-single-run-v1.0\ZEUSTEK_T09_SINGLE_RUN_BUNDLE_v1.0\T09_VISUAL_AUTHORITY.png`
-- Implementation: local ZeusTek T09 Insights route, checked in the in-app browser at matching responsive widths.
+- Source mockups: `_tweaks_bundle_v1/mockups/01_overview_at_a_glance.png`, `02_insights_award_selector.png`, `03_insights_filters_and_detail_overlay.png`, `04_cylinders_and_gas_table.png`, and `05_workflow_navigation_split.png`.
+- Implementation checked in the local production candidate at `http://127.0.0.1:5173/` using the same in-app browser session.
+- The Insights award-selector mockup and implementation were reviewed together in one visual comparison input.
 
-## Comparison loop
+## Visual fidelity
 
-1. The first desktop comparison confirmed the reference hierarchy: diver hero, seven interactive KPI cells, orange/aqua/charcoal palette, six analysis cards and a full-width Readiness card.
-2. The hero overlay and image position were adjusted so the existing ZeusTek diver artwork remains visible while the heading retains sufficient contrast.
-3. The final desktop comparison at 1440 × 900 confirmed the intended visual hierarchy and no horizontal overflow.
+| Area | Result | Evidence |
+|---|---|---|
+| Overview hierarchy | Pass | The long analytics/award presentation is absent. Next Dive leads, with My Profile and Top Dive Buddy beside the existing Kit Status and weather content. |
+| Insights style | Pass | Existing dark photographic hero, cyan card outlines, orange headings and dense dashboard rhythm are preserved. |
+| Award selector | Pass | Compact 4/8/12/16/20 controls appear immediately above the configurable award grid; the selected count uses the orange active treatment. |
+| Insights cards | Pass | SAC and RMV are separate cards/trends. Qualifying-dive Progress and Readiness/Currency are absent. |
+| Filter overlay | Pass | The overlay retains the ZeusTek dark modal treatment, has contained scrolling, and exposes date, inclusion, depth/time, water, dive-mode, searchable one/many/all location and equipment-set controls. |
+| Gear split | Pass | Equipment, Loadouts and Cylinders & Gas are distinct destinations. Cylinders & Gas uses the supplied compact table/detail concept and canonical ZeusTek styling. |
+| Navigation | Pass | Trip / Event Planning and Dive Preparation remain separate; Technical Diving remains under Diving CPD. |
 
-## Responsive checks
+## Responsive acceptance
 
-| Width | Result |
-| --- | --- |
-| 390 px | Passed — two-column KPI strip, single-column cards, usable filter dialog, closed/open mobile navigation, no horizontal overflow. |
-| 820 px | Passed — four-plus-three KPI layout, two-column cards, no horizontal overflow. |
-| 1024 px | Passed — sidebar layout, four-plus-three KPI layout, two-column cards, no horizontal overflow. |
-| 1440 px | Passed — desktop hierarchy matches the visual authority as closely as practical with the current ZeusTek asset library. |
+| Viewport | Result | Notes |
+|---|---|---|
+| 390 × 844 | Pass | Compact header and five-item bottom navigation; award controls wrap cleanly; no document horizontal overflow (`375 <= 390`). |
+| 820 × 900 | Pass | Two-column analytics layout and compact bottom navigation; no document horizontal overflow (`805 <= 820`). |
+| 1024 × 900 | Pass | Desktop sidebar returns and analytics grid remains contained; no document horizontal overflow (`1009 <= 1024`). |
+| 1440 × 900 | Pass | Desktop hierarchy and density align with the source mockups and existing Experience & Analytics visual authority. |
 
 ## Interaction and accessibility
 
-- All seven KPI cells and all seven major analysis cards open accessible detail overlays by pointer and keyboard.
-- Escape closes only the active overlay and restores focus to its launcher.
-- The Analysis Scope dialog remains usable at 390 px and does not overflow.
-- Depth drill-down can promote a local Saltwater/Freshwater scope to the dashboard without mutating Dive data.
-- Charts include accessible text/table equivalents.
-- Interactive targets meet the 44 px touch-size expectation and visible focus is retained.
+- Full award cells remain keyboard/touch buttons.
+- Filter dialog Escape closes only the dialog and restores focus to Analysis filters.
+- Cylinder rows are focusable and open by click, Enter or Space.
+- The mobile navigation drawer opens and closes without leaving page overflow.
+- Data-point selection provides all/none/individual controls plus Apply to dashboard.
+- Visible text labels remain alongside icons.
 
-## Result
+## Final verdict
 
-`passed`
+passed
