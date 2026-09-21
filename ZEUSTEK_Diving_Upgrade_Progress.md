@@ -787,3 +787,16 @@ Owner-returned SOL_RETURN_INSTRUCTIONS are focused diagnostic/review input, not 
 - Required owner smoke: Skill Catalogue header/toolbar and group selector at desktop, tablet and phone widths; zero-group empty state; one/multiple/select-all/clear-all filtering; bounded Load more results; Import/Export presence; select a rich Skill, confirm each competence definition, save/reopen; compact Edit/Unlink/Delete controls and delete confirmation; one unrelated route.
 - Immediate rollback target is app 1.0.10 / Sites76: saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_583b3da80d7481919aade742d4f6dc17`; deployment `appgdep_6aa684b42554819183ff2673b84c7c32`. The original pre-pass app 1.0.9 / Sites74 checkpoint remains recorded above. No rollback was required because the Sites77 deployment succeeded and no candidate failure was observed.
 - Astra invoked: no. Actual usage: NOT_EXPOSED.
+
+## T12.5E Cylinder → Gas Planner integration — 2026-09-21
+
+- Status: COMPLETE. T12.6R, T13 and T14 were not started.
+- Baseline: app `1.0.45` / Sites `116` / deployment `appgdep_6ab176c4b62881918e67626b06327126` / source `bd8af0feb24beab551c75a3fa56bc642a286b8d7`; GitHub main `0bbca207fc71480307563110579dc383c91300e4`.
+- Release: app `1.0.46` / Sites `117` / deployment `appgdep_6ab18c6b2f2c81918f67c5eb06a529c0` / published source `d5a8322908023d5c529da8d6efbaa3b870ebcaf2` / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_42f4fb6e41448191846fd8d74ff25ce3`.
+- Rollback: app `1.0.44` / Sites `115` / deployment `appgdep_6aaea5a7d8448191a9c68e240414b63a` / source `daea36d63a63f8ce2108bddcb20e4d1a5303468a` / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_f68f2e121610819192c7bdb8d20b9668`.
+- Canonical cylinders, water volume, stable IDs, current/root fill, analysis `originFillId`, pressure/usage lineage and inspection/valve readiness are now consumed by Gas Planning without a second store or canonical record overwrite. Usage-only pressure changes do not stale composition evidence; new composition-changing fills and owner-stale evidence do.
+- Focused: 6 files / 43 tests passed. Full regression: 87 files / 488 tests passed. Typecheck, production build, final PWA precache 201, version/PWA 4/4, targeted lint and diff check passed.
+- Responsive/browser: 390, 820, 1024 and 1440 px passed without horizontal overflow; warning dialog Escape/focus return passed; no console errors.
+- Read-only production smoke passed on the canonical URL. Two existing cylinders displayed ID/serial/volume/gas/pressure/analysis/test/provenance evidence. Logbook retained exactly 66 Dives. Owner records changed: no. Live write acceptance was not performed because no T12.5E write approval was given.
+- GitHub product-sync commit: `d5a8322908023d5c529da8d6efbaa3b870ebcaf2`; final main merge SHA is recorded in the owner-facing report.
+- Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.

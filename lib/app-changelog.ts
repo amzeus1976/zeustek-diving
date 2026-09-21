@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.46',
+    date: '2026-09-21',
+    title: 'Cylinder to Gas Planning evidence integration',
+    changes: [
+      'Loaded the canonical Cylinders & Gas inventory directly into Gas Planning, including newly created cylinders, stable IDs, serials, water volumes, valves and inspection evidence.',
+      'Separated current pressure, selected fill, plan snapshot and owner override sources without changing the canonical cylinder state.',
+      'Kept root-fill gas analysis current across usage-only pressure events while staling it for composition-changing fills or explicit owner review.',
+      'Added readable fill, analysis and pressure-event provenance plus context-sensitive hydro, visual, valve and oxygen-clean readiness warnings.',
+      'Preserved existing cylinder, Gas Plan and Dive identities, local-first history and all Plan-to-Dive provenance without a new store or migration.',
+    ],
+  },
+  {
     version: '1.0.45',
     date: '2026-09-19',
     title: 'Cylinder identity and inspection cycle correction',

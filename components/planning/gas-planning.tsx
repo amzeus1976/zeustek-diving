@@ -15,17 +15,20 @@ import { AccessibleDialog } from '../accessible-dialog';
 import { useRecordRefresh } from '../record-status';
 import { CollapsibleWorkCard } from '../workflow/collapsible-work-card';
 import { ZeusTekIcon } from '../zeustek-icon';
-import { listDiveSites, listEquipment, type DiveSiteRecord, type Stored } from '../../lib/offline/dive-planning';
+import { listDiveSites, type DiveSiteRecord, type Stored } from '../../lib/offline/dive-planning';
 import type { StoredEnrichedDivePlan } from '../../lib/offline/dive-planning-centre';
 import type { DiveRecord } from '../../lib/offline/dives';
 import { listDiveExpeditionTrips, type DiveExpeditionTripRecord } from '../../lib/offline/trips-expeditions';
 import { flightProximity, previousDiveContext } from '../../lib/offline/plan-context-checks';
-import type {
-  CylinderEquipmentRecord,
-  CylinderFillRecord,
-  GasAnalysisRecord,
+import {
+  deriveCylinderInspectionSchedule,
+  gasMixLabel,
+  type CylinderEquipmentRecord,
+  type CylinderFillRecord,
+  type GasAnalysisRecord,
 } from '../../lib/offline/loadouts-gas';
 import {
+  cylinderPickerSummary,
   deleteGasPlan,
   fractionLabel,
   planningPageSources,
@@ -110,8 +113,11 @@ function analysisFor(
 ) {
   if (!fill) return undefined;
   const latestFill = fills.filter(row => row.cylinderEquipmentId === cylinder.cylinderEquipmentId).sort((a, b) => b.filledAt.localeCompare(a.filledAt))[0];
-  if (latestFill?.entityId !== fill.entityId) return undefined;
-  const eligible = analyses.filter((item) => item.fillId === fill.entityId && item.cylinderEquipmentId === fill.cylinderEquipmentId && Date.parse(item.analysedAt) >= Date.parse(fill.filledAt));
+  const rootFillId = fill.originFillId || fill.entityId;
+  const latestRootFillId = latestFill?.originFillId || latestFill?.entityId;
+  if (latestRootFillId !== rootFillId) return undefined;
+  const rootFill = fills.find(row => row.entityId === rootFillId) ?? fill;
+  const eligible = analyses.filter((item) => item.fillId === rootFillId && item.cylinderEquipmentId === fill.cylinderEquipmentId && !item.markedStaleAt && Date.parse(item.analysedAt) >= Date.parse(rootFill.filledAt));
   if (cylinder.analysisId)
     return eligible.find((item) => item.entityId === cylinder.analysisId);
   return [...analyses]
@@ -146,9 +152,8 @@ export function GasPlanning({ go }: Props) {
   const [query, setQuery] = useState('');
 
   const refresh = useCallback(async () => {
-    const [sources, allEquipment, tripRecords, siteRecords] = await Promise.all([
+    const [sources, tripRecords, siteRecords] = await Promise.all([
       planningPageSources(),
-      listEquipment(),
       listDiveExpeditionTrips(),
       listDiveSites(),
     ]);
@@ -164,11 +169,7 @@ export function GasPlanning({ go }: Props) {
     setDives(sources.dives);
     setTrips(tripRecords);
     setSites(siteRecords);
-    setEquipment(
-      allEquipment.filter((item) =>
-        /cylinder|tank/i.test(`${item.category} ${item.name}`),
-      ) as Array<Stored<CylinderEquipmentRecord>>,
-    );
+    setEquipment(sources.cylinders);
   }, []);
   useRecordRefresh(refresh);
   useEffect(() => {
@@ -211,7 +212,7 @@ export function GasPlanning({ go }: Props) {
   const previousDive = selectedDivePlan ? previousDiveContext(selectedDivePlan, dives) : null;
   const flight = selectedDivePlan ? flightProximity(selectedDivePlan, selectedTrip) : null;
   const [warningsOpen, setWarningsOpen] = useState(false);
-  const warnings = selected ? warnGasPlan(selected, fills, equipment) : [];
+  const warnings = selected ? warnGasPlan(selected, fills, equipment, analyses) : [];
   const projections = selected ? selected.cylinders.map(cylinder => projectGasCylinder(cylinder, selected, fills, analyses, equipment)) : [];
   const availableValues = projections.map(projection => projection.volume?.usableLitres ?? null);
   const gasAvailable = availableValues.length && availableValues.every((value): value is number => value !== null) ? availableValues.reduce((sum, value) => sum + value, 0) : null;
@@ -698,6 +699,7 @@ function GasPlanEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [draftWarningsOpen, setDraftWarningsOpen] = useState(false);
+  const [detailsCylinderId, setDetailsCylinderId] = useState<string | null>(null);
   const [helpTopic, setHelpTopic] = useState<'PPO₂ / MOD' | 'EAD' | 'Gas volume' | 'Agency table' | 'Bühlmann reference' | 'Depth limits' | null>(null);
   const linkedPlan = divePlans.find(plan => plan.entityId === draft.divePlanId);
   const linkedTrip = linkedPlan?.tripId ? trips.find(trip => trip.entityId === linkedPlan.tripId) : null;
@@ -718,6 +720,15 @@ function GasPlanEditor({
       return { snapshot: null, error: cause instanceof Error ? cause.message : 'Recreational planner inputs are invalid.' };
     }
   }, [recInput, draft, fills, analyses, equipment, linkedPlan, dives]);
+  const draftWarnings = useMemo(
+    () => [
+      ...new Set([
+        ...warnGasPlan(draft, fills, equipment, analyses),
+        ...(recProjection.snapshot?.warnings ?? []),
+      ]),
+    ],
+    [draft, fills, equipment, analyses, recProjection.snapshot],
+  );
 
   function update(patch: Partial<GasPlanRecord>) {
     setDraft((current) => ({ ...current, ...patch }));
@@ -777,10 +788,9 @@ function GasPlanEditor({
         const blockers = recreationalReadinessBlockers(recProjection.snapshot);
         if (blockers.length) throw new Error(`Cannot mark ready: ${blockers.join(' ')}`);
       }
-      const warnings = warnGasPlan(draft, fills, equipment);
       await saveGasPlan({ ...draft, plannedDepthM: recInput.plannedDepthM, rmvRateLitresMin: recInput.ownRmvLMin,
         gradientFactorLow: recInput.gfLow, gradientFactorHigh: recInput.gfHigh,
-        recGasPlan101: recProjection.snapshot, warnings: [...new Set([...warnings, ...recProjection.snapshot.warnings])] });
+        recGasPlan101: recProjection.snapshot, warnings: draftWarnings });
       saved();
     } catch (reason) {
       setError(
@@ -792,6 +802,28 @@ function GasPlanEditor({
       setBusy(false);
     }
   }
+
+  const detailsSlot = draft.cylinders.find(
+    (cylinder) => cylinder.id === detailsCylinderId,
+  );
+  const detailsItem = equipment.find(
+    (candidate) => candidate.entityId === detailsSlot?.cylinderEquipmentId,
+  );
+  const detailsProjection = detailsSlot
+    ? projectGasCylinder(detailsSlot, draft, fills, analyses, equipment)
+    : null;
+  const detailsCurrentEvent = detailsProjection?.fillId
+    ? fills.find((candidate) => candidate.entityId === detailsProjection.fillId)
+    : null;
+  const detailsRootFill = detailsProjection?.rootFillId
+    ? fills.find((candidate) => candidate.entityId === detailsProjection.rootFillId)
+    : null;
+  const detailsAnalysis = detailsProjection?.analysisId
+    ? analyses.find((candidate) => candidate.entityId === detailsProjection.analysisId)
+    : null;
+  const detailsSchedule = detailsItem
+    ? deriveCylinderInspectionSchedule(detailsItem)
+    : null;
 
   return (
     <div className="focus-modal-bg">
@@ -815,7 +847,7 @@ function GasPlanEditor({
         </header>
 
         <RecreationalGasPlanner input={recInput} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => setRecInput(current => ({ ...current, ...patch }))}/>
-        {recProjection.snapshot?.warnings.length ? <button type="button" className={styles.warningIconButton} aria-label="Open draft Gas Plan warnings" aria-haspopup="dialog" title={recProjection.snapshot.warnings.join('\n')} onClick={() => setDraftWarningsOpen(true)}><AlertTriangle size={16} aria-hidden="true" /> {recProjection.snapshot.warnings.length} warning(s) · details</button> : null}
+        {draftWarnings.length ? <button type="button" className={styles.warningIconButton} aria-label="Open draft Gas Plan warnings" aria-haspopup="dialog" title={draftWarnings.join('\n')} onClick={() => setDraftWarningsOpen(true)}><AlertTriangle size={16} aria-hidden="true" /> {draftWarnings.length} warning(s) · details</button> : null}
         <div className={styles.editorGrid}>
           <label>
             Name
@@ -996,9 +1028,34 @@ function GasPlanEditor({
                   <option value="">Choose</option>
                   {equipment.map((item) => (
                     <option key={item.entityId} value={item.entityId}>
-                      {item.name}
+                      {cylinderPickerSummary(
+                        item,
+                        fills.filter(
+                          (fill) => fill.cylinderEquipmentId === item.entityId,
+                        ),
+                        analyses.filter(
+                          (analysis) =>
+                            analysis.cylinderEquipmentId === item.entityId,
+                        ),
+                      )}
                     </option>
                   ))}
+                </select>
+              </label>
+              <label>
+                Required valve / connection
+                <select
+                  value={cylinder.requiredValveType ?? ''}
+                  onChange={(event) =>
+                    updateCylinder(cylinder.id, {
+                      requiredValveType:
+                        (event.target.value as 'DIN' | 'A-CLAMP') || null,
+                    })
+                  }
+                >
+                  <option value="">No connection requirement recorded</option>
+                  <option value="DIN">DIN</option>
+                  <option value="A-CLAMP">A-clamp</option>
                 </select>
               </label>
               <label>
@@ -1046,10 +1103,12 @@ function GasPlanEditor({
                   {analyses
                     .filter(
                       (analysis) =>
-                        analysis.cylinderEquipmentId === cylinder.cylinderEquipmentId &&
-                        analysis.fillId === fillFor(cylinder, fills)?.entityId &&
-                        fills.filter((row) => row.cylinderEquipmentId === cylinder.cylinderEquipmentId).sort((a, b) => b.filledAt.localeCompare(a.filledAt))[0]?.entityId === fillFor(cylinder, fills)?.entityId &&
-                        Date.parse(analysis.analysedAt) >= Date.parse(fillFor(cylinder, fills)?.filledAt ?? ''),
+                        analysisFor(
+                          { ...cylinder, analysisId: analysis.entityId },
+                          analyses,
+                          fillFor(cylinder, fills),
+                          fills,
+                        )?.entityId === analysis.entityId,
                     )
                     .map((analysis) => (
                       <option key={analysis.entityId} value={analysis.entityId}>
@@ -1082,10 +1141,38 @@ function GasPlanEditor({
                         event.target.value === ''
                           ? null
                           : Number(event.target.value),
+                      startPressureSource:
+                        event.target.value === '' ? null : 'owner-override',
                     })
                   }
                 />
               </label>
+              <p className={styles.provenance}>
+                <strong>Start-pressure source:</strong>{' '}
+                {
+                  projectGasCylinder(
+                    cylinder,
+                    draft,
+                    fills,
+                    analyses,
+                    equipment,
+                  ).startPressureEvidence.label
+                }
+                {cylinder.startPressureBar != null ? (
+                  <button
+                    type="button"
+                    className="focus-secondary"
+                    onClick={() =>
+                      updateCylinder(cylinder.id, {
+                        startPressureBar: null,
+                        startPressureSource: null,
+                      })
+                    }
+                  >
+                    Use current pressure
+                  </button>
+                ) : null}
+              </p>
               <label>
                 End bar
                 <input
@@ -1144,6 +1231,13 @@ function GasPlanEditor({
                 />
               </label>
               <button
+                type="button"
+                className="focus-secondary"
+                onClick={() => setDetailsCylinderId(cylinder.id)}
+              >
+                Cylinder details &amp; provenance
+              </button>
+              <button
                 className="focus-secondary danger"
                 onClick={() =>
                   update({
@@ -1191,7 +1285,58 @@ function GasPlanEditor({
           </button>
         </footer>
       </AccessibleDialog>
-      {draftWarningsOpen && recProjection.snapshot ? <AccessibleDialog label="Draft Gas Plan warnings" close={() => setDraftWarningsOpen(false)} className="focus-modal"><header><h2>Draft Gas Plan warnings</h2><button type="button" className="focus-icon" data-dialog-close aria-label="Close draft warnings" onClick={() => setDraftWarningsOpen(false)}><X /></button></header><ul className={styles.warningList}>{recProjection.snapshot.warnings.map(warning => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDraftWarningsOpen(false)}>Close</button></footer></AccessibleDialog> : null}
+      {draftWarningsOpen ? <AccessibleDialog label="Draft Gas Plan warnings" close={() => setDraftWarningsOpen(false)} className="focus-modal"><header><h2>Draft Gas Plan warnings</h2><button type="button" className="focus-icon" data-dialog-close aria-label="Close draft warnings" onClick={() => setDraftWarningsOpen(false)}><X /></button></header><ul className={styles.warningList}>{draftWarnings.map(warning => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDraftWarningsOpen(false)}>Close</button></footer></AccessibleDialog> : null}
+      {detailsSlot && detailsItem && detailsProjection ? (
+        <AccessibleDialog
+          label={`${detailsItem.name} cylinder details and provenance`}
+          close={() => setDetailsCylinderId(null)}
+          className="focus-modal"
+        >
+          <header>
+            <div>
+              <span className="focus-eyebrow">CYLINDER READINESS</span>
+              <h2>{detailsItem.name}</h2>
+              <p>
+                Cyl {detailsItem.cylinderNumber || detailsItem.entityId} · S/N{' '}
+                {detailsItem.serialNumber || 'not recorded'}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="focus-icon"
+              data-dialog-close
+              aria-label="Close cylinder details"
+              onClick={() => setDetailsCylinderId(null)}
+            >
+              <X />
+            </button>
+          </header>
+          <dl className={styles.evidenceGrid}>
+            <div><dt>Cylinder ID</dt><dd>{detailsItem.cylinderNumber || detailsItem.entityId}</dd></div>
+            <div><dt>Manufacturer / serial</dt><dd>{detailsItem.manufacturer || 'Not recorded'} · {detailsItem.serialNumber || 'Not recorded'}</dd></div>
+            <div><dt>Water volume</dt><dd>{detailsItem.waterVolumeLiters == null ? 'Not recorded' : `${detailsItem.waterVolumeLiters} L`}</dd></div>
+            <div><dt>Valve</dt><dd>{detailsItem.valveType || 'Unknown'}{detailsSlot.requiredValveType ? ` · required ${detailsSlot.requiredValveType}` : ''}</dd></div>
+            <div><dt>Hydro</dt><dd>{detailsItem.hydroTestAt || detailsSchedule?.latestHydro || 'Not recorded'} · due {detailsItem.hydroDueAt || detailsSchedule?.hydroDueAt || 'unknown'}</dd></div>
+            <div><dt>Visual</dt><dd>{detailsItem.visualTestAt || detailsSchedule?.latestVisualQualifyingTest || 'Not recorded'} · due {detailsItem.visualDueAt || detailsSchedule?.visualDueAt || 'unknown'}</dd></div>
+            <div><dt>O₂ clean</dt><dd>{detailsItem.oxygenClean ? `Current until ${detailsItem.oxygenCleanUntil || 'unknown'}` : 'Not recorded/current'}</dd></div>
+            <div><dt>Current pressure event</dt><dd>{detailsCurrentEvent ? `${detailsCurrentEvent.entityId} · ${detailsCurrentEvent.pressureBar ?? '—'} bar · ${detailsCurrentEvent.eventType || 'fill'}` : 'None'}</dd></div>
+            <div><dt>Root fill</dt><dd>{detailsRootFill ? `${detailsRootFill.entityId} · ${detailsRootFill.filledAt} · ${detailsRootFill.location || detailsRootFill.provider || 'location not recorded'} · ${detailsRootFill.source}` : 'None'}</dd></div>
+            <div><dt>Analysis</dt><dd>{detailsAnalysis ? `${detailsAnalysis.entityId} · ${gasMixLabel(detailsAnalysis.oxygenFraction, detailsAnalysis.heliumFraction)} · ${detailsAnalysis.analysedAt} · analyser ${detailsAnalysis.analysedByPersonId || 'not recorded'} · ${detailsAnalysis.source || 'recorded'}` : 'No valid current analysis'}</dd></div>
+            <div><dt>Start pressure source</dt><dd>{detailsProjection.startPressureEvidence.label} · {detailsProjection.startPressureEvidence.pressureBar ?? '—'} bar</dd></div>
+            <div><dt>Analysis state</dt><dd>{detailsProjection.analysisState === 'current' ? 'Analysis current for this fill' : detailsProjection.analysisState}</dd></div>
+          </dl>
+          <h3>Fill and pressure lineage</h3>
+          {detailsProjection.provenanceChain.length ? (
+            <ol className={styles.provenanceChain}>
+              {detailsProjection.provenanceChain.map((entry) => <li key={entry}>{entry}</li>)}
+            </ol>
+          ) : <p>No fill provenance recorded.</p>}
+          {detailsProjection.warnings.length ? (
+            <><h3>Readiness warnings</h3><ul className={styles.warningList}>{detailsProjection.warnings.map((warning) => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul></>
+          ) : <p>Recorded cylinder evidence has no current readiness warnings.</p>}
+          <footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDetailsCylinderId(null)}>Close</button></footer>
+        </AccessibleDialog>
+      ) : null}
       {helpTopic ? <AccessibleDialog label={`${helpTopic} help`} close={()=>setHelpTopic(null)} className="focus-modal"><header><h2>{helpTopic}</h2><button className="focus-icon" aria-label="Close help" data-dialog-close onClick={()=>setHelpTopic(null)}><X/></button></header><p>{helpTopic==='PPO₂ / MOD'?'PPO₂ is oxygen fraction × absolute pressure. MOD is the depth where the selected target PPO₂ is reached. The target is a planning input, not a guarantee of safety.':helpTopic==='EAD'?'Equivalent Air Depth compares nitrogen exposure using FN₂/0.79. It is not a decompression schedule.':helpTopic==='Gas volume'?GAS_FORMULA_PROVENANCE:helpTopic==='Depth limits'?'Site, owner-entered user and team limits are separate. The lowest known limit applies, and unknown capability is not a pass. Verify training evidence independently.':helpTopic==='Bühlmann reference'?'ZeusTek calculates a recreational no-stop limit at the selected depth using the chosen ZH-L16B or ZH-L16C model and gradient factors. The model, assumptions and result are saved with the Gas Plan. This is a planning aid, not a validated dive computer or a decompression schedule.':'Record the exact table family and edition with your own transcribed values. Never interchange pressure groups across PADI air, PADI EANx32, SSI or Navy tables. No table dataset is bundled; a table is lookup backup only and does not drive the calculated NDL.'}</p><p>{GAS_PLANNING_CAUTION}</p><footer><button className="focus-secondary" data-dialog-close onClick={()=>setHelpTopic(null)}>Close</button></footer></AccessibleDialog> : null}
     </div>
   );
