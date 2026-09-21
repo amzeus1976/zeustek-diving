@@ -48,7 +48,7 @@ export function assessLinkedGasPlan(
   const projections = gas.cylinders.map((cylinder) => projectGasCylinder(cylinder, gas, fills, analyses, equipment));
   const depth = gas.plannedDepthM ?? divePlan?.plannedMaxDepthM ?? null;
   const team = teamDepthAssessment(divePlan?.planTeam, people);
-  const warnings = [...warnGasPlan(gas, fills, equipment), ...projections.flatMap((projection) => projection.warnings)];
+  const warnings = [...warnGasPlan(gas, fills, equipment, analyses), ...projections.flatMap((projection) => projection.warnings)];
   if (!divePlan) warnings.push('No linked Dive Plan; Site and team limits cannot be checked.');
   if (!site) warnings.push('No linked Site; Site maximum depth cannot be checked.');
   if (depth != null && site?.maxDepthM != null && depth > site.maxDepthM)

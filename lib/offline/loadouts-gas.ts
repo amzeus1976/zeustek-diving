@@ -128,6 +128,8 @@ export interface CylinderFillRecord {
   oxygenFraction: number | null;
   heliumFraction: number | null;
   provider: string | null;
+  /** Optional explicit place; legacy records use provider as the readable fill location. */
+  location?: string | null;
   notes: string | null;
   source: 'recorded' | 'imported';
   eventType?: 'fill' | 'usage' | 'adjustment';
@@ -144,6 +146,9 @@ export interface GasAnalysisRecord {
   oxygenFraction: number | null;
   heliumFraction: number | null;
   analysedByPersonId: string | null;
+  source?: 'recorded' | 'imported' | null;
+  markedStaleAt?: string | null;
+  markedStaleReason?: string | null;
   attachmentIds: string[];
   notes: string | null;
   createdAt: string;
@@ -339,17 +344,24 @@ export async function saveGasAnalysis(input: Omit<GasAnalysisRecord, 'createdAt'
   if (!input.analysedAt || !Number.isFinite(Date.parse(input.analysedAt))) throw new Error('Record a valid analysis date and time.');
   const mix = validateMix(input.oxygenFraction, input.heliumFraction);
   if (mix.oxygenFraction == null && mix.heliumFraction == null) throw new Error('Record at least one analysed gas fraction.');
-  if (input.fillId) {
-    const fill = (await listCylinderFills()).find((candidate) => candidate.entityId === input.fillId);
+  let linkedFillId = input.fillId || null;
+  if (linkedFillId) {
+    const fills = await listCylinderFills();
+    const fill = fills.find((candidate) => candidate.entityId === linkedFillId);
     if (!fill) throw new Error('The linked fill is no longer available.');
     if (fill.cylinderEquipmentId !== input.cylinderEquipmentId) throw new Error('The linked fill belongs to a different cylinder.');
-    if (Date.parse(input.analysedAt) < Date.parse(fill.filledAt)) throw new Error('Analysis cannot predate its linked fill.');
+    const rootFill = fill.originFillId
+      ? fills.find((candidate) => candidate.entityId === fill.originFillId)
+      : fill;
+    if (!rootFill) throw new Error('The root fill evidence is no longer available.');
+    if (Date.parse(input.analysedAt) < Date.parse(rootFill.filledAt)) throw new Error('Analysis cannot predate its linked fill.');
+    linkedFillId = rootFill.entityId;
   }
   return saveRecord('gas-analysis', {
     ...input,
     ...mix,
     analysedAt: new Date(input.analysedAt).toISOString(),
-    fillId: input.fillId || null,
+    fillId: linkedFillId,
     analysedByPersonId: input.analysedByPersonId || null,
     attachmentIds: unique(input.attachmentIds ?? []),
     notes: input.notes?.trim() || '',
@@ -429,6 +441,7 @@ export async function recordCylinderGasUsage(input: {
     oxygenFraction: latest.oxygenFraction,
     heliumFraction: latest.heliumFraction,
     provider: latest.provider,
+    location: latest.location ?? null,
     notes: input.notes?.trim() || '',
     source: 'recorded',
     eventType: hasUsed ? 'usage' : 'adjustment',
@@ -490,7 +503,7 @@ export function deriveCylinderCurrentState(
   const analysisFillId = latestFill?.originFillId || latestFill?.entityId;
   const analysisFill = fills.find((fill) => fill.entityId === analysisFillId) ?? latestFill;
   const currentAnalysis = latestFill
-    ? byDateDescending(analyses.filter((analysis) => analysis.fillId === analysisFillId && analysis.cylinderEquipmentId === latestFill.cylinderEquipmentId && Date.parse(analysis.analysedAt) >= Date.parse(analysisFill?.filledAt ?? latestFill.filledAt)), 'analysedAt')[0] ?? null
+    ? byDateDescending(analyses.filter((analysis) => analysis.fillId === analysisFillId && analysis.cylinderEquipmentId === latestFill.cylinderEquipmentId && !analysis.markedStaleAt && Date.parse(analysis.analysedAt) >= Date.parse(analysisFill?.filledAt ?? latestFill.filledAt)), 'analysedAt')[0] ?? null
     : null;
   const analysisState: CylinderCurrentState['analysisState'] = currentAnalysis
     ? 'current'

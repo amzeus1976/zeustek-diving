@@ -12,10 +12,14 @@ import {
 } from './dive-planning-centre';
 import { listDives, type DiveRecord } from './dives';
 import {
+  deriveCylinderInspectionSchedule,
+  gasMixLabel,
+  listCylinderInventory,
   listCylinderFills,
   listGasAnalyses,
   type CylinderEquipmentRecord,
   type CylinderFillRecord,
+  type GasAnalysisRecord,
 } from './loadouts-gas';
 import {
   maximumOperatingDepth,
@@ -82,6 +86,8 @@ export interface GasPlanCylinder {
   depthM?: number | null;
   waterVolumeOverrideL?: number | null;
   startPressureBar?: number | null;
+  startPressureSource?: 'plan-snapshot' | 'owner-override' | null;
+  requiredValveType?: 'DIN' | 'A-CLAMP' | null;
   endPressureBar?: number | null;
   reservePressureBar?: number | null;
   turnPressureBar?: number | null;
@@ -258,7 +264,20 @@ export interface GasCylinderProjection {
   mixProvenance: string;
   analysisState: 'current' | 'stale' | 'manual' | 'unknown';
   fillId: string | null;
+  rootFillId: string | null;
   analysisId: string | null;
+  startPressureEvidence: {
+    kind:
+      | 'plan-snapshot'
+      | 'owner-override'
+      | 'selected-fill'
+      | 'current-pressure'
+      | 'unavailable';
+    pressureBar: number | null;
+    eventId: string | null;
+    label: string;
+  };
+  provenanceChain: string[];
   modM: number | null;
   ppo2AtDepth: number | null;
   nitrogenFraction: number | null;
@@ -267,23 +286,192 @@ export interface GasCylinderProjection {
   warnings: string[];
 }
 
-/** Never substitutes a previous analysis for one linked to the selected/latest fill. */
+function rootFillId(fill: Stored<CylinderFillRecord> | null | undefined) {
+  return fill ? fill.originFillId || fill.entityId : null;
+}
+
+function fillEventLabel(fill: Stored<CylinderFillRecord>) {
+  if (fill.eventType === 'usage')
+    return `${fill.pressureUsedBar ?? '—'} bar used at ${fill.filledAt} · pressure ${fill.pressureBar ?? '—'} bar · event ${fill.entityId}`;
+  if (fill.eventType === 'adjustment')
+    return `Remaining pressure adjusted at ${fill.filledAt} · pressure ${fill.pressureBar ?? '—'} bar · event ${fill.entityId}`;
+  return `Pressure recorded at ${fill.filledAt} · ${fill.pressureBar ?? '—'} bar · event ${fill.entityId}`;
+}
+
+function selectedFillEvidence(
+  cylinder: GasPlanCylinder,
+  fills: Array<Stored<CylinderFillRecord>>,
+) {
+  const cylinderFills = fills
+    .filter((row) => row.cylinderEquipmentId === cylinder.cylinderEquipmentId)
+    .sort((a, b) => b.filledAt.localeCompare(a.filledAt));
+  const latestEvent = cylinderFills[0] ?? null;
+  const selectedEvent = cylinder.fillId
+    ? cylinderFills.find((row) => row.entityId === cylinder.fillId) ?? null
+    : latestEvent;
+  const selectedRootId = rootFillId(selectedEvent);
+  const currentRootId = rootFillId(latestEvent);
+  const rootFill = selectedRootId
+    ? cylinderFills.find((row) => row.entityId === selectedRootId) ?? selectedEvent
+    : null;
+  const selectedChain = selectedRootId
+    ? cylinderFills
+        .filter((row) => rootFillId(row) === selectedRootId)
+        .sort((a, b) => a.filledAt.localeCompare(b.filledAt))
+    : [];
+  return {
+    cylinderFills,
+    latestEvent,
+    selectedEvent,
+    selectedRootId,
+    currentRootId,
+    rootFill,
+    selectedChain,
+    selectedChainIsCurrent: Boolean(
+      selectedEvent && selectedRootId && selectedRootId === currentRootId,
+    ),
+  };
+}
+
+function analysisForFillChain(
+  evidence: ReturnType<typeof selectedFillEvidence>,
+  cylinder: GasPlanCylinder,
+  analyses: Array<Stored<GasAnalysisRecord>>,
+) {
+  if (!evidence.rootFill || !evidence.selectedChainIsCurrent) return null;
+  const eligible = analyses
+    .filter(
+      (row) =>
+        row.cylinderEquipmentId === evidence.rootFill?.cylinderEquipmentId &&
+        row.fillId === evidence.selectedRootId &&
+        !row.markedStaleAt &&
+        Date.parse(row.analysedAt) >= Date.parse(evidence.rootFill?.filledAt ?? ''),
+    )
+    .sort((a, b) => b.analysedAt.localeCompare(a.analysedAt));
+  if (cylinder.analysisId)
+    return eligible.find((row) => row.entityId === cylinder.analysisId) ?? null;
+  return eligible[0] ?? null;
+}
+
+function monthAt(value: string) {
+  return value.slice(0, 7);
+}
+
+export function cylinderReadinessWarnings(
+  cylinder: Stored<CylinderEquipmentRecord>,
+  mix: PlanningGasMix | null,
+  asOf = new Date().toISOString(),
+  requiredValveType?: GasPlanCylinder['requiredValveType'],
+) {
+  const warnings: string[] = [];
+  const schedule = deriveCylinderInspectionSchedule(cylinder);
+  const currentMonth = monthAt(asOf);
+  const hydroDue = cylinder.hydroDueAt ?? schedule.hydroDueAt;
+  const visualDue = cylinder.visualDueAt ?? schedule.visualDueAt;
+  if (!hydroDue) warnings.push('Cylinder hydro test date/due date is missing.');
+  else if (hydroDue < currentMonth)
+    warnings.push(`Cylinder hydro test is overdue (due ${hydroDue}).`);
+  if (!visualDue)
+    warnings.push('Cylinder visual inspection date/due date is missing.');
+  else if (visualDue < currentMonth)
+    warnings.push(`Cylinder visual inspection is overdue (due ${visualDue}).`);
+  if (cylinder.valveType !== 'DIN' && cylinder.valveType !== 'A-CLAMP')
+    warnings.push('Cylinder valve type is unknown.');
+  else if (requiredValveType && cylinder.valveType !== requiredValveType)
+    warnings.push(
+      `Cylinder valve type ${cylinder.valveType} does not match required ${requiredValveType}.`,
+    );
+  if ((mix?.oxygenFraction ?? 0) > 0.4) {
+    if (!cylinder.oxygenClean)
+      warnings.push(
+        'Cylinder has no current O₂-clean evidence for the selected oxygen-rich mix.',
+      );
+    else if (!cylinder.oxygenCleanUntil)
+      warnings.push(
+        'Cylinder O₂-clean expiry is missing for the selected oxygen-rich mix.',
+      );
+    else if (monthAt(cylinder.oxygenCleanUntil) < currentMonth)
+      warnings.push(
+        `Cylinder O₂-clean evidence is overdue for the selected oxygen-rich mix (due ${monthAt(cylinder.oxygenCleanUntil)}).`,
+      );
+  }
+  if (cylinder.cylinderStatus === 'service')
+    warnings.push('Cylinder is marked as requiring service.');
+  if (cylinder.cylinderStatus === 'retired' || cylinder.retired)
+    warnings.push('Cylinder is retired and must not be planned for use.');
+  return warnings;
+}
+
+export function cylinderPickerSummary(
+  cylinder: Stored<CylinderEquipmentRecord>,
+  fills: Array<Stored<CylinderFillRecord>>,
+  analyses: Array<Stored<GasAnalysisRecord>>,
+  asOf = new Date().toISOString(),
+) {
+  const evidence = selectedFillEvidence(
+    { id: 'picker', role: 'primary', cylinderEquipmentId: cylinder.entityId },
+    fills,
+  );
+  const analysis = analysisForFillChain(
+    evidence,
+    { id: 'picker', role: 'primary', cylinderEquipmentId: cylinder.entityId },
+    analyses,
+  );
+  const mix = analysis
+    ? gasMixLabel(analysis.oxygenFraction, analysis.heliumFraction)
+    : evidence.selectedEvent
+      ? gasMixLabel(
+          evidence.selectedEvent.oxygenFraction,
+          evidence.selectedEvent.heliumFraction,
+        )
+      : 'No gas';
+  const schedule = deriveCylinderInspectionSchedule(cylinder);
+  const visualDue = cylinder.visualDueAt ?? schedule.visualDueAt;
+  const testState = !visualDue
+    ? 'visual date missing'
+    : visualDue < monthAt(asOf)
+      ? `visual overdue ${visualDue}`
+      : `visual due ${visualDue}`;
+  return [
+    `Cyl ${cylinder.cylinderNumber || cylinder.entityId}`,
+    cylinder.waterVolumeLiters == null ? 'volume unknown' : `${cylinder.waterVolumeLiters} L`,
+    mix,
+    evidence.selectedEvent?.pressureBar == null
+      ? 'pressure unknown'
+      : `${evidence.selectedEvent.pressureBar} bar`,
+    analysis ? 'analysis current' : 'analysis missing/stale',
+    testState,
+  ].join(' · ');
+}
+
+/** Keeps composition evidence attached to its root fill through usage-only pressure events. */
 export function projectGasCylinder(
   cylinder: GasPlanCylinder,
   plan: Pick<GasPlanRecord, 'plannedDepthM' | 'plannedBottomTimeMin' | 'rmvRateLitresMin' | 'depthSegments'> & { cylinders?: GasPlanCylinder[] },
   fills: Array<Stored<CylinderFillRecord>>,
   analyses: Array<Stored<import('./loadouts-gas').GasAnalysisRecord>>,
   equipment: Array<Stored<CylinderEquipmentRecord>>,
+  asOf = new Date().toISOString(),
 ): GasCylinderProjection {
   const warnings: string[] = [];
-  const cylinderFills = fills.filter((row) => row.cylinderEquipmentId === cylinder.cylinderEquipmentId).sort((a, b) => b.filledAt.localeCompare(a.filledAt));
-  const fill = cylinder.fillId ? cylinderFills.find((row) => row.entityId === cylinder.fillId) ?? null : cylinderFills[0] ?? null;
-  const selectedFillIsOlder = Boolean(fill && cylinderFills[0] && fill.entityId !== cylinderFills[0].entityId);
+  const evidence = selectedFillEvidence(cylinder, fills);
+  const fill = evidence.selectedEvent;
+  const selectedFillIsOlder = Boolean(fill && !evidence.selectedChainIsCurrent);
+  const selectedPressureEventIsOlder = Boolean(
+    cylinder.fillId &&
+      fill &&
+      evidence.latestEvent &&
+      evidence.selectedChainIsCurrent &&
+      fill.entityId !== evidence.latestEvent.entityId,
+  );
   const chosenAnalysis = cylinder.analysisId ? analyses.find((row) => row.entityId === cylinder.analysisId) ?? null : null;
-  const eligible = fill && !selectedFillIsOlder ? analyses.filter((row) => row.fillId === fill.entityId && row.cylinderEquipmentId === fill.cylinderEquipmentId && Date.parse(row.analysedAt) >= Date.parse(fill.filledAt)).sort((a, b) => b.analysedAt.localeCompare(a.analysedAt)) : [];
-  const analysis = chosenAnalysis ? eligible.find((row) => row.entityId === chosenAnalysis.entityId) ?? null : eligible[0] ?? null;
+  const analysis = analysisForFillChain(evidence, cylinder, analyses);
   if (!fill) warnings.push('No current fill evidence.');
   if (selectedFillIsOlder) warnings.push('Selected fill is older than the latest recorded fill; its analysis is not current evidence.');
+  if (selectedPressureEventIsOlder)
+    warnings.push(
+      'Selected pressure event is older than the latest pressure event for this fill chain.',
+    );
   if (chosenAnalysis && !analysis) warnings.push('Selected analysis is stale or belongs to another fill.');
   const manual = cylinder.mixSource === 'manual';
   const candidateMix = manual
@@ -293,7 +481,10 @@ export function projectGasCylinder(
       : null;
   const mix = candidateMix && validateMix(candidateMix) ? candidateMix : null;
   const analysisState = manual ? 'manual' : analysis ? 'current' : chosenAnalysis || analyses.some((row) => row.cylinderEquipmentId === cylinder.cylinderEquipmentId) ? 'stale' : 'unknown';
-  if (!mix) warnings.push('No valid current gas analysis or explicitly recorded manual mix.');
+  if (!mix) {
+    warnings.push('No valid current gas analysis or explicitly recorded manual mix.');
+    if (fill) warnings.push('Current fill chain has no valid analysis provenance.');
+  }
   if (manual) warnings.push('Manual mix is not verified analysis evidence.');
   const depthM = cylinder.depthM ?? plan.plannedDepthM ?? null;
   const targetPpo2 = cylinder.targetPpo2 ?? 1.4;
@@ -302,8 +493,34 @@ export function projectGasCylinder(
   if (depthM != null && modM != null && depthM > modM) warnings.push('Planned depth exceeds calculated MOD for the chosen target PPO₂.');
   if (ppo2AtDepth != null && ppo2AtDepth > targetPpo2) warnings.push('Calculated PPO₂ exceeds the chosen target.');
   const item = equipment.find((row) => row.entityId === cylinder.cylinderEquipmentId);
-  const volume = gasVolumeLitres(cylinder.waterVolumeOverrideL ?? item?.waterVolumeLiters, cylinder.startPressureBar ?? (selectedFillIsOlder ? null : fill?.pressureBar), cylinder.reservePressureBar);
+  const pressureBar = cylinder.startPressureBar ?? (selectedFillIsOlder ? null : fill?.pressureBar) ?? null;
+  const startPressureKind = cylinder.startPressureBar != null
+    ? cylinder.startPressureSource === 'owner-override'
+      ? 'owner-override'
+      : 'plan-snapshot'
+    : cylinder.fillId
+      ? 'selected-fill'
+      : fill
+        ? 'current-pressure'
+        : 'unavailable';
+  const startPressureEvidence: GasCylinderProjection['startPressureEvidence'] = {
+    kind: startPressureKind,
+    pressureBar,
+    eventId: fill?.entityId ?? null,
+    label:
+      startPressureKind === 'owner-override'
+        ? 'Owner-entered override'
+        : startPressureKind === 'plan-snapshot'
+          ? 'Explicit plan snapshot'
+          : startPressureKind === 'selected-fill'
+            ? `Selected fill/pressure event ${fill?.entityId ?? ''}`.trim()
+            : startPressureKind === 'current-pressure'
+              ? `Current cylinder pressure · ${fill?.eventType ?? 'fill'} event ${fill?.entityId ?? ''}`.trim()
+              : 'No pressure evidence',
+  };
+  const volume = gasVolumeLitres(cylinder.waterVolumeOverrideL ?? item?.waterVolumeLiters, pressureBar, cylinder.reservePressureBar);
   if (!volume) warnings.push('Cylinder water volume, start pressure or reserve is missing/invalid.');
+  if (item) warnings.push(...cylinderReadinessWarnings(item, mix, asOf, cylinder.requiredValveType));
   const multiCylinder = (plan.cylinders?.length ?? 1) > 1;
   const assignedSegments = plan.depthSegments?.length && plan.depthSegments.every((row) => row.gasCylinderId && plan.cylinders?.some((item) => item.id === row.gasCylinderId));
   const segments = plan.depthSegments?.length
@@ -312,12 +529,28 @@ export function projectGasCylinder(
   const requiredLitres = multiCylinder && !assignedSegments ? null : segments.length ? gasRequiredForSegments(plan.rmvRateLitresMin, segments) : null;
   if (multiCylinder && !assignedSegments) warnings.push('Total gas needed unavailable until depth/time segments are assigned to a cylinder.');
   if (requiredLitres != null && volume && requiredLitres > volume.usableLitres) warnings.push('Estimated gas required exceeds usable gas after reserve.');
+  const provenanceChain = evidence.rootFill
+    ? [
+        `Filled at ${evidence.rootFill.location || evidence.rootFill.provider || 'location not recorded'} on ${evidence.rootFill.filledAt} · fill ${evidence.rootFill.entityId} · source ${evidence.rootFill.source}`,
+        ...(analysis
+          ? [
+              `analysed at ${analysis.analysedAt} · analysis ${analysis.entityId} · O₂ ${Math.round((analysis.oxygenFraction ?? 0) * 100)}% · He ${Math.round((analysis.heliumFraction ?? 0) * 100)}% · analyser ${analysis.analysedByPersonId || 'not recorded'} · source ${analysis.source ?? 'recorded'}`,
+            ]
+          : []),
+        ...evidence.selectedChain
+          .filter((row) => row.entityId !== evidence.rootFill?.entityId)
+          .map(fillEventLabel),
+      ]
+    : [];
   return {
     mix,
     mixProvenance: manual ? 'Manual entry, not verified analysis' : analysis ? `Analysis ${analysis.entityId} · ${analysis.analysedAt}` : 'No current analysis',
     analysisState,
     fillId: fill?.entityId ?? null,
+    rootFillId: evidence.selectedRootId,
     analysisId: analysis?.entityId ?? null,
+    startPressureEvidence,
+    provenanceChain,
     modM,
     ppo2AtDepth,
     nitrogenFraction: mix ? nitrogenFraction(mix) : null,
@@ -403,10 +636,16 @@ export function deriveRmvBaseline(
 export function warnGasPlan(
   input: Pick<
     GasPlanRecord,
-    'plannedDepthM' | 'plannedBottomTimeMin' | 'rmvRateLitresMin' | 'cylinders'
+    | 'plannedDepthM'
+    | 'plannedBottomTimeMin'
+    | 'rmvRateLitresMin'
+    | 'depthSegments'
+    | 'cylinders'
   >,
   fills: Array<Stored<CylinderFillRecord>>,
   equipment: Array<Stored<CylinderEquipmentRecord>> = [],
+  analyses: Array<Stored<GasAnalysisRecord>> = [],
+  asOf = new Date().toISOString(),
 ) {
   const warnings: string[] = [];
   if (!input.cylinders.length) warnings.push('No cylinders selected.');
@@ -415,9 +654,7 @@ export function warnGasPlan(
   if (input.rmvRateLitresMin == null)
     warnings.push('Using no RMV baseline; enter a conservative override.');
   for (const cylinder of input.cylinders) {
-    const fill = cylinder.fillId
-      ? fills.find((candidate) => candidate.entityId === cylinder.fillId)
-      : null;
+    const fill = selectedFillEvidence(cylinder, fills).selectedEvent;
     if (!fill)
       warnings.push(`${cylinder.role} cylinder has no current fill evidence.`);
     if (cylinder.startPressureBar == null && fill?.pressureBar == null)
@@ -429,12 +666,22 @@ export function warnGasPlan(
     );
     if (cylinder.cylinderEquipmentId && !equipmentItem?.waterVolumeLiters)
       warnings.push(`${cylinder.role} cylinder has no water-volume evidence.`);
+    warnings.push(
+      ...projectGasCylinder(
+        cylinder,
+        input,
+        fills,
+        analyses,
+        equipment,
+        asOf,
+      ).warnings,
+    );
   }
   return [...new Set(warnings)];
 }
 
 export async function planningPageSources() {
-  const [bookings, gasPlans, divePlans, dives, fills, analyses] =
+  const [bookings, gasPlans, divePlans, dives, fills, analyses, cylinders] =
     await Promise.all([
       listDivingCalendarBookings(),
       listGasPlans().catch(() => [] as StoredGasPlanRecord[]),
@@ -442,6 +689,7 @@ export async function planningPageSources() {
       listDives(),
       listCylinderFills(),
       listGasAnalyses(),
+      listCylinderInventory(),
     ]);
   return {
     bookings,
@@ -450,6 +698,7 @@ export async function planningPageSources() {
     dives,
     fills,
     analyses,
+    cylinders,
     rmvBaseline: deriveRmvBaseline(dives),
   };
 }
