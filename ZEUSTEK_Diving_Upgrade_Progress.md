@@ -800,3 +800,16 @@ Owner-returned SOL_RETURN_INSTRUCTIONS are focused diagnostic/review input, not 
 - Read-only production smoke passed on the canonical URL. Two existing cylinders displayed ID/serial/volume/gas/pressure/analysis/test/provenance evidence. Logbook retained exactly 66 Dives. Owner records changed: no. Live write acceptance was not performed because no T12.5E write approval was given.
 - GitHub product-sync commit: `d5a8322908023d5c529da8d6efbaa3b870ebcaf2`; final main merge SHA is recorded in the owner-facing report.
 - Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.
+
+## T12.5F Rental / temporary cylinder mode — 2026-09-21
+
+- Status: COMPLETE. T12.6R, T13 and T14 were not started.
+- Baseline: app `1.0.46` / Sites `117` / deployment `appgdep_6ab18c6b2f2c81918f67c5eb06a529c0` / GitHub main `56ec161cd58ac637d14149f3015eae75f09dbe10`.
+- Release: app `1.0.47` / Sites `118` / deployment `appgdep_6ab1a4d3493c81919ec59b29ce0fcc5d` / published product source `5ba71a87fa39565dcafa926ed4e0046424e5c08e` / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_f81c3e7837888191b39210c5fb1fed94`.
+- Rollback: app `1.0.46` / Sites `117` / deployment `appgdep_6ab18c6b2f2c81918f67c5eb06a529c0` / source `d5a8322908023d5c529da8d6efbaa3b870ebcaf2`.
+- Rental/temporary cylinders remain self-contained Gas Plan snapshots and do not require or automatically create canonical cylinders. Owned-cylinder selection and provenance remain unchanged.
+- Focused and release checks: 5 files / 31 tests passed. Full regression: 88 files / 496 tests passed. Typecheck, production build, final PWA precache 201, targeted lint and diff check passed.
+- Production read-only smoke passed with no console errors or horizontal overflow. Owner-approved write acceptance saved and reopened exactly one standalone synthetic rental Gas Plan, verified EAN32 analysis/date, volume/pressure, MOD/PPO2, 79-minute NDL, 22.7-minute gas-time and reserve evidence, then deleted it through the app.
+- Cleanup verified: Gas Planning returned to zero plans; no synthetic cylinder existed; no real owner records changed; Logbook retained exactly 66 Dives.
+- Detailed evidence: `docs/T12-5F-release-record.md`. Final GitHub main merge SHA is reported in the owner-facing completion report.
+- Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.
