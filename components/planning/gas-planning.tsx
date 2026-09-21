@@ -33,11 +33,15 @@ import {
   fractionLabel,
   planningPageSources,
   projectGasCylinder,
+  rentalCylinderRecreationalInput,
   saveGasPlan,
   saveGasPlanNotesToDivePlan,
+  saveRentalCylinderAsOwned,
+  setGasCylinderSourceMode,
   warnGasPlan,
   type GasPlanCylinder,
   type GasPlanRecord,
+  type RentalCylinderSnapshot,
   type RmvBaseline,
   type StoredGasPlanRecord,
 } from '../../lib/offline/planning-pages';
@@ -253,14 +257,16 @@ export function GasPlanning({ go }: Props) {
           <h2>Planning context</h2>
           <ul>
             <li>Link an existing Dive Plan</li>
-            <li>Select canonical cylinders, fills and gas analyses</li>
+            <li>Select canonical cylinders or add rental/temporary snapshots</li>
             <li>Use a Logbook RMV baseline or enter a manual override</li>
             <li>Compare basic gas needed with available usable gas</li>
             <li>Keep reserve, turn, end-pressure and team notes together</li>
           </ul>
           <h3>Evidence source</h3>
           <p>
-            Cylinders, fills and analyses come from Loadouts &amp; Cylinder Gas.
+            Owned cylinders, fills and analyses come from Cylinders &amp; Gas.
+            Rental snapshots remain inside their Gas Plan unless explicitly
+            saved as an owned cylinder.
           </p>
           <button
             className="focus-secondary"
@@ -393,6 +399,7 @@ export function GasPlanning({ go }: Props) {
                       .map((cylinder, index) => {
                         const fill = fillFor(cylinder, fills);
                         const analysis = analysisFor(cylinder, analyses, fill, fills);
+                        const projection = projections[index];
                         const equipmentItem = equipment.find(
                           (item) =>
                             item.entityId === cylinder.cylinderEquipmentId,
@@ -405,17 +412,23 @@ export function GasPlanning({ go }: Props) {
                             <ZeusTekIcon id="dive-cylinder" size="card" />
                             <span>
                               <b>
-                                {equipmentItem?.name ?? `Cylinder ${index + 1}`}
+                                {cylinder.sourceMode === 'rental'
+                                  ? `${cylinder.rentalSnapshot?.label || `Cylinder ${index + 1}`} · rental / temporary`
+                                  : equipmentItem?.name ?? `Cylinder ${index + 1}`}
                               </b>
                               <small>
                                 {cylinder.role} ·{' '}
-                                {analysis ? fractionLabel(analysis.oxygenFraction, analysis.heliumFraction) : cylinder.mixSource === 'manual' ? 'Manual mix (unverified)' : 'Analysed mix unknown'}
+                                {projection?.mix
+                                  ? fractionLabel(projection.mix.oxygenFraction, projection.mix.heliumFraction)
+                                  : analysis
+                                    ? fractionLabel(analysis.oxygenFraction, analysis.heliumFraction)
+                                    : cylinder.mixSource === 'manual'
+                                      ? 'Manual mix (unverified)'
+                                      : 'Analysed mix unknown'}
                               </small>
                             </span>
                             <em>
-                              {cylinder.startPressureBar ??
-                                fill?.pressureBar ??
-                                '—'}{' '}
+                              {projection?.startPressureEvidence.pressureBar ?? '—'}{' '}
                               bar
                             </em>
                           </article>
@@ -700,6 +713,9 @@ function GasPlanEditor({
   const [error, setError] = useState('');
   const [draftWarningsOpen, setDraftWarningsOpen] = useState(false);
   const [detailsCylinderId, setDetailsCylinderId] = useState<string | null>(null);
+  const [saveAsCylinderId, setSaveAsCylinderId] = useState<string | null>(null);
+  const [conversionStatus, setConversionStatus] = useState('');
+  const [conversionBusy, setConversionBusy] = useState(false);
   const [helpTopic, setHelpTopic] = useState<'PPO₂ / MOD' | 'EAD' | 'Gas volume' | 'Agency table' | 'Bühlmann reference' | 'Depth limits' | null>(null);
   const linkedPlan = divePlans.find(plan => plan.entityId === draft.divePlanId);
   const linkedTrip = linkedPlan?.tripId ? trips.find(trip => trip.entityId === linkedPlan.tripId) : null;
@@ -708,16 +724,38 @@ function GasPlanEditor({
   const flight = linkedPlan ? flightProximity(linkedPlan, linkedTrip) : null;
   const recProjection = useMemo(() => {
     try {
+      const projectedCylinders = draft.cylinders.map((cylinder) =>
+        projectGasCylinder(cylinder, draft, fills, analyses, equipment),
+      );
       const analysedGases = draft.cylinders.flatMap((cylinder, index) => {
-        const projected = projectGasCylinder(cylinder, draft, fills, analyses, equipment);
+        const projected = projectedCylinders[index]!;
         return projected.analysisState === 'current' && projected.mix && projected.mix.heliumFraction === 0
-          ? [{ label: `Analysed fill ${index + 1}`, oxygenFraction: projected.mix.oxygenFraction, source: 'analysed-fill' as const,
+          ? [{ label: cylinder.sourceMode === 'rental' ? `Rental · ${cylinder.rentalSnapshot?.label || `cylinder ${index + 1}`} · ${fractionLabel(projected.mix.oxygenFraction, projected.mix.heliumFraction)}` : `Analysed fill ${index + 1}`, oxygenFraction: projected.mix.oxygenFraction, source: 'analysed-fill' as const,
             analysed: true, evidence: projected.mixProvenance }] : [];
       });
       const repetitiveDive = Boolean(linkedPlan && ((linkedPlan.diveNumberOfDay ?? 1) > 1 || dives.some(dive => dive.date === linkedPlan.startDate)));
-      return { snapshot: buildRecreationalGasSnapshot({ ...recInput, analysedGases, repetitiveDive }), error: null };
+      const baseInput = { ...recInput, analysedGases, repetitiveDive };
+      const rentalIndex = draft.cylinders.findIndex(
+        (cylinder) => cylinder.sourceMode === 'rental',
+      );
+      const effectiveInput = rentalIndex >= 0
+        ? rentalCylinderRecreationalInput(
+            baseInput,
+            draft.cylinders[rentalIndex]!,
+            projectedCylinders[rentalIndex]!,
+          )
+        : baseInput;
+      return {
+        snapshot: buildRecreationalGasSnapshot(effectiveInput),
+        input: effectiveInput,
+        error: null,
+      };
     } catch (cause) {
-      return { snapshot: null, error: cause instanceof Error ? cause.message : 'Recreational planner inputs are invalid.' };
+      return {
+        snapshot: null,
+        input: recInput,
+        error: cause instanceof Error ? cause.message : 'Recreational planner inputs are invalid.',
+      };
     }
   }, [recInput, draft, fills, analyses, equipment, linkedPlan, dives]);
   const draftWarnings = useMemo(
@@ -740,6 +778,28 @@ function GasPlanEditor({
       ),
     });
   }
+  function updateRentalSnapshot(
+    id: string,
+    patch: Partial<RentalCylinderSnapshot>,
+  ) {
+    update({
+      cylinders: draft.cylinders.map((row) =>
+        row.id === id && row.rentalSnapshot
+          ? { ...row, rentalSnapshot: { ...row.rentalSnapshot, ...patch } }
+          : row,
+      ),
+    });
+  }
+  function changeCylinderSource(
+    id: string,
+    sourceMode: 'owned' | 'rental',
+  ) {
+    update({
+      cylinders: draft.cylinders.map((row) =>
+        row.id === id ? setGasCylinderSourceMode(row, sourceMode) : row,
+      ),
+    });
+  }
   function updateSegment(id: string, patch: Partial<GasDepthSegment>) {
     update({ depthSegments: (draft.depthSegments ?? []).map(row => row.id === id ? { ...row, ...patch } : row) });
   }
@@ -749,6 +809,7 @@ function GasPlanEditor({
         ...draft.cylinders,
         {
           id: crypto.randomUUID(),
+          sourceMode: 'owned',
           role: 'bottom',
           cylinderEquipmentId: equipment[0]?.entityId ?? null,
           fillId: null,
@@ -761,6 +822,34 @@ function GasPlanEditor({
         },
       ],
     });
+  }
+  async function confirmSaveAsCylinder() {
+    const slot = draft.cylinders.find((row) => row.id === saveAsCylinderId);
+    if (!slot?.rentalSnapshot) return;
+    setConversionBusy(true);
+    setConversionStatus('');
+    try {
+      const result = await saveRentalCylinderAsOwned(
+        slot.rentalSnapshot,
+        true,
+      );
+      updateRentalSnapshot(slot.id, {
+        savedCylinderId: result.id,
+        savedAsCylinderAt: nowIso(),
+      });
+      setConversionStatus(
+        `Owned cylinder ${result.id} created. This Gas Plan remains a rental snapshot until you explicitly change its source.`,
+      );
+      setSaveAsCylinderId(null);
+    } catch (reason) {
+      setConversionStatus(
+        reason instanceof Error
+          ? reason.message
+          : 'The owned cylinder could not be created.',
+      );
+    } finally {
+      setConversionBusy(false);
+    }
   }
   function selectDivePlan(divePlanId: string) {
     const selectedPlan = divePlans.find((plan) => plan.entityId === divePlanId);
@@ -788,8 +877,8 @@ function GasPlanEditor({
         const blockers = recreationalReadinessBlockers(recProjection.snapshot);
         if (blockers.length) throw new Error(`Cannot mark ready: ${blockers.join(' ')}`);
       }
-      await saveGasPlan({ ...draft, plannedDepthM: recInput.plannedDepthM, rmvRateLitresMin: recInput.ownRmvLMin,
-        gradientFactorLow: recInput.gfLow, gradientFactorHigh: recInput.gfHigh,
+      await saveGasPlan({ ...draft, plannedDepthM: recProjection.input.plannedDepthM, rmvRateLitresMin: recProjection.input.ownRmvLMin,
+        gradientFactorLow: recProjection.input.gfLow, gradientFactorHigh: recProjection.input.gfHigh,
         recGasPlan101: recProjection.snapshot, warnings: draftWarnings });
       saved();
     } catch (reason) {
@@ -846,7 +935,8 @@ function GasPlanEditor({
           </button>
         </header>
 
-        <RecreationalGasPlanner input={recInput} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => setRecInput(current => ({ ...current, ...patch }))}/>
+        <RecreationalGasPlanner input={recProjection.input} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => setRecInput(current => ({ ...current, ...patch }))}/>
+        {draft.cylinders.some((cylinder) => cylinder.sourceMode === 'rental') ? <p className={styles.provenance}>Rental cylinder volume, current pressure and analysed gas are taken from the saved rental snapshot below and drive the recreational calculation.</p> : null}
         {draftWarnings.length ? <button type="button" className={styles.warningIconButton} aria-label="Open draft Gas Plan warnings" aria-haspopup="dialog" title={draftWarnings.join('\n')} onClick={() => setDraftWarningsOpen(true)}><AlertTriangle size={16} aria-hidden="true" /> {draftWarnings.length} warning(s) · details</button> : null}
         <div className={styles.editorGrid}>
           <label>
@@ -1014,6 +1104,22 @@ function GasPlanEditor({
                 </select>
               </label>
               <label>
+                Cylinder source
+                <select
+                  value={cylinder.sourceMode ?? 'owned'}
+                  onChange={(event) =>
+                    changeCylinderSource(
+                      cylinder.id,
+                      event.target.value as 'owned' | 'rental',
+                    )
+                  }
+                >
+                  <option value="owned">Use owned cylinder</option>
+                  <option value="rental">Use rental / temporary cylinder</option>
+                </select>
+              </label>
+              {(cylinder.sourceMode ?? 'owned') === 'owned' ? <>
+              <label>
                 Cylinder
                 <select
                   value={cylinder.cylinderEquipmentId ?? ''}
@@ -1125,9 +1231,11 @@ function GasPlanEditor({
               <label>Gas type<select value={cylinder.gasType??''} onChange={event=>updateCylinder(cylinder.id,{gasType:event.target.value as NonNullable<GasPlanCylinder['gasType']>})}><option value="">Not classified</option><option value="air">Air</option><option value="nitrox">Nitrox</option><option value="trimix">Trimix</option><option value="heliox">Heliox</option><option value="other">Other</option></select></label>
               <label>Mix evidence<select value={cylinder.mixSource??'analysis'} onChange={event=>updateCylinder(cylinder.id,{mixSource:event.target.value as NonNullable<GasPlanCylinder['mixSource']>})}><option value="analysis">Linked current analysis</option><option value="manual">Manual entry (unverified)</option></select></label>
               {cylinder.mixSource==='manual'&&<><label>Manual O₂ fraction (0–1)<input type="number" min="0" max="1" step="0.01" value={cylinder.manualOxygenFraction??''} onChange={event=>updateCylinder(cylinder.id,{manualOxygenFraction:event.target.value?Number(event.target.value):null})}/></label><label>Manual He fraction (0–1)<input type="number" min="0" max="1" step="0.01" value={cylinder.manualHeliumFraction??''} onChange={event=>updateCylinder(cylinder.id,{manualHeliumFraction:event.target.value?Number(event.target.value):null})}/></label></>}
+              </> : null}
               <label>Target PPO₂ (bar) <button type="button" className={styles.infoButton} title={GAS_HELP['PPO₂ / MOD']} aria-label="About PPO2 and MOD" onClick={()=>setHelpTopic('PPO₂ / MOD')}>ⓘ</button><input type="number" min="0" max="2" step="0.05" value={cylinder.targetPpo2??1.4} onChange={event=>updateCylinder(cylinder.id,{targetPpo2:event.target.value?Number(event.target.value):null})}/></label>
               <label>Depth conservatism (m)<input type="number" min="0" step="0.5" value={cylinder.conservatismM??0} onChange={event=>updateCylinder(cylinder.id,{conservatismM:event.target.value?Number(event.target.value):null})}/></label>
               <label>Segment / switch depth (m)<input type="number" min="0" step="0.5" value={cylinder.depthM??''} onChange={event=>updateCylinder(cylinder.id,{depthM:event.target.value?Number(event.target.value):null})}/></label>
+              {(cylinder.sourceMode ?? 'owned') === 'owned' ? <>
               <label>Water volume override (L, optional)<input type="number" min="0" step="0.1" value={cylinder.waterVolumeOverrideL??''} onChange={event=>updateCylinder(cylinder.id,{waterVolumeOverrideL:event.target.value?Number(event.target.value):null})}/></label>
               <label>
                 Start bar
@@ -1173,6 +1281,92 @@ function GasPlanEditor({
                   </button>
                 ) : null}
               </p>
+              </> : cylinder.rentalSnapshot ? <>
+                <label>
+                  Rental cylinder label
+                  <input
+                    value={cylinder.rentalSnapshot.label}
+                    placeholder="Boat AL80, Rental 12 L…"
+                    onChange={(event) => updateRentalSnapshot(cylinder.id, { label: event.target.value })}
+                  />
+                </label>
+                <label>
+                  Cylinder material / type
+                  <select
+                    value={cylinder.rentalSnapshot.cylinderType}
+                    onChange={(event) => updateRentalSnapshot(cylinder.id, { cylinderType: event.target.value as RentalCylinderSnapshot['cylinderType'] })}
+                  >
+                    <option value="aluminium">Aluminium</option>
+                    <option value="steel">Steel</option>
+                    <option value="unknown">Unknown</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+                <label>Water volume (L)<input type="number" min="0" step="0.1" value={cylinder.rentalSnapshot.waterVolumeL ?? ''} onChange={(event) => updateRentalSnapshot(cylinder.id, { waterVolumeL: event.target.value ? Number(event.target.value) : null })}/></label>
+                <label>Working pressure (bar)<input type="number" min="0" value={cylinder.rentalSnapshot.workingPressureBar ?? ''} onChange={(event) => updateRentalSnapshot(cylinder.id, { workingPressureBar: event.target.value ? Number(event.target.value) : null })}/></label>
+                <label>Start pressure (bar)<input type="number" min="0" value={cylinder.rentalSnapshot.startPressureBar ?? ''} onChange={(event) => updateRentalSnapshot(cylinder.id, { startPressureBar: event.target.value ? Number(event.target.value) : null })}/></label>
+                <label>Remaining pressure (bar, if known)<input type="number" min="0" value={cylinder.rentalSnapshot.remainingPressureBar ?? ''} onChange={(event) => updateRentalSnapshot(cylinder.id, { remainingPressureBar: event.target.value ? Number(event.target.value) : null })}/></label>
+                <label>
+                  Valve type
+                  <select value={cylinder.rentalSnapshot.valveType} onChange={(event) => updateRentalSnapshot(cylinder.id, { valveType: event.target.value as RentalCylinderSnapshot['valveType'] })}>
+                    <option value="DIN">DIN</option>
+                    <option value="A-CLAMP">A-clamp</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                </label>
+                <label>
+                  Gas
+                  <select
+                    value={cylinder.rentalSnapshot.gasType}
+                    onChange={(event) => {
+                      const gasType = event.target.value as RentalCylinderSnapshot['gasType'];
+                      updateRentalSnapshot(cylinder.id, {
+                        gasType,
+                        ...(gasType === 'air' ? { oxygenFraction: 0.21, heliumFraction: 0 } : {}),
+                      });
+                    }}
+                  >
+                    <option value="air">Air</option>
+                    <option value="nitrox">Nitrox</option>
+                    <option value="custom">Custom FO₂</option>
+                  </select>
+                </label>
+                <label>Analysed O₂ (%)<input type="number" min="0" max="100" step="0.1" value={cylinder.rentalSnapshot.oxygenFraction == null ? '' : cylinder.rentalSnapshot.oxygenFraction * 100} onChange={(event) => updateRentalSnapshot(cylinder.id, { oxygenFraction: event.target.value ? Number(event.target.value) / 100 : null })}/></label>
+                <label>Analysed He (%)<input type="number" min="0" max="100" step="0.1" value={(cylinder.rentalSnapshot.heliumFraction ?? 0) * 100} onChange={(event) => updateRentalSnapshot(cylinder.id, { heliumFraction: event.target.value ? Number(event.target.value) / 100 : 0 })}/></label>
+                <label>
+                  Analysis state
+                  <select value={cylinder.rentalSnapshot.analysisStatus} onChange={(event) => updateRentalSnapshot(cylinder.id, { analysisStatus: event.target.value as RentalCylinderSnapshot['analysisStatus'] })}>
+                    <option value="current">Current for this rental fill</option>
+                    <option value="stale">Stale</option>
+                    <option value="missing">Not analysed / unknown</option>
+                  </select>
+                </label>
+                <label>
+                  Analyser / evidence source
+                  <select value={cylinder.rentalSnapshot.analysisSource} onChange={(event) => updateRentalSnapshot(cylinder.id, { analysisSource: event.target.value as RentalCylinderSnapshot['analysisSource'] })}>
+                    <option value="analysed-by-me">Analysed by me</option>
+                    <option value="analysed-by-operator">Analysed by operator</option>
+                    <option value="label-only">Label only</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                </label>
+                <label>Analysis date/time<input type="datetime-local" value={cylinder.rentalSnapshot.analysedAt?.slice(0, 16) ?? ''} onChange={(event) => updateRentalSnapshot(cylinder.id, { analysedAt: event.target.value ? new Date(event.target.value).toISOString() : null })}/></label>
+                <label>
+                  Fill / operator source
+                  <select value={cylinder.rentalSnapshot.fillSource} onChange={(event) => updateRentalSnapshot(cylinder.id, { fillSource: event.target.value as RentalCylinderSnapshot['fillSource'] })}>
+                    <option value="dive-centre">Dive centre</option>
+                    <option value="day-boat">Day boat</option>
+                    <option value="liveaboard">Liveaboard</option>
+                    <option value="resort">Resort</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                </label>
+                <label className={styles.wide}>Rental cylinder notes<input value={cylinder.rentalSnapshot.notes} onChange={(event) => updateRentalSnapshot(cylinder.id, { notes: event.target.value })}/></label>
+                <p className={styles.wide}>Rental cylinder — service history not recorded in ZeusTek. Verify with operator.</p>
+                <button type="button" className="focus-secondary" onClick={() => setSaveAsCylinderId(cylinder.id)} disabled={Boolean(cylinder.rentalSnapshot.savedCylinderId)}>
+                  {cylinder.rentalSnapshot.savedCylinderId ? `Saved as cylinder ${cylinder.rentalSnapshot.savedCylinderId}` : 'Save as cylinder'}
+                </button>
+              </> : null}
               <label>
                 End bar
                 <input
@@ -1235,7 +1429,9 @@ function GasPlanEditor({
                 className="focus-secondary"
                 onClick={() => setDetailsCylinderId(cylinder.id)}
               >
-                Cylinder details &amp; provenance
+                {cylinder.sourceMode === 'rental'
+                  ? 'Rental snapshot details'
+                  : 'Cylinder details & provenance'}
               </button>
               <button
                 className="focus-secondary danger"
@@ -1258,6 +1454,7 @@ function GasPlanEditor({
             </p>
           ) : null}
         </div>
+        {conversionStatus ? <output className={styles.wide}>{conversionStatus}</output> : null}
 
         <div className={styles.editorSectionHeading}><h3>Depth/time segments</h3><button className="focus-secondary" onClick={()=>update({depthSegments:[...(draft.depthSegments??[]),{id:crypto.randomUUID(),depthM:null,minutes:null,gasCylinderId:null,note:''}]})}><Plus size={14}/> Add segment</button></div>
         <p className={styles.provenance}>Each segment uses its recorded depth, minutes and selected gas. These rows do not calculate decompression obligations or a no-stop limit. <button type="button" className={styles.infoButton} aria-label="About gas volume" onClick={()=>setHelpTopic('Gas volume')}>ⓘ</button></p>
@@ -1286,6 +1483,36 @@ function GasPlanEditor({
         </footer>
       </AccessibleDialog>
       {draftWarningsOpen ? <AccessibleDialog label="Draft Gas Plan warnings" close={() => setDraftWarningsOpen(false)} className="focus-modal"><header><h2>Draft Gas Plan warnings</h2><button type="button" className="focus-icon" data-dialog-close aria-label="Close draft warnings" onClick={() => setDraftWarningsOpen(false)}><X /></button></header><ul className={styles.warningList}>{draftWarnings.map(warning => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDraftWarningsOpen(false)}>Close</button></footer></AccessibleDialog> : null}
+      {saveAsCylinderId ? <AccessibleDialog label="Confirm Save as cylinder" close={() => setSaveAsCylinderId(null)} className="focus-modal"><header><div><span className="focus-eyebrow">EXPLICIT CONVERSION</span><h2>Save rental snapshot as an owned cylinder?</h2></div><button type="button" className="focus-icon" data-dialog-close aria-label="Cancel Save as cylinder" onClick={() => setSaveAsCylinderId(null)}><X /></button></header><p>This creates one canonical record in Cylinders &amp; Gas. The Gas Plan remains a rental/temporary snapshot and retains its original operator and analysis evidence.</p><p>No owned cylinder, fill or analysis record is created until you confirm.</p><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setSaveAsCylinderId(null)}>Cancel</button><button type="button" className="focus-primary" disabled={conversionBusy} onClick={() => void confirmSaveAsCylinder()}>{conversionBusy ? 'Saving…' : 'Confirm Save as cylinder'}</button></footer></AccessibleDialog> : null}
+      {detailsSlot?.sourceMode === 'rental' && detailsSlot.rentalSnapshot && detailsProjection ? (
+        <AccessibleDialog
+          label={`${detailsSlot.rentalSnapshot.label || 'Rental cylinder'} snapshot details`}
+          close={() => setDetailsCylinderId(null)}
+          className="focus-modal"
+        >
+          <header>
+            <div>
+              <span className="focus-eyebrow">RENTAL / TEMPORARY CYLINDER</span>
+              <h2>{detailsSlot.rentalSnapshot.label || 'Unlabelled rental cylinder'}</h2>
+              <p>Saved inside this Gas Plan. No canonical cylinder ID is required.</p>
+            </div>
+            <button type="button" className="focus-icon" data-dialog-close aria-label="Close rental cylinder details" onClick={() => setDetailsCylinderId(null)}><X /></button>
+          </header>
+          <dl className={styles.evidenceGrid}>
+            <div><dt>Material / type</dt><dd>{detailsSlot.rentalSnapshot.cylinderType}</dd></div>
+            <div><dt>Water volume</dt><dd>{detailsSlot.rentalSnapshot.waterVolumeL == null ? 'Not recorded' : `${detailsSlot.rentalSnapshot.waterVolumeL} L`}</dd></div>
+            <div><dt>Working / current pressure</dt><dd>{detailsSlot.rentalSnapshot.workingPressureBar ?? '—'} / {detailsProjection.startPressureEvidence.pressureBar ?? '—'} bar</dd></div>
+            <div><dt>Valve</dt><dd>{detailsSlot.rentalSnapshot.valveType}</dd></div>
+            <div><dt>Gas</dt><dd>{detailsProjection.mix ? fractionLabel(detailsProjection.mix.oxygenFraction, detailsProjection.mix.heliumFraction) : 'Unknown'}</dd></div>
+            <div><dt>Analysis</dt><dd>{detailsSlot.rentalSnapshot.analysisStatus} · {detailsSlot.rentalSnapshot.analysisSource} · {detailsSlot.rentalSnapshot.analysedAt ?? 'date not recorded'}</dd></div>
+            <div><dt>Fill/operator source</dt><dd>{detailsSlot.rentalSnapshot.fillSource}</dd></div>
+            <div><dt>Owned copy</dt><dd>{detailsSlot.rentalSnapshot.savedCylinderId ?? 'Not created'}</dd></div>
+          </dl>
+          <p>Rental cylinder — service history not recorded in ZeusTek. Verify with operator.</p>
+          {detailsProjection.warnings.length ? <><h3>Readiness warnings</h3><ul className={styles.warningList}>{detailsProjection.warnings.map((warning) => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul></> : null}
+          <footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDetailsCylinderId(null)}>Close</button></footer>
+        </AccessibleDialog>
+      ) : null}
       {detailsSlot && detailsItem && detailsProjection ? (
         <AccessibleDialog
           label={`${detailsItem.name} cylinder details and provenance`}
