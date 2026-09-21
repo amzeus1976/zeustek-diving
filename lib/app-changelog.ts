@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.48',
+    date: '2026-09-22',
+    title: 'Recreational no-stop gas planning workbench',
+    changes: [
+      'Completed the recreational no-stop planner with selectable ZH-L16B or ZH-L16C, preserved Gradient Factors, controlling-compartment evidence and explicit unavailable reasons without generating decompression schedules.',
+      'Separated NDL, gas-limited time, owner maximum duration and planned working time in one readiness summary with MOD, PPO₂, EAD, reserve and limiting-factor evidence.',
+      'Connected canonical owned-cylinder and rental-snapshot volume, pressure, fill, analysis, valve and inspection provenance to the saved Gas Plan without changing cylinder or Dive records.',
+      'Added best and conservative mix comparisons while allowing lower-oxygen actual gas, plus explicit analysis, MOD/PPO₂, gas sufficiency and recreational-scope warnings.',
+      'Added calculated emergency reserve phases, rule-of-thirds comparison and route/checkpoint gas and pressure evidence for return, shore, wreck and multilevel recreational plans.',
+    ],
+  },
+  {
     version: '1.0.47',
     date: '2026-09-21',
     title: 'Rental and temporary cylinder planning',

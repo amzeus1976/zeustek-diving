@@ -33,6 +33,7 @@ import {
   fractionLabel,
   planningPageSources,
   projectGasCylinder,
+  ownedCylinderRecreationalInput,
   rentalCylinderRecreationalInput,
   saveGasPlan,
   saveGasPlanNotesToDivePlan,
@@ -242,8 +243,9 @@ export function GasPlanning({ go }: Props) {
             <span className="focus-eyebrow">PLANNING</span>
             <h1>Gas Planning</h1>
             <p>
-              Link a Dive Plan, select current cylinder evidence and compare a
-              basic gas estimate. This is not decompression software.
+              Plan recreational no-stop gas, NDL, reserves and route
+              checkpoints from current cylinder evidence. This does not
+              generate decompression schedules.
             </p>
           </div>
         </div>
@@ -259,7 +261,8 @@ export function GasPlanning({ go }: Props) {
             <li>Link an existing Dive Plan</li>
             <li>Select canonical cylinders or add rental/temporary snapshots</li>
             <li>Use a Logbook RMV baseline or enter a manual override</li>
-            <li>Compare basic gas needed with available usable gas</li>
+            <li>Compare NDL and gas time as separate limits</li>
+            <li>Review emergency and route/checkpoint reserves</li>
             <li>Keep reserve, turn, end-pressure and team notes together</li>
           </ul>
           <h3>Evidence source</h3>
@@ -270,9 +273,9 @@ export function GasPlanning({ go }: Props) {
           </p>
           <button
             className="focus-secondary"
-            onClick={() => go?.('Loadouts & Gas')}
+            onClick={() => go?.('Cylinders & Gas')}
           >
-            Open Loadouts &amp; Gas
+            Open Cylinders &amp; Gas
           </button>
           <button
             className="focus-secondary"
@@ -452,9 +455,12 @@ export function GasPlanning({ go }: Props) {
               >
                 <div className={styles.summaryGrid}>
                   {selected.recGasPlan101 ? <>
+                    <span><small>Readiness</small><b>{selected.recGasPlan101.readiness}</b></span>
                     <span><small>Selected gas NDL</small><b>{selected.recGasPlan101.gasCandidates.find(row => row.selected)?.ndl.minutes ?? '—'} min</b></span>
                     <span><small>Gas-limited time</small><b>{selected.recGasPlan101.gasCandidates.find(row => row.selected)?.gasLimitedTimeMin?.toFixed(1) ?? '—'} min</b></span>
                     <span><small>Emergency reserve</small><b>{selected.recGasPlan101.reserve.selectedLitres?.toFixed(0) ?? '—'} L</b></span>
+                    <span><small>Limiting factor</small><b>{selected.recGasPlan101.limitingFactor}</b></span>
+                    <span><small>Planned working time</small><b>{selected.recGasPlan101.plannedWorkingTimeMin ?? '—'} min</b></span>
                   </> : null}
                   <span>
                     <small>Planned depth</small>
@@ -643,7 +649,7 @@ function GasDetail({
           disabled={!divePlan}
           onClick={() => void linkNotes()}
         >
-          <Save size={14} /> Save notes to Dive Plan
+          <Save size={14} /> Send summary to Dive Planning Centre
         </button>
         <button className="focus-secondary danger" onClick={remove}>
           <Trash2 size={14} /> Delete gas plan
@@ -703,9 +709,19 @@ function GasPlanEditor({
       startPressureBar: saved?.startPressureBar ?? null,
       ownRmvLMin: saved?.ownRmvLMin ?? item?.rmvRateLitresMin ?? rmvBaseline.litresPerMinute,
       buddyRmvLMin: saved?.buddyRmvLMin ?? null,
+      ownRmvSource: saved?.ownRmvSource ?? (item?.rmvSource === 'logbook-average' ? 'profile-average' : item?.rmvSource === 'manual' ? 'owner-entered' : rmvBaseline.litresPerMinute != null ? 'profile-average' : 'unknown'),
+      buddyRmvSource: saved?.buddyRmvSource ?? 'owner-fallback',
       reserveStrategy: saved?.reserveStrategy ?? 'most-conservative',
-      ascentRateMMin: saved?.ascentRateMMin ?? 9,
-      ownerMaxDurationMin: saved?.ownerMaxDurationMin ?? item?.plannedBottomTimeMin ?? null,
+      ascentRateMMin: saved?.ascentRateMMin ?? item?.ascentRateMMin ?? 9,
+      ownerMaxDurationMin: saved?.ownerMaxDurationMin ?? null,
+      plannedWorkingTimeMin: saved?.plannedWorkingTimeMin ?? item?.plannedBottomTimeMin ?? null,
+      cylinderSourceMode: saved?.cylinderSourceMode ?? 'manual',
+      cylinderSourceId: saved?.cylinderSourceId ?? null,
+      cylinderSourceLabel: saved?.cylinderSourceLabel ?? null,
+      pressureSource: saved?.pressureSource ?? null,
+      fillProvenance: saved?.fillProvenance ?? [],
+      analysisProvenance: saved?.analysisProvenance ?? null,
+      sourceWarnings: saved?.sourceWarnings ?? [],
       routeSegments: saved?.routeSegments ?? [], tableProvider: null,
     };
   });
@@ -734,17 +750,44 @@ function GasPlanEditor({
             analysed: true, evidence: projected.mixProvenance }] : [];
       });
       const repetitiveDive = Boolean(linkedPlan && ((linkedPlan.diveNumberOfDay ?? 1) > 1 || dives.some(dive => dive.date === linkedPlan.startDate)));
-      const baseInput = { ...recInput, analysedGases, repetitiveDive };
-      const rentalIndex = draft.cylinders.findIndex(
-        (cylinder) => cylinder.sourceMode === 'rental',
-      );
-      const effectiveInput = rentalIndex >= 0
+      const baseInput = {
+        ...recInput,
+        analysedGases,
+        repetitiveDive,
+        ownRmvLMin: draft.rmvRateLitresMin ?? recInput.ownRmvLMin,
+        ownRmvSource: draft.rmvSource === 'logbook-average' ? 'profile-average' as const : draft.rmvSource === 'manual' ? 'owner-entered' as const : recInput.ownRmvSource ?? 'unknown' as const,
+        plannedDepthM: draft.plannedDepthM ?? recInput.plannedDepthM,
+        plannedWorkingTimeMin: draft.plannedBottomTimeMin ?? recInput.plannedWorkingTimeMin,
+      };
+      const planningIndex = draft.cylinders.findIndex((cylinder) => cylinder.role === 'primary') >= 0
+        ? draft.cylinders.findIndex((cylinder) => cylinder.role === 'primary')
+        : draft.cylinders.findIndex((cylinder) => cylinder.role === 'bottom') >= 0
+          ? draft.cylinders.findIndex((cylinder) => cylinder.role === 'bottom')
+          : draft.cylinders.length ? 0 : -1;
+      const planningCylinder = planningIndex >= 0 ? draft.cylinders[planningIndex]! : null;
+      const effectiveInput = planningCylinder?.sourceMode === 'rental'
         ? rentalCylinderRecreationalInput(
             baseInput,
-            draft.cylinders[rentalIndex]!,
-            projectedCylinders[rentalIndex]!,
+            planningCylinder,
+            projectedCylinders[planningIndex]!,
           )
-        : baseInput;
+        : planningCylinder?.cylinderEquipmentId
+          ? ownedCylinderRecreationalInput(
+              baseInput,
+              planningCylinder,
+              projectedCylinders[planningIndex]!,
+              equipment.find((row) => row.entityId === planningCylinder.cylinderEquipmentId),
+            )
+          : {
+              ...baseInput,
+              cylinderSourceMode: 'manual' as const,
+              cylinderSourceId: null,
+              cylinderSourceLabel: null,
+              pressureSource: null,
+              fillProvenance: [],
+              analysisProvenance: null,
+              sourceWarnings: [],
+            };
       return {
         snapshot: buildRecreationalGasSnapshot(effectiveInput),
         input: effectiveInput,
@@ -877,7 +920,9 @@ function GasPlanEditor({
         const blockers = recreationalReadinessBlockers(recProjection.snapshot);
         if (blockers.length) throw new Error(`Cannot mark ready: ${blockers.join(' ')}`);
       }
-      await saveGasPlan({ ...draft, plannedDepthM: recProjection.input.plannedDepthM, rmvRateLitresMin: recProjection.input.ownRmvLMin,
+      await saveGasPlan({ ...draft, plannedDepthM: recProjection.input.plannedDepthM,
+        plannedBottomTimeMin: recProjection.input.plannedWorkingTimeMin,
+        rmvRateLitresMin: recProjection.input.ownRmvLMin,
         gradientFactorLow: recProjection.input.gfLow, gradientFactorHigh: recProjection.input.gfHigh,
         recGasPlan101: recProjection.snapshot, warnings: draftWarnings });
       saved();
@@ -935,7 +980,17 @@ function GasPlanEditor({
           </button>
         </header>
 
-        <RecreationalGasPlanner input={recProjection.input} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => setRecInput(current => ({ ...current, ...patch }))}/>
+        <RecreationalGasPlanner input={recProjection.input} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => {
+          setRecInput(current => ({ ...current, ...patch }));
+          update({
+            ...('plannedDepthM' in patch ? { plannedDepthM: patch.plannedDepthM } : {}),
+            ...('plannedWorkingTimeMin' in patch ? { plannedBottomTimeMin: patch.plannedWorkingTimeMin } : {}),
+            ...('ownRmvLMin' in patch ? { rmvRateLitresMin: patch.ownRmvLMin, rmvSource: patch.ownRmvLMin == null ? null : 'manual', rmvSourceDiveIds: [] } : {}),
+            ...('gfLow' in patch ? { gradientFactorLow: patch.gfLow } : {}),
+            ...('gfHigh' in patch ? { gradientFactorHigh: patch.gfHigh } : {}),
+            ...('ascentRateMMin' in patch ? { ascentRateMMin: patch.ascentRateMMin } : {}),
+          });
+        }}/>
         {draft.cylinders.some((cylinder) => cylinder.sourceMode === 'rental') ? <p className={styles.provenance}>Rental cylinder volume, current pressure and analysed gas are taken from the saved rental snapshot below and drive the recreational calculation.</p> : null}
         {draftWarnings.length ? <button type="button" className={styles.warningIconButton} aria-label="Open draft Gas Plan warnings" aria-haspopup="dialog" title={draftWarnings.join('\n')} onClick={() => setDraftWarningsOpen(true)}><AlertTriangle size={16} aria-hidden="true" /> {draftWarnings.length} warning(s) · details</button> : null}
         <div className={styles.editorGrid}>
@@ -1460,7 +1515,7 @@ function GasPlanEditor({
         <p className={styles.provenance}>Each segment uses its recorded depth, minutes and selected gas. These rows do not calculate decompression obligations or a no-stop limit. <button type="button" className={styles.infoButton} aria-label="About gas volume" onClick={()=>setHelpTopic('Gas volume')}>ⓘ</button></p>
         <div className={styles.editorCylinderList}>{(draft.depthSegments??[]).map((segment,index)=><fieldset key={segment.id}><legend>Segment {index+1}</legend><label>Depth (m)<input type="number" min="0" step="0.5" value={segment.depthM??''} onChange={event=>updateSegment(segment.id,{depthM:event.target.value?Number(event.target.value):null})}/></label><label>Time (min)<input type="number" min="0" value={segment.minutes??''} onChange={event=>updateSegment(segment.id,{minutes:event.target.value?Number(event.target.value):null})}/></label><label>Gas / cylinder<select value={segment.gasCylinderId??''} onChange={event=>updateSegment(segment.id,{gasCylinderId:event.target.value||null})}><option value="">Unassigned (all-gas estimate)</option>{draft.cylinders.map((row,i)=><option key={row.id} value={row.id}>{row.role} · cylinder {i+1}</option>)}</select></label><label>Segment note<input value={segment.note??''} onChange={event=>updateSegment(segment.id,{note:event.target.value})}/></label><button className="focus-secondary danger" onClick={()=>update({depthSegments:(draft.depthSegments??[]).filter(row=>row.id!==segment.id)})}>Remove segment</button></fieldset>)}</div>
 
-        <p className={styles.provenance}>T12.6R calculates no-stop limits only. It does not create or edit decompression schedules. Legacy manual-stop notes remain stored on older Gas Plans.</p>
+        <p className={styles.provenance}>This is not decompression software. T12.6R calculates no-stop limits only and does not create or edit decompression schedules. Legacy manual-stop notes remain stored on older Gas Plans.</p>
 
         <p className={styles.safetyWarning}>{GAS_PLANNING_CAUTION}</p>
 
