@@ -5,7 +5,7 @@ import {configureDiveStore,listLocalDiveRecords,saveLocalRecord} from '../lib/of
 import {localBackupPayload,restoreLocalPayload} from '../lib/offline/local-backup';
 import {createDiveDraftFromPlan,loadOriginatingPlan} from '../lib/offline/dive-context';
 import {deleteEquipmentSet,saveEquipment} from '../lib/offline/dive-planning';
-import {applyReusableLoadout,cloneReusableLoadout,deriveCylinderCurrentState,listCylinderFills,listGasAnalyses,listReusableLoadouts,saveCylinderFill,saveGasAnalysis,saveReusableLoadout,type ReusableLoadoutRecord} from '../lib/offline/loadouts-gas';
+import {applyReusableLoadout,cloneReusableLoadout,deriveCylinderCurrentState,deriveCylinderInspectionSchedule,listCylinderFills,listCylinderInventory,listGasAnalyses,listReusableLoadouts,recordCylinderGasUsage,saveCylinderFill,saveCylinderProfile,saveGasAnalysis,saveReusableLoadout} from '../lib/offline/loadouts-gas';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore('t05-test');await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
 afterEach(()=>vi.unstubAllGlobals());
 describe('T05 canonical offline records and historical assignments',()=>{
@@ -47,6 +47,36 @@ describe('T05 canonical offline records and historical assignments',()=>{
     expect(deriveCylinderCurrentState({waterVolumeLiters:12},fills,analyses).analysisState).toBe('stale');
     await saveEquipment({entityId:'cylinder',name:'Legacy editor change',category:'Cylinder',manufacturer:'',model:'',serialNumber:'',purchasedAt:'',lastServiceAt:'',nextServiceAt:'',notes:'',retired:false});
     expect((await listLocalDiveRecords('equipment'))[0]).toMatchObject({waterVolumeLiters:12,futureFact:'Keep'});expect(fetch).not.toHaveBeenCalled();
+  });
+  it('stores new physical cylinders in their own table while retaining legacy Equipment cylinders',async()=>{
+    await saveCylinderProfile({entityId:'canonical-cylinder',name:'12L backgas',manufacturer:'Faber',serialNumber:'CYL-001',threadType:'M25 x 2',countryCode:'UK',cylinderMaterial:'Steel',waterVolumeLiters:12,emptyWeightKg:14.2,wallThicknessMm:4.1,workingPressureBar:232,testPressureBar:348,birthDate:'2024-02',hydroTestStamps:[{facility:'TEST',testedAt:'2025-08-01',stampMark:'TEST 25/08'}],visualInspection:{inspectedAt:'2026-01-01',dueAt:'2028-07-01',stickerColour:'Blue quadrant sticker'}});
+    await saveLocalRecord('equipment',{entityId:'legacy-cylinder',name:'Legacy ali cylinder',category:'Cylinder',serialNumber:'LEG-1'});
+    expect(await listLocalDiveRecords('cylinder')).toHaveLength(1);
+    const inventory=await listCylinderInventory();
+    expect(inventory.map((item)=>[item.entityId,item.recordStorageKind])).toEqual(expect.arrayContaining([['canonical-cylinder','cylinder'],['legacy-cylinder','equipment']]));
+    expect(inventory.find((item)=>item.entityId==='canonical-cylinder')).toMatchObject({threadType:'M25 x 2',testPressureBar:348,visualInspection:{stickerColour:'Blue quadrant sticker'}});
+    expect(await listLocalDiveRecords('equipment')).toHaveLength(1);
+  });
+  it('records pressure used or remaining without losing the current fill analysis provenance',async()=>{
+    const fill=await saveCylinderFill({cylinderEquipmentId:'usage-cylinder',filledAt:'2026-09-01T10:00:00Z',pressureBar:232,oxygenFraction:.32,heliumFraction:0,provider:'Test fill',notes:'',source:'recorded'});
+    await saveGasAnalysis({cylinderEquipmentId:'usage-cylinder',fillId:fill.id,analysedAt:'2026-09-01T10:05:00Z',oxygenFraction:.32,heliumFraction:0,analysedByPersonId:null,attachmentIds:[],notes:''});
+    await recordCylinderGasUsage({cylinderEquipmentId:'usage-cylinder',recordedAt:'2026-09-01T12:00:00Z',pressureUsedBar:82,notes:'Dive use'});
+    let state=deriveCylinderCurrentState({waterVolumeLiters:12},await listCylinderFills(),await listGasAnalyses());
+    expect(state.latestFill).toMatchObject({pressureBar:150,eventType:'usage',pressureUsedBar:82,originFillId:fill.id});
+    expect(state.analysisState).toBe('current');
+    await recordCylinderGasUsage({cylinderEquipmentId:'usage-cylinder',recordedAt:'2026-09-01T13:00:00Z',remainingPressureBar:100,notes:'Gauge reading'});
+    state=deriveCylinderCurrentState({waterVolumeLiters:12},await listCylinderFills(),await listGasAnalyses());
+    expect(state.latestFill).toMatchObject({pressureBar:100,eventType:'adjustment',pressureUsedBar:50,originFillId:fill.id});
+    expect(state.analysisState).toBe('current');
+  });
+  it('assigns a separate incrementing cylinder ID and derives the alternating month-only test cycle',async()=>{
+    await saveCylinderProfile({name:'First cylinder',serialNumber:'SERIAL-A',valveType:'DIN',lastTestType:'hydro',lastTestAt:'2026-02'});
+    await saveCylinderProfile({name:'Second cylinder',serialNumber:'SERIAL-B',valveType:'A-CLAMP',lastTestType:'visual',lastTestAt:'2028-08'});
+    const inventory=(await listCylinderInventory()).sort((left,right)=>String(left.cylinderNumber).localeCompare(String(right.cylinderNumber)));
+    expect(inventory.map((item)=>[item.cylinderNumber,item.serialNumber,item.valveType])).toEqual([['01','SERIAL-A','DIN'],['02','SERIAL-B','A-CLAMP']]);
+    expect(inventory[0]).toMatchObject({lastTestType:'hydro',lastTestAt:'2026-02',hydroDueAt:'2031-02',visualDueAt:'2028-08'});
+    expect(inventory[1]).toMatchObject({lastTestType:'visual',lastTestAt:'2028-08',hydroDueAt:null,visualDueAt:'2031-02'});
+    expect(deriveCylinderInspectionSchedule({hydroTestAt:'2026-02',visualTestAt:'2028-08'})).toEqual({latestHydro:'2026-02',latestVisualQualifyingTest:'2028-08',hydroDueAt:'2031-02',visualDueAt:'2031-02'});
   });
   it('rejects cross-cylinder or pre-fill analyses without creating evidence',async()=>{
     const fill=await saveCylinderFill({cylinderEquipmentId:'a',filledAt:'2026-09-01T10:00:00Z',pressureBar:200,oxygenFraction:.21,heliumFraction:0,provider:'',notes:'',source:'recorded'});

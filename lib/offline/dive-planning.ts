@@ -682,6 +682,8 @@ export interface PersonRecord extends BaseRecord {
 
   agency: string;
 
+  membershipId?: string;
+
   highestQualification: string;
 
   membershipNumber: string;
@@ -696,6 +698,81 @@ export interface PersonRecord extends BaseRecord {
   operatorId?: string;
   profileImageId?: string;
   profileImage?: import('./dive-images').CardImage | null;
+
+  /** P01 additive profile fields. Legacy name/role fields remain canonical-compatible. */
+  forename?: string;
+  surname?: string;
+  displayName?: string;
+  roles?: {
+    ownerProfile?: boolean;
+    buddy?: boolean;
+    instructor?: boolean;
+    diveOperator?: boolean;
+    diveCentre?: boolean;
+    boatCharter?: boolean;
+    guide?: boolean;
+    emergencyContact?: boolean;
+    other?: boolean;
+  };
+  preferredTopBuddyPersonId?: string;
+  highestKnownQualification?: string;
+  highestRecreationalCertification?: string;
+  highestTechnicalCertification?: string;
+  highestProfessionalCertification?: string;
+  maxAllowedDepthM?: number | null;
+  maxAllowedDepthSource?: 'auto' | 'owner-entered' | 'certification-derived' | 'unknown';
+  certificationFlags?: {
+    deep?: boolean; wreck?: boolean; wreckPenetration?: boolean; drysuit?: boolean;
+    nitrox?: boolean; trimix?: boolean; cavern?: boolean; cave?: boolean;
+    tec40?: boolean; tec45?: boolean; tec50?: boolean; tec65Plus?: boolean;
+    rescue?: boolean; divemaster?: boolean; instructor?: boolean;
+  };
+  certificationEvidenceNotes?: string;
+  totalLinkedDives?: number | null;
+  maxDepthM?: number | null;
+  averageSac?: number | null;
+  averageRmv?: number | null;
+  boatDives?: number | null;
+  shoreDives?: number | null;
+  nightDives?: number | null;
+  wreckDives?: number | null;
+  technicalDives?: number | null;
+  lastDivedTogether?: string;
+  topBuddyRank?: number | null;
+  topBuddyCount?: number | null;
+  derivedStatsUpdatedAt?: string;
+  derivedStatsSource?: string;
+  profileValueSources?: Record<string, 'auto-logbook' | 'auto-certifications' | 'owner-entered' | 'certification-derived' | 'unknown'>;
+  manualOverrideFields?: string[];
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
+  address?: string;
+  postcode?: string;
+  location?: string;
+  contactVisibility?: 'private' | 'household' | 'planning';
+  currentDiveOperatorId?: string;
+  instructorAgency?: string;
+  instructorNumber?: string;
+  instructorPhone?: string;
+  instructorEmail?: string;
+  instructorUrl?: string;
+  instructorSpecialties?: string[];
+  instructorActive?: boolean;
+  instructorNotes?: string;
+  operatorName?: string;
+  operatorType?: 'dive-centre' | 'liveaboard' | 'charter-boat' | 'club' | 'independent-instructor' | 'resort' | 'other';
+  website?: string;
+  operatorPhone?: string;
+  operatorEmail?: string;
+  operatorAddress?: string;
+  operatorPostcode?: string;
+  operatorLocation?: string;
+  bookingUrl?: string;
+  operatorEmergencyContact?: string;
+  linkedTripIds?: string[];
+  linkedDivePlanIds?: string[];
+  linkedDiveIds?: string[];
+  operatorNotes?: string;
 
   notes: string;
 
@@ -934,6 +1011,8 @@ export const DEFAULT_GEAR_MANUFACTURERS = [
 
   'Cressi',
 
+  'Faber',
+
   'Fourth Element',
 
   'Garmin',
@@ -941,6 +1020,8 @@ export const DEFAULT_GEAR_MANUFACTURERS = [
   'Halcyon',
 
   'Hollis',
+
+  'Luxfer',
 
   'Mares',
 

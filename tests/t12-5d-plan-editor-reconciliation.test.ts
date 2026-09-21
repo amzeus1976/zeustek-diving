@@ -25,7 +25,9 @@ describe('Sites108 Plan editor baseline reconciliation', () => {
     const source = editor();
     expect(source).toContain('aria-label="Matching People"');
     expect(source).toContain('aria-label="Selected Dive team"');
-    expect(source).toContain('>+ Add {person.name}</button>');
+    expect(source).toMatch(
+      />\+ Add \{(?:person\.name|personDisplayName\(person\))\}<\/button>/,
+    );
     expect(source).toContain('aria-label="Matching Dive Skills"');
     expect(source).toContain('aria-label="Selected planned Skills"');
     expect(source).toContain('>+ Add {skillRecordName(skill)}</button>');

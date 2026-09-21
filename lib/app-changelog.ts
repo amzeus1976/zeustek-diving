@@ -1,6 +1,50 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.45',
+    date: '2026-09-19',
+    title: 'Cylinder identity and inspection cycle correction',
+    changes: [
+      'Separated the automatic two-digit cylinder inventory ID from the manufacturer serial number and reused the shared Equipment manufacturer catalogue.',
+      'Restricted valve type to DIN or A-CLAMP and changed manufacture, inspection and O₂-clean dates to month/year entry.',
+      'Replaced competing Hydro and Visual date fields with one latest-test type/date: Hydro includes Visual, Hydro is due after 60 months and Visual after 30 months.',
+      'Added manual pressure-used and remaining-pressure entries while retaining the originating fill mix and gas-analysis provenance.',
+      'Preserved existing cylinder, fill, analysis, People and Dive records through the same canonical local-first path.',
+    ],
+  },
+  {
+    version: '1.0.44',
+    date: '2026-09-19',
+    title: 'Legacy Person evidence compatibility',
+    changes: [
+      'Carried explicit legacy Person qualification evidence into new Dive Plan team snapshots, including a recorded Rescue Diver status, without inferring an unsupported depth limit.',
+      'Retained the app1.0.43 People & Operators foundation, privacy defaults, dedicated cylinder inventory and all existing canonical records unchanged.',
+    ],
+  },
+  {
+    version: '1.0.43',
+    date: '2026-09-19',
+    title: 'People, operators and My Profile foundation',
+    changes: [
+      'Promoted People & Operators into the canonical profile source for My Profile, buddies, instructors, dive centres, charter operators, guides and emergency contacts without creating a second people store.',
+      'Added additive identity, role, certification, depth, contact, instructor and operator fields plus an explicit, privacy-aware derived-stat refresh from canonical Logbook and Certification evidence.',
+      'Connected Overview My Profile and Top Buddy cards to Person profiles while defaulting legacy contact visibility to private.',
+      'Kept Dive Planning search-and-add controls and now snapshots recorded rescue, depth, qualification and specialty evidence when a Person is added to a team.',
+      'Preserved all existing Person and Dive IDs, local-first event/outbox sync, Plan-to-Dive provenance, the dedicated cylinder inventory and all 66 Dive logs.',
+    ],
+  },
+  {
+    version: '1.0.42',
+    date: '2026-09-19',
+    title: 'Dedicated cylinder inventory',
+    changes: [
+      'Moved physical-cylinder creation and management out of Equipment and into the existing Cylinders & Gas table while keeping non-cylinder gear in Equipment.',
+      'Added cylinder identity, stamped construction, PW/PT pressure, manufacture, hydro-stamp and visual-sticker evidence fields alongside existing fill, analysis, service and media history.',
+      'Preserved legacy cylinder IDs, loadout references, fills and analyses; older Equipment-backed cylinders remain compatible while new cylinders use the additive local-first cylinder record kind.',
+      'Added dependency-aware cylinder deletion that never removes canonical Dive records or linked fill and analysis evidence.',
+    ],
+  },
+  {
     version: '1.0.41',
     date: '2026-09-19',
     title: 'Workflow, Insights and Gear refinement',
