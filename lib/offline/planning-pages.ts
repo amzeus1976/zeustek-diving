@@ -17,6 +17,7 @@ import {
   listCylinderInventory,
   listCylinderFills,
   listGasAnalyses,
+  saveCylinderProfile,
   type CylinderEquipmentRecord,
   type CylinderFillRecord,
   type GasAnalysisRecord,
@@ -32,7 +33,11 @@ import {
   type ManualStop,
   type PlanningGasMix,
 } from './gas-planning-foundation';
-import type { RecreationalGasSnapshot } from './recreational-gas-planner';
+import type {
+  GasChoice,
+  RecreationalGasInput,
+  RecreationalGasSnapshot,
+} from './recreational-gas-planner';
 
 export type BookingKind =
   | 'dive'
@@ -71,8 +76,38 @@ export type StoredDivingCalendarBooking = Stored<DivingCalendarBooking>;
 
 export type GasPlanStatus = 'draft' | 'planned' | 'ready' | 'used' | 'archived';
 export type GasPlanRmvSource = 'logbook-average' | 'manual' | null;
+export interface RentalCylinderSnapshot {
+  label: string;
+  cylinderType: 'aluminium' | 'steel' | 'unknown' | 'other';
+  waterVolumeL: number | null;
+  workingPressureBar: number | null;
+  startPressureBar: number | null;
+  remainingPressureBar: number | null;
+  valveType: 'DIN' | 'A-CLAMP' | 'unknown';
+  gasType: 'air' | 'nitrox' | 'custom';
+  oxygenFraction: number | null;
+  heliumFraction: number | null;
+  analysisStatus: 'current' | 'stale' | 'missing';
+  analysisSource:
+    | 'analysed-by-me'
+    | 'analysed-by-operator'
+    | 'label-only'
+    | 'unknown';
+  analysedAt: string | null;
+  fillSource:
+    | 'dive-centre'
+    | 'day-boat'
+    | 'liveaboard'
+    | 'resort'
+    | 'unknown';
+  notes: string;
+  savedCylinderId?: string | null;
+  savedAsCylinderAt?: string | null;
+}
 export interface GasPlanCylinder {
   id: string;
+  sourceMode?: 'owned' | 'rental';
+  rentalSnapshot?: RentalCylinderSnapshot | null;
   cylinderEquipmentId?: string | null;
   fillId?: string | null;
   analysisId?: string | null;
@@ -92,6 +127,48 @@ export interface GasPlanCylinder {
   reservePressureBar?: number | null;
   turnPressureBar?: number | null;
   notes?: string | null;
+}
+
+export function setGasCylinderSourceMode(
+  cylinder: GasPlanCylinder,
+  sourceMode: 'owned' | 'rental',
+): GasPlanCylinder {
+  if (sourceMode === 'owned') {
+    return {
+      ...cylinder,
+      sourceMode,
+      rentalSnapshot: null,
+      cylinderEquipmentId: null,
+      fillId: null,
+      analysisId: null,
+    };
+  }
+  return {
+    ...cylinder,
+    sourceMode,
+    cylinderEquipmentId: null,
+    fillId: null,
+    analysisId: null,
+    startPressureBar: null,
+    startPressureSource: null,
+    rentalSnapshot: cylinder.rentalSnapshot ?? {
+      label: '',
+      cylinderType: 'unknown',
+      waterVolumeL: null,
+      workingPressureBar: null,
+      startPressureBar: null,
+      remainingPressureBar: null,
+      valveType: 'unknown',
+      gasType: 'air',
+      oxygenFraction: 0.21,
+      heliumFraction: 0,
+      analysisStatus: 'missing',
+      analysisSource: 'unknown',
+      analysedAt: null,
+      fillSource: 'unknown',
+      notes: '',
+    },
+  };
 }
 export interface GasPlanRecord {
   /** Additive T12.6R snapshot in the existing gas-plan store. */
@@ -272,6 +349,7 @@ export interface GasCylinderProjection {
       | 'owner-override'
       | 'selected-fill'
       | 'current-pressure'
+      | 'rental-snapshot'
       | 'unavailable';
     pressureBar: number | null;
     eventId: string | null;
@@ -444,6 +522,241 @@ export function cylinderPickerSummary(
   ].join(' · ');
 }
 
+function rentalGasLabel(snapshot: RentalCylinderSnapshot) {
+  return `Rental · ${snapshot.label || 'temporary cylinder'} · ${fractionLabel(
+    snapshot.oxygenFraction,
+    snapshot.heliumFraction,
+  )}`;
+}
+
+function rentalAnalysisIsCurrent(snapshot: RentalCylinderSnapshot) {
+  return (
+    snapshot.analysisStatus === 'current' &&
+    (snapshot.analysisSource === 'analysed-by-me' ||
+      snapshot.analysisSource === 'analysed-by-operator') &&
+    Boolean(snapshot.analysedAt && Number.isFinite(Date.parse(snapshot.analysedAt)))
+  );
+}
+
+export function rentalCylinderRecreationalInput(
+  input: RecreationalGasInput,
+  cylinder: GasPlanCylinder,
+  projection: GasCylinderProjection,
+): RecreationalGasInput {
+  const snapshot = cylinder.rentalSnapshot;
+  if (
+    cylinder.sourceMode !== 'rental' ||
+    !snapshot ||
+    !projection.mix ||
+    projection.mix.heliumFraction > 0
+  )
+    return input;
+  const label = rentalGasLabel(snapshot);
+  const gas: GasChoice = {
+    label,
+    oxygenFraction: projection.mix.oxygenFraction,
+    source:
+      projection.analysisState === 'current' ? 'analysed-fill' : 'custom',
+    analysed: projection.analysisState === 'current',
+    evidence: projection.mixProvenance,
+  };
+  return {
+    ...input,
+    selectedGasLabel: label,
+    cylinderWaterVolumeL: snapshot.waterVolumeL,
+    startPressureBar:
+      snapshot.remainingPressureBar ?? snapshot.startPressureBar,
+    analysedGases:
+      projection.analysisState === 'current' ? [gas] : [],
+    customGas: projection.analysisState === 'current' ? null : gas,
+  };
+}
+
+export async function saveRentalCylinderAsOwned(
+  snapshot: RentalCylinderSnapshot,
+  confirmed: boolean,
+) {
+  if (!confirmed)
+    throw new Error(
+      'Confirm Save as cylinder before creating owned equipment.',
+    );
+  return saveCylinderProfile({
+    name: snapshot.label.trim() || 'Rental cylinder',
+    cylinderMaterial:
+      snapshot.cylinderType === 'aluminium'
+        ? 'Aluminium'
+        : snapshot.cylinderType === 'steel'
+          ? 'Steel'
+          : snapshot.cylinderType === 'other'
+            ? 'Other'
+            : '',
+    waterVolumeLiters: snapshot.waterVolumeL,
+    workingPressureBar: snapshot.workingPressureBar,
+    valveType:
+      snapshot.valveType === 'DIN' || snapshot.valveType === 'A-CLAMP'
+        ? snapshot.valveType
+        : null,
+    notes: [
+      `Created from rental Gas Plan snapshot · source ${snapshot.fillSource}.`,
+      snapshot.notes.trim(),
+    ]
+      .filter(Boolean)
+      .join(' '),
+  });
+}
+
+function projectRentalCylinder(
+  cylinder: GasPlanCylinder,
+  plan: Pick<
+    GasPlanRecord,
+    'plannedDepthM' | 'plannedBottomTimeMin' | 'rmvRateLitresMin' | 'depthSegments'
+  > & { cylinders?: GasPlanCylinder[] },
+): GasCylinderProjection {
+  const snapshot = cylinder.rentalSnapshot;
+  const warnings: string[] = [
+    'Rental cylinder — service history not recorded in ZeusTek. Verify with operator.',
+  ];
+  if (!snapshot) {
+    return {
+      mix: null,
+      mixProvenance: 'Rental snapshot is missing',
+      analysisState: 'unknown',
+      fillId: null,
+      rootFillId: null,
+      analysisId: null,
+      startPressureEvidence: {
+        kind: 'rental-snapshot',
+        pressureBar: null,
+        eventId: null,
+        label: 'Rental snapshot is missing',
+      },
+      provenanceChain: [],
+      modM: null,
+      ppo2AtDepth: null,
+      nitrogenFraction: null,
+      requiredLitres: null,
+      volume: null,
+      warnings: [...warnings, 'Rental cylinder snapshot is missing.'],
+    };
+  }
+  const oxygenFraction =
+    snapshot.oxygenFraction ?? (snapshot.gasType === 'air' ? 0.21 : Number.NaN);
+  const heliumFraction = snapshot.heliumFraction ?? 0;
+  const candidateMix = { oxygenFraction, heliumFraction };
+  const mix = validateMix(candidateMix) ? candidateMix : null;
+  const analysisCurrent = rentalAnalysisIsCurrent(snapshot);
+  const analysisState: GasCylinderProjection['analysisState'] =
+    snapshot.analysisStatus === 'stale'
+      ? 'stale'
+      : analysisCurrent
+        ? 'current'
+        : snapshot.gasType === 'air'
+          ? 'manual'
+          : 'unknown';
+  const nitroxOrCustom =
+    snapshot.gasType !== 'air' || (mix?.oxygenFraction ?? 0) > 0.21;
+  if (!snapshot.waterVolumeL)
+    warnings.push('Rental cylinder water volume is missing.');
+  const pressureBar =
+    snapshot.remainingPressureBar ?? snapshot.startPressureBar;
+  if (!pressureBar)
+    warnings.push('Rental cylinder start pressure is missing.');
+  if (snapshot.valveType === 'unknown')
+    warnings.push('Rental cylinder valve type is unknown.');
+  if (nitroxOrCustom && !analysisCurrent)
+    warnings.push(
+      snapshot.analysisStatus === 'stale'
+        ? 'Rental gas analysis is marked stale.'
+        : 'Rental nitrox has no current gas analysis evidence.',
+    );
+  if (!mix) warnings.push('Rental cylinder gas mix is missing or invalid.');
+  if ((mix?.heliumFraction ?? 0) > 0)
+    warnings.push(
+      'Rental helium-containing gas is outside the recreational NDL mode.',
+    );
+  const depthM = cylinder.depthM ?? plan.plannedDepthM ?? null;
+  const targetPpo2 = cylinder.targetPpo2 ?? 1.4;
+  const modM = mix ? maximumOperatingDepth(mix, targetPpo2) : null;
+  const ppo2AtDepth = mix ? oxygenPartialPressure(mix, depthM) : null;
+  if (depthM != null && modM != null && depthM > modM)
+    warnings.push(
+      'Planned depth exceeds calculated MOD for the chosen target PPO₂.',
+    );
+  if (ppo2AtDepth != null && ppo2AtDepth > targetPpo2)
+    warnings.push('Calculated PPO₂ exceeds the chosen target.');
+  const volume = gasVolumeLitres(
+    snapshot.waterVolumeL,
+    pressureBar,
+    cylinder.reservePressureBar,
+  );
+  const multiCylinder = (plan.cylinders?.length ?? 1) > 1;
+  const assignedSegments =
+    plan.depthSegments?.length &&
+    plan.depthSegments.every(
+      (row) =>
+        row.gasCylinderId &&
+        plan.cylinders?.some((item) => item.id === row.gasCylinderId),
+    );
+  const segments = plan.depthSegments?.length
+    ? plan.depthSegments.filter((row) =>
+        multiCylinder
+          ? row.gasCylinderId === cylinder.id
+          : !row.gasCylinderId || row.gasCylinderId === cylinder.id,
+      )
+    : [
+        {
+          id: 'single-level',
+          depthM,
+          minutes: plan.plannedBottomTimeMin ?? null,
+        },
+      ];
+  const requiredLitres =
+    multiCylinder && !assignedSegments
+      ? null
+      : segments.length
+        ? gasRequiredForSegments(plan.rmvRateLitresMin, segments)
+        : null;
+  if (multiCylinder && !assignedSegments)
+    warnings.push(
+      'Total gas needed unavailable until depth/time segments are assigned to a cylinder.',
+    );
+  if (requiredLitres != null && volume && requiredLitres > volume.usableLitres)
+    warnings.push('Estimated gas required exceeds usable gas after reserve.');
+  const mixProvenance = analysisCurrent
+    ? `${snapshot.analysisSource} · ${snapshot.analysedAt} · ${snapshot.fillSource}`
+    : `${snapshot.analysisSource} · ${snapshot.fillSource}`;
+  return {
+    mix,
+    mixProvenance,
+    analysisState,
+    fillId: null,
+    rootFillId: null,
+    analysisId: null,
+    startPressureEvidence: {
+      kind: 'rental-snapshot',
+      pressureBar,
+      eventId: null,
+      label: snapshot.remainingPressureBar
+        ? 'Rental snapshot remaining pressure'
+        : 'Rental snapshot start pressure',
+    },
+    provenanceChain: [
+      `Rental / temporary cylinder · ${snapshot.label || 'unlabelled'} · source ${snapshot.fillSource}`,
+      ...(mix
+        ? [
+            `${fractionLabel(mix.oxygenFraction, mix.heliumFraction)} · analysis ${mixProvenance}`,
+          ]
+        : []),
+    ],
+    modM,
+    ppo2AtDepth,
+    nitrogenFraction: mix ? nitrogenFraction(mix) : null,
+    requiredLitres,
+    volume,
+    warnings,
+  };
+}
+
 /** Keeps composition evidence attached to its root fill through usage-only pressure events. */
 export function projectGasCylinder(
   cylinder: GasPlanCylinder,
@@ -453,6 +766,8 @@ export function projectGasCylinder(
   equipment: Array<Stored<CylinderEquipmentRecord>>,
   asOf = new Date().toISOString(),
 ): GasCylinderProjection {
+  if (cylinder.sourceMode === 'rental')
+    return projectRentalCylinder(cylinder, plan);
   const warnings: string[] = [];
   const evidence = selectedFillEvidence(cylinder, fills);
   const fill = evidence.selectedEvent;
@@ -654,17 +969,20 @@ export function warnGasPlan(
   if (input.rmvRateLitresMin == null)
     warnings.push('Using no RMV baseline; enter a conservative override.');
   for (const cylinder of input.cylinders) {
-    const fill = selectedFillEvidence(cylinder, fills).selectedEvent;
-    if (!fill)
+    const rental = cylinder.sourceMode === 'rental';
+    const fill = rental
+      ? null
+      : selectedFillEvidence(cylinder, fills).selectedEvent;
+    if (!rental && !fill)
       warnings.push(`${cylinder.role} cylinder has no current fill evidence.`);
-    if (cylinder.startPressureBar == null && fill?.pressureBar == null)
+    if (!rental && cylinder.startPressureBar == null && fill?.pressureBar == null)
       warnings.push(`${cylinder.role} cylinder has no start pressure.`);
     if (cylinder.reservePressureBar == null)
       warnings.push(`${cylinder.role} cylinder has no reserve pressure.`);
     const equipmentItem = equipment.find(
       (candidate) => candidate.entityId === cylinder.cylinderEquipmentId,
     );
-    if (cylinder.cylinderEquipmentId && !equipmentItem?.waterVolumeLiters)
+    if (!rental && cylinder.cylinderEquipmentId && !equipmentItem?.waterVolumeLiters)
       warnings.push(`${cylinder.role} cylinder has no water-volume evidence.`);
     warnings.push(
       ...projectGasCylinder(

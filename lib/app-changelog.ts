@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.47',
+    date: '2026-09-21',
+    title: 'Rental and temporary cylinder planning',
+    changes: [
+      'Added an explicit rental or temporary cylinder source for holiday, boat, resort and liveaboard Gas Plans without requiring an owned-cylinder record.',
+      'Stored rental label, material, volume, pressure, valve, gas, analysis, operator and notes evidence inside the Gas Plan snapshot for reliable save and reopen.',
+      'Connected rental evidence to total and usable gas, reserve, gas-limited time, MOD, PPO₂, NDL and route-checkpoint calculations while keeping decompression scheduling out of scope.',
+      'Added missing-evidence, analysis, MOD/PPO₂ and gas-sufficiency warnings plus the rental service-history advisory without applying owned-cylinder inspection requirements.',
+      'Kept owned-cylinder selection and provenance unchanged; creating an owned cylinder from a rental snapshot now requires an explicit confirmation action.',
+    ],
+  },
+  {
     version: '1.0.46',
     date: '2026-09-21',
     title: 'Cylinder to Gas Planning evidence integration',
