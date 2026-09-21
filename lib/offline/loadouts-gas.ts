@@ -66,6 +66,7 @@ export const LOADOUT_SLOT_DEFINITIONS: LoadoutSlotDefinition[] = [
 
 export interface CylinderEquipmentRecord extends EquipmentRecord {
   recordStorageKind?: 'cylinder' | 'equipment';
+  cylinderNumber?: string | null;
   threadType?: string | null;
   countryCode?: string | null;
   waterVolumeLiters?: number | null;
@@ -87,6 +88,37 @@ export interface CylinderEquipmentRecord extends EquipmentRecord {
   cylinderStatus?: 'active' | 'service' | 'retired' | 'unknown';
   hydroTestStamps?: Array<{ facility: string; testedAt: string; stampMark: string; notes?: string }>;
   visualInspection?: { inspectedAt?: string | null; dueAt?: string | null; stickerColour?: string | null; notes?: string | null };
+  lastTestType?: 'hydro' | 'visual' | null;
+  lastTestAt?: string | null;
+}
+
+function monthValue(value?: string | null) {
+  const match = value?.match(/^(\d{4})-(\d{2})/);
+  return match ? `${match[1]}-${match[2]}` : null;
+}
+
+function addMonths(value: string | null, months: number) {
+  if (!value) return null;
+  const [year, month] = value.split('-').map(Number);
+  if (!year || !month) return null;
+  const date = new Date(Date.UTC(year, month - 1 + months, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+export function deriveCylinderInspectionSchedule(cylinder: Partial<CylinderEquipmentRecord>) {
+  const stampMonths = (cylinder.hydroTestStamps ?? []).map((stamp) => monthValue(stamp.testedAt)).filter((value): value is string => Boolean(value));
+  const explicitHydro = monthValue(cylinder.hydroTestAt);
+  const latestHydro = [explicitHydro, ...stampMonths, cylinder.lastTestType === 'hydro' ? monthValue(cylinder.lastTestAt) : null]
+    .filter((value): value is string => Boolean(value)).sort().at(-1) ?? null;
+  const latestVisual = [monthValue(cylinder.visualTestAt), monthValue(cylinder.visualInspection?.inspectedAt), cylinder.lastTestType === 'visual' ? monthValue(cylinder.lastTestAt) : null]
+    .filter((value): value is string => Boolean(value)).sort().at(-1) ?? null;
+  const latestVisualQualifyingTest = [latestHydro, latestVisual].filter((value): value is string => Boolean(value)).sort().at(-1) ?? null;
+  return {
+    latestHydro,
+    latestVisualQualifyingTest,
+    hydroDueAt: addMonths(latestHydro, 60),
+    visualDueAt: addMonths(latestVisualQualifyingTest, 30),
+  };
 }
 
 export interface CylinderFillRecord {
@@ -98,6 +130,9 @@ export interface CylinderFillRecord {
   provider: string | null;
   notes: string | null;
   source: 'recorded' | 'imported';
+  eventType?: 'fill' | 'usage' | 'adjustment';
+  originFillId?: string | null;
+  pressureUsedBar?: number | null;
   createdAt: string;
   modifiedAt: string;
 }
@@ -330,9 +365,24 @@ export async function saveCylinderProfile(
   }
   const { recordStorageKind, ...storedInput } = input;
   const storageKind = recordStorageKind === 'equipment' ? 'equipment' : 'cylinder';
+  let cylinderNumber = input.cylinderNumber?.trim() || null;
+  if (!cylinderNumber) {
+    const inventory = await listCylinderInventory();
+    const highest = inventory.reduce((maximum, cylinder) => {
+      const value = Number.parseInt(cylinder.cylinderNumber ?? '', 10);
+      return Number.isFinite(value) ? Math.max(maximum, value) : maximum;
+    }, inventory.length);
+    cylinderNumber = String(highest + 1).padStart(2, '0');
+  }
+  const lastTestAt = monthValue(input.lastTestAt);
+  const lastTestType = lastTestAt ? input.lastTestType ?? null : null;
+  const latestHydroAt = lastTestType === 'hydro' ? lastTestAt : monthValue(input.hydroTestAt);
+  const latestVisualAt = lastTestType === 'hydro' || lastTestType === 'visual' ? lastTestAt : monthValue(input.visualTestAt ?? input.visualInspection?.inspectedAt);
+  const schedule = deriveCylinderInspectionSchedule({ ...input, hydroTestAt: latestHydroAt, visualTestAt: latestVisualAt, lastTestAt, lastTestType });
   return saveRecord(storageKind, {
     manufacturer: '', model: '', serialNumber: '', purchasedAt: '', lastServiceAt: '', nextServiceAt: '', notes: '', retired: false,
     ...storedInput,
+    cylinderNumber,
     name: input.name.trim(),
     category: 'Cylinder',
     waterVolumeLiters: input.waterVolumeLiters == null ? null : Number(input.waterVolumeLiters),
@@ -341,6 +391,49 @@ export async function saveCylinderProfile(
     emptyWeightKg: input.emptyWeightKg == null ? (input.tareKg == null ? null : Number(input.tareKg)) : Number(input.emptyWeightKg),
     tareKg: input.emptyWeightKg == null ? (input.tareKg == null ? null : Number(input.tareKg)) : Number(input.emptyWeightKg),
     wallThicknessMm: input.wallThicknessMm == null ? null : Number(input.wallThicknessMm),
+    lastTestType,
+    lastTestAt,
+    hydroTestAt: schedule.latestHydro,
+    hydroDueAt: schedule.hydroDueAt,
+    visualTestAt: schedule.latestVisualQualifyingTest,
+    visualDueAt: schedule.visualDueAt,
+    visualInspection: {
+      ...input.visualInspection,
+      inspectedAt: schedule.latestVisualQualifyingTest,
+      dueAt: schedule.visualDueAt,
+    },
+  });
+}
+
+export async function recordCylinderGasUsage(input: {
+  cylinderEquipmentId: string;
+  recordedAt: string;
+  pressureUsedBar?: number | null;
+  remainingPressureBar?: number | null;
+  notes?: string | null;
+}) {
+  const fills = (await listCylinderFills()).filter((fill) => fill.cylinderEquipmentId === input.cylinderEquipmentId);
+  const latest = byDateDescending(fills, 'filledAt')[0];
+  if (!latest || latest.pressureBar == null) throw new Error('Record a cylinder fill pressure before recording gas use.');
+  const hasUsed = input.pressureUsedBar != null;
+  const hasRemaining = input.remainingPressureBar != null;
+  if (hasUsed === hasRemaining) throw new Error('Enter either pressure used or remaining pressure, not both.');
+  const used = hasUsed ? Number(input.pressureUsedBar) : latest.pressureBar - Number(input.remainingPressureBar);
+  const remaining = hasRemaining ? Number(input.remainingPressureBar) : latest.pressureBar - used;
+  if (!Number.isFinite(used) || used < 0 || used > latest.pressureBar) throw new Error('Pressure used must be between 0 and the current remaining pressure.');
+  if (!Number.isFinite(remaining) || remaining < 0 || remaining > latest.pressureBar) throw new Error('Remaining pressure must be between 0 and the current remaining pressure.');
+  return saveCylinderFill({
+    cylinderEquipmentId: input.cylinderEquipmentId,
+    filledAt: input.recordedAt,
+    pressureBar: remaining,
+    oxygenFraction: latest.oxygenFraction,
+    heliumFraction: latest.heliumFraction,
+    provider: latest.provider,
+    notes: input.notes?.trim() || '',
+    source: 'recorded',
+    eventType: hasUsed ? 'usage' : 'adjustment',
+    originFillId: latest.originFillId || latest.entityId,
+    pressureUsedBar: used,
   });
 }
 
@@ -394,8 +487,10 @@ export function deriveCylinderCurrentState(
 ): CylinderCurrentState {
   const latestFill = byDateDescending(fills, 'filledAt')[0] ?? null;
   const latestAnyAnalysis = byDateDescending(analyses, 'analysedAt')[0] ?? null;
+  const analysisFillId = latestFill?.originFillId || latestFill?.entityId;
+  const analysisFill = fills.find((fill) => fill.entityId === analysisFillId) ?? latestFill;
   const currentAnalysis = latestFill
-    ? byDateDescending(analyses.filter((analysis) => analysis.fillId === latestFill.entityId && analysis.cylinderEquipmentId === latestFill.cylinderEquipmentId && Date.parse(analysis.analysedAt) >= Date.parse(latestFill.filledAt)), 'analysedAt')[0] ?? null
+    ? byDateDescending(analyses.filter((analysis) => analysis.fillId === analysisFillId && analysis.cylinderEquipmentId === latestFill.cylinderEquipmentId && Date.parse(analysis.analysedAt) >= Date.parse(analysisFill?.filledAt ?? latestFill.filledAt)), 'analysedAt')[0] ?? null
     : null;
   const analysisState: CylinderCurrentState['analysisState'] = currentAnalysis
     ? 'current'

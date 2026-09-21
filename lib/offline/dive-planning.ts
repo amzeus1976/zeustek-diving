@@ -1011,6 +1011,8 @@ export const DEFAULT_GEAR_MANUFACTURERS = [
 
   'Cressi',
 
+  'Faber',
+
   'Fourth Element',
 
   'Garmin',
@@ -1018,6 +1020,8 @@ export const DEFAULT_GEAR_MANUFACTURERS = [
   'Halcyon',
 
   'Hollis',
+
+  'Luxfer',
 
   'Mares',
 

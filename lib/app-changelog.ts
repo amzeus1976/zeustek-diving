@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.45',
+    date: '2026-09-19',
+    title: 'Cylinder identity and inspection cycle correction',
+    changes: [
+      'Separated the automatic two-digit cylinder inventory ID from the manufacturer serial number and reused the shared Equipment manufacturer catalogue.',
+      'Restricted valve type to DIN or A-CLAMP and changed manufacture, inspection and O₂-clean dates to month/year entry.',
+      'Replaced competing Hydro and Visual date fields with one latest-test type/date: Hydro includes Visual, Hydro is due after 60 months and Visual after 30 months.',
+      'Added manual pressure-used and remaining-pressure entries while retaining the originating fill mix and gas-analysis provenance.',
+      'Preserved existing cylinder, fill, analysis, People and Dive records through the same canonical local-first path.',
+    ],
+  },
+  {
     version: '1.0.44',
     date: '2026-09-19',
     title: 'Legacy Person evidence compatibility',

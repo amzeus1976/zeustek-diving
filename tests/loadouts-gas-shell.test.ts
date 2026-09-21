@@ -38,6 +38,14 @@ describe('T05 shell and compatibility integration', () => {
     expect(domain).toContain("saveRecord('gas-analysis'");
     expect(read('components/loadouts-gas.tsx')).toContain('Add cylinder');
     expect(read('components/loadouts-gas.tsx')).toContain('Blue quadrant sticker');
+    expect(read('components/loadouts-gas.tsx')).toContain('Assigned automatically on save');
+    expect(read('components/loadouts-gas.tsx')).toContain('Serial number (S/N)');
+    expect(read('components/loadouts-gas.tsx')).toContain('Hydro + visual');
+    expect(read('components/loadouts-gas.tsx')).toContain('type="month"');
+    expect(read('components/loadouts-gas.tsx')).toContain('<option value="A-CLAMP">A-CLAMP</option>');
+    expect(read('components/loadouts-gas.tsx')).toContain('DEFAULT_GEAR_MANUFACTURERS');
+    expect(read('components/loadouts-gas.tsx')).toContain('Gas use / remaining pressure');
+    expect(domain).toContain('recordCylinderGasUsage');
     expect(dashboard).toContain('items.filter((item) => !isCylinderEquipment(item))');
     expect(dashboard).not.toContain('placeholder="12L steel cylinder"');
   });
