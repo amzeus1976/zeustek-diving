@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, type ComponentType } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -18,24 +18,31 @@ import {
 } from '../lib/workflow/workflow-model';
 import { TechnicalWorkspace } from '../components/technical-workspace';
 
+const TestCollapsibleWorkCard = CollapsibleWorkCard as ComponentType<
+  Omit<CollapsibleWorkCardProps, 'children'>
+>;
+const TestAccessibleDialog = AccessibleDialog as ComponentType<
+  Omit<Parameters<typeof AccessibleDialog>[0], 'children'>
+>;
+
 describe('T13 shared design-system behavior', () => {
   it('keeps minimized card status and warnings announced while hiding the body', () => {
     const html = renderToStaticMarkup(
       createElement(
-        CollapsibleWorkCard,
+        TestCollapsibleWorkCard,
         {
           id: 'readiness',
           title: 'Readiness',
           status: '2 checks current',
           alert: 'Review one warning',
           defaultMinimized: true,
-        } satisfies CollapsibleWorkCardProps,
+        } satisfies Omit<CollapsibleWorkCardProps, 'children'>,
         createElement('p', null, 'Private expanded evidence'),
       ),
     );
 
     expect(html).toContain('data-zeustek-density-card="true"');
-    expect(html).toContain('role="status"');
+    expect(html).toContain('<output');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain('2 checks current');
     expect(html).toContain('role="alert"');
@@ -48,7 +55,7 @@ describe('T13 shared design-system behavior', () => {
   it('exposes the shared dialog hook without weakening editable dismissal safety', () => {
     const html = renderToStaticMarkup(
       createElement(
-        AccessibleDialog,
+        TestAccessibleDialog,
         {
           label: 'Edit cylinder',
           className: 'focus-modal',

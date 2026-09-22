@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.50',
+    date: '2026-09-22',
+    title: 'Whole-site design ethos and accessibility convergence',
+    changes: [
+      'Introduced shared ZeusTek surface, colour, focus, status, warning, form, table and dialog patterns so established and newer pages read as one coherent product family.',
+      'Aligned Overview, Insights, Gear, People, Admin, Dive Planning, Gas Planning and Technical Diving presentation without redesigning routes or replacing page-specific workflows.',
+      'Kept warnings and status visible in minimised cards, strengthened accessible dialog semantics and standardised 44 px Site Configuration form and action targets.',
+      'Verified desktop, 1024 px, 820 px and 390 px layouts without page-level horizontal overflow and retained compact mobile navigation.',
+      'Left all canonical records, schemas and Gas Planner NDL, MOD, PPO₂, gas-time and reserve calculations unchanged.',
+    ],
+  },
+  {
     version: '1.0.49',
     date: '2026-09-22',
     title: 'Stable numeric cylinder identifiers',

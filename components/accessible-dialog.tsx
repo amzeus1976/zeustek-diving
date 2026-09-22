@@ -15,6 +15,11 @@ export function AccessibleDialog({label,className,close,editable=false,dirty=fal
     if(dialog){dialog.scrollTop=0;dialog.focus({preventScroll:true});}
     return()=>{dialog?.close();if(previous?.isConnected)previous.focus({preventScroll:true});};
   },[]);
+  useEffect(()=>{
+    const dialog=ref.current;if(!dialog)return;
+    const dismiss=(event:MouseEvent)=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();const outside=event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom;if(outside&&dialogAllowsImplicitDismiss(editable))close();};
+    dialog.addEventListener('click',dismiss);return()=>dialog.removeEventListener('click',dismiss);
+  },[close,editable]);
   useEffect(()=>{if(confirmDiscard)confirmRef.current?.focus({preventScroll:true});},[confirmDiscard]);
   return <dialog tabIndex={-1} ref={ref} className={className} aria-label={label} data-zeustek-dialog="true" data-editable={editable||undefined}
     onCancel={event=>{event.preventDefault();if(containDismiss)event.stopPropagation();if(onEscape)onEscape();else if(dialogAllowsImplicitDismiss(editable))close();}}
@@ -26,8 +31,7 @@ export function AccessibleDialog({label,className,close,editable=false,dirty=fal
       if(target?.closest('[data-dialog-dirty]'))setInteractionDirty(true);
       if(!dialogNeedsDiscardConfirmation(editable,hasUnsavedChanges)||!target?.closest('[data-dialog-close]'))return;
       event.preventDefault();event.stopPropagation();setConfirmDiscard(true);
-    }}
-    onClick={event=>{if(event.target!==event.currentTarget)return;const rect=event.currentTarget.getBoundingClientRect();const outside=event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom;if(outside&&dialogAllowsImplicitDismiss(editable))close();}}>
+    }}>
     {children}
     {confirmDiscard&&<div className="dialog-discard-backdrop"><section role="alertdialog" aria-modal="true" aria-labelledby={confirmTitleId} className="dialog-discard-confirmation"><h2 id={confirmTitleId}>Discard unsaved changes?</h2><p>Your edits have not been saved.</p><div><button ref={confirmRef} type="button" className="focus-primary" onClick={()=>setConfirmDiscard(false)}>Keep editing</button><button type="button" className="focus-secondary danger" onClick={close}>Discard changes</button></div></section></div>}
   </dialog>;

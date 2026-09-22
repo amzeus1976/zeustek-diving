@@ -52,7 +52,7 @@ export function CollapsibleWorkCard({
         <div className={styles.heading}>
           {eyebrow && <span className="focus-eyebrow">{eyebrow}</span>}
           <h2>{onOpenDetail ? <button type="button" className={styles.headingButton} onClick={onOpenDetail} aria-label={`Open ${title}`}>{title}</button> : title}</h2>
-          {(status || alert) && <p className={styles.status} role="status" aria-live="polite">{status}{alert && <strong role="alert">{alert}</strong>}</p>}
+          {(status || alert) && <output className={styles.status} aria-live="polite">{status}{alert && <strong role="alert">{alert}</strong>}</output>}
         </div>
         <div className={styles.controls}>
           {actions}

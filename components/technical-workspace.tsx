@@ -1,13 +1,14 @@
 'use client';
+/* oxlint-disable next/no-html-link-for-pages -- Vinext uses the existing query-routed application shell. */
 
-import { AlertTriangle, CheckCircle2, ClipboardCheck, Cylinder, Gauge, Plus, Settings2, X } from 'lucide-react';
+import { ClipboardCheck, Cylinder, Gauge, Plus, Settings2, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
 import { useRecordRefresh } from './record-status';
 import { listDives, type DiveRecord } from '../lib/offline/dives';
 import { canonicalSkillGroups, skillRecordGroup, listCanonicalSkills, listSkillEvidence, skillRecordName, type CanonicalSkillRecord, type SkillEvidenceRecord } from '../lib/offline/dive-context';
-import { listCertifications, listDiveTrips, listEquipmentSets, type CertificationRecord, type DiveTripRecord, type Stored } from '../lib/offline/dive-planning';
+import { listCertifications, listDiveTrips, type CertificationRecord, type DiveTripRecord, type Stored } from '../lib/offline/dive-planning';
 import { listCurrencyPolicies, buildSkillsCurrencyProjection, type CurrencyPolicyRecord } from '../lib/offline/skills-currency';
 import { listReusableLoadouts, listCylinderFills, listGasAnalyses, deriveCylinderCurrentState, type CylinderFillRecord, type GasAnalysisRecord, type ReusableLoadoutRecord } from '../lib/offline/loadouts-gas';
 import {
@@ -73,7 +74,7 @@ function PathwayCard({row,onEdit}:{row:ReturnType<typeof evaluatePathwayReadines
 function RequirementSetEditor({existing,close,saved}:{existing:Stored<ReferenceRequirementSetRecord>|null;close:()=>void;saved:()=>Promise<void>|void}){
  const [sourceUrl,setSourceUrl] = useState(existing?.sourceUrl ?? '');const [notes,setNotes] = useState(existing?.notes ?? '');
  const base=existing??emptyRequirementSet('tec40','Tec 40');const [agency,setAgency]=useState(base.agency);const [pathwayKey,setPathwayKey]=useState(base.pathwayKey);const [pathwayLabel,setPathwayLabel]=useState(base.pathwayLabel??'');const [versionLabel,setVersionLabel]=useState(existing ? `${base.versionLabel}-new` : base.versionLabel);const [effectiveFrom,setEffectiveFrom]=useState(base.effectiveFrom??'');const [sourceCitation,setSourceCitation]=useState(base.sourceCitation??'');const [requirementsText,setRequirementsText]=useState(JSON.stringify(base.requirements,null,2));const [busy,setBusy]=useState(false);const [error,setError]=useState('');
- async function submit(event:React.FormEvent){event.preventDefault();setBusy(true);setError('');try{const parsed=JSON.parse(requirementsText) as TechnicalRequirementDefinition[];if(!Array.isArray(parsed))throw new Error('Requirements JSON must be an array.');await saveReferenceRequirementSet({agency,pathwayKey,pathwayLabel,versionLabel,effectiveFrom:effectiveFrom||null,effectiveTo:base.effectiveTo??null,sourceCitation:sourceCitation||null,sourceUrl:sourceUrl||null,notes,requirements:parsed,capturedAt:new Date().toISOString()});await saved();close();}catch(reason){setError(reason instanceof Error?reason.message:'Reference snapshot could not be saved.');}finally{setBusy(false);}}
+ async function submit(event:React.SyntheticEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');try{const parsed=JSON.parse(requirementsText) as TechnicalRequirementDefinition[];if(!Array.isArray(parsed))throw new Error('Requirements JSON must be an array.');await saveReferenceRequirementSet({agency,pathwayKey,pathwayLabel,versionLabel,effectiveFrom:effectiveFrom||null,effectiveTo:base.effectiveTo??null,sourceCitation:sourceCitation||null,sourceUrl:sourceUrl||null,notes,requirements:parsed,capturedAt:new Date().toISOString()});await saved();close();}catch(reason){setError(reason instanceof Error?reason.message:'Reference snapshot could not be saved.');}finally{setBusy(false);}}
  return <div className="focus-modal-bg"><AccessibleDialog editable containDismiss label="Technical pathway reference snapshot" className={`focus-modal ${styles.referenceEditor}`} close={()=>{if(!busy)close();}}><form onSubmit={(event)=>void submit(event)}>
  <header><div><span className="focus-eyebrow">VERSIONED REFERENCE DATA</span><h2>{existing?'Capture new pathway version':'Capture pathway snapshot'}</h2><p>Use a source you actually checked. Historical snapshots are immutable; no current agency numbers are bundled.</p></div><button type="button" className="focus-icon" data-dialog-close disabled={busy} aria-label="Close reference editor" onClick={close}><X/></button></header>
  <fieldset disabled={busy} className={styles.referenceFields}>

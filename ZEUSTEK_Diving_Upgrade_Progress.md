@@ -813,3 +813,16 @@ Owner-returned SOL_RETURN_INSTRUCTIONS are focused diagnostic/review input, not 
 - Cleanup verified: Gas Planning returned to zero plans; no synthetic cylinder existed; no real owner records changed; Logbook retained exactly 66 Dives.
 - Detailed evidence: `docs/T12-5F-release-record.md`. Final GitHub main merge SHA is reported in the owner-facing completion report.
 - Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.
+
+## T13 release candidate — 2026-09-22
+
+- Status: LOCAL GATES COMPLETE; production publication and GitHub verification pending. T14 and T15 were not started.
+- Source baseline: accepted GitHub main `1ceeecf5cdb564fb5487e81465c03a9ca94418ec`, corresponding to live app `1.0.49` / Sites `120` / deployment `appgdep_6ab25dc72ee48191abd975468eea4d58` / published source `c41a2cc8096e2d779df457e2b148f50ee0973261`.
+- Rollback: app `1.0.48` / Sites `119`; the current Sites120 deployment remains available until app1.0.50 production acceptance passes.
+- Candidate: app `1.0.50`, implemented shared-system-first using common ZeusTek tokens, card density, dialog, focus, status, warning, form, table and action patterns plus bounded route-level presentation fixes.
+- Local release gate: 90 test files / 514 tests passed; typecheck passed; production build and PWA generation passed with final 201-entry precache; targeted lint for changed TSX/test files passed.
+- Responsive acceptance: Overview, Insights, Equipment, Cylinders & Gas, People & Operators, Dive Planning Centre, Gas Planning, Technical Diving, Site Configuration and Data & Backups passed at desktop, 1024, 820 and 390 px without page-level horizontal overflow. Mobile bottom navigation remained present.
+- Data/calculation boundary: no schema, canonical record, sync/history/outbox or Gas Planner calculation source changes. `CALCULATION_TOUCHPOINT: NONE`.
+- Owner records changed: no. Production retention check remains pending publication; established target is 66 Dive logs and zero Gas Plans.
+- Deployment ID, Sites version, published source and final GitHub SHA: PENDING VERIFIED PRODUCTION.
+- Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.
