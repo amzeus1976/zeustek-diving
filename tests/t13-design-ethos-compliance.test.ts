@@ -15,6 +15,7 @@ import {
   resolveWorkflowRoute,
   workflowRoutesForSection,
 } from '../lib/workflow/workflow-model';
+import { TechnicalWorkspace } from '../components/technical-workspace';
 
 describe('T13 shared design-system behavior', () => {
   it('keeps minimized card status and warnings announced while hiding the body', () => {
@@ -92,5 +93,18 @@ describe('T13 route and terminology preservation', () => {
     expect(resolveWorkflowRoute('Cylinder Gas')).toBe('Cylinders & Gas');
     expect(resolveWorkflowRoute('Dive Planning Centre')).toBe('Dive Plans');
     expect(resolveWorkflowRoute('Site Configuration')).toBe('Settings');
+  });
+});
+
+describe('T13 targeted legacy-page alignment', () => {
+  it('keeps Technical Diving advisory controls in a compact note after the hero', () => {
+    const html = renderToStaticMarkup(
+      createElement(TechnicalWorkspace, { go: () => {} }),
+    );
+
+    expect(html).toContain('role="note"');
+    expect(html).toContain('Readiness is advisory');
+    expect(html).toContain('Canonical Skill Group');
+    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('role="note"'));
   });
 });

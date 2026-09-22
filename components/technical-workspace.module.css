@@ -2,3 +2,31 @@
 @media(max-width:1000px){.pathways>div{grid-template-columns:1fr}.dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .heading a,.pathways button,.dashboard button,.dashboard a,.referenceEditor button{min-height:44px}.pathwayCard,.row>div,.config>div,.gas>div,.referenceFields{min-width:0;overflow-wrap:anywhere}.referenceEditor input,.referenceEditor select,.referenceEditor textarea{min-width:0;max-width:100%;min-height:44px}.referenceEditor :focus-visible,.dashboard :focus-visible,.pathways :focus-visible{outline:2px solid #00d9f5;outline-offset:3px}.pathwayHead{flex-wrap:wrap}.pathwayHead em{max-width:100%}
 @media(max-width:680px){.heading{flex-direction:column;align-items:stretch}.heading>button{align-self:flex-start}.dashboard{grid-template-columns:1fr}.dashboard>section{min-height:0}.referenceFields{grid-template-columns:1fr}.span2{grid-column:auto}.actions{display:grid}.metrics{grid-template-columns:1fr 1fr}}
+
+/* T13 shared ZeusTek presentation layer. */
+.heading{
+  padding:clamp(1rem,2.2vw,1.5rem);
+  border:1px solid var(--zt-border-cyan);
+  border-radius:var(--zt-radius-card);
+  background:linear-gradient(105deg,var(--zt-surface-card),rgba(7,35,45,.9));
+}
+.advisory{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(15rem,24rem);
+  gap:1rem;
+  align-items:center;
+  margin:0 0 1rem;
+  padding:.75rem 1rem;
+  border:1px solid color-mix(in srgb,var(--zt-accent-yellow) 45%,transparent);
+  border-left:3px solid var(--zt-accent-yellow);
+  border-radius:var(--zt-radius-card);
+  background:var(--zt-surface-card);
+}
+.advisory p{margin:0;color:var(--zt-text-muted)}
+.advisory label{display:grid;gap:.35rem;color:var(--zt-text);font-size:.82rem}
+.advisory select{min-width:0;min-height:var(--zt-target);border-color:var(--zt-border-muted);background:var(--zt-surface-page);color:var(--zt-text)}
+.pathwayCard,.dashboard>section{border-color:var(--zt-border-cyan);border-radius:var(--zt-radius-card);background:var(--zt-surface-card)}
+.row,.config,.gas,.practice{border-color:var(--zt-border-muted)}
+.metrics span{border-color:var(--zt-border-muted);background:var(--zt-surface-raised)}
+.advisory :focus-visible,.heading :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
+@media(max-width:680px){.advisory{grid-template-columns:1fr}.heading{align-items:stretch}}

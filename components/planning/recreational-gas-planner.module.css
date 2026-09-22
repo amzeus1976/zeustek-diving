@@ -26,3 +26,23 @@
 .blocked{color:#ffb2a6!important}.caution{color:#ffd397!important}.ready{color:#88f0ba!important}
 @media(max-width:760px){.routeRow{grid-template-columns:1fr 1fr}.routeNotes{grid-column:1/-1}.routeRow button{grid-column:1/-1}}
 @media(max-width:440px){.routeRow{grid-template-columns:1fr}.routeNotes{grid-column:auto}.metrics{grid-template-columns:1fr 1fr}.controls{grid-template-columns:1fr}}
+
+/* T13 presentation-only convergence. Gas calculations are intentionally untouched. */
+.planner>header,.planner details,.routeRow,.metrics span,.sourceFacts span,.scroll{
+  border-color:var(--zt-border-cyan);
+  border-radius:var(--zt-radius-card);
+  background:var(--zt-surface-card);
+}
+.planner details:nth-of-type(3),.planner details:nth-of-type(4){border-color:color-mix(in srgb,var(--zt-accent-orange) 70%,var(--zt-border-muted))}
+.planner summary,.routeRow legend{color:var(--zt-accent-yellow)}
+.controls input,.controls select,.routeRow input,.routeRow select,.routeRow textarea{
+  min-height:var(--zt-target);
+  border-color:var(--zt-border-muted);
+  background:var(--zt-surface-page);
+  color:var(--zt-text);
+}
+.metrics strong,.sourceFacts strong,.scroll th{color:var(--zt-accent-cyan)}
+.warning{border-left-color:var(--zt-caution);background:color-mix(in srgb,var(--zt-caution) 12%,var(--zt-surface-card));color:var(--zt-text)}
+.blocked{color:var(--zt-blocked)!important}.caution{color:var(--zt-caution)!important}.ready{color:var(--zt-ready)!important}
+.planner :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
+@media(max-width:440px){.planner{gap:10px}.planner details{padding:10px}.metrics{grid-template-columns:1fr}}

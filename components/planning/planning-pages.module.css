@@ -616,3 +616,24 @@
     position: static;
   }
 }
+
+/* T13 shared ZeusTek presentation layer. */
+.hero,.sideRail,.workArea,.detailPane,.detailCard,.emptyPane,.railNote,.linkedPlan,.cylinderCard,.formulaResults>div,.tableReference{
+  border-color:var(--zt-border-cyan);
+  border-radius:var(--zt-radius-card);
+  background-color:var(--zt-surface-card);
+}
+.hero{background:linear-gradient(105deg,var(--zt-surface-card),rgba(5,36,47,.88))}
+.heroTitle h1,.monthHeader h2,.detailCard h2,.detailCard h3{color:var(--zt-text)}
+.tabs button,.toolbar input,.toolbar select,.editorGrid input,.editorGrid select,.editorGrid textarea,.editorCylinderList input,.editorCylinderList select{
+  min-height:var(--zt-target);
+  border-color:var(--zt-border-muted);
+  background:var(--zt-surface-page);
+  color:var(--zt-text);
+}
+.activeTab,.activePill{border-color:var(--zt-accent-orange)!important;color:var(--zt-accent-orange)!important}
+.eventList button,.linkRows button,.cylinderList button,.calendarGrid button{border-color:var(--zt-border-muted);background:var(--zt-surface-raised);color:var(--zt-text)}
+.warningIconButton,.safetyWarning{border-color:var(--zt-caution);background:color-mix(in srgb,var(--zt-caution) 12%,var(--zt-surface-card));color:var(--zt-text)}
+.contextChecks p,.provenance,.provenanceChain{border-color:var(--zt-accent-cyan);background:var(--zt-surface-raised)}
+.page :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
+@media(max-width:640px){.hero{gap:.75rem}.workArea,.detailPane{min-width:0}.tabs{max-width:100%;overflow-x:auto}}
