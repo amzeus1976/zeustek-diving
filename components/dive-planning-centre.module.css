@@ -38,3 +38,27 @@
 .gasWarningButton:hover{background:#513015}
 .gasWarningButton:focus-visible{outline:3px solid #fff11a;outline-offset:2px}
 @media(max-width:720px){.gasSummaryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* T13 shared ZeusTek presentation layer; planning behaviour remains unchanged. */
+.hero,.upcoming,.card,.actions,.editorGrid fieldset,.readinessDialog{
+  border-color:var(--zt-border-cyan);
+  border-radius:var(--zt-radius-card);
+  background-color:var(--zt-surface-card);
+}
+.hero{background:linear-gradient(90deg,rgba(4,10,13,.97),rgba(3,26,38,.82) 60%,rgba(1,39,55,.7)),url('/zeustek-hero.png') right center/cover no-repeat}
+.planTabs button,.siteCard>div>span,.selectedPills>div,.gasSummary,.gasSummaryGrid>span,.selectedFact,.pickerResults button{
+  border-color:var(--zt-border-muted);
+  background:var(--zt-surface-raised);
+}
+.card>header button,.editorGrid legend{color:var(--zt-accent-orange)}
+.infoButton{border-color:var(--zt-accent-cyan);background:var(--zt-surface-raised);color:var(--zt-accent-cyan)}
+.warningList,.weatherStatus,.conditionWarning{color:var(--zt-caution)}
+.editorGrid input,.editorGrid select,.editorGrid textarea{
+  min-height:var(--zt-target);
+  border-color:var(--zt-border-muted);
+  background:var(--zt-surface-page);
+  color:var(--zt-text);
+}
+.page :focus-visible,.editor :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
+.teamRow:has(.teamDetails),.gasWarningButton{border-radius:var(--zt-radius-card)}
+@media(max-width:720px){.hero{min-height:0}.editorGrid fieldset{padding:10px}.actions{background:var(--zt-surface-raised)}}

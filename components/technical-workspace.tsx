@@ -1,13 +1,14 @@
 'use client';
+/* oxlint-disable next/no-html-link-for-pages -- Vinext uses the existing query-routed application shell. */
 
-import { AlertTriangle, CheckCircle2, ClipboardCheck, Cylinder, Gauge, Plus, Settings2, X } from 'lucide-react';
+import { ClipboardCheck, Cylinder, Gauge, Plus, Settings2, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
 import { useRecordRefresh } from './record-status';
 import { listDives, type DiveRecord } from '../lib/offline/dives';
 import { canonicalSkillGroups, skillRecordGroup, listCanonicalSkills, listSkillEvidence, skillRecordName, type CanonicalSkillRecord, type SkillEvidenceRecord } from '../lib/offline/dive-context';
-import { listCertifications, listDiveTrips, listEquipmentSets, type CertificationRecord, type DiveTripRecord, type Stored } from '../lib/offline/dive-planning';
+import { listCertifications, listDiveTrips, type CertificationRecord, type DiveTripRecord, type Stored } from '../lib/offline/dive-planning';
 import { listCurrencyPolicies, buildSkillsCurrencyProjection, type CurrencyPolicyRecord } from '../lib/offline/skills-currency';
 import { listReusableLoadouts, listCylinderFills, listGasAnalyses, deriveCylinderCurrentState, type CylinderFillRecord, type GasAnalysisRecord, type ReusableLoadoutRecord } from '../lib/offline/loadouts-gas';
 import {
@@ -42,9 +43,11 @@ export function TechnicalWorkspace({go}:{go?:(section:string)=>void}){
  const pathwayCards=TECH_PATHWAY_STARTERS.filter(starter=>!readiness.some(row=>row.set.pathwayKey.toLocaleLowerCase('en-GB')===starter.key)).map(starter=>({starter}));
  const latestPlan=techPlans[0];
  return <>
-  <p>Readiness is advisory, not certification, medical clearance or instructor authorisation. Recorded / imported metrics only.</p>
-  <label>Canonical Skill Group<select value={group} onChange={event=>setGroup(event.target.value)}><option value="">Detected technical drills</option>{canonicalSkillGroups(skills).map(name=><option key={name}>{name}</option>)}</select></label>
   <header className={styles.heading}><div className="focus-heading-title"><ZeusTekIcon id="technical-diving" size="heading"/><div><span className="focus-eyebrow">TECHNICAL DIVING</span><h1>Technical Diving</h1><p>A derived workspace over your Dives, Plans, Skills, loadouts and gas evidence — never a second technical logbook.</p></div></div><a className="focus-primary" href="/?section=Dive%20Plans&newPlan=technical"><Plus size={17}/>New tec plan</a></header>
+  <section className={styles.advisory} role="note">
+   <p>Readiness is advisory, not certification, medical clearance or instructor authorisation. Recorded / imported metrics only.</p>
+   <label>Canonical Skill Group<select value={group} onChange={event=>setGroup(event.target.value)}><option value="">Detected technical drills</option>{canonicalSkillGroups(skills).map(name=><option key={name}>{name}</option>)}</select></label>
+  </section>
   <section className={styles.pathways}><h2>Progression pathway</h2><div>{pathwayCards.map(entry=><Card key={entry.starter.key} className={styles.pathwayCard}><span className="focus-eyebrow">REFERENCE NOT CAPTURED</span><h3>{entry.starter.label}</h3><p>No agency requirement numbers are bundled. Capture a dated source snapshot before ZeusTek claims readiness.</p><button className="focus-secondary" onClick={()=>setEditingReference(null)}>Capture reference snapshot</button></Card>)}</div></section>
   <div className={styles.dashboard}>
    <Card><h2>Current gas evidence · recorded</h2>{latestPlan?.cylinderAssignments?.map((gas,index)=>{const state=deriveCylinderCurrentState({},gasEvidence.fills.filter(fill=>fill.cylinderEquipmentId===gas.cylinderEquipmentId),gasEvidence.analyses.filter(analysis=>analysis.cylinderEquipmentId===gas.cylinderEquipmentId));return <article className={styles.gas} key={gas.id??index}><div><b>{gas.role||`Cylinder ${index+1}`}</b><span>Current analysis: {state.analysisState}</span><span>{gas.analysisId&&gas.analysisId!==state.currentAnalysis?.entityId?'Selected historical analysis is not current for the latest fill.':state.analysedMixLabel}</span></div></article>;})}<p>Declared Plan gases above are not a substitute for current fill-linked analysis. Historical evidence is retained.</p></Card>
@@ -71,7 +74,7 @@ function PathwayCard({row,onEdit}:{row:ReturnType<typeof evaluatePathwayReadines
 function RequirementSetEditor({existing,close,saved}:{existing:Stored<ReferenceRequirementSetRecord>|null;close:()=>void;saved:()=>Promise<void>|void}){
  const [sourceUrl,setSourceUrl] = useState(existing?.sourceUrl ?? '');const [notes,setNotes] = useState(existing?.notes ?? '');
  const base=existing??emptyRequirementSet('tec40','Tec 40');const [agency,setAgency]=useState(base.agency);const [pathwayKey,setPathwayKey]=useState(base.pathwayKey);const [pathwayLabel,setPathwayLabel]=useState(base.pathwayLabel??'');const [versionLabel,setVersionLabel]=useState(existing ? `${base.versionLabel}-new` : base.versionLabel);const [effectiveFrom,setEffectiveFrom]=useState(base.effectiveFrom??'');const [sourceCitation,setSourceCitation]=useState(base.sourceCitation??'');const [requirementsText,setRequirementsText]=useState(JSON.stringify(base.requirements,null,2));const [busy,setBusy]=useState(false);const [error,setError]=useState('');
- async function submit(event:React.FormEvent){event.preventDefault();setBusy(true);setError('');try{const parsed=JSON.parse(requirementsText) as TechnicalRequirementDefinition[];if(!Array.isArray(parsed))throw new Error('Requirements JSON must be an array.');await saveReferenceRequirementSet({agency,pathwayKey,pathwayLabel,versionLabel,effectiveFrom:effectiveFrom||null,effectiveTo:base.effectiveTo??null,sourceCitation:sourceCitation||null,sourceUrl:sourceUrl||null,notes,requirements:parsed,capturedAt:new Date().toISOString()});await saved();close();}catch(reason){setError(reason instanceof Error?reason.message:'Reference snapshot could not be saved.');}finally{setBusy(false);}}
+ async function submit(event:React.SyntheticEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');try{const parsed=JSON.parse(requirementsText) as TechnicalRequirementDefinition[];if(!Array.isArray(parsed))throw new Error('Requirements JSON must be an array.');await saveReferenceRequirementSet({agency,pathwayKey,pathwayLabel,versionLabel,effectiveFrom:effectiveFrom||null,effectiveTo:base.effectiveTo??null,sourceCitation:sourceCitation||null,sourceUrl:sourceUrl||null,notes,requirements:parsed,capturedAt:new Date().toISOString()});await saved();close();}catch(reason){setError(reason instanceof Error?reason.message:'Reference snapshot could not be saved.');}finally{setBusy(false);}}
  return <div className="focus-modal-bg"><AccessibleDialog editable containDismiss label="Technical pathway reference snapshot" className={`focus-modal ${styles.referenceEditor}`} close={()=>{if(!busy)close();}}><form onSubmit={(event)=>void submit(event)}>
  <header><div><span className="focus-eyebrow">VERSIONED REFERENCE DATA</span><h2>{existing?'Capture new pathway version':'Capture pathway snapshot'}</h2><p>Use a source you actually checked. Historical snapshots are immutable; no current agency numbers are bundled.</p></div><button type="button" className="focus-icon" data-dialog-close disabled={busy} aria-label="Close reference editor" onClick={close}><X/></button></header>
  <fieldset disabled={busy} className={styles.referenceFields}>
