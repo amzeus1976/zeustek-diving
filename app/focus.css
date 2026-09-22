@@ -516,6 +516,9 @@ body,.focus-app{font-size:1rem}
 .focus-row i.warn { background: var(--zt-caution); }
 .record-actions button:hover { color: var(--zt-accent-cyan); border-color: var(--zt-border-cyan); }
 .record-actions button:last-child:hover { color: var(--zt-blocked); border-color: color-mix(in srgb,var(--zt-blocked) 50%,transparent); }
+.site-configuration-card :is(button,a,input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea){min-height:var(--zt-target)}
+.site-configuration-card :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea){min-width:0;max-width:100%;border-color:var(--zt-border-muted);background:var(--zt-surface-page);color:var(--zt-text)}
+.site-configuration-card :is(button,a,input,select,textarea):focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
 
 @media(max-width:700px){
   .focus-modal { width:min(100%,calc(100vw - 20px)); padding:16px; }

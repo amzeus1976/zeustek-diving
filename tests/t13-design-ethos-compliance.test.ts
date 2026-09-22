@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   AccessibleDialog,
@@ -106,5 +107,13 @@ describe('T13 targeted legacy-page alignment', () => {
     expect(html).toContain('Readiness is advisory');
     expect(html).toContain('Canonical Skill Group');
     expect(html.indexOf('<header')).toBeLessThan(html.indexOf('role="note"'));
+  });
+
+  it('keeps Site Configuration action and form targets touch-safe', () => {
+    const css = readFileSync(new URL('../app/focus.css', import.meta.url), 'utf8');
+
+    expect(css).toContain(
+      '.site-configuration-card :is(button,a,input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea){min-height:var(--zt-target)}',
+    );
   });
 });
