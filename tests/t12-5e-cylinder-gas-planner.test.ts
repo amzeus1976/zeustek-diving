@@ -5,6 +5,7 @@ import { configureDiveStore } from '../lib/offline/dive-store';
 import {
   cylinderPickerSummary,
   cylinderReadinessWarnings,
+  ownedCylinderRecreationalInput,
   projectGasCylinder,
   planningPageSources,
   warnGasPlan,
@@ -123,6 +124,67 @@ describe('T12.5E canonical cylinder planning sources', () => {
         waterVolumeLiters: 12,
       }),
     ]);
+  });
+
+  it('feeds the stable canonical cylinder ID, volume, pressure and analysed gas into the recreational planner', () => {
+    const cylinder = storedCylinder();
+    const slot = {
+      id: 'slot-1',
+      sourceMode: 'owned' as const,
+      role: 'primary' as const,
+      cylinderEquipmentId: cylinder.entityId,
+      reservePressureBar: 50,
+    };
+    const projection = projectGasCylinder(
+      slot,
+      { plannedDepthM: 24, plannedBottomTimeMin: 30, rmvRateLitresMin: 18 },
+      [storedFill()],
+      [storedAnalysis()],
+      [cylinder],
+      '2026-09-21T12:00:00.000Z',
+    );
+    const input = ownedCylinderRecreationalInput(
+      {
+        mode: 'direct-ascent', selectedBuhlmannModel: 'ZH-L16C', compareOtherModel: false,
+        gfLow: 40, gfHigh: 85, waterType: 'salt', surfacePressureBar: 1,
+        plannedDepthM: 24, conservatismM: 3, maxPpo2: 1.4,
+        selectedGasLabel: 'Air / EAN21', cylinderWaterVolumeL: null,
+        startPressureBar: null, ownRmvLMin: 18, buddyRmvLMin: null,
+        reserveStrategy: 'most-conservative', ascentRateMMin: 9,
+        ownerMaxDurationMin: 35, plannedWorkingTimeMin: 25,
+        routeSegments: [], tableProvider: null,
+      },
+      slot,
+      projection,
+      cylinder,
+    );
+    expect(input).toMatchObject({
+      cylinderSourceMode: 'owned',
+      cylinderSourceId: 'cylinder-1',
+      cylinderWaterVolumeL: 12,
+      startPressureBar: 232,
+      pressureSource: 'Current cylinder pressure · fill event fill-root',
+    });
+    expect(input.cylinderSourceLabel).toBe('03 · S/N FAB-123');
+    expect(input.analysedGases).toEqual([
+      expect.objectContaining({
+        oxygenFraction: 0.32,
+        source: 'owned-cylinder',
+        analysed: true,
+      }),
+    ]);
+    expect(input.selectedGasLabel).toBe(input.analysedGases?.[0]?.label);
+  });
+
+  it('starts the owned-cylinder picker summary with the exact stored ID and no text prefix', () => {
+    expect(
+      cylinderPickerSummary(
+        storedCylinder(),
+        [storedFill()],
+        [storedAnalysis()],
+        '2026-09-21T12:00:00.000Z',
+      ),
+    ).toBe('03 · 12 L · EAN32 · 232 bar · analysis current · visual due 2027-07');
   });
 });
 
@@ -368,7 +430,7 @@ describe('T12.5E cylinder readiness', () => {
         '2026-09-21T12:00:00.000Z',
       ),
     ).toBe(
-      'Cyl 03 · 12 L · Nitrox 32 · 180 bar · analysis current · visual due 2027-07',
+      '03 · 12 L · EAN32 · 180 bar · analysis current · visual due 2027-07',
     );
   });
 });

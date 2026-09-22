@@ -174,12 +174,59 @@ export type LoadoutTargetKind = 'dive' | 'trip';
 
 export const listReusableLoadouts = () => listRecords<ReusableLoadoutRecord>('equipment-set');
 export const listCylinders = () => listRecords<CylinderEquipmentRecord>('cylinder');
-export async function listCylinderInventory() {
+type InventoryCylinder = Stored<CylinderEquipmentRecord> & { recordStorageKind: 'cylinder' | 'equipment' };
+
+async function readCylinderInventory(): Promise<InventoryCylinder[]> {
   const [cylinders, equipment] = await Promise.all([listCylinders(), listRecords<EquipmentRecord>('equipment')]);
   const canonical = cylinders.map((item) => ({ ...item, recordStorageKind: 'cylinder' as const }));
   const ids = new Set(canonical.map((item) => item.entityId));
-  const legacy = equipment.filter(isCylinderEquipment).filter((item) => !ids.has(item.entityId)).map((item) => ({ ...item, recordStorageKind: 'equipment' as const } as Stored<CylinderEquipmentRecord>));
+  const legacy = equipment.filter(isCylinderEquipment).filter((item) => !ids.has(item.entityId)).map((item) => ({ ...item, recordStorageKind: 'equipment' as const } as InventoryCylinder));
   return [...canonical, ...legacy];
+}
+
+function cylinderIdNumber(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? '';
+  if (!/^\d{1,2}$/.test(trimmed)) return null;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 99 ? parsed : null;
+}
+
+const formatCylinderId = (value: number) => String(value).padStart(2, '0');
+let cylinderIdAssignmentQueue: Promise<void> = Promise.resolve();
+
+async function ensureCylinderIds() {
+  cylinderIdAssignmentQueue = cylinderIdAssignmentQueue.then(async () => {
+    const inventory = (await readCylinderInventory()).sort((left, right) =>
+      `${left.createdAt ?? ''}:${left.entityId}`.localeCompare(`${right.createdAt ?? ''}:${right.entityId}`),
+    );
+    const used = new Set<number>();
+    let highest = 0;
+    const repairs: Array<{ item: InventoryCylinder; cylinderNumber: string }> = [];
+    for (const item of inventory) {
+      const parsed = cylinderIdNumber(item.cylinderNumber);
+      if (parsed != null && !used.has(parsed)) {
+        used.add(parsed);
+        highest = Math.max(highest, parsed);
+        const normalised = formatCylinderId(parsed);
+        if (item.cylinderNumber !== normalised) repairs.push({ item, cylinderNumber: normalised });
+        continue;
+      }
+      do highest += 1; while (used.has(highest));
+      if (highest > 99) throw new Error('Cylinder ID capacity reached. IDs are limited to 01–99.');
+      used.add(highest);
+      repairs.push({ item, cylinderNumber: formatCylinderId(highest) });
+    }
+    for (const { item, cylinderNumber } of repairs) {
+      const { recordStorageKind, ...record } = item;
+      await saveRecord(recordStorageKind, { ...record, entityId: item.entityId, cylinderNumber });
+    }
+  });
+  await cylinderIdAssignmentQueue;
+}
+
+export async function listCylinderInventory() {
+  await ensureCylinderIds();
+  return readCylinderInventory();
 }
 export const listCylinderFills = () => listRecords<CylinderFillRecord>('cylinder-fill');
 export const listGasAnalyses = () => listRecords<GasAnalysisRecord>('gas-analysis');
@@ -377,14 +424,13 @@ export async function saveCylinderProfile(
   }
   const { recordStorageKind, ...storedInput } = input;
   const storageKind = recordStorageKind === 'equipment' ? 'equipment' : 'cylinder';
-  let cylinderNumber = input.cylinderNumber?.trim() || null;
+  const inventory = await listCylinderInventory();
+  const existing = input.entityId ? inventory.find((item) => item.entityId === input.entityId) : null;
+  let cylinderNumber = existing?.cylinderNumber ?? null;
   if (!cylinderNumber) {
-    const inventory = await listCylinderInventory();
-    const highest = inventory.reduce((maximum, cylinder) => {
-      const value = Number.parseInt(cylinder.cylinderNumber ?? '', 10);
-      return Number.isFinite(value) ? Math.max(maximum, value) : maximum;
-    }, inventory.length);
-    cylinderNumber = String(highest + 1).padStart(2, '0');
+    const highest = inventory.reduce((maximum, cylinder) => Math.max(maximum, cylinderIdNumber(cylinder.cylinderNumber) ?? 0), 0);
+    if (highest >= 99) throw new Error('Cylinder ID capacity reached. IDs are limited to 01–99.');
+    cylinderNumber = formatCylinderId(highest + 1);
   }
   const lastTestAt = monthValue(input.lastTestAt);
   const lastTestType = lastTestAt ? input.lastTestType ?? null : null;

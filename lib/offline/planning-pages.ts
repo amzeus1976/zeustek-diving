@@ -511,9 +511,13 @@ export function cylinderPickerSummary(
       ? `visual overdue ${visualDue}`
       : `visual due ${visualDue}`;
   return [
-    `Cyl ${cylinder.cylinderNumber || cylinder.entityId}`,
+    cylinder.cylinderNumber || cylinder.entityId,
     cylinder.waterVolumeLiters == null ? 'volume unknown' : `${cylinder.waterVolumeLiters} L`,
-    mix,
+    analysis
+      ? fractionLabel(analysis.oxygenFraction, analysis.heliumFraction)
+      : evidence.selectedEvent
+        ? fractionLabel(evidence.selectedEvent.oxygenFraction, evidence.selectedEvent.heliumFraction)
+        : mix,
     evidence.selectedEvent?.pressureBar == null
       ? 'pressure unknown'
       : `${evidence.selectedEvent.pressureBar} bar`,
@@ -544,30 +548,101 @@ export function rentalCylinderRecreationalInput(
   projection: GasCylinderProjection,
 ): RecreationalGasInput {
   const snapshot = cylinder.rentalSnapshot;
-  if (
-    cylinder.sourceMode !== 'rental' ||
-    !snapshot ||
-    !projection.mix ||
-    projection.mix.heliumFraction > 0
-  )
-    return input;
+  if (cylinder.sourceMode !== 'rental' || !snapshot) return input;
+  const sourceFacts = {
+    cylinderSourceMode: 'rental' as const,
+    cylinderSourceId: null,
+    cylinderSourceLabel: snapshot.label || 'Rental / temporary cylinder',
+    cylinderWaterVolumeL: snapshot.waterVolumeL,
+    startPressureBar:
+      snapshot.remainingPressureBar ?? snapshot.startPressureBar,
+    pressureSource: projection.startPressureEvidence.label,
+    fillProvenance: projection.provenanceChain,
+    analysisProvenance: projection.mixProvenance,
+    sourceWarnings: projection.warnings,
+  };
+  if (!projection.mix || projection.mix.heliumFraction > 0)
+    return {
+      ...input,
+      ...sourceFacts,
+      selectedGasLabel: '',
+      analysedGases: [],
+      customGas: null,
+    };
   const label = rentalGasLabel(snapshot);
   const gas: GasChoice = {
     label,
     oxygenFraction: projection.mix.oxygenFraction,
     source:
-      projection.analysisState === 'current' ? 'analysed-fill' : 'custom',
+      snapshot.fillSource === 'unknown'
+        ? 'rental-snapshot'
+        : 'operator-supplied',
     analysed: projection.analysisState === 'current',
     evidence: projection.mixProvenance,
   };
   return {
     ...input,
+    ...sourceFacts,
     selectedGasLabel: label,
-    cylinderWaterVolumeL: snapshot.waterVolumeL,
-    startPressureBar:
-      snapshot.remainingPressureBar ?? snapshot.startPressureBar,
     analysedGases:
       projection.analysisState === 'current' ? [gas] : [],
+    customGas: projection.analysisState === 'current' ? null : gas,
+  };
+}
+
+/** Projects one canonical owned cylinder into the additive recreational snapshot. */
+export function ownedCylinderRecreationalInput(
+  input: RecreationalGasInput,
+  cylinder: GasPlanCylinder,
+  projection: GasCylinderProjection,
+  equipment: Stored<CylinderEquipmentRecord> | null | undefined,
+): RecreationalGasInput {
+  if (cylinder.sourceMode === 'rental' || !cylinder.cylinderEquipmentId)
+    return input;
+  const cylinderLabel = equipment
+    ? equipment.cylinderNumber || equipment.entityId
+    : cylinder.cylinderEquipmentId;
+  const sourceFacts = {
+    cylinderSourceMode: 'owned' as const,
+    cylinderSourceId: cylinder.cylinderEquipmentId,
+    cylinderSourceLabel: [
+      cylinderLabel,
+      equipment?.serialNumber ? `S/N ${equipment.serialNumber}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    cylinderWaterVolumeL:
+      cylinder.waterVolumeOverrideL ?? equipment?.waterVolumeLiters ?? null,
+    startPressureBar: projection.startPressureEvidence.pressureBar,
+    pressureSource: projection.startPressureEvidence.label,
+    fillProvenance: projection.provenanceChain,
+    analysisProvenance: projection.mixProvenance,
+    sourceWarnings: projection.warnings,
+  };
+  if (!projection.mix || projection.mix.heliumFraction > 0)
+    return {
+      ...input,
+      ...sourceFacts,
+      selectedGasLabel: '',
+      analysedGases: [],
+      customGas: null,
+    };
+  const label = `Owned · ${cylinderLabel} · ${fractionLabel(
+    projection.mix.oxygenFraction,
+    projection.mix.heliumFraction,
+  )}`;
+  const gas: GasChoice = {
+    label,
+    oxygenFraction: projection.mix.oxygenFraction,
+    source: 'owned-cylinder',
+    analysed: projection.analysisState === 'current',
+    evidence: projection.mixProvenance,
+  };
+  return {
+    ...input,
+    ...sourceFacts,
+    selectedGasLabel: label,
+    analysedGases: projection.analysisState === 'current' ? [gas] : [],
     customGas: projection.analysisState === 'current' ? null : gas,
   };
 }
@@ -1042,6 +1117,10 @@ export async function saveGasPlanNotesToDivePlan(
         gasLimitedTimeMin: gasPlan.recGasPlan101.gasCandidates.find(candidate => candidate.selected)?.gasLimitedTimeMin ?? null,
         reserveBar: gasPlan.recGasPlan101.reserve.selectedBar,
         limitingFactor: gasPlan.recGasPlan101.limitingFactor,
+        readiness: gasPlan.recGasPlan101.readiness,
+        plannedWorkingTimeMin: gasPlan.recGasPlan101.plannedWorkingTimeMin,
+        sourceMode: gasPlan.recGasPlan101.cylinderSourceMode ?? 'manual',
+        plannerVersion: gasPlan.recGasPlan101.version,
       } } : {}),
     },
   ];

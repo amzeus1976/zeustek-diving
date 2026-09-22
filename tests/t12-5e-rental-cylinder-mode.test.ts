@@ -207,6 +207,7 @@ describe('T12.5E rental cylinder projection', () => {
         reserveStrategy: 'thirds',
         ascentRateMMin: 9,
         ownerMaxDurationMin: 40,
+        plannedWorkingTimeMin: 30,
         routeSegments: [
           { id: 'turn', label: 'Turn', depthM: 30, minutes: 5 },
           { id: 'return', label: 'Return', depthM: 20, minutes: 5 },
@@ -226,6 +227,9 @@ describe('T12.5E rental cylinder projection', () => {
     expect(selected.ndl.state).toBe('available');
     expect(selected.gasLimitedTimeMin).toBeGreaterThan(0);
     expect(snapshot.routeCheckpoints.state).toBe('available');
+    expect(snapshot.warnings).toContain(
+      'Rental cylinder — service history not recorded in ZeusTek. Verify with operator.',
+    );
   });
 
   it('does not misrepresent a helium mix as recreational nitrox', () => {
@@ -255,10 +259,15 @@ describe('T12.5E rental cylinder projection', () => {
       reserveStrategy: 'thirds' as const,
       ascentRateMMin: 9,
       ownerMaxDurationMin: null,
+      plannedWorkingTimeMin: 30,
       routeSegments: [],
     };
 
-    expect(rentalCylinderRecreationalInput(base, cylinder, projected)).toBe(base);
+    expect(rentalCylinderRecreationalInput(base, cylinder, projected)).toMatchObject({
+      cylinderSourceMode: 'rental',
+      cylinderSourceId: null,
+      selectedGasLabel: '',
+    });
     expect(projected.warnings).toContain(
       'Rental helium-containing gas is outside the recreational NDL mode.',
     );
@@ -282,6 +291,49 @@ describe('T12.5E rental cylinder persistence and conversion', () => {
         analysisSource: 'analysed-by-operator',
       },
     });
+    expect(await listCylinderInventory()).toEqual([]);
+  });
+
+  it('saves and reopens the T12.6R engine, limit and route-checkpoint snapshot inside the existing Gas Plan', async () => {
+    const cylinder = rentalCylinder();
+    const projected = projectGasCylinder(cylinder, gasPlan(cylinder), [], [], []);
+    const recInput = rentalCylinderRecreationalInput(
+      {
+        mode: 'out-and-back', selectedBuhlmannModel: 'ZH-L16B', compareOtherModel: true,
+        gfLow: 35, gfHigh: 80, waterType: 'salt', surfacePressureBar: 1,
+        plannedDepthM: 24, conservatismM: 3, maxPpo2: 1.4,
+        selectedGasLabel: 'Air / EAN21', cylinderWaterVolumeL: null,
+        startPressureBar: null, ownRmvLMin: 18, buddyRmvLMin: null,
+        ownRmvSource: 'plan-snapshot', buddyRmvSource: 'owner-fallback',
+        reserveStrategy: 'most-conservative', ascentRateMMin: 9,
+        ownerMaxDurationMin: 40, plannedWorkingTimeMin: 20,
+        routeSegments: [{
+          id: 'turn', label: 'Turn point', checkpointKind: 'turn', startDepthM: 24,
+          endDepthM: 24, averageDepthM: 24, durationMin: 6, depthM: null,
+          minutes: null, cylinderId: null, stressFactor: 1.2, buddySharing: false,
+          directAscentPossible: true, notes: 'Return at the turn pressure.',
+        }],
+        tableProvider: null,
+      },
+      cylinder,
+      projected,
+    );
+    const snapshot = buildRecreationalGasSnapshot(recInput, '2026-09-21T12:00:00.000Z');
+    await saveGasPlan({ ...gasPlan(cylinder), recGasPlan101: snapshot });
+
+    const reopened = (await listGasPlans())[0]!.recGasPlan101!;
+    expect(reopened).toMatchObject({
+      version: 'zeustek-rec-gas-102/1.1',
+      selectedBuhlmannModel: 'ZH-L16B',
+      gfLow: 35,
+      gfHigh: 80,
+      plannedWorkingTimeMin: 20,
+      cylinderSourceMode: 'rental',
+      readiness: expect.stringMatching(/Ready|Caution|Blocked/),
+      routeSegments: [expect.objectContaining({ label: 'Turn point', checkpointKind: 'turn' })],
+    });
+    expect(reopened.gasCandidates.find((row) => row.selected)?.ndl.minutes).toEqual(expect.any(Number));
+    expect(reopened.routeCheckpoints.state).toBe('available');
     expect(await listCylinderInventory()).toEqual([]);
   });
 

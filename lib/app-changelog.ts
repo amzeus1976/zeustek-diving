@@ -1,6 +1,29 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.49',
+    date: '2026-09-22',
+    title: 'Stable numeric cylinder identifiers',
+    changes: [
+      'Standardised cylinder IDs as permanent two-digit numeric labels such as 01, 02 and 03, separate from the editable manufacturer serial number.',
+      'Assigned and persisted missing legacy cylinder IDs without changing canonical record identities, and prevented later edits or retirement from regenerating or reusing an ID.',
+      'Updated the Cylinders & Gas table, editor and detail views to use the ID # label with no Cylinder, Tank or other text prefix.',
+      'Updated owned-cylinder Gas Planning selectors and provenance summaries to begin with the stable numeric ID while retaining volume, mix, pressure, analysis and inspection evidence.',
+    ],
+  },
+  {
+    version: '1.0.48',
+    date: '2026-09-22',
+    title: 'Recreational no-stop gas planning workbench',
+    changes: [
+      'Completed the recreational no-stop planner with selectable ZH-L16B or ZH-L16C, preserved Gradient Factors, controlling-compartment evidence and explicit unavailable reasons without generating decompression schedules.',
+      'Separated NDL, gas-limited time, owner maximum duration and planned working time in one readiness summary with MOD, PPO₂, EAD, reserve and limiting-factor evidence.',
+      'Connected canonical owned-cylinder and rental-snapshot volume, pressure, fill, analysis, valve and inspection provenance to the saved Gas Plan without changing cylinder or Dive records.',
+      'Added best and conservative mix comparisons while allowing lower-oxygen actual gas, plus explicit analysis, MOD/PPO₂, gas sufficiency and recreational-scope warnings.',
+      'Added calculated emergency reserve phases, rule-of-thirds comparison and route/checkpoint gas and pressure evidence for return, shore, wreck and multilevel recreational plans.',
+    ],
+  },
+  {
     version: '1.0.47',
     date: '2026-09-21',
     title: 'Rental and temporary cylinder planning',

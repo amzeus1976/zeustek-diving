@@ -21,12 +21,14 @@ export interface NdlInput {
   waterType: WaterType; surfacePressureBar: number; ascentRateMMin?: number;
   priorLevels?: NdlLevel[] | undefined;
   residualNitrogenUnknown?: boolean;
+  calculatedAt?: string;
 }
 export interface NdlResult {
   state: 'available' | 'unavailable' | 'blocked'; model: BuhlmannModel; gfLow: number; gfHigh: number;
   minutes: number | null; controllingCompartment: number | null; unavailableReason: string | null;
   waterType: WaterType; surfacePressureBar: number; oxygenFraction: number; depthM: number;
   restedOrResidual: 'rested-surface-air' | 'same-dive-levels'; engineVersion: string;
+  calculatedAt: string;
   assumptions: string[];
 }
 const ambient = (depthM: number, water: WaterType, surface: number) => surface + depthM / (water === 'fresh' ? 10.3 : 10);
@@ -58,7 +60,7 @@ export function calculateBuhlmannNdl(input: NdlInput): NdlResult {
   const base = { state: 'unavailable' as const, model, gfLow, gfHigh, minutes: null, controllingCompartment: null,
     unavailableReason: null, waterType, surfacePressureBar, oxygenFraction: fo2, depthM,
     restedOrResidual: input.priorLevels?.length ? 'same-dive-levels' as const : 'rested-surface-air' as const,
-    engineVersion: NDL_ENGINE_VERSION, assumptions };
+    engineVersion: NDL_ENGINE_VERSION, calculatedAt: input.calculatedAt ?? new Date().toISOString(), assumptions };
   if (input.residualNitrogenUnknown) return { ...base, unavailableReason: 'Repetitive-dive tissue carryover is not supported; verify NDL with a dive computer or the applicable current table.' };
   if (!N2_A[model] || !['salt', 'fresh'].includes(waterType) || !Number.isFinite(depthM) || depthM <= 0 || depthM > 60
     || !Number.isFinite(fo2) || fo2 < .16 || fo2 >= 1 || !Number.isFinite(surfacePressureBar) || surfacePressureBar <= VAPOUR_BAR
