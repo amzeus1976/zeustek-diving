@@ -498,3 +498,28 @@ body,.focus-app{font-size:1rem}
 @media (max-width: 480px) {
   .focus-heading-title { align-items: flex-start; }
 }
+
+/* T13 shared ZeusTek surface, action, status and form contract. */
+.focus-app { background: radial-gradient(circle at 76% -18%, rgba(0, 107, 145, .16), transparent 34%), var(--zt-surface-page); color: var(--zt-text); }
+.focus-card,.panel { background: linear-gradient(145deg,var(--zt-surface-card),var(--zt-surface-raised)); border-color: var(--zt-border-cyan); border-radius: var(--zt-radius-card); }
+.focus-primary,.focus-secondary,.focus-link,.record-actions button { min-height: var(--zt-target); }
+.focus-primary { background: var(--zt-accent-orange); border-color: var(--zt-accent-orange); }
+.focus-secondary { background: var(--zt-surface-raised); border-color: var(--zt-border-muted); color: var(--zt-text); }
+.focus-link { color: var(--zt-accent-orange); }
+.focus-heading>div>span,.focus-eyebrow { color: var(--zt-accent-orange); }
+.focus-heading p,.focus-copy { color: var(--zt-text-muted); }
+.focus-modal { min-width: 0; border-color: var(--zt-border-cyan); background: var(--zt-surface-card); }
+.focus-modal :is(input,select,textarea),.record-fields :is(input,select,textarea) { min-width: 0; max-width: 100%; min-height: var(--zt-target); border-color: var(--zt-border-muted); background: #070b0d; color: var(--zt-text); }
+.focus-modal :is(input,select,textarea):focus-visible,.record-fields :is(input,select,textarea):focus-visible { outline: 3px solid var(--zt-focus); outline-offset: 2px; border-color: var(--zt-accent-cyan); box-shadow: none; }
+.focus-row { border-color: var(--zt-border-muted); }
+.focus-row i { background: var(--zt-ready); }
+.focus-row i.warn { background: var(--zt-caution); }
+.record-actions button:hover { color: var(--zt-accent-cyan); border-color: var(--zt-border-cyan); }
+.record-actions button:last-child:hover { color: var(--zt-blocked); border-color: color-mix(in srgb,var(--zt-blocked) 50%,transparent); }
+
+@media(max-width:700px){
+  .focus-modal { width:min(100%,calc(100vw - 20px)); padding:16px; }
+  .focus-modal footer,.zt-dialog-actions { align-items:stretch; }
+  .focus-modal footer>button,.focus-modal footer>a { min-width:0; }
+  .record-actions { flex-wrap:wrap; }
+}

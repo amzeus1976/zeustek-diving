@@ -16,7 +16,7 @@ export function AccessibleDialog({label,className,close,editable=false,dirty=fal
     return()=>{dialog?.close();if(previous?.isConnected)previous.focus({preventScroll:true});};
   },[]);
   useEffect(()=>{if(confirmDiscard)confirmRef.current?.focus({preventScroll:true});},[confirmDiscard]);
-  return <dialog tabIndex={-1} ref={ref} className={className} aria-label={label} data-editable={editable||undefined}
+  return <dialog tabIndex={-1} ref={ref} className={className} aria-label={label} data-zeustek-dialog="true" data-editable={editable||undefined}
     onCancel={event=>{event.preventDefault();if(containDismiss)event.stopPropagation();if(onEscape)onEscape();else if(dialogAllowsImplicitDismiss(editable))close();}}
     onInputCapture={()=>{if(editable)setInteractionDirty(true);}}
     onChangeCapture={()=>{if(editable)setInteractionDirty(true);}}

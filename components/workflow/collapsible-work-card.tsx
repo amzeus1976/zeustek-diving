@@ -47,12 +47,12 @@ export function CollapsibleWorkCard({
   const canShowMore = rowCount != null && rowCount > previewLimit;
   const content = typeof children === 'function' ? children({ expanded, previewLimit }) : children;
   return (
-    <section id={id} className={`${styles.card} ${className}`} data-minimized={minimized || undefined}>
+    <section id={id} className={`${styles.card} ${className}`} data-zeustek-density-card="true" data-minimized={minimized || undefined}>
       <header className={styles.header}>
         <div className={styles.heading}>
           {eyebrow && <span className="focus-eyebrow">{eyebrow}</span>}
           <h2>{onOpenDetail ? <button type="button" className={styles.headingButton} onClick={onOpenDetail} aria-label={`Open ${title}`}>{title}</button> : title}</h2>
-          {(status || alert) && <p className={styles.status}>{status}{alert && <strong>{alert}</strong>}</p>}
+          {(status || alert) && <p className={styles.status} role="status" aria-live="polite">{status}{alert && <strong role="alert">{alert}</strong>}</p>}
         </div>
         <div className={styles.controls}>
           {actions}
