@@ -8,6 +8,7 @@
   background: #08141a;
   color: #f7fbff;
 }
+
 .hero {
   display: flex;
   align-items: end;
@@ -261,4 +262,58 @@
     width: 100%;
     min-height: 3rem;
   }
+}
+
+/* T13 shared-system alignment: profile records and privacy semantics are unchanged. */
+.hero,
+.ownerCard,
+.toolbar,
+.personCard,
+.empty,
+.detailGrid section,
+.editor fieldset {
+  border-color: var(--zt-border-cyan);
+  background-color: var(--zt-surface-card);
+  border-radius: var(--zt-radius-card);
+}
+.hero span,
+.detailGrid h3,
+.editor legend {
+  color: var(--zt-accent-orange);
+}
+.hero p,
+.ownerCard p,
+.personCard p,
+.empty p {
+  color: var(--zt-text-muted);
+}
+.toolbar input,
+.toolbar select,
+.fields input,
+.fields select,
+.fields textarea,
+.fullLabel textarea {
+  min-height: var(--zt-target);
+  border-color: var(--zt-border-muted);
+  background: #070b0d;
+  color: var(--zt-text);
+}
+.personCard:focus-within,
+.toolbar :is(input,select):focus-visible,
+.editor :is(input,select,textarea):focus-visible,
+.dialog :is(button,a):focus-visible {
+  outline: 3px solid var(--zt-focus);
+  outline-offset: 3px;
+}
+.avatar {
+  color: var(--zt-accent-cyan);
+  background: color-mix(in srgb,var(--zt-accent-cyan) 12%,var(--zt-surface-card));
+}
+.error {
+  color: var(--zt-caution);
+  border-color: var(--zt-caution);
+}
+.dialog footer,
+.editor footer {
+  flex-wrap: wrap;
 }

@@ -3,6 +3,7 @@
   gap: 12px;
   min-width: 0;
 }
+
 .hero {
   min-height: 128px;
   margin: -2px -2px 0;
@@ -525,6 +526,45 @@
   .readiness article:nth-child(-n + 2) {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
+}
+
+/* T13 shared-system alignment: preserve analytics layout and data semantics. */
+.kpis,
+.card,
+.readiness,
+.detailPanel,
+.filterDialog,
+.detailDialog {
+  border-color: var(--zt-border-cyan);
+  background-color: var(--zt-surface-card);
+}
+.kpis,
+.card,
+.readiness {
+  border-radius: var(--zt-radius-card);
+}
+.card > header button,
+.heroQuote i {
+  color: var(--zt-accent-orange);
+}
+.kpi svg,
+.scopeNotice {
+  color: var(--zt-accent-cyan);
+}
+.kpi:focus-visible,
+.card > header button:focus-visible,
+.filterDialog :is(button,input,select):focus-visible,
+.detailDialog :is(button,a):focus-visible {
+  outline: 3px solid var(--zt-focus);
+  outline-offset: 3px;
+}
+.filterDialog :is(input,select),
+.detailDialog :is(input,select) {
+  min-width: 0;
+  min-height: var(--zt-target);
+  border-color: var(--zt-border-muted);
+  background: #070b0d;
+  color: var(--zt-text);
 }
 @media (max-width: 700px) {
   .page {
