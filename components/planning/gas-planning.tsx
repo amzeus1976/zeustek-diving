@@ -1579,7 +1579,7 @@ function GasPlanEditor({
               <span className="focus-eyebrow">CYLINDER READINESS</span>
               <h2>{detailsItem.name}</h2>
               <p>
-                Cyl {detailsItem.cylinderNumber || detailsItem.entityId} · S/N{' '}
+                {detailsItem.cylinderNumber || detailsItem.entityId} · S/N{' '}
                 {detailsItem.serialNumber || 'not recorded'}
               </p>
             </div>
@@ -1594,7 +1594,7 @@ function GasPlanEditor({
             </button>
           </header>
           <dl className={styles.evidenceGrid}>
-            <div><dt>Cylinder ID</dt><dd>{detailsItem.cylinderNumber || detailsItem.entityId}</dd></div>
+            <div><dt>ID #</dt><dd>{detailsItem.cylinderNumber || detailsItem.entityId}</dd></div>
             <div><dt>Manufacturer / serial</dt><dd>{detailsItem.manufacturer || 'Not recorded'} · {detailsItem.serialNumber || 'Not recorded'}</dd></div>
             <div><dt>Water volume</dt><dd>{detailsItem.waterVolumeLiters == null ? 'Not recorded' : `${detailsItem.waterVolumeLiters} L`}</dd></div>
             <div><dt>Valve</dt><dd>{detailsItem.valveType || 'Unknown'}{detailsSlot.requiredValveType ? ` · required ${detailsSlot.requiredValveType}` : ''}</dd></div>

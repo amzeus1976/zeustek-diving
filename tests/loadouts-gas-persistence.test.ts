@@ -78,6 +78,33 @@ describe('T05 canonical offline records and historical assignments',()=>{
     expect(inventory[1]).toMatchObject({lastTestType:'visual',lastTestAt:'2028-08',hydroDueAt:null,visualDueAt:'2031-02'});
     expect(deriveCylinderInspectionSchedule({hydroTestAt:'2026-02',visualTestAt:'2028-08'})).toEqual({latestHydro:'2026-02',latestVisualQualifyingTest:'2028-08',hydroDueAt:'2031-02',visualDueAt:'2031-02'});
   });
+  it('keeps a two-digit cylinder ID stable on edit and never reuses a retired cylinder ID',async()=>{
+    const first=await saveCylinderProfile({name:'First cylinder',serialNumber:'SERIAL-A'});
+    const second=await saveCylinderProfile({name:'Second cylinder',serialNumber:'SERIAL-B'});
+    await saveCylinderProfile({entityId:first.id,name:'First cylinder retired',serialNumber:'SERIAL-A',cylinderNumber:'99',cylinderStatus:'retired',retired:true});
+    const third=await saveCylinderProfile({name:'Third cylinder',serialNumber:'SERIAL-C'});
+    const inventory=(await listCylinderInventory()).sort((left,right)=>String(left.cylinderNumber).localeCompare(String(right.cylinderNumber)));
+    expect(inventory.map((item)=>[item.entityId,item.cylinderNumber])).toEqual([
+      [first.id,'01'],
+      [second.id,'02'],
+      [third.id,'03'],
+    ]);
+  });
+  it('assigns permanent two-digit IDs to pre-existing cylinder records that do not have one',async()=>{
+    await saveLocalRecord('cylinder',{entityId:'legacy-missing',name:'Legacy missing ID',category:'Cylinder',serialNumber:'LEGACY-A'});
+    await saveLocalRecord('equipment',{entityId:'legacy-one-digit',name:'Legacy 12L cylinder',category:'Cylinder',cylinderNumber:'2',serialNumber:'LEGACY-B'});
+    const firstRead=(await listCylinderInventory()).sort((left,right)=>left.entityId.localeCompare(right.entityId));
+    expect(firstRead.map((item)=>[item.entityId,item.cylinderNumber])).toEqual([
+      ['legacy-missing','01'],
+      ['legacy-one-digit','02'],
+    ]);
+    zeustekDb.close();await zeustekDb.open();
+    const reopened=(await listCylinderInventory()).sort((left,right)=>left.entityId.localeCompare(right.entityId));
+    expect(reopened.map((item)=>[item.entityId,item.cylinderNumber])).toEqual([
+      ['legacy-missing','01'],
+      ['legacy-one-digit','02'],
+    ]);
+  });
   it('rejects cross-cylinder or pre-fill analyses without creating evidence',async()=>{
     const fill=await saveCylinderFill({cylinderEquipmentId:'a',filledAt:'2026-09-01T10:00:00Z',pressureBar:200,oxygenFraction:.21,heliumFraction:0,provider:'',notes:'',source:'recorded'});
     const input={cylinderEquipmentId:'b',fillId:fill.id,analysedAt:'2026-09-01T10:10:00Z',oxygenFraction:.21,heliumFraction:0,analysedByPersonId:null,attachmentIds:[],notes:''};

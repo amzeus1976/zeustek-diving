@@ -1,6 +1,17 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.49',
+    date: '2026-09-22',
+    title: 'Stable numeric cylinder identifiers',
+    changes: [
+      'Standardised cylinder IDs as permanent two-digit numeric labels such as 01, 02 and 03, separate from the editable manufacturer serial number.',
+      'Assigned and persisted missing legacy cylinder IDs without changing canonical record identities, and prevented later edits or retirement from regenerating or reusing an ID.',
+      'Updated the Cylinders & Gas table, editor and detail views to use the ID # label with no Cylinder, Tank or other text prefix.',
+      'Updated owned-cylinder Gas Planning selectors and provenance summaries to begin with the stable numeric ID while retaining volume, mix, pressure, analysis and inspection evidence.',
+    ],
+  },
+  {
     version: '1.0.48',
     date: '2026-09-22',
     title: 'Recreational no-stop gas planning workbench',

@@ -511,9 +511,13 @@ export function cylinderPickerSummary(
       ? `visual overdue ${visualDue}`
       : `visual due ${visualDue}`;
   return [
-    `Cyl ${cylinder.cylinderNumber || cylinder.entityId}`,
+    cylinder.cylinderNumber || cylinder.entityId,
     cylinder.waterVolumeLiters == null ? 'volume unknown' : `${cylinder.waterVolumeLiters} L`,
-    mix,
+    analysis
+      ? fractionLabel(analysis.oxygenFraction, analysis.heliumFraction)
+      : evidence.selectedEvent
+        ? fractionLabel(evidence.selectedEvent.oxygenFraction, evidence.selectedEvent.heliumFraction)
+        : mix,
     evidence.selectedEvent?.pressureBar == null
       ? 'pressure unknown'
       : `${evidence.selectedEvent.pressureBar} bar`,
@@ -596,8 +600,8 @@ export function ownedCylinderRecreationalInput(
   if (cylinder.sourceMode === 'rental' || !cylinder.cylinderEquipmentId)
     return input;
   const cylinderLabel = equipment
-    ? `Cyl ${equipment.cylinderNumber || equipment.entityId}`
-    : `Cyl ${cylinder.cylinderEquipmentId}`;
+    ? equipment.cylinderNumber || equipment.entityId
+    : cylinder.cylinderEquipmentId;
   const sourceFacts = {
     cylinderSourceMode: 'owned' as const,
     cylinderSourceId: cylinder.cylinderEquipmentId,

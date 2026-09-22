@@ -165,7 +165,7 @@ describe('T12.5E canonical cylinder planning sources', () => {
       startPressureBar: 232,
       pressureSource: 'Current cylinder pressure · fill event fill-root',
     });
-    expect(input.cylinderSourceLabel).toContain('Cyl 03');
+    expect(input.cylinderSourceLabel).toBe('03 · S/N FAB-123');
     expect(input.analysedGases).toEqual([
       expect.objectContaining({
         oxygenFraction: 0.32,
@@ -174,6 +174,17 @@ describe('T12.5E canonical cylinder planning sources', () => {
       }),
     ]);
     expect(input.selectedGasLabel).toBe(input.analysedGases?.[0]?.label);
+  });
+
+  it('starts the owned-cylinder picker summary with the exact stored ID and no text prefix', () => {
+    expect(
+      cylinderPickerSummary(
+        storedCylinder(),
+        [storedFill()],
+        [storedAnalysis()],
+        '2026-09-21T12:00:00.000Z',
+      ),
+    ).toBe('03 · 12 L · EAN32 · 232 bar · analysis current · visual due 2027-07');
   });
 });
 
@@ -419,7 +430,7 @@ describe('T12.5E cylinder readiness', () => {
         '2026-09-21T12:00:00.000Z',
       ),
     ).toBe(
-      'Cyl 03 · 12 L · Nitrox 32 · 180 bar · analysis current · visual due 2027-07',
+      '03 · 12 L · EAN32 · 180 bar · analysis current · visual due 2027-07',
     );
   });
 });
