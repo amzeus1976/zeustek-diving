@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { CardImageView } from './certification-images';
 import { ProfilePicture } from './profile-picture';
 import { useRecordRefresh } from './record-status';
@@ -225,6 +226,10 @@ export function PeopleOperators() {
     }
   }
 
+  if (editing) return <ProfileEditor person={editing} people={people} dives={dives}
+    certifications={certifications} error={error}
+    close={() => { setEditing(null); setError(''); }} save={save}/>;
+
   return (
     <>
       <header className={styles.hero}>
@@ -356,20 +361,6 @@ export function PeopleOperators() {
             setEditing({ ...viewing });
             setViewing(null);
           }}
-        />
-      )}
-      {editing && (
-        <ProfileEditor
-          person={editing}
-          people={people}
-          dives={dives}
-          certifications={certifications}
-          error={error}
-          close={() => {
-            setEditing(null);
-            setError('');
-          }}
-          save={save}
         />
       )}
     </>
@@ -596,7 +587,7 @@ function ProfileEditor({
     draft.roles?.boatCharter,
   );
   return (
-    <AccessibleDialog
+    <RecordEditorWorkspace
       label={
         draft.entityId
           ? `Edit ${personDisplayName(draft)}`
@@ -605,28 +596,12 @@ function ProfileEditor({
             : 'Add profile'
       }
       close={close}
-      className={`focus-modal ${styles.editor}`}
+      value={draft}
+      save={() => save(draft)}
+      saveLabel="Save profile"
+      contentClassName={styles.editorContent}
     >
-      <header>
-        <div>
-          <span className="focus-eyebrow">PROFILE EDITOR</span>
-          <h2>
-            {draft.entityId
-              ? `Edit ${personDisplayName(draft)}`
-              : draft.roles?.ownerProfile
-                ? 'Create My Profile'
-                : 'Add person or operator'}
-          </h2>
-        </div>
-        <button
-          className="focus-icon"
-          data-dialog-close
-          aria-label="Close editor"
-          onClick={close}
-        >
-          <X />
-        </button>
-      </header>
+
       <div className={styles.editorSections}>
         <fieldset>
           <legend>Identity</legend>
@@ -1186,14 +1161,7 @@ function ProfileEditor({
           {error}
         </p>
       )}
-      <footer>
-        <button className="focus-secondary" data-dialog-close onClick={close}>
-          Cancel
-        </button>
-        <button className="focus-primary" onClick={() => void save(draft)}>
-          Save profile
-        </button>
-      </footer>
-    </AccessibleDialog>
+
+    </RecordEditorWorkspace>
   );
 }

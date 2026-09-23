@@ -105,7 +105,9 @@ import { GasPlanning } from '@/components/planning/gas-planning';
 import { CollapsibleWorkCard } from '@/components/workflow/collapsible-work-card';
 import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-review';
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
-import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, resolveWorkflowRoute, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
+import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
+import { useWorkflowNavigation } from '@/components/shared/use-workflow-navigation';
+import { workflowDestinationUrl } from '@/lib/workflow/workflow-destination';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
 import {
@@ -247,6 +249,7 @@ const workflowIcons: Record<string, LucideIcon> = {
   'Dive News': Newspaper, 'Professional Development': GraduationCap, Admin: ListChecks,
   Settings: Settings2, 'Data & Backups': Database, 'Diver Summary Export': Download,
 };
+const domainIconNames: Record<string,string> = {Overview:'overview',Insights:'insights',Logbook:'logbook','Dive Computer Imports':'dive-computer-imports',Sites:'sites','Dive Site Map':'dive-location-map',People:'people','Dive Centres':'dive-centres','Diving Calendar & Bookings':'calendar',Trips:'trips','Dive Plans':'dive-planning','Gas Planning':'gas-planning',Equipment:'equipment','Loadouts & Gas':'equipment','Cylinders & Gas':'cylinders','Dive Bucket List':'bucket-list',Training:'certifications','Skills & Currency':'dive-skills','Technical Diving':'technical-diving'};
 const quickNavigation = ['Overview', 'Logbook', 'Dive Plans', 'Equipment', 'Data & Backups']
   .map((route) => WORKFLOW_ROUTES.find((item) => item.route === route))
   .filter((item): item is (typeof WORKFLOW_ROUTES)[number] => Boolean(item));
@@ -277,7 +280,7 @@ function WorkflowNavigation({ active, go }: { active: string; go: (route: string
       const routes = workflowRoutesForSection(section.key);
       return <details className="workflow-nav-group" key={section.key} open={openSections.has(section.key)} onToggle={(event) => { const isOpen = event.currentTarget.open; setNavigationState((current) => { const next = new Set(current.openSections); if (isOpen) next.add(section.key); else next.delete(section.key); return { ...current, openSections: next }; }); }}>
         <summary>{section.label}<ChevronDown size={15}/></summary>
-        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><Icon size={18}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
+        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><ZeusTekAssetIcon name={domainIconNames[route.route] ?? null} decorative size={26} fallback={<Icon size={18}/>}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
       </details>;
     })}
   </nav>;
@@ -480,19 +483,19 @@ export default function DiveApp({ userId }: { userId: string }) {
   configureDiveStore(userId);
   const [active, setActive] = useState('Overview');
   const [destinationTab,setDestinationTab]=useState('');
+  const [destinationKey,setDestinationKey]=useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [draftDive, setDraftDive] = useState<(Partial<DiveRecord> & { entityId?: string }) | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const go = (next: string) => {
-    const resolved = resolveWorkflowRoute(next);
-    setDestinationTab(resolved === 'Diver Summary Export' ? 'Diver summary' : next);
+  const go = useWorkflowNavigation((destination) => {
+    const resolved = destination.route;
+    setDestinationTab(resolved === 'Diver Summary Export' ? 'Diver summary' : destination.params?.tab ?? resolved);
     setActive(resolved === 'Diver Summary Export' ? 'Data & Backups' : resolved);
+    setDestinationKey(workflowDestinationUrl(destination));
     setMenuOpen(false);
-  };
+  });
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[active]);
   useEffect(() => {
-    const requestedSection = new URLSearchParams(window.location.search).get('section');
-    if (requestedSection) go(requestedSection);
     const root = document.querySelector('.focus-content');
     if (!root) return;
     const reveal = (node: Node) => {
@@ -557,7 +560,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           </button>
         </header>
         <RecordOperationStatus />
-        <div className="focus-content"><ScreenTiming screen={active}>
+        <div className="focus-content"><ScreenTiming key={destinationKey} screen={active}>
           {active === 'Overview' && (
             <Overview openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />
           )}

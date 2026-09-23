@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { AccessibleDialog } from '../accessible-dialog';
+import { RecordEditorWorkspace } from '../shared/record-editor-workspace';
 import { useRecordRefresh } from '../record-status';
 import { CollapsibleWorkCard } from '../workflow/collapsible-work-card';
 import { ZeusTekIcon } from '../zeustek-icon';
@@ -233,6 +234,24 @@ export function GasPlanning({ go }: Props) {
     ...(flight?.warning ? [flight.warning] : []),
     ...(selected?.manualStops?.length ? ['Gas-needed estimates exclude manually recorded stops, ascent and contingency gas; verify the full profile independently.'] : []),
   ])];
+
+  if (editing !== undefined) return <GasPlanEditor
+          item={editing}
+          newGasPlanFor={newGasPlanFor}
+          divePlans={divePlans}
+          equipment={equipment}
+          fills={fills}
+          analyses={analyses}
+          dives={dives}
+          trips={trips}
+          sites={sites}
+          rmvBaseline={rmvBaseline}
+          close={() => setEditing(undefined)}
+          saved={async () => {
+            setEditing(undefined);
+            await refresh();
+          }}
+        />;
 
   return (
     <main className={styles.page}>
@@ -554,25 +573,6 @@ export function GasPlanning({ go }: Props) {
         </aside>
       </div>
 
-      {editing !== undefined ? (
-        <GasPlanEditor
-          item={editing}
-          newGasPlanFor={newGasPlanFor}
-          divePlans={divePlans}
-          equipment={equipment}
-          fills={fills}
-          analyses={analyses}
-          dives={dives}
-          trips={trips}
-          sites={sites}
-          rmvBaseline={rmvBaseline}
-          close={() => setEditing(undefined)}
-          saved={async () => {
-            setEditing(undefined);
-            await refresh();
-          }}
-        />
-      ) : null}
       {warningsOpen && selected ? <AccessibleDialog label="Gas planning warnings" close={() => setWarningsOpen(false)} className="focus-modal">
         <header><h2>Gas planning warnings</h2><button type="button" className="focus-icon" aria-label="Close warnings" data-dialog-close onClick={() => setWarningsOpen(false)}><X /></button></header>
         <p>{GAS_PLANNING_CAUTION}</p>
@@ -960,25 +960,12 @@ function GasPlanEditor({
     : null;
 
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
+    <div>
+      <RecordEditorWorkspace
         label={item ? 'Edit gas plan' : 'New gas plan'}
-        close={close}
-        className="focus-modal"
+        close={close} value={{draft,recInput}} busy={busy} save={save} saveLabel="Save gas plan"
       >
-        <header>
-          <div>
-            <span className="focus-eyebrow">GAS PLANNING</span>
-            <h2>{item ? 'Edit gas plan' : 'New gas plan'}</h2>
-          </div>
-          <button
-            className="focus-icon"
-            onClick={close}
-            aria-label="Close editor"
-          >
-            <X />
-          </button>
-        </header>
+
 
         <RecreationalGasPlanner input={recProjection.input} snapshot={recProjection.snapshot} error={recProjection.error} change={patch => {
           setRecInput(current => ({ ...current, ...patch }));
@@ -1524,19 +1511,8 @@ function GasPlanEditor({
             {error}
           </p>
         ) : null}
-        <footer>
-          <button className="focus-secondary" onClick={close}>
-            Cancel
-          </button>
-          <button
-            className="focus-primary"
-            disabled={busy}
-            onClick={() => void save()}
-          >
-            {busy ? 'Saving…' : 'Save gas plan'}
-          </button>
-        </footer>
-      </AccessibleDialog>
+
+      </RecordEditorWorkspace>
       {draftWarningsOpen ? <AccessibleDialog label="Draft Gas Plan warnings" close={() => setDraftWarningsOpen(false)} className="focus-modal"><header><h2>Draft Gas Plan warnings</h2><button type="button" className="focus-icon" data-dialog-close aria-label="Close draft warnings" onClick={() => setDraftWarningsOpen(false)}><X /></button></header><ul className={styles.warningList}>{draftWarnings.map(warning => <li key={warning}><AlertTriangle size={16} aria-hidden="true" /> {warning}</li>)}</ul><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setDraftWarningsOpen(false)}>Close</button></footer></AccessibleDialog> : null}
       {saveAsCylinderId ? <AccessibleDialog label="Confirm Save as cylinder" close={() => setSaveAsCylinderId(null)} className="focus-modal"><header><div><span className="focus-eyebrow">EXPLICIT CONVERSION</span><h2>Save rental snapshot as an owned cylinder?</h2></div><button type="button" className="focus-icon" data-dialog-close aria-label="Cancel Save as cylinder" onClick={() => setSaveAsCylinderId(null)}><X /></button></header><p>This creates one canonical record in Cylinders &amp; Gas. The Gas Plan remains a rental/temporary snapshot and retains its original operator and analysis evidence.</p><p>No owned cylinder, fill or analysis record is created until you confirm.</p><footer><button type="button" className="focus-secondary" data-dialog-close onClick={() => setSaveAsCylinderId(null)}>Cancel</button><button type="button" className="focus-primary" disabled={conversionBusy} onClick={() => void confirmSaveAsCylinder()}>{conversionBusy ? 'Saving…' : 'Confirm Save as cylinder'}</button></footer></AccessibleDialog> : null}
       {detailsSlot?.sourceMode === 'rental' && detailsSlot.rentalSnapshot && detailsProjection ? (

@@ -1,8 +1,10 @@
 /// <reference lib="webworker" />
-import { clientsClaim } from 'workbox-core';
+import { clientsClaim, type WorkboxPlugin } from 'workbox-core';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { CacheFirst, NetworkOnly, NetworkFirst } from 'workbox-strategies';
+import {ExpirationPlugin} from 'workbox-expiration';
+import {isCompleteIconPath} from '../lib/brand/icon-path';
 
 declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<unknown> };
 
@@ -25,6 +27,11 @@ registerRoute(new NavigationRoute(new NetworkFirst({
 }),{allowlist:[/^\/(?:\?.*)?$/]}));
 registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v2' }));
 registerRoute(({ url }) => url.pathname.startsWith('/api/'), new NetworkOnly());
+registerRoute(({url})=>url.origin===self.location.origin&&isCompleteIconPath(url.pathname),new CacheFirst({
+  cacheName:'zeustek-complete-icons-v1',
+  // Workbox marks optional callbacks as possibly undefined; its runtime plugin contract accepts them.
+  plugins:[new ExpirationPlugin({maxEntries:96,maxAgeSeconds:30*24*60*60,purgeOnQuotaError:true}) as WorkboxPlugin],
+}));
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();

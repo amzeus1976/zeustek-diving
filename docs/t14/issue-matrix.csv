@@ -1,52 +1,52 @@
-ID,Area,Issue,Priority,Stage,Implementation note
-BASE-01,T14A,Overview compacting,COMPLETE / VERIFY,Baseline,Overview compact layout already passed T14A.
-BASE-02,T14A,Insights award selection/cap/empty state,COMPLETE / VERIFY,Baseline,Do not reopen unless regression.
-BASE-03,T14A,Cancel/Escape/discard focus,COMPLETE / VERIFY,Baseline,Keep current confirmation/focus behavior.
-INS-01,Insights,Filters layout redesign,MUST,Stage 3,Replace raw fieldset/giant-checkbox layout with compact Analysis Scope workbench.
-INS-02,Insights,AND/OR/NOT advanced filtering,MUST,Stage 3,Add expression model without editing Dive records.
-INS-03,Insights,Up to 9 configurable analysis cards,MUST,Stage 3,Metric + visualization registry; persist additive layout settings.
-INS-04,Insights,Card title expand + data/source overlay,MUST,Stage 3,"Real labels, include/exclude, source-record navigation."
-INS-05,Insights,Environment rows clickable filter/unfilter,SHOULD,Stage 3,Click toggles current analysis scope.
-INS-06,Insights,Topic/mind-map card,OPTIONAL,Stage 3,Only if canonical topics can be sourced without new graph store.
-GEAR-01,Gear,Equipment general styling like Loadouts,NICE,Stage 4,Presentation only.
-GEAR-02,Gear,Loadout read-only detail view,NICE,Stage 4,Click card/row to inspect without edit mode.
-GEAR-03,Gear,Loadout Other only unmatched categories,SHOULD,Stage 4,Use category coverage; fallback to base Other icon.
-DIVE-01,Dive Data,Dive card icon cleanup + buddy initials,NICE,Stage 4,Brand domain icons; initials such as G.B.
-DIVE-02,Dive Data,Dive Computer Imports master/detail view,NICE,Stage 4,"Scrollable imported dives left, selected profile right."
-DIVE-03,Dive Data,Sites visual convergence,NICE,Stage 4,Use modern ZeusTek shell without data change.
-PEOPLE-01,People,My Profile derived certification/depth refresh,SHOULD,Stage 4,Fix highest known/Rec/Tec/Pro and max-depth source handling.
-PEOPLE-02,People,Buddy dives link and mass-link workflow,SHOULD,Stage 4,Explicit selection/confirmation; never silent bulk mutation.
-CENTRE-01,Dive Centres,Restore dedicated dive-centre/operator workspace,MUST,Stage 2,Use existing `operator` record kind; no second store.
-CENTRE-02,Dive Centres,Link people/instructors to centres,MUST,Stage 2,Use existing person operatorId/currentDiveOperatorId.
-TRIP-01,Trip/Event,Calendar linked records visibility/links,SHOULD,Stage 4,Hide absent links; real deep links when present.
-TRIP-02,Trip/Event,Trips/Bucket visual convergence,NICE,Stage 4,Presentation only.
-PLAN-01,Dive Planning,Compact plan actions near upcoming-plan card,NICE,Stage 5,"Save/edit, mark ready, log/link dive."
-PLAN-02,Dive Planning,Aims/goals/objectives field sizing and info hitbox,SHOULD,Stage 5,Larger text entry; only icon triggers help.
-PLAN-03,Dive Planning,Weather provider + explicit Get weather,MUST,Stage 5,Open-Meteo default; provider registry/configuration.
-PLAN-04,Dive Planning,Oxygen-trained list limited to planned team,SHOULD,Stage 5,No unrelated People records.
-GAS-01,Gas Planning,Plan-first without owned cylinder,MUST,Stage 6,"Requirements-first planning, then source/obtain gas."
-GAS-02,Gas Planning,Owned-empty / owned-full / hire strategies,MUST,Stage 6,Generate fill/order list; preserve provenance.
-GAS-03,Gas Planning,Multiple cylinder roles,MUST,Stage 6,"Backgas/main, pony, stage, sidemount L/R; no deco schedule."
-GAS-04,Gas Planning,Desktop full-page editor,MUST,Stage 6,Complex editing not in narrow overlay.
-GAS-05,Gas Planning,Depth/Water/Gas shows NDL/MOD/PPO2 outputs,MUST,Stage 6,Display existing calculations locally in context.
-GAS-06,Gas Planning,Help icons for all inputs,MUST,Stage 6,"Explain owner max duration, planned working time, stress factor, etc."
-GAS-07,Gas Planning,Detailed readiness blockers + specific remedies,SHOULD,Stage 6,Display-only advice based on actual blockers.
-GAS-08,Gas Planning,Tables no horizontal-scroll / silly wrapping,SHOULD,Stage 6,Desktop fit; mobile stacked/scroll-safe at component level.
-GAS-09,Gas Planning,Route cylinder dropdown + checkpoint continuity,SHOULD,Stage 6,Next start depth inherits previous end depth.
-GAS-10,Gas Planning,Remove duplicate legacy form at editor bottom,MUST,Stage 6,One canonical editor only.
-CPD-01,CPD,Certifications modern styling,NICE,Stage 7,Presentation only.
-CPD-02,Dive Knowledge,Single-question edit/delete/replace,SHOULD,Stage 7,Explicit review reason and safe set persistence.
-CPD-03,Dive Knowledge,AI readability/context review hook,SHOULD,Stage 7,Advisory review; human retains control.
-CPD-04,Bibliography,Broken text flow/width,MUST,Stage 7,"Fix layout, not data."
-NEWS-01,Dive News,Delete causes record-type error,MUST,Stage 7,Fix state/update path and cache-safe refresh.
-NEWS-02,Dive News,Newsletter mailbox intermittent bad request,SHOULD,Stage 7,Instrument/fix request path.
-NEWS-03,Dive News,Modern styling + grouped merged story description,NICE,Stage 7,Preserve source links.
-PRO-01,Professional Development,Redesign onboarding/setup flow,MUST,Stage 7,Make setup/use path obvious; otherwise hide until configured.
-ADMIN-01,Admin,Proper Site Logs workspace,SHOULD,Stage 8,"Structured app diagnostics, filters, download; don't claim platform logs."
-ADMIN-02,Admin,Rebuild Site Configuration by domain,MUST,Stage 8,Move map/news settings out of Insights and restore missing cards.
-ADMIN-03,Admin,Diver Summary export failure + equipment section,MUST,Stage 8,PDF/DOCX plus TXT/CSV fallback.
-ADMIN-04,Admin,Read-only API/public diver profile,OPTIONAL,Stage 8,Disabled by default; redacted allowlist only.
-GEN-01,Sitewide,Editors should not dismiss on backdrop,MUST,Stage 1,Display overlays may dismiss; dirty editors use in-page workspace.
-GEN-02,Sitewide,Complex edits move from overlays to route workspace,SHOULD,Stage 1,Gas/Dive Plans/People/Dive Centres first.
-GEN-03,Navigation,Remove bulky bottom household card,NICE,Stage 9,Keep version/changelog footer; cloud status already topbar.
-ICON-01,Brand,Integrate new 748-icon complete library,MUST,Stage 1,Preserve curated 131; add complete library and semantic mapping.
+ID,Area,Issue,Priority,Stage,Implementation note,Status,Evidence
+BASE-01,T14A,Overview compacting,COMPLETE / VERIFY,Baseline,Overview compact layout already passed T14A.,PASS,Stage0-1 retained and focused tests
+BASE-02,T14A,Insights award selection/cap/empty state,COMPLETE / VERIFY,Baseline,Do not reopen unless regression.,PASS,Stage0-1 retained and focused tests
+BASE-03,T14A,Cancel/Escape/discard focus,COMPLETE / VERIFY,Baseline,Keep current confirmation/focus behavior.,PASS,Stage0-1 retained and focused tests
+INS-01,Insights,Filters layout redesign,MUST,Stage 3,Replace raw fieldset/giant-checkbox layout with compact Analysis Scope workbench.,PENDING,
+INS-02,Insights,AND/OR/NOT advanced filtering,MUST,Stage 3,Add expression model without editing Dive records.,PENDING,
+INS-03,Insights,Up to 9 configurable analysis cards,MUST,Stage 3,Metric + visualization registry; persist additive layout settings.,PENDING,
+INS-04,Insights,Card title expand + data/source overlay,MUST,Stage 3,"Real labels, include/exclude, source-record navigation.",PENDING,
+INS-05,Insights,Environment rows clickable filter/unfilter,SHOULD,Stage 3,Click toggles current analysis scope.,PENDING,
+INS-06,Insights,Topic/mind-map card,OPTIONAL,Stage 3,Only if canonical topics can be sourced without new graph store.,PENDING,
+GEAR-01,Gear,Equipment general styling like Loadouts,NICE,Stage 4,Presentation only.,PENDING,
+GEAR-02,Gear,Loadout read-only detail view,NICE,Stage 4,Click card/row to inspect without edit mode.,PENDING,
+GEAR-03,Gear,Loadout Other only unmatched categories,SHOULD,Stage 4,Use category coverage; fallback to base Other icon.,PENDING,
+DIVE-01,Dive Data,Dive card icon cleanup + buddy initials,NICE,Stage 4,Brand domain icons; initials such as G.B.,PENDING,
+DIVE-02,Dive Data,Dive Computer Imports master/detail view,NICE,Stage 4,"Scrollable imported dives left, selected profile right.",PENDING,
+DIVE-03,Dive Data,Sites visual convergence,NICE,Stage 4,Use modern ZeusTek shell without data change.,PENDING,
+PEOPLE-01,People,My Profile derived certification/depth refresh,SHOULD,Stage 4,Fix highest known/Rec/Tec/Pro and max-depth source handling.,PENDING,
+PEOPLE-02,People,Buddy dives link and mass-link workflow,SHOULD,Stage 4,Explicit selection/confirmation; never silent bulk mutation.,PENDING,
+CENTRE-01,Dive Centres,Restore dedicated dive-centre/operator workspace,MUST,Stage 2,Use existing `operator` record kind; no second store.,PENDING,
+CENTRE-02,Dive Centres,Link people/instructors to centres,MUST,Stage 2,Use existing person operatorId/currentDiveOperatorId.,PENDING,
+TRIP-01,Trip/Event,Calendar linked records visibility/links,SHOULD,Stage 4,Hide absent links; real deep links when present.,PENDING,
+TRIP-02,Trip/Event,Trips/Bucket visual convergence,NICE,Stage 4,Presentation only.,PENDING,
+PLAN-01,Dive Planning,Compact plan actions near upcoming-plan card,NICE,Stage 5,"Save/edit, mark ready, log/link dive.",PENDING,
+PLAN-02,Dive Planning,Aims/goals/objectives field sizing and info hitbox,SHOULD,Stage 5,Larger text entry; only icon triggers help.,PENDING,
+PLAN-03,Dive Planning,Weather provider + explicit Get weather,MUST,Stage 5,Open-Meteo default; provider registry/configuration.,PENDING,
+PLAN-04,Dive Planning,Oxygen-trained list limited to planned team,SHOULD,Stage 5,No unrelated People records.,PENDING,
+GAS-01,Gas Planning,Plan-first without owned cylinder,MUST,Stage 6,"Requirements-first planning, then source/obtain gas.",PENDING,
+GAS-02,Gas Planning,Owned-empty / owned-full / hire strategies,MUST,Stage 6,Generate fill/order list; preserve provenance.,PENDING,
+GAS-03,Gas Planning,Multiple cylinder roles,MUST,Stage 6,"Backgas/main, pony, stage, sidemount L/R; no deco schedule.",PENDING,
+GAS-04,Gas Planning,Desktop full-page editor,MUST,Stage 6,Complex editing not in narrow overlay.,PENDING,
+GAS-05,Gas Planning,Depth/Water/Gas shows NDL/MOD/PPO2 outputs,MUST,Stage 6,Display existing calculations locally in context.,PENDING,
+GAS-06,Gas Planning,Help icons for all inputs,MUST,Stage 6,"Explain owner max duration, planned working time, stress factor, etc.",PENDING,
+GAS-07,Gas Planning,Detailed readiness blockers + specific remedies,SHOULD,Stage 6,Display-only advice based on actual blockers.,PENDING,
+GAS-08,Gas Planning,Tables no horizontal-scroll / silly wrapping,SHOULD,Stage 6,Desktop fit; mobile stacked/scroll-safe at component level.,PENDING,
+GAS-09,Gas Planning,Route cylinder dropdown + checkpoint continuity,SHOULD,Stage 6,Next start depth inherits previous end depth.,PENDING,
+GAS-10,Gas Planning,Remove duplicate legacy form at editor bottom,MUST,Stage 6,One canonical editor only.,PENDING,
+CPD-01,CPD,Certifications modern styling,NICE,Stage 7,Presentation only.,PENDING,
+CPD-02,Dive Knowledge,Single-question edit/delete/replace,SHOULD,Stage 7,Explicit review reason and safe set persistence.,PENDING,
+CPD-03,Dive Knowledge,AI readability/context review hook,SHOULD,Stage 7,Advisory review; human retains control.,PENDING,
+CPD-04,Bibliography,Broken text flow/width,MUST,Stage 7,"Fix layout, not data.",PENDING,
+NEWS-01,Dive News,Delete causes record-type error,MUST,Stage 7,Fix state/update path and cache-safe refresh.,PENDING,
+NEWS-02,Dive News,Newsletter mailbox intermittent bad request,SHOULD,Stage 7,Instrument/fix request path.,PENDING,
+NEWS-03,Dive News,Modern styling + grouped merged story description,NICE,Stage 7,Preserve source links.,PENDING,
+PRO-01,Professional Development,Redesign onboarding/setup flow,MUST,Stage 7,Make setup/use path obvious; otherwise hide until configured.,PENDING,
+ADMIN-01,Admin,Proper Site Logs workspace,SHOULD,Stage 8,"Structured app diagnostics, filters, download; don't claim platform logs.",PENDING,
+ADMIN-02,Admin,Rebuild Site Configuration by domain,MUST,Stage 8,Move map/news settings out of Insights and restore missing cards.,PENDING,
+ADMIN-03,Admin,Diver Summary export failure + equipment section,MUST,Stage 8,PDF/DOCX plus TXT/CSV fallback.,PENDING,
+ADMIN-04,Admin,Read-only API/public diver profile,OPTIONAL,Stage 8,Disabled by default; redacted allowlist only.,PENDING,
+GEN-01,Sitewide,Editors should not dismiss on backdrop,MUST,Stage 1,Display overlays may dismiss; dirty editors use in-page workspace.,PARTIAL,Shared workspace and first three editor migrations complete; remaining routes in scheduled stages
+GEN-02,Sitewide,Complex edits move from overlays to route workspace,SHOULD,Stage 1,Gas/Dive Plans/People/Dive Centres first.,PARTIAL,Shared workspace and first three editor migrations complete; remaining routes in scheduled stages
+GEN-03,Navigation,Remove bulky bottom household card,NICE,Stage 9,Keep version/changelog footer; cloud status already topbar.,PENDING,
+ICON-01,Brand,Integrate new 748-icon complete library,MUST,Stage 1,Preserve curated 131; add complete library and semantic mapping.,PASS,Stage0-1 retained and focused tests

@@ -4,7 +4,7 @@
 
 Read this ledger and implementation-plan.md, inspect git log/status, then continue the first incomplete stage. Never discard earlier checkpoint work or publish partial stages. Reference specs/candidates live in ../t14-master-reference. User corrections in the approved plan supersede package rollback/multiplier/optional advice.
 
-## Stage 0 — in progress
+## Stage 0 — complete
 
 - Isolated branch t14/master-forward-build at b2e86827c19239776c80b51fc93067c7dc4b18ac.
 - GitHub connector main unchanged; Sites connector latest124, successful accepted deployment/source unchanged.
@@ -30,6 +30,20 @@ Read this ledger and implementation-plan.md, inspect git log/status, then contin
 
 ## Remaining checkpoints
 
-Stages1–10 NOT STARTED. No production deployment or GitHub source push performed.
+Stage1 foundation complete; Stages2–10 remain. No production deployment or GitHub source push performed.
 
 Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS. 748 PNGs extracted/validated in ignored staging, manifest748, curated131 unchanged,112 overlapping basenames. Owner baseline captured2026-09-23T16:17:52.726Z; hashes of sorted [id,dataJson,createdAt,updatedAt] per kind in ignored work/t14-evidence/owner-baseline.csv. Sites124 rollback verified. Next: Stage1 foundations and focused tests.
+
+
+## Stage 1 — checkpoint
+
+- Full-page shared workspace integrated in People / Dive Planning / Gas Planning. Explicit Save/Cancel, dirty route and Back protection, contained Escape, failed-validation retention and restored launcher focus verified in local browser. Remaining complex editors migrate in their scheduled stages.
+- Typed destinations preserve canonical record IDs, legacy aliases and Data Centre tabs; same-route record navigation remounts the correct target.
+- 748 complete PNG assets + manifest/generated registry installed; original131 retained. 22 semantic aliases resolve to17 distinct precached complete icons; runtime cache96/30days. Built service worker confirms17 complete PNG entries, not748.
+- Focused33/33 (including protected10), full regression94files/542tests PASS, typecheck PASS, production build/PWA PASS. New/shared-module targeted lint PASS. Broad lint also surfaced existing monolithic-file debt; modified-line review/new modules clean, track cleanup in corresponding stages and final targeted gate.
+- Local Dive Plan and Gas Plan workspaces have zero page overflow at390/820/1024/1440. Browser Escape / keep / Back / failed validation / focus tests PASS. Development hot reload after changing hook structure required reload; fresh-session console check recorded separately.
+- Existing T10 static shell test updated from modal-local Escape assertion to shared workspace Escape contract; all earlier behavior assertions retained.
+- A disposable local Person fixture was saved in isolated local preview only; production records untouched. Local built-in seed records show sync-review notices; no attempt to sync or repair owner data.
+- Next: Stage2 canonical Dive Centres workspace and dependency-safe deletion.
+
+Fresh browser session: Gas Plan workspace mounted and cancelled; application console errors0.

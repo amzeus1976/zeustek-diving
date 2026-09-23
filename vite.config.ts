@@ -4,6 +4,8 @@ import vinext from 'vinext';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import hostingConfig from './.openai/hosting.json';
+import {readFileSync} from 'node:fs';
+import {buildCompleteIconPrecache} from './lib/brand/icon-cache-policy';
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   '00000000-0000-4000-8000-000000000000';
@@ -78,7 +80,7 @@ export default defineConfig((async () => {
             { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
-        injectManifest: { globDirectory: 'dist/client', globPatterns: ['**/*.{js,css,html,svg,png,woff2}'], globIgnores:['**/node_modules/**','**/server/**'] },
+        injectManifest: { globDirectory: 'dist/client', globPatterns: ['**/*.{js,css,html,svg,png,woff2}'], globIgnores:['**/node_modules/**','**/server/**','**/brand/icons/zeustek-complete/**'], additionalManifestEntries:buildCompleteIconPrecache(src=>readFileSync(`public${src}`)) },
       }) as unknown as import('vite').PluginOption,
       cloudflare({
         viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
