@@ -107,10 +107,12 @@ describe('TWEAKS workflow, Insights and Gear acceptance', () => {
     const original = structuredClone(source);
     expect(applyAnalysisScope(source, { ...DEFAULT_ANALYSIS_SCOPE, excludedDiveIds: ['a'], minDepthM: 30 }).map((row) => row.entityId)).toEqual(['b']);
     expect(source).toEqual(original);
-    const component = read('components/experience-analytics.tsx');
-    expect(component).toContain('Apply to dashboard');
-    expect(component).toContain('placeholder="Search Sites"');
-    expect(component).toContain('Minimum depth');
+    const sourceControls=read('components/insights/analysis-source-records.tsx');
+    const scopeControls=read('components/insights/analysis-scope-panel.tsx');
+    expect(sourceControls).toContain('Include all matching records');
+    expect(sourceControls).toContain('Exclude all matching records');
+    expect(scopeControls).toContain('ReferencePicker label="Sites"');
+    expect(scopeControls).toContain('Minimum depth');
   });
 
   it('keeps individual Equipment, removes gas ownership from Loadouts, and exposes a cylinder table/detail history', () => {

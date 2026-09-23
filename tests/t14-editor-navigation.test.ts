@@ -8,6 +8,7 @@ import {RecordEditorWorkspace} from '../components/shared/record-editor-workspac
 describe('T14 exact record navigation',()=>{
   it('preserves ampersands in route names while decoding legacy record destinations',()=>{
     expect(parseWorkflowDestination('Loadouts & Gas').route).toBe('Loadouts & Gas');
+    expect(parseWorkflowDestination('Loadouts & Gas&loadoutId=kit-1')).toMatchObject({route:'Loadouts & Gas',recordId:'kit-1'});
     expect(parseWorkflowDestination('Trips&tripId=trip%26one')).toMatchObject({route:'Trips',recordId:'trip&one'});
     expect(parseWorkflowDestination('?section=Dive+Planning+Centre&planId=p1')).toMatchObject({route:'Dive Plans',recordId:'p1'});
   });

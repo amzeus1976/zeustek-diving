@@ -1,7 +1,7 @@
 import {resolveWorkflowRoute,WORKFLOW_ROUTES} from './workflow-model';
 
 export interface WorkflowDestination {route:string;recordId?:string;params?:Record<string,string>}
-const recordKeys:Record<string,string>={People:'personId','Dive Centres':'operatorId',Sites:'siteId',Trips:'tripId',Logbook:'diveId','Dive Plans':'planId','Gas Planning':'gasPlanId','Dive Computer Imports':'importId'};
+const recordKeys:Record<string,string>={People:'personId','Dive Centres':'operatorId',Sites:'siteId',Trips:'tripId',Logbook:'diveId','Dive Plans':'planId','Gas Planning':'gasPlanId','Dive Computer Imports':'importId','Loadouts & Gas':'loadoutId',Equipment:'equipmentId'};
 const parameterKeys=new Set(['recordId',...Object.values(recordKeys),'divePlanId','newPlan','source','tab','view','edit','personId','equipmentId','eventId','loadoutId','bucketId']);
 const routes=new Set([...WORKFLOW_ROUTES.map(item=>item.route),'Dive Centres','Changelog','Imports','Sync','Backups']);
 
@@ -11,7 +11,7 @@ export function parseWorkflowDestination(input:string|WorkflowDestination):Workf
     return {route:routes.has(route)?route:'Overview',...(input.recordId?{recordId:input.recordId}:{}),...(input.params?{params:Object.fromEntries(Object.entries(input.params).filter(([key])=>parameterKeys.has(key)))}:{})};
   }
   if(/^[a-z][a-z0-9+.-]*:/i.test(input)||input.startsWith('//'))return {route:'Overview'};
-  const separator=input.search(/&(?=(?:recordId|personId|operatorId|siteId|tripId|diveId|planId|gasPlanId|divePlanId|importId|newPlan|tab|view|edit)=)/);
+  const separator=input.search(new RegExp('&(?=(?:'+[...parameterKeys].join('|')+')=)'));
   const isQuery=input.startsWith('?')||input.startsWith('/?');
   const query=new URLSearchParams(isQuery?input.replace(/^\/?\?/,''):separator>=0?input.slice(separator+1):'');
   const section=isQuery?query.get('section'):separator>=0?input.slice(0,separator):input;

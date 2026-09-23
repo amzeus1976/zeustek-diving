@@ -30,7 +30,7 @@ Read this ledger and implementation-plan.md, inspect git log/status, then contin
 
 ## Remaining checkpoints
 
-Stages0–2 checkpointed; Stage3 is next. No production deployment or GitHub source push performed.
+Stages0–3 checkpointed; Stage4 is next. No production deployment or GitHub source push performed.
 
 Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS. 748 PNGs extracted/validated in ignored staging, manifest748, curated131 unchanged,112 overlapping basenames. Owner baseline captured2026-09-23T16:17:52.726Z; hashes of sorted [id,dataJson,createdAt,updatedAt] per kind in ignored work/t14-evidence/owner-baseline.csv. Sites124 rollback verified. Next: Stage1 foundations and focused tests.
 
@@ -57,3 +57,15 @@ Fresh browser session: Gas Plan workspace mounted and cancelled; application con
 - Local fixture browser verification: create/edit, both Save controls, exact Person link and disabled linked-centre deletion PASS. List/detail and editor have no page overflow at390/820/1024/1440; fresh browser console errors0.
 - Browser finding corrected: shared sticky editor header now tracks the real topbar height, keeping Save/Cancel reachable after scrolling. No frozen calculations changed.
 - Production/GitHub remain untouched. Next: Stage3 Insights scope/expression/workbench.
+
+## Stage 3 — complete
+
+- Designed Analysis Scope workspace provides chips, compact activity/water/mode controls, date/depth/duration bounds, searchable one/many/all references and explicit reset. Typed bounded AND/OR/NOT expressions are additive; invalid expressions fail closed, including negation of missing evidence.
+- Registry-controlled workbench retains six default cards and saves up to nine. KPI/bar/line/scatter/donut/table/Site views, enlarged analysis, reversible source exclusions, exact Dive/Site/loadout navigation and environment toggles are integrated. SAC and RMV retain distinct units. Settings merge preserves awards and unrelated domains.
+- Brought forward read-only loadout detail from Stage4 to make Insights source links functional. Legacy and unavailable equipment references remain visible; projection never writes. Stage4 still owns editor/categorisation/presentation work.
+- Focused22/22 including protected hashes; full regression97files/562tests; typecheck; production build/PWA; new/modified Insights module lint all PASS.
+- Local browser used75 disposable Dives,3 Sites,2 loadouts: all three source pages, exclude/reinclude, exact Dive and loadout links, environment toggle, nine-card persistence, Site view, enlarged scatter and invalid range blocking pass. Nested NOT/AND/OR returns expected38 Dives; Show all returns75. Scope/workbench overflow0 at390/820/1024/1440; application console errors0.
+- Canonical local fixture count/content hash unchanged:75 / b8d528c1c1534ff85eb6b0ffccfeded3cfa3cace1bf296c6f9289f4718bd9efc. No production access/write or GitHub push during this stage. Frozen calculations unchanged.
+- Topic card remains scheduled after all MUST/SHOULD/NICE pass in Stage9; it is included, not deferred.
+- Next: Stage4 Gear / Dive Data / People / Trip-Event.
+

@@ -13,7 +13,8 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { LoadoutDetail } from './gear/loadout-detail';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
 import { ZeusTekAssetIcon } from './brand/zeustek-asset-icon';
@@ -117,6 +118,15 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
   const tab = initialTab;
   const [equipment, setEquipment] = useState<Array<Stored<EquipmentRecord>>>([]);
   const [loadouts, setLoadouts] = useState<Array<Stored<ReusableLoadoutRecord>>>([]);
+  const [viewingLoadout, setViewingLoadout] = useState<Stored<ReusableLoadoutRecord> | null>(null);
+  const openedLoadout = useRef('');
+  useEffect(() => {
+    if (tab !== 'loadouts') return;
+    const id = new URLSearchParams(window.location.search).get('loadoutId');
+    if (!id || openedLoadout.current === id) return;
+    const match = loadouts.find(item => item.entityId === id);
+    if (match) { openedLoadout.current = id; setViewingLoadout(match); }
+  }, [loadouts, tab]);
   const [fills, setFills] = useState<Array<Stored<CylinderFillRecord>>>([]);
   const [analyses, setAnalyses] = useState<Array<Stored<GasAnalysisRecord>>>([]);
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
@@ -198,6 +208,7 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
           <span className="focus-eyebrow">{item.intendedUse || 'REUSABLE LOADOUT'}</span><h2 className={styles.iconTitle}><ZeusTekIcon id={item.intendedUse?.toLowerCase().includes('sidemount') ? 'sidemount' : item.intendedUse?.toLowerCase().includes('twin') ? 'twinset' : item.intendedUse?.toLowerCase().includes('rebreather') || item.intendedUse?.toLowerCase().includes('ccr') ? 'ccr-rebreather' : 'equipment'} size="card"/><span>{item.name}</span></h2><p>{item.description || item.notes || 'No description recorded.'}</p>
           <div className={styles.chips}><span>{validation.referencedItemCount} items</span>{(item.environmentTags ?? []).slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}</div>
           {validation.warnings.length ? <div className={styles.warning}><AlertTriangle size={16}/><span>{validation.warnings[0]}</span></div> : <div className={styles.ok}><CheckCircle2 size={16}/><span>All referenced items available</span></div>}
+          <button className="focus-secondary" onClick={() => setViewingLoadout(item)}>View {item.name}</button>
           <button className="focus-primary" onClick={() => setApplying(item)}>Apply to Dive / Plan</button>
         </Card>;
       })}
@@ -232,6 +243,7 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
       <div className={styles.serviceDefaults}><b>Service defaults</b><span>Hydro: 5 years</span><span>Visual: 30 months</span><span>O₂ clean/inspection: optional 12–15 months</span></div>
     </Card>}
 
+    {viewingLoadout && <LoadoutDetail item={viewingLoadout} equipment={loadoutEquipment} close={() => setViewingLoadout(null)} edit={() => { setEditing(viewingLoadout); setViewingLoadout(null); }} />}
     {editing !== undefined && <LoadoutEditor item={editing} equipment={loadoutEquipment} close={() => setEditing(undefined)} saved={refresh} />}
     {editingCylinder !== undefined && <CylinderEditor item={editingCylinder} close={() => setEditingCylinder(undefined)} saved={refresh} />}
     {applying && <ApplyLoadoutDialog loadout={applying} equipment={loadoutEquipment} plans={plans} dives={dives} close={() => setApplying(null)} saved={refresh} />}

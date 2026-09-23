@@ -280,6 +280,7 @@ export const deleteDiveSite = removeRecord;
 
 
 export interface DashboardSettingsRecord extends BaseRecord {
+  analysisWorkbench?:{version:1;cards:import('../insights/analysis-card-registry').AnalysisCardConfig[]};
 
   selectedAwards: string[];
 
