@@ -52,10 +52,12 @@ describe('T14A route-level display contracts', () => {
 
   it('removes broken Wishlist price search UI while retaining wishlist records', () => {
     const dashboard = read('app/dashboard-client.tsx');
+    const focus = read('app/focus.css');
     expect(dashboard).not.toContain('Wishlist price search');
     expect(dashboard).not.toContain('Check online prices');
     expect(dashboard).toContain('listGearWishlist()');
     expect(dashboard).toContain('saveGearWishlist');
+    expect(focus).toContain('@media(max-width:1200px){.wishlist-group,.wishlist-grid,.wishlist-drag-item{min-width:0}');
   });
 
   it('centres Equipment media and exposes compact cylinder columns with stable IDs', () => {
