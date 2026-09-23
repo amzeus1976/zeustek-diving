@@ -30,7 +30,7 @@ Read this ledger and implementation-plan.md, inspect git log/status, then contin
 
 ## Remaining checkpoints
 
-Stages0–4 checkpointed; Stage5 is next. No production deployment or GitHub source push performed.
+Stages0–5 checkpointed; Stage6 is next. No production deployment or GitHub source push performed.
 
 Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS. 748 PNGs extracted/validated in ignored staging, manifest748, curated131 unchanged,112 overlapping basenames. Owner baseline captured2026-09-23T16:17:52.726Z; hashes of sorted [id,dataJson,createdAt,updatedAt] per kind in ignored work/t14-evidence/owner-baseline.csv. Sites124 rollback verified. Next: Stage1 foundations and focused tests.
 
@@ -80,4 +80,15 @@ Fresh browser session: Gas Plan workspace mounted and cancelled; application con
 - New focused12 tests; full regression98files/574tests; typecheck; production build/PWA; new/shared modified-module lint PASS. Existing Trip monolith lint debt is recorded for the Stage9 finishing gate, not claimed clean here.
 - Gear/Sites/Imports/Calendar/Trip/Bucket/buddy workspace checks at390/820/1024/1440 show no page overflow. Fresh browser application console errors0. All frozen calculation hashes pass.
 - No production deployment or GitHub push. Next: Stage5 Dive Planning Centre.
+
+
+## Stage 5 — complete
+
+- Compact Save/edit, Mark ready, Log dive and Link logged dive actions sit directly below Upcoming Dive Plan. Linking selects/reviews one real log, preserves its observations and refuses replacement of existing provenance.
+- Resolved source conflict deliberately: legacy draft creation formerly saved the Plan to obtain a revision and Start dive changed lifecycle before a log existed. Draft creation is now read-only; an owner-scoped, hash-checked immutable revision snapshot persists only when its Dive is saved. Existing event-based provenance remains supported. Enriched fields use the same revision, avoiding a mixed snapshot.
+- Full-page editor has larger named objectives fields, bounded36px help targets and team-only oxygen selections; departing members are removed from the draft selection. Planning cylinder reads use a pure adapter instead of the frozen ID-repair helper.
+- Explicit provider interface defaults to Open-Meteo; request identities include Site/date/time/provider/mode/coordinates/marine. Superseded requests cannot update the draft. Snapshots retain provider/time/coordinates, visible attribution and changed-input warning; existing historical/seasonal/NASA fallback remains. Met Office registration is present but disabled until Stage9 server validation.
+- Focused8 tests + retained provenance/lifecycle/weather tests; regression99files/582tests; typecheck; production build/PWA; targeted modified-module lint PASS. Frozen hashes pass.
+- Local browser: cancellation retains exact Plan fingerprint edeffbe5e65a30ac2eaa54f36562ee50e754ea53f90c9ef00d468cff2f39bebe; one disposable existing Dive explicitly linked, original observed facts retained. Team filtering/removal, help, forecast retrieval and exact linked-log destination pass. Workbench/editor overflow0 at390/820/1024/1440; console errors0. Stale-response race verified with focused deterministic tests.
+- No production/GitHub writes. Next: Stage6 corrected gas allocation and supply UX.
 

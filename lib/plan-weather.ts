@@ -56,6 +56,9 @@ export function planningWeatherRegime(plannedDate: string, today: string): 'fore
 }
 
 export interface PlannedWeatherResponse {
+  providerId?: import('./weather/provider-contract').WeatherProviderId;
+  sourceCoordinates?: {latitude:number;longitude:number};
+  sourceTime?: string;
   error?: string;
   provider?: string;
   resolution?: string;
