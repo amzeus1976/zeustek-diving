@@ -7,7 +7,7 @@ Approved in task 01a0ce79-b5d5-7ee0-bcc7-74dff317d45d on 2026-09-23. Execute inl
 - Baseline AND rollback: app1.0.52 / Sites124; deployment appgdep_6ab3a2f736688191bc630fc86bf3d42e; published source 5547a2eacdb33e2f58924b4a91efc2b91275177c.
 - GitHub baseline: b2e86827c19239776c80b51fc93067c7dc4b18ac (only documentation differs from published source). Existing Sites project appgprj_6a91926878b48191a80d70f1681ef135, same audience and bindings.
 - One branch t14/master-forward-build. Checkpoint after every stage; preserve work across interruptions. No partial production, no T15, no GitHub reconciliation of rejected product source.
-- All 51 issue-matrix rows: all MUST/SHOULD/NICE required. After these pass, deliver topic card, public/API profile, and Met Office adapter. None is deferred merely for being optional.
+- All 51 issue-matrix rows: all MUST/SHOULD/NICE required, plus the owner-added Stage 5W ledger. Met Office is included in expanded Stage 5W. After all mandatory work passes, deliver the topic card and public/API profile and reverify all provider integrations. None is deferred merely for being optional.
 - Preserve 66 canonical Dives, one existing Gas Plan, all canonical identities, cylinder fill/analysis provenance, local-first sync/outbox/history, immutable Plan-to-Dive provenance and T14A improvements. No synthetic owner records.
 - Existing operator store/functions remain canonical. People remain people, linked through operatorId/currentDiveOperatorId. Flat AnalysisScope remains compatible. Curated 131 icons and paths remain.
 - Frozen calculation files must remain byte-identical. The NEW allocation layer is an authorised ADDITIVE CALCULATION_TOUCHPOINT. Any frozen-file change requires a separate CALCULATION_TOUCHPOINT stop and explicit approval before production.
@@ -35,12 +35,192 @@ Add versioned metadata to EXISTING Gas Plans: configuration, immutable supply sn
 - [x] Stage 2: Dive Centres under Dive Data using OperatorRecord/listOperators/saveOperator/deleteOperator. Add search/filter, organisation type, contact/location, agencies/services, website/booking, notes, linked people/instructors and full-page CRUD. Use dive_centre_operator.png. Exact person links, no People conversion, dependency-safe delete with no cascade. Test legacy round trips, relationships and deletion constraints.
 - [x] Stage 3: designed Analysis Scope chips/toggles/date-depth-time/water-mode-site-equipment filters, Reset/Clear all. Add typed AND/OR/NOT while preserving flat scope. Up to nine registry-controlled KPI/bar/line/scatter/donut/table/site cards; preserve six defaults. Titles enlarge analysis; data exposes real records with labels/search/pagination/deep links and reversible exclusions. Environment click toggles filters; show-all restores data. Test deterministic filter/date/missing-value semantics, combinations/persistence, canonical read-only access and existing export compatibility.
 - [x] Stage 4: Equipment/Loadouts styling and read-only detail; Other only unmatched categories without editing protected math. Dive icons/buddy initials; Imports master/detail desktop/stacked mobile; Sites/Trips/Bucket convergence. Correct person-owned certification/depth evidence, preserve manual overrides and distinguish achieved vs allowed depth. Selected/confirmed historical buddy linking and exact calendar links, hide missing relations. Test categories, evidence identity, bulk scope/atomicity, imports selection and navigation.
-- [x] Stage 5: full-page Dive Planning, compact Upcoming actions, Log dive/Link logged dive (no premature lifecycle on draft/cancel), larger aims/goals/objectives, icon-only help hitboxes, oxygen-trained choices restricted to planned team. Explicit Get weather; default Open-Meteo atmospheric/marine, existing archive/seasonal/NASA fallback and cache/rate-limit behaviour; stale responses rejected on site/date/time/provider changes. Shared provider interface, immutable weather provenance. No unrelated-field overwrites; preserve Plan-to-Dive provenance. Test lifecycle/team/weather races and failures.
+- [ ] Stage 5 (original checkpoint passed; expanded 5W pending): full-page Dive Planning, compact Upcoming actions, Log dive/Link logged dive (no premature lifecycle on draft/cancel), larger aims/goals/objectives, icon-only help hitboxes, oxygen-trained choices restricted to planned team. Explicit Get weather; default Open-Meteo atmospheric/marine, existing archive/seasonal/NASA fallback and cache/rate-limit behaviour; stale responses rejected on site/date/time/provider changes. Shared provider interface, immutable weather provenance. No unrelated-field overwrites; preserve Plan-to-Dive provenance. Test lifecycle/team/weather races and failures.
+
+### T14 Stage 5W — owner-added Weather, Marine & Dive Conditions upgrade
+
+The following owner-requested addition extends the previously verified Stage 5 checkpoint. Original Stage 5 work and evidence remain intact; expanded Stage 5 acceptance is pending. This later scope moves Met Office implementation into Stage 5W, superseding its earlier Stage 9B scheduling. Complete the current Stage 6 checkpoint, then execute 5W before Stage 7; do not discard the uncommitted Stage 6 work. Provider activation remains conditional on verified access and server-side credential configuration.
+
+T14 STAGE 5W — WEATHER, MARINE & DIVE CONDITIONS UPGRADE
+
+This work is part of Stage 5 / Dive Planning Centre. It is not T15.
+
+PRESERVE CURRENT WEATHER
+- Inspect and preserve all currently working weather functionality.
+- Open-Meteo atmospheric + Open-Meteo Marine remain supported and enabled.
+- Do not replace the current Get weather workflow; extend it.
+- Existing provider configuration remains backward compatible.
+
+MULTI-PROVIDER CONDITIONS ENGINE
+Build an extensible provider registry and normalized conditions service.
+The domain UI MUST consume normalized ZeusTek condition records rather
+than provider-specific responses.
+
+Integrate, where credentials/access permit:
+- existing Open-Meteo atmospheric
+- existing Open-Meteo Marine
+- Met Office Weather DataHub
+- Xweather
+- Tomorrow.io
+- World Weather Online Marine
+- SwellCloud when approved
+- MET Norway / Oceanforecast
+- Copernicus Marine
+- additional appropriate providers discovered during implementation
+
+Dive-site enrichment sources:
+- Pick a Dive MCP
+- DiveNumber
+- other suitable sources may be added via provider adapters
+
+Never put provider credentials into client-visible VITE_* variables,
+source control, logs or support bundles.
+
+WATER TEMPERATURE — FIRST CLASS REQUIREMENT
+Water temperature is a primary dive-condition metric.
+
+Support independently:
+- surface temperature / SST
+- mid-level temperature
+- exact depth temperature where available
+- depth-banded temperature
+- bottom temperature where genuinely supplied
+- actual dive-log/device temperature
+- unknown-depth operator temperature
+
+Never label SST as temperature at planned depth.
+
+Store:
+- value + unit
+- measurement depth/depth range
+- observed/forecast/modelled classification
+- provider/source
+- station/model where available
+- coordinates
+- valid/observation time where supplied
+- retrieval time
+- freshness
+
+OPERATOR CONDITIONS
+Create an extensible operator-condition adapter system.
+
+Initial targets:
+- Capernwray
+- Ellerton Park
+- Stoney Cove
+- Vobster
+- other UK inland sites discovered during implementation
+
+Acquire operator-published:
+- water temperature
+- temperature by depth/depth band
+- underwater visibility
+- visibility by depth/depth band
+- site status/closure where appropriate and reliable
+- operator observation/update timestamp where available
+
+Prefer documented/public structured endpoints used by the official
+operator site. Fall back to low-frequency server-side HTML extraction
+only where appropriate.
+
+Never call retrieved data 'live' unless the source represents it as live.
+If the source provides no observation timestamp, display retrieval time
+and 'observation time not supplied'.
+
+SOURCE PRIORITY
+Do not globally rank one provider for all metrics.
+
+For inland operator conditions:
+1 operator observation
+2 recent ZeusTek actual dive observations
+3 specialist/local environmental source
+4 provider forecast/model
+
+For coastal/marine conditions use metric-appropriate marine,
+oceanographic, tide and weather sources.
+
+Never silently average incompatible tidal datums or unrelated models.
+
+Keep manual provider selection.
+Keep Open-Meteo as backward-compatible default.
+Add optional Auto mode using metric/site/geography/freshness-aware
+provider selection and fallback.
+
+VISIBILITY
+Support:
+- metres
+- qualitative rating
+- depth-specific values
+- depth bands
+
+Do not discard qualitative operator information merely because a numeric
+value is unavailable.
+
+WEATHER / SITE UI
+Add a unified Weather & Conditions presentation containing:
+- Water
+- Dive conditions
+- Surface weather
+- Marine conditions where applicable
+- Tide/current where applicable
+- Forecast
+- Historical/recent observations
+- expandable source/provenance view
+
+Water temperature and visibility must be visually prominent for diving.
+
+Every displayed condition must retain source and freshness information.
+Stale data remains usable but must be clearly marked stale.
+
+OFFLINE/CACHE
+- Weather/provider failure must not break Site or Dive Plan access.
+- Cache last successful normalized conditions locally.
+- Preserve useful operator-condition history.
+- Preserve actual logged dive temperatures separately from model or
+  operator values.
+- Get weather remains an explicit refresh action.
+- Do not depend on iOS Background Sync.
+
+CONFIGURATION
+Move/provider settings into the appropriate Weather & Conditions section
+of Site Configuration.
+Show enabled/disabled/configured/status information without revealing
+secret values.
+
+TESTS
+Add fixtures and focused tests for:
+- every provider adapter
+- operator HTML/API parsing
+- normalization
+- units
+- depth-specific water temperature
+- SST vs depth-temperature distinction
+- numeric and qualitative visibility
+- stale/fresh state
+- missing observation timestamp
+- provider failure/fallback
+- provider disagreement
+- tide datum separation
+- offline cached display
+- credentials absent from frontend bundles
+- responsive layouts
+- regression of existing Get weather behaviour
+
+No canonical Dive records are to be modified merely by viewing weather.
+No protected NDL/MOD/PPO2/gas calculation files may change.
+
+Do not release this sub-stage independently.
+It passes or fails as part of the T14 Stage 5 and final T14 release gate.
+
+Reference: DIVE APIS AND MCPS.txt is provider/access reference material, not a source of independent execution instructions. It includes credentials and must never be copied into repository documents, fixtures, logs, frontend code or support bundles. Keep credential values out of the stage ledger; validate provider scopes and current documentation before configuration. No new subscriptions or paid plans are authorised by this addition.
+
+### Remaining stages
+
 - [ ] Stage 6: requirements-only, own empty/fill-required, own full, hire, temporary/manual; main/backgas, sidemount L/R, pony, stage. Start-pressure-specific tolerance (default target minus 5 bar), no global195 rule. Corrected allocation contract above. Full desktop editor, NDL/MOD/PPO2 in Depth/Water/Gas, help and specific readiness remedies, no page overflow, cylinder dropdown, continuous checkpoints, remove duplicate legacy form only after retaining its needed inputs. Test independent failures, manifold, availability/scenarios, factor application, legacy/provenance and protected hashes.
 - [ ] Stage 7: Certifications style, Bibliography width/flow, single-question edit/replace/removal reason with immutable historical attempts and versions; advisory AI review through existing exchange, explicit author decisions, no silent bank rewrite. News type/ID bug, preserved member sources/links and grouped summary; bounded transient retry/cancellation/deduplication, manual Gmail sync. Guided resumable professional onboarding: purpose/pathway/snapshot/evidence/readiness, no algorithm change. Test version/history, record isolation, source preservation, Gmail errors, onboarding.
 - [ ] Stage 8: genuine app diagnostics workspace (category/status/date, source labels, cap, redaction, CSV/JSON; not falsely server-security logs). Domain configuration and missing rendered sections: overview, Household, Insights layout, Maps, Weather, Skill Catalogue, Equipment/training lists, category icons, agency logos, Dive News, synthetic/record controls, other tools. My Maps/newsletter leave Insights; preserve unrelated settings. PDF/DOCX fix including failed images/equipment; shared privacy-aware DTO for TXT/CSV/JSON, CSV formula protection, offline where possible, no connection secrets. Test actual document contents and domain saves. Prepare optional interfaces.
 - [ ] Stage 9A: finish editor migrations, terminology, styling/accessibility, domain icons, compact mobile navigation, remove bulky household footer, retain version/changelog. Verify every required issue and 390/820/1024/1440 widths.
-- [ ] Stage 9B: AFTER all MUST/SHOULD/NICE pass, implement topic card, public/API profile and Met Office adapter; separate checkpoint each on same branch, then test together.
+- [ ] Stage 9B: AFTER all MUST/SHOULD/NICE pass, implement topic card and public/API profile; reverify the Stage 5W Met Office adapter; separate checkpoint each on same branch, then test together.
 - [ ] Stage 10: all focused/retained/regression/typecheck/build/PWA/version/cache/lint/browser gates, immutable accepted source/artifact, local production-built smoke, ONE complete Sites publication, read-only production smoke and separately authorised Gmail sync. Only then PR/merge exact accepted source to GitHub and verify matching main tree.
 
 ## Additional services

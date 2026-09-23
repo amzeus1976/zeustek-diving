@@ -92,3 +92,12 @@ Fresh browser session: Gas Plan workspace mounted and cancelled; application con
 - Local browser: cancellation retains exact Plan fingerprint edeffbe5e65a30ac2eaa54f36562ee50e754ea53f90c9ef00d468cff2f39bebe; one disposable existing Dive explicitly linked, original observed facts retained. Team filtering/removal, help, forecast retrieval and exact linked-log destination pass. Workbench/editor overflow0 at390/820/1024/1440; console errors0. Stale-response race verified with focused deterministic tests.
 - No production/GitHub writes. Next: Stage6 corrected gas allocation and supply UX.
 
+
+
+## Owner addition — Stage 5W pending
+
+- Inserted the supplied Weather, Marine & Dive Conditions scope immediately after the Stage 5 weather-provider section. Original Stage 5 checkpoint c55b4f0 and its passing evidence are preserved; expanded Stage 5 now awaits 5W acceptance.
+- Includes normalized provider registry/conditions, first-class depth-aware water temperature, operator adapters, source/freshness provenance, visibility, metric-aware Auto/manual selection, local cache/history, Weather & Conditions configuration and focused regression coverage.
+- Met Office now belongs to 5W; no duplicate adapter in Stage 9B. Other provider integrations depend on verified access. SwellCloud remains approval-dependent; do not claim enabled without access.
+- Provider/access reference contains secrets: no secret values are persisted in repository materials. Existing server-only credential and no-partial-release rules apply.
+- Stage 6 allocation work remains uncommitted and preserved. Finish its checkpoint, then execute 5W before Stage 7. The original 51-row issue matrix is retained; supplemental weather requirements have their own ledger.
