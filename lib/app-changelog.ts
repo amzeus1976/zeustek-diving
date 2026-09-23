@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.52',
+    date: '2026-09-23',
+    title: 'Equipment media centring correction',
+    changes: [
+      'Centred the accessible full-resolution Equipment photo viewer on desktop while retaining contained, phone-safe image sizing and the existing media records.',
+      'Kept the T14A icon, awards, dialog, Overview, Wishlist, Cylinders and brand-focus changes unchanged, with no Gas Planner calculation or canonical data changes.',
+    ],
+  },
+  {
     version: '1.0.51',
     date: '2026-09-23',
     title: 'Brand icon foundation and must-fix display corrections',

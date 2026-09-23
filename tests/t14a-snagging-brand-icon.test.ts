@@ -65,6 +65,7 @@ describe('T14A route-level display contracts', () => {
     const focus = read('app/focus.css');
     const cylinders = read('components/loadouts-gas.tsx');
     expect(dashboard).toContain('<MediaGallery ownerKind={ownerKind} ownerId={ownerId} accessibleViewer />');
+    expect(focus).toContain('.media-lightbox>div{grid-column:2;display:grid;place-items:center');
     expect(focus).toContain('object-position:center');
     expect(cylinders).toContain('Cylinder table columns');
     expect(cylinders).toContain("item.cylinderNumber || '—'");
