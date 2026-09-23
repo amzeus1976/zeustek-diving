@@ -33,4 +33,14 @@
 
 ## Production evidence
 
-Deployment, Sites version, published-source SHA, production smoke, retention counts, and final GitHub SHA are recorded in the progress log after successful publication and smoke verification.
+- Release: app `1.0.51` / Sites `123` / deployment `appgdep_6ab39b75f6f48191aff767c4d4aa7c3a`.
+- Saved Sites version: `appgprj_6a91926878b48191a80d70f1681ef135~appgver_3f9753a8f72481918844385c337f56f2`.
+- Exact published product source: `bef6a3a8e3413eca5b7e9cb084f9b9c9ca8462db`.
+- Production smoke passed for Overview, Insights, Site Configuration, Equipment, Gear Wishlist, Cylinders & Gas, Logbook, and the shared discard-confirmation flow.
+- Insights respected the configured inclusion list and rendered the zero-selection prompt without auto-filling awards.
+- The long-editor discard prompt remained centred at a scrolled position; Escape returned to the editor with focus restored; final discard left no test record.
+- Responsive production checks passed at 390, 820, 1024, and 1440 px without page-level horizontal overflow.
+- Browser console errors observed during final smoke: none.
+- Logbook retained exactly 66 Dives. No owner record was created, edited, or deleted by T14A acceptance.
+- Production contained one pre-existing owner Gas Plan at smoke time, despite the supplied baseline stating zero. T14A did not create, edit, or delete that record; Gas Plan delta from this pass is zero.
+- GitHub release-source commit: `bef6a3a8e3413eca5b7e9cb084f9b9c9ca8462db`; final main merge SHA is recorded in the owner-facing report after PR merge.
