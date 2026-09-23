@@ -1,5 +1,6 @@
 'use client';
 import {useCallback,useEffect,useRef} from 'react';
+import {WORKFLOW_LINK_EVENT} from '../../lib/workflow/workflow-link';
 import {recordNavigation} from '../../lib/editor/navigation-guard';
 import {rememberEditorTrigger} from '../../lib/editor/focus-return';
 import {parseWorkflowDestination,workflowDestinationUrl,type WorkflowDestination} from '../../lib/workflow/workflow-destination';
@@ -34,9 +35,11 @@ export function useWorkflowNavigation(apply:(destination:WorkflowDestination)=>v
         if(restoring)afterRestore=proceed;else proceed();
       });
     };
+    const link=(event:Event)=>{const destination=(event as CustomEvent<WorkflowDestination>).detail;if(destination)navigateRef.current(parseWorkflowDestination(destination));};
+    window.addEventListener(WORKFLOW_LINK_EVENT,link);
     window.addEventListener('popstate',pop);
     document.addEventListener('click',rememberEditorTrigger,true);
-    return ()=>{window.removeEventListener('popstate',pop);document.removeEventListener('click',rememberEditorTrigger,true);navigateRef.current=()=>{};};
+    return ()=>{window.removeEventListener(WORKFLOW_LINK_EVENT,link);window.removeEventListener('popstate',pop);document.removeEventListener('click',rememberEditorTrigger,true);navigateRef.current=()=>{};};
   },[]);
   return useCallback((input:string|WorkflowDestination)=>navigateRef.current(parseWorkflowDestination(input)),[]);
 }

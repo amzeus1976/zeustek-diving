@@ -1,3 +1,4 @@
+import {retainPartialConditions} from './weather/conditions-retention';
 import type { PlanConditionSnapshot } from './offline/dive-planning-centre';
 
 export const PLAN_FORECAST_DAYS = 7;
@@ -28,6 +29,7 @@ export function ownerConditionMode(conditions: PlanConditionSnapshot | undefined
     weather: null,
     airTemperatureC: null,
     waterTemperatureC: null,
+    surfaceTemperatureC: null,
     waveHeightM: null,
     visibilityM: null,
     swellHeightM: null,
@@ -56,6 +58,7 @@ export function planningWeatherRegime(plannedDate: string, today: string): 'fore
 }
 
 export interface PlannedWeatherResponse {
+  conditionsV1?:import('./weather/conditions-model').ConditionsSnapshot;
   providerId?: import('./weather/provider-contract').WeatherProviderId;
   sourceCoordinates?: {latitude:number;longitude:number};
   sourceTime?: string;
@@ -73,7 +76,7 @@ export interface PlannedWeatherResponse {
 }
 
 /** Unknown marine fields stay unknown; historical seasonal context is never presented as a dive-day forecast. */
-export function plannedWeatherSnapshot(response: PlannedWeatherResponse, regime: 'forecast' | 'seasonal', siteId: string, date: string, capturedAt: string): PlanConditionSnapshot {
+export function plannedWeatherSnapshot(response: PlannedWeatherResponse, regime: 'forecast' | 'seasonal', siteId: string, date: string, capturedAt: string, previous?: PlanConditionSnapshot): PlanConditionSnapshot {
   const value = response.logConditions;
   if (!value || (!value.weatherSummary && value.airTemperatureC == null)) throw new Error('No usable weather data were returned. Existing conditions were kept.');
   return {
@@ -85,7 +88,9 @@ export function plannedWeatherSnapshot(response: PlannedWeatherResponse, regime:
     sourceDetail: `${response.provider ?? 'Open-Meteo'} · ${response.resolution ?? regime} · ${response.attribution ?? ''}`,
     weather: value.weatherSummary || null,
     airTemperatureC: value.airTemperatureC ?? null,
-    waterTemperatureC: regime === 'forecast' ? value.surfaceTemperatureC ?? null : null,
+    waterTemperatureC: null,
+    surfaceTemperatureC: regime === 'forecast' ? value.surfaceTemperatureC ?? null : null,
+    ...(response.conditionsV1?{conditionsV1:retainPartialConditions(response.conditionsV1,previous?.conditionsV1)}:{}),
     waveHeightM: regime === 'forecast' ? value.waveHeightM ?? null : null,
     currentStrength: null,
     visibilityM: null,

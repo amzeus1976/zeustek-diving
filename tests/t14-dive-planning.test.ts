@@ -54,7 +54,7 @@ describe('T14 explicit weather requests',()=>{
   const request={mode:'seasonal',provider:'open-meteo',siteId:'s',date:'2026-10-20',time:'14:00',latitude:50,longitude:-2,marine:true};
   const transport=vi.mocked(fetch);transport.mockResolvedValue(new Response(JSON.stringify({error:'Rate limit'}),{status:429}));
   await expect(weatherProvider('open-meteo').forecast(request)).rejects.toThrow('Rate limit');
-  const url=String(transport.mock.calls[0]?.[0]);expect(url).toContain('/api/site-weather?');expect(url).toContain('planning=seasonal');expect(url).toContain('marine=true');expect(url).toContain('provider=open-meteo');
+  const url=String(transport.mock.calls[0]?.[0]);expect(url).toContain('/api/conditions?');expect(url).toContain('mode=seasonal');expect(url).toContain('marine=true');expect(url).toContain('provider=open-meteo');
  });
  it('keys the complete requested time, location, mode and provider',()=>{
   const request={mode:'auto',provider:'open-meteo',siteId:'s',date:'2026-09-24',time:'10:00',latitude:50,longitude:-2};

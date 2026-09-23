@@ -16,6 +16,8 @@ export interface PlanTeamMember {
   specialties?: string | null;
 }
 export interface PlanConditionSnapshot {
+  conditionsV1?:import('../weather/conditions-model').ConditionsSnapshot;
+  surfaceTemperatureC?:number|null;
   providerId?: import('../weather/provider-contract').WeatherProviderId;
   sourceCoordinates?: {latitude:number;longitude:number};
   sourceTime?: string;

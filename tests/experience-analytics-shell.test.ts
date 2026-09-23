@@ -12,7 +12,7 @@ describe('T09 shell integration', () => {
   it('mounts Insights in the current dashboard shell', () => {
     const source = read('app/dashboard-client.tsx');
     expect(source).toContain(
-      "import { ExperienceAnalytics } from '@/components/experience-analytics';",
+      "const ExperienceAnalytics=lazy(()=>import('@/components/experience-analytics').then(module=>({default:module.ExperienceAnalytics})));",
     );
     expect(source).toContain('Insights: BarChart3');
     expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Insights', label: 'Insights'");

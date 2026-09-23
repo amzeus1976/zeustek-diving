@@ -1,8 +1,10 @@
 'use client';
+import {useSiteForecasts,SevenDayForecastCard} from '../components/weather/overview-conditions';
+import {ConditionsWorkspace} from '../components/weather/conditions-workspace';
+import {ConditionsConfiguration} from '../components/weather/conditions-configuration';
 import {
   Anchor,
   Clock,
-  Thermometer,
   Hash,
   Archive,
   BarChart3,
@@ -18,8 +20,6 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Cloud,
-  CloudFog,
-  CloudLightning,
   CloudRain,
   CloudSun,
   Compass,
@@ -46,8 +46,6 @@ import {
   ShieldCheck,
   ShipWheel,
   Star,
-  Sun,
-  Snowflake,
   ShoppingBag,
   Trash2,
   Upload,
@@ -57,7 +55,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
@@ -96,13 +94,13 @@ import { CylindersGas, Loadouts } from '@/components/loadouts-gas';
 import { isCylinderEquipment } from '@/lib/offline/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
-import { ProfessionalDevelopment } from '@/components/professional-development';
+const ProfessionalDevelopment=lazy(()=>import('@/components/professional-development').then(module=>({default:module.ProfessionalDevelopment})));
 import { DivePlanningCentre } from '@/components/dive-planning-centre';
-import { ExperienceAnalytics } from '@/components/experience-analytics';
-import { KnowledgeCentre } from '@/components/knowledge-centre';
-import { DiveComputerData } from '@/components/dive-computer-data';
+const ExperienceAnalytics=lazy(()=>import('@/components/experience-analytics').then(module=>({default:module.ExperienceAnalytics})));
+const KnowledgeCentre=lazy(()=>import('@/components/knowledge-centre').then(module=>({default:module.KnowledgeCentre})));
+const DiveComputerData=lazy(()=>import('@/components/dive-computer-data').then(module=>({default:module.DiveComputerData})));
 import { DivingCalendarBookings } from '@/components/planning/diving-calendar-bookings';
-import { GasPlanning } from '@/components/planning/gas-planning';
+const GasPlanning=lazy(()=>import('@/components/planning/gas-planning').then(module=>({default:module.GasPlanning})));
 import { CollapsibleWorkCard } from '@/components/workflow/collapsible-work-card';
 import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-review';
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
@@ -566,6 +564,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Overview' && (
             <Overview openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />
           )}
+          <Suspense fallback={<output className="focus-copy">Loading workspace…</output>}>
           {active === 'Changelog' && <AppChangelog />}
           {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />}
           {active === 'Equipment' && <Equipment />}{' '}
@@ -599,6 +598,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sync' && <SyncCentre />}{' '}
           {active === 'Backups' && <BackupsScreen />}{' '}
           {active === 'Settings' && <SiteConfiguration go={go} />}
+          </Suspense>
         </ScreenTiming></div>
       </section>
       <nav className="focus-mobile-nav">
@@ -628,6 +628,7 @@ const configurationLinks = [
   ['training-agency-logos', 'Training agency logos'],
   ['overview-layout-awards', 'Insights layout / awards'],
   ['dive-news-settings', 'Dive News settings'],
+  ['weather-conditions', 'Weather & Conditions'],
   ['acceptance-fixture-review', 'Synthetic data & record controls'],
   ['other-site-data-tools', 'Other site data tools'],
 ] as const;
@@ -647,6 +648,7 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
       <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="skill-catalogue" defaultMinimized className="site-configuration-card" title="Skill Catalogue" eyebrow="DIVING CPD" status="Canonical groups, CSV and evidence definitions"><SkillCatalogue /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Insights layout / awards" eyebrow="INSIGHTS" status="Choose 4, 8, 12, 16 or 20 analytics awards"><DashboardAwardsSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="weather-conditions" defaultMinimized className="site-configuration-card" title="Weather & Conditions" eyebrow="DIVE CONDITIONS" status="Providers, official operators, source status and offline cache"><ConditionsConfiguration /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><NewsSourceSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Synthetic data & record controls" eyebrow="OWNER CONFIRMATION" status="All canonical kinds, dependencies and safe actions" alert="No automatic deletion"><SyntheticFixtureReview go={go}/></CollapsibleWorkCard>
       <CollapsibleWorkCard id="other-site-data-tools" defaultMinimized className="site-configuration-card" title="Other site data tools" eyebrow="ADMIN" status="Diagnostics and records needing attention"><AdminPanel /></CollapsibleWorkCard>
@@ -787,90 +789,6 @@ function DashboardAwardsSettings() {
   );
 }
 
-type ForecastPayload = {
-  daily?: {
-    time?: string[];
-    weather_code?: number[];
-    temperature_2m_max?: number[];
-    temperature_2m_min?: number[];
-    precipitation_probability_max?: number[];
-    precipitation_sum?: number[];
-    wind_speed_10m_max?: number[];
-  };
-  daily_units?: Record<string, string>;
-};
-
-function weatherIcon(code = 3, size = 18) {
-  if (code === 0) return <Sun size={size} />;
-  if ([1, 2].includes(code)) return <CloudSun size={size} />;
-  if ([45, 48].includes(code)) return <CloudFog size={size} />;
-  if (code >= 71 && code <= 77) return <Snowflake size={size} />;
-  if (code >= 95) return <CloudLightning size={size} />;
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return <CloudRain size={size} />;
-  return <Cloud size={size} />;
-}
-
-function forecastDescription(code = 3) {
-  if (code === 0) return 'Clear';
-  if ([1, 2].includes(code)) return 'Partly cloudy';
-  if (code === 3) return 'Overcast';
-  if ([45, 48].includes(code)) return 'Fog';
-  if (code >= 71 && code <= 77) return 'Snow';
-  if (code >= 95) return 'Thunderstorms';
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'Rain';
-  return 'Mixed conditions';
-}
-
-function useSiteForecasts(sites: Array<Stored<DiveSiteRecord>>) {
-  const [forecasts, setForecasts] = useState<Record<string, ForecastPayload>>({});
-  const [error, setError] = useState('');
-  const signature = sites.map((site) => `${site.entityId}:${site.latitude}:${site.longitude}`).join('|');
-  useEffect(() => {
-    const located = sites.filter((site) => site.latitude != null && site.longitude != null).slice(0, 8);
-    if (!located.length) { setForecasts({}); setError(''); return; }
-    let cancelled = false;
-    async function load() {
-      const points = located.map((site) => `${site.latitude},${site.longitude}`).join('|');
-      let locations: Array<{ weather?: ForecastPayload | null }> = [];
-      try {
-        const response = await fetch(`/api/site-weather?${new URLSearchParams({ points })}`, { cache: 'no-store' });
-        const result = await response.json() as { locations?: Array<{ weather?: ForecastPayload | null }>; error?: string };
-        if (!response.ok || !result.locations) throw new Error(result.error || 'Shared forecast unavailable');
-        locations = result.locations;
-      } catch {
-        const direct = new URL('https://api.open-meteo.com/v1/forecast');
-        direct.search = new URLSearchParams({
-          latitude: located.map((site) => String(site.latitude)).join(','),
-          longitude: located.map((site) => String(site.longitude)).join(','),
-          daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max',
-          timezone: 'auto', forecast_days: '7', wind_speed_unit: 'mph',
-        }).toString();
-        const response = await fetch(direct);
-        if (!response.ok) throw new Error('Forecast service unavailable');
-        const result = await response.json() as ForecastPayload | ForecastPayload[];
-        locations = (Array.isArray(result) ? result : [result]).map((weather) => ({ weather }));
-      }
-      if (cancelled) return;
-      setForecasts(Object.fromEntries(located.flatMap((site, index) => locations[index]?.weather ? [[site.entityId, locations[index].weather as ForecastPayload]] : [])));
-      setError('');
-    }
-    void load().catch(() => { if (!cancelled) { setForecasts({}); setError('Forecast temporarily unavailable.'); } });
-    return () => { cancelled = true; };
-  }, [signature]);
-  return { forecasts, error };
-}
-
-function SevenDayForecastCard({ site, forecast, compact = false }: { site: Pick<DiveSiteRecord, 'name' | 'location'>; forecast?: ForecastPayload | undefined; compact?: boolean }) {
-  const daily = forecast?.daily;
-  const days = daily?.time?.slice(0, compact ? 4 : 7) ?? [];
-  return <Card className={`mini-forecast-card ${compact ? 'compact' : ''}`}>
-    <div className="mini-forecast-head"><div><span className="focus-eyebrow">{compact ? 'FORECAST' : '7-DAY DIVE WEATHER'}</span><h3>{site.name}</h3><small>{site.location}</small></div><CloudSun /></div>
-    {days.length ? <div className="forecast-days">{days.map((date, index) => {
-      const code = daily?.weather_code?.[index] ?? 3;
-      return <div key={date} title={forecastDescription(code)}><b>{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</b>{weatherIcon(code, compact ? 17 : 20)}<span>{Math.round(daily?.temperature_2m_max?.[index] ?? 0)}°</span><small>{Math.round(daily?.wind_speed_10m_max?.[index] ?? 0)} mph</small></div>;
-    })}</div> : <p className="focus-copy">Loading seven-day forecast…</p>}
-  </Card>;
-}
 
 function Overview({
   openLog,
@@ -943,10 +861,8 @@ function Overview({
     .flatMap((siteId) => { const site = weatherCandidateSites.find((candidate) => candidate.entityId === siteId); return site ? [site] : []; })
     .slice(0, 6);
   const forecastSites = [...featuredSites, ...(nextSite && !featuredSites.some((site) => site.entityId === nextSite.entityId) ? [nextSite] : [])].slice(0, 8);
-  const { forecasts, error: forecastError } = useSiteForecasts(forecastSites);
-  const nextDaily = nextSite ? forecasts[nextSite.entityId]?.daily : undefined;
-  const nextDateIndex = nextTrip?.startDate && nextDaily?.time ? nextDaily.time.indexOf(nextTrip.startDate) : -1;
-  const nextWeatherIndex = nextDateIndex != null && nextDateIndex >= 0 ? nextDateIndex : 0;
+  const { forecasts, error: forecastError, busy:forecastBusy, refresh:refreshForecasts } = useSiteForecasts(forecastSites);
+  const nextForecast = nextSite ? forecasts[nextSite.entityId]?.days.find(day=>day.date===nextTrip?.startDate) : undefined;
   const serviceOverviewItems = overviewServiceItems(equipment, dives, 8);
   const serviceWarningCount = serviceOverviewItems.filter((item) => equipmentServiceStatus(item, dives).state !== 'current').length;
   async function saveHomeWeatherSelection(nextIds: string[]) {
@@ -1012,10 +928,7 @@ function Overview({
                   .join(' · ')
               : 'Add a trip when the plan is confirmed and it will appear here.'}
           </p>
-          {nextSite && nextDaily?.time?.length ? <div className="next-dive-weather">
-            {weatherIcon(nextDaily.weather_code?.[nextWeatherIndex] ?? 3, 24)}
-            <div><b>{forecastDescription(nextDaily.weather_code?.[nextWeatherIndex] ?? 3)}</b><span>{Math.round(nextDaily.temperature_2m_min?.[nextWeatherIndex] ?? 0)}–{Math.round(nextDaily.temperature_2m_max?.[nextWeatherIndex] ?? 0)}°C · wind to {Math.round(nextDaily.wind_speed_10m_max?.[nextWeatherIndex] ?? 0)} mph</span></div>
-          </div> : nextTrip && <small className="next-weather-note">{nextSite ? 'Loading forecast…' : 'Link this plan to a saved site to show its weather.'}</small>}
+          {nextForecast ? <div className="next-dive-weather"><CloudSun size={24}/><div><b>{nextForecast.summary??'Atmospheric forecast'}</b><span>{nextForecast.minimumC==null?'Unknown':Math.round(nextForecast.minimumC)}–{nextForecast.maximumC==null?'Unknown':Math.round(nextForecast.maximumC)}°C · wind {nextForecast.windMaximumMps==null?'unknown':`to ${Math.round(nextForecast.windMaximumMps*2.236936)} mph`}</span></div></div> : nextTrip && <small className="next-weather-note">{nextSite ? 'Choose Get weather. Forecasts are shown only for the actual planned date.' : 'Link this plan to a saved site to show its weather.'}</small>}
           <button onClick={() => go('Dive Plans')}>
             Open dive plans <ChevronRight size={15} />
           </button>
@@ -1049,6 +962,7 @@ function Overview({
       <section className="home-weather-section">
         <div className="focus-card-head"><div><span className="focus-eyebrow">HOME DIVE FORECASTS</span><h2>Seven-day conditions</h2><p className="focus-copy">Choose up to six saved sites, or show no forecast cards.</p></div><button className="focus-secondary" aria-expanded={weatherPickerOpen} onClick={() => setWeatherPickerOpen((current) => !current)}>{weatherPickerOpen ? 'Close selector' : 'Choose sites'}</button></div>
         {weatherPickerOpen && <Card className="home-weather-picker"><div className="home-weather-picker-head"><div><h3>Forecast sites</h3><p className="focus-copy">Selections save automatically and sync across devices.</p></div><label><input type="checkbox" checked={selectedHomeWeatherSiteIds.length === 0} disabled={weatherSelectionSaving} onChange={(event) => { if (event.target.checked) void saveHomeWeatherSelection([]); }} /> Don’t show any</label></div><div className="home-weather-options">{weatherCandidateSites.map((site) => { const checked = selectedHomeWeatherSiteIds.includes(site.entityId); return <label key={site.entityId}><input type="checkbox" checked={checked} disabled={weatherSelectionSaving || (!checked && selectedHomeWeatherSiteIds.length >= 6)} onChange={(event) => void saveHomeWeatherSelection(event.target.checked ? [...selectedHomeWeatherSiteIds, site.entityId] : selectedHomeWeatherSiteIds.filter((siteId) => siteId !== site.entityId))} /><span><b>{site.name}</b><small>{site.location || site.country || 'Location not recorded'}</small></span></label>; })}</div><small className="home-weather-picker-status">{weatherSelectionSaving ? 'Saving selection…' : `${selectedHomeWeatherSiteIds.length} of 6 selected`}</small></Card>}
+        <button className="focus-secondary" disabled={forecastBusy||!forecastSites.length} onClick={()=>void refreshForecasts()}>{forecastBusy?'Getting conditions…':'Get weather'}</button>
         {featuredSites.length ? <div className="home-weather-grid">{featuredSites.map((site) => <SevenDayForecastCard key={site.entityId} site={site} forecast={forecasts[site.entityId]} compact />)}</div> : <Card className="focus-empty"><CloudSun size={30}/><h2>No forecast sites selected</h2><p>Open the selector and tick up to six sites whenever you want forecasts here.</p><button className="focus-primary" onClick={() => setWeatherPickerOpen(true)}>Choose forecast sites</button></Card>}
         {forecastError && <div className="focus-notice"><CloudRain size={15}/>{forecastError}</div>}
       </section>
@@ -3198,6 +3112,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
         >
           {viewing.diveMapImage && <section className="site-map-image"><h3>Dive map</h3><CardImageView image={viewing.diveMapImage} label={`${viewing.name} dive map`}/></section>}
           <SiteAlbums site={viewing}/>
+          <SiteWeather item={viewing}/>
           <SiteOverheadSection key={viewing.entityId} site={viewing}/>
         </RecordDetail>
       )}
@@ -3218,132 +3133,8 @@ function SiteDetail({
     </div>
   );
 }
-function SiteWeather({ item }: { item: DiveSiteRecord }) {
-  const [data, setData] = useState<{
-    weather?: {
-      current?: Record<string, number>;
-      current_units?: Record<string, string>;
-      daily?: Record<string, unknown[]>;
-    };
-    marine?: {
-      current?: Record<string, number>;
-      current_units?: Record<string, string>;
-    };
-    attribution?: string;
-  } | null>(null);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    setData(null);
-    setError('');
-    const params = new URLSearchParams({
-      latitude: String(item.latitude),
-      longitude: String(item.longitude),
-      marine: String(
-        ['shore', 'boat', 'wreck', 'sea'].includes(item.siteType ?? ''),
-      ),
-    });
-    let cancelled = false;
-    async function load() {
-      try {
-        const response = await fetch(`/api/site-weather?${params}`, { cache: 'no-store' });
-        const result = (await response.json()) as {
-          weather?: {
-            current?: Record<string, number>;
-            current_units?: Record<string, string>;
-            daily?: Record<string, unknown[]>;
-          };
-          marine?: {
-            current?: Record<string, number>;
-            current_units?: Record<string, string>;
-          };
-          attribution?: string;
-          error?: string;
-        };
-        if (!response.ok) throw new Error(result.error || 'Shared forecast unavailable');
-        if (!cancelled) setData(result);
-      } catch {
-        const direct = new URL('https://api.open-meteo.com/v1/forecast');
-        direct.search = new URLSearchParams({ latitude: String(item.latitude), longitude: String(item.longitude), current: 'temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m', daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max', timezone: 'auto', forecast_days: '7', wind_speed_unit: 'mph' }).toString();
-        const response = await fetch(direct);
-        if (!response.ok) throw new Error('Forecast temporarily unavailable.');
-        const weather = await response.json() as NonNullable<NonNullable<typeof data>['weather']>;
-        if (!cancelled) setData({ weather, attribution: 'Weather data by Open-Meteo. Forecasts are guidance only and are not dive-safety advice.' });
-      }
-    }
-    void load().catch((reason) => { if (!cancelled) setError(reason instanceof Error ? reason.message : 'Forecast temporarily unavailable.'); });
-    return () => { cancelled = true; };
-  }, [item.latitude, item.longitude, item.siteType]);
-  const current = data?.weather?.current;
-  const units = data?.weather?.current_units;
-  const marine = data?.marine?.current;
-  return (
-    <aside className="weather-card">
-      <div className="weather-title">
-        <CloudRain />
-        <div>
-          <span>SELECTED SITE WEATHER</span>
-          <strong>{item.name}</strong>
-        </div>
-      </div>
-      {error ? (
-        <p>{error}</p>
-      ) : !current ? (
-        <p>Loading forecast…</p>
-      ) : (
-        <>
-          <div className="weather-now">
-            <strong>
-              {current.temperature_2m}
-              {units?.temperature_2m}
-            </strong>
-            <span>
-              Feels {current.apparent_temperature}
-              {units?.apparent_temperature}
-            </span>
-          </div>
-          <div className="weather-metrics">
-            <span>
-              Wind{' '}
-              <b>
-                {current.wind_speed_10m} {units?.wind_speed_10m}
-              </b>
-            </span>
-            <span>
-              Gusts{' '}
-              <b>
-                {current.wind_gusts_10m} {units?.wind_gusts_10m}
-              </b>
-            </span>
-            <span>
-              Rain{' '}
-              <b>
-                {current.precipitation} {units?.precipitation}
-              </b>
-            </span>
-            {marine && (
-              <>
-                <span>
-                  Wave <b>{marine.wave_height ?? '—'}m</b>
-                </span>
-                <span>
-                  Water <b>{marine.sea_surface_temperature ?? '—'}°C</b>
-                </span>
-                <span>
-                  Current <b>{marine.ocean_current_velocity ?? '—'} kn</b>
-                </span>
-              </>
-            )}
-          </div>
-          <div className="weather-week">{data?.weather?.daily?.time?.slice(0, 7).map((date, index) => {
-            const daily = data.weather?.daily;
-            const code = Number(daily?.weather_code?.[index] ?? 3);
-            return <div key={String(date)} title={forecastDescription(code)}><b>{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</b>{weatherIcon(code, 18)}<span>{Math.round(Number(daily?.temperature_2m_max?.[index] ?? 0))}°</span><small>{Math.round(Number(daily?.wind_speed_10m_max?.[index] ?? 0))} mph</small></div>;
-          })}</div>
-          <small>{data?.attribution}</small>
-        </>
-      )}
-    </aside>
-  );
+function SiteWeather({ item }: { item: DiveSiteRecord & { entityId?: string } }) {
+  return <ConditionsWorkspace key={(item.entityId??item.name)+String(item.latitude)+String(item.longitude)} site={item}/>;
 }
 function SiteV2Form({
   item,
@@ -6058,5 +5849,4 @@ function DiveModal({
     </div>
   );
 }
-
 

@@ -2,7 +2,7 @@ import {resolveWorkflowRoute,WORKFLOW_ROUTES} from './workflow-model';
 
 export interface WorkflowDestination {route:string;recordId?:string;params?:Record<string,string>}
 const recordKeys:Record<string,string>={People:'personId','Dive Centres':'operatorId',Sites:'siteId',Trips:'tripId',Logbook:'diveId','Dive Plans':'planId','Gas Planning':'gasPlanId','Dive Computer Imports':'importId','Loadouts & Gas':'loadoutId',Equipment:'equipmentId'};
-const parameterKeys=new Set(['recordId',...Object.values(recordKeys),'divePlanId','newPlan','source','tab','view','edit','personId','equipmentId','eventId','loadoutId','bucketId']);
+const parameterKeys=new Set(['config','recordId',...Object.values(recordKeys),'divePlanId','newPlan','source','tab','view','edit','personId','equipmentId','eventId','loadoutId','bucketId']);
 const routes=new Set([...WORKFLOW_ROUTES.map(item=>item.route),'Dive Centres','Changelog','Imports','Sync','Backups']);
 
 export function parseWorkflowDestination(input:string|WorkflowDestination):WorkflowDestination {
