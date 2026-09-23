@@ -201,7 +201,7 @@ describe('T14 Gmail manual acceptance contract', () => {
     expect(status).toMatchObject({
       configured: true,
       connected: false,
-      syncMode: 'manual',
+      syncMode: 'disabled',
     });
     expect(fetcher).not.toHaveBeenCalled();
     expect(

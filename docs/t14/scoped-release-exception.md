@@ -1,0 +1,9 @@
+# Owner-approved scoped-release exception — Gmail sync
+
+On 2026-09-24 the owner explicitly authorised publication of the completed T14 work through Stage 8, including 5W, **without a successful live Gmail synchronisation acceptance**. This exception supersedes the former Gmail-success release gate only. The single 2026-09-23 live acceptance run `fdeda6a4-5504-49d0-881d-d1795839955b` remains **FAILED — upstream_failure**. Do not repeat it under this authorisation or describe the Gmail integration as verified.
+
+The release candidate must isolate Gmail sync while keeping its encrypted connection, previously imported stories, public News feeds, source grouping and diagnostics. The release lock is shared by the status model, News UI and server POST boundary: status reports `syncMode: disabled`, the visible manual action is disabled with the text “Gmail sync temporarily unavailable — repair deferred.”, and an authenticated direct POST returns a private no-store 503 before reading the request body, database or provider. No scheduled or background sync path exists in the T14 source. Existing OAuth connection management and cached-story reads are not changed.
+
+The 2026-09-23 failed deployment and verified Sites124 rollback remain recorded in `scoped-release-attempt.md`. A new candidate is required because isolation, version and cache identifiers change application source. Its exact commit, final gate, live owner-data baseline, Sites version/deployment, export-secret exclusion, no-sync evidence and GitHub reconciliation must be added to the release record after verification. All non-Gmail gates remain mandatory. NEWS-02 is `PARTIAL` under this explicit owner-approved exception, not `PASS`.
+
+Stage 9 nonblocking finishing, optional topic card and disabled public/API profile remain deferred. Met Office access remains unverified/denied, and Copernicus/SwellCloud stay conditional and disabled until access is actually established.

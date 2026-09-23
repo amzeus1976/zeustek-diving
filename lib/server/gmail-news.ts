@@ -1,5 +1,6 @@
 import {
   GMAIL_READ_SCOPE,
+  GMAIL_SYNC_RELEASE_DISABLED,
   NEWS_MAILBOX,
   gmailDiagnostic,
   type GmailDiagnosticCode,
@@ -511,7 +512,7 @@ export async function gmailConnectionStatus(
     lastError: diagnostic?.message ?? '',
     diagnostic,
     reconnectRequired: diagnostic?.reconnect ?? false,
-    syncMode: 'manual',
+    syncMode: GMAIL_SYNC_RELEASE_DISABLED ? 'disabled' : 'manual',
     lastRun: await readRun(env, userId),
   };
 }

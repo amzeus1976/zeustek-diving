@@ -1,11 +1,16 @@
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '../../../chatgpt-auth';
 import { GmailError, syncGmailNews } from '@/lib/server/gmail-news';
-import { gmailDiagnostic } from '@/lib/gmail-contract';
+import { GMAIL_SYNC_DISABLED_MESSAGE, GMAIL_SYNC_RELEASE_DISABLED, gmailDiagnostic } from '@/lib/gmail-contract';
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
   if (!user)
     return Response.json({ error: 'Authentication required' }, { status: 401 });
+  if (GMAIL_SYNC_RELEASE_DISABLED)
+    return Response.json(
+      { code: 'gmail_sync_disabled', error: GMAIL_SYNC_DISABLED_MESSAGE },
+      { status: 503, headers: { 'cache-control': 'private, no-store' } },
+    );
   try {
     const body = (await request.json().catch(() => null)) as {
       runId?: unknown;

@@ -1,6 +1,11 @@
 export const NEWS_MAILBOX = 'zeustekdivenews@gmail.com';
 export const GMAIL_READ_SCOPE =
   'https://www.googleapis.com/auth/gmail.readonly';
+// Owner-approved release isolation. Keep the connection and cached stories;
+// only the live mailbox-sync action is unavailable until separately repaired.
+export const GMAIL_SYNC_RELEASE_DISABLED = true;
+export const GMAIL_SYNC_DISABLED_MESSAGE =
+  'Gmail sync temporarily unavailable — repair deferred.';
 export type GmailDiagnosticCode =
   | 'missing_configuration'
   | 'callback_mismatch'
@@ -43,7 +48,7 @@ export type GmailConnectionStatus = {
   lastSyncAt: string;
   lastSyncCount: number;
   lastError: string;
-  syncMode: 'manual';
+  syncMode: 'manual' | 'disabled';
   reconnectRequired: boolean;
   diagnostic: GmailDiagnostic | null;
   lastRun: GmailSyncRun | null;
