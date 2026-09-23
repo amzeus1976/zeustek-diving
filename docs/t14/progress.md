@@ -30,7 +30,7 @@ Read this ledger and implementation-plan.md, inspect git log/status, then contin
 
 ## Remaining checkpoints
 
-Stages0–3 checkpointed; Stage4 is next. No production deployment or GitHub source push performed.
+Stages0–4 checkpointed; Stage5 is next. No production deployment or GitHub source push performed.
 
 Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS. 748 PNGs extracted/validated in ignored staging, manifest748, curated131 unchanged,112 overlapping basenames. Owner baseline captured2026-09-23T16:17:52.726Z; hashes of sorted [id,dataJson,createdAt,updatedAt] per kind in ignored work/t14-evidence/owner-baseline.csv. Sites124 rollback verified. Next: Stage1 foundations and focused tests.
 
@@ -68,4 +68,16 @@ Fresh browser session: Gas Plan workspace mounted and cancelled; application con
 - Canonical local fixture count/content hash unchanged:75 / b8d528c1c1534ff85eb6b0ffccfeded3cfa3cace1bf296c6f9289f4718bd9efc. No production access/write or GitHub push during this stage. Frozen calculations unchanged.
 - Topic card remains scheduled after all MUST/SHOULD/NICE pass in Stage9; it is included, not deferred.
 - Next: Stage4 Gear / Dive Data / People / Trip-Event.
+
+
+## Stage 4 — complete
+
+- Gear, Sites, Trips and Bucket presentation aligned; curated domain icons and real buddy initials added. Other loadout choices use category coverage while retaining selected legacy entries. Read-only loadout details from Stage3 retained.
+- Imports master/detail keeps a scrollable profile list beside the selected graph, stacked on small screens. Eight isolated profiles verified; selected graph changes correctly.
+- Certification projection associates evidence with the holder, never the instructor. Explicit qualification ranks and depth evidence remain distinct from display priority and achieved depth; owner-entered and legacy overrides preserved. Refresh is displayed without automatic owner saves.
+- Historical buddy linking requires explicit selection/review and performs one atomic, owner-scoped, revision-checked database update. Browser acceptance deliberately linked three disposable local Dives; production records were not accessed or changed. Post-save workspace is clean.
+- Calendar hides absent associations and opens exact Trip/Dive/Gas records. Gas deep links no longer depend on having a Dive Plan. Local Trip detail verified.
+- New focused12 tests; full regression98files/574tests; typecheck; production build/PWA; new/shared modified-module lint PASS. Existing Trip monolith lint debt is recorded for the Stage9 finishing gate, not claimed clean here.
+- Gear/Sites/Imports/Calendar/Trip/Bucket/buddy workspace checks at390/820/1024/1440 show no page overflow. Fresh browser application console errors0. All frozen calculation hashes pass.
+- No production deployment or GitHub push. Next: Stage5 Dive Planning Centre.
 

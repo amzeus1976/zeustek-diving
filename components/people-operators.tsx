@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { BuddyDiveWorkspace } from './people/buddy-dive-workspace';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { CardImageView } from './certification-images';
 import { ProfilePicture } from './profile-picture';
@@ -118,6 +119,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [editing, setEditing] = useState<DraftPerson | null>(null);
   const [viewing, setViewing] = useState<StoredPerson | null>(null);
+  const [buddyView,setBuddyView]=useState<StoredPerson|null>(null);
   const [error, setError] = useState('');
   const [operators,setOperators]=useState<Awaited<ReturnType<typeof listOperators>>>([]);
   const openedPersonLink=useRef(false);
@@ -136,12 +138,12 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
     if(openedPersonLink.current)return;
     const query=new URLSearchParams(window.location.search),id=query.get('personId')??query.get('recordId');
     const person=people.find(row=>row.entityId===id);
-    if(person){setViewing(person);openedPersonLink.current=true;}
+    if(person){const frame=requestAnimationFrame(()=>{setViewing(person);openedPersonLink.current=true;});return()=>cancelAnimationFrame(frame);}
   },[people]);
   const owner = findOwnerProfile(people);
   const visible = useMemo(
     () =>
-      people
+      people.map(person=>refreshPersonDerivedStats(person,derivePersonProfileStats(person,dives,certifications)))
         .filter((person) => {
           const haystack = [
             personDisplayName(person),
@@ -175,7 +177,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               Number(Boolean(a.roles?.ownerProfile)) ||
             personDisplayName(a).localeCompare(personDisplayName(b)),
         ),
-    [people, query, roleFilter],
+    [people, dives, certifications, query, roleFilter],
   );
 
   async function remove(person: StoredPerson) {
@@ -239,6 +241,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   if (editing) return <ProfileEditor person={editing} people={people} dives={dives}
     certifications={certifications} error={error} operators={operators}
     close={() => { setEditing(null); setError(''); }} save={save}/>;
+  if (buddyView) return <BuddyDiveWorkspace person={buddyView} dives={dives} close={()=>setBuddyView(null)} saved={refresh} go={go}/>;
 
   return (
     <>
@@ -366,7 +369,8 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
       </section>
       {viewing && (
         <ProfileDetail
-          person={viewing}
+          person={refreshPersonDerivedStats(viewing,derivePersonProfileStats(viewing,dives,certifications))}
+          showDives={()=>{setBuddyView(viewing);setViewing(null);}}
           close={() => setViewing(null)}
           edit={() => {
             setEditing({ ...viewing });
@@ -382,10 +386,12 @@ function ProfileDetail({
   person,
   close,
   edit,
+  showDives,
 }: {
   person: StoredPerson;
   close: () => void;
   edit: () => void;
+  showDives: () => void;
 }) {
   const stats = [
     ['Linked dives', valueOrUnknown(person.totalLinkedDives)],
@@ -514,6 +520,7 @@ function ProfileDetail({
         </section>
       </div>
       <footer>
+        <button className="focus-secondary" onClick={showDives}>Dives together / link history</button>
         <button className="focus-secondary" onClick={edit}>
           Edit profile
         </button>

@@ -5,10 +5,12 @@ import {recordNavigation} from '../../lib/editor/navigation-guard';
 import {editorReturnTrigger} from '../../lib/editor/focus-return';
 import styles from './record-editor-workspace.module.css';
 
-export function RecordEditorWorkspace({label,close,save,children,value,dirty=false,busy=false,saveDisabled=false,saveLabel='Save',contentClassName}:{
+export function RecordEditorWorkspace({label,close,save,children,value,dirty=false,busy=false,saveDisabled=false,saveLabel='Save',contentClassName,trackInteractions=true}:{
   label:string;close:()=>void;save?:()=>void|Promise<unknown>;children:ReactNode;value?:unknown;
   dirty?:boolean;busy?:boolean;saveDisabled?:boolean;saveLabel?:string;
   contentClassName?:string|undefined;
+  /** Disable when value fully describes edits and other inputs only filter the view. */
+  trackInteractions?:boolean;
 }){
   const root=useRef<HTMLElement>(null);
   const [initial]=useState(()=>JSON.stringify(value));
@@ -61,7 +63,7 @@ export function RecordEditorWorkspace({label,close,save,children,value,dirty=fal
     finally{setSaving(false);}
   }
   return <section ref={root} tabIndex={-1} aria-label={label} data-record-editor-workspace className={styles.workspace}
-    onInputCapture={()=>setInteractionDirty(true)} onChangeCapture={()=>setInteractionDirty(true)}
+    onInputCapture={()=>{if(trackInteractions)setInteractionDirty(true);}} onChangeCapture={()=>{if(trackInteractions)setInteractionDirty(true);}}
     onClickCapture={event=>{
       const target=event.target instanceof Element?event.target:null;
       if(target?.closest('dialog'))return;

@@ -174,7 +174,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
           </p>
         </aside>
       </section>
-      <section className={styles.workspace}>
+      <details className={styles.importSources}><summary>Import files and local staging</summary>
         <aside className={styles.sources}>
           <header>
             <span className="focus-eyebrow">IMPORTS / STAGING</span>
@@ -210,6 +210,19 @@ export function DiveComputerData({ evidenceStore }: Props) {
           ))}
           {!stages.length && !imports.length && <p>No computer imports yet.</p>}
         </aside>
+      </details>
+      <section className={styles.importReviewGrid} aria-label="Imported Dive master and detail">
+      <ImportedComputerProfiles
+        profiles={profiles}
+        imports={imports}
+        dives={dives}
+        sites={sites}
+        selectedProfileId={selectedProfile}
+        evidenceStore={durableEvidenceStore}
+        selectProfile={setSelectedProfile}
+        refresh={refresh}
+        announce={setMessage}
+      />
         <section className={styles.profile}>
           <header>
             <div>
@@ -278,17 +291,6 @@ export function DiveComputerData({ evidenceStore }: Props) {
           )}
         </section>
       </section>
-      <ImportedComputerProfiles
-        profiles={profiles}
-        imports={imports}
-        dives={dives}
-        sites={sites}
-        selectedProfileId={selectedProfile}
-        evidenceStore={durableEvidenceStore}
-        selectProfile={setSelectedProfile}
-        refresh={refresh}
-        announce={setMessage}
-      />
       {reviewing && (
         <ImportWizard
           stage={reviewing}
@@ -652,3 +654,4 @@ function ImportWizard({
     </div>
   );
 }
+

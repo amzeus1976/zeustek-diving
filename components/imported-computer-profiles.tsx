@@ -328,6 +328,7 @@ export function ImportedComputerProfiles({
                 className={styles.profileRowMain}
                 onClick={() => selectProfile(profile.entityId)}
                 aria-label={`View imported profile ${profile.sourceDiveId}`}
+                aria-pressed={profile.entityId === selectedProfileId}
               >
                 <span>{formatDate(profile.summary.normalisedTimestamp)}</span>
                 <b>{profile.sourceSite?.name || profile.sourceDiveId}</b>

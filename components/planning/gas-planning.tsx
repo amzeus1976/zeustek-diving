@@ -179,7 +179,7 @@ export function GasPlanning({ go }: Props) {
   }, []);
   useRecordRefresh(refresh);
   useEffect(() => {
-    if (openedDeepLink.current || !divePlans.length) return;
+    if (openedDeepLink.current) return;
     const params = new URLSearchParams(window.location.search);
     const newFor = params.get('newGasPlanFor');
     if (newFor && divePlans.some(plan => plan.entityId === newFor)) {

@@ -323,6 +323,11 @@ export const deleteDiveTrip = removeRecord;
 
 
 export interface CertificationRecord extends BaseRecord {
+  /** Unassigned legacy certificates belong to My Profile. instructorId is not ownership. */
+  personId?: string;
+  /** Explicit recorded evidence only; never inferred from a course title. */
+  certifiedDepthM?: number | null;
+  qualificationRank?: number | null;
   cardFront?: import('./dive-images').CardImage | null;
   cardBack?: import('./dive-images').CardImage | null;
 
@@ -940,7 +945,7 @@ export const DEFAULT_GEAR_CATEGORY_ICONS: Record<string, string> = {
 
   Wetsuit: '/equipment-icons/wetsuit.png',
 
-  Other: '/equipment-icons/blank.png',
+  Other: '/brand/icons/zeustek-single/06_water_entry_and_dive_types/other.png',
 
 };
 
@@ -968,7 +973,7 @@ export function equipmentIconSource(
 
     ? `/api/media?id=${encodeURIComponent(custom.iconMediaId)}`
 
-    : DEFAULT_GEAR_CATEGORY_ICONS[category] ?? '/equipment-icons/blank.png';
+    : DEFAULT_GEAR_CATEGORY_ICONS[category] ?? DEFAULT_GEAR_CATEGORY_ICONS.Other!;
 
 }
 

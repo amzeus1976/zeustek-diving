@@ -1,6 +1,7 @@
 import type { DiveRecord } from './dives';
 import type { CertificationRecord, PersonRecord } from './dive-planning';
 import type { PlanTeamMember } from './dive-planning-centre';
+import { certificationProfileEvidence } from '../people/certification-evidence';
 import {
   diveSacBarPerMinute,
   diveSacLitresPerMinute,
@@ -8,6 +9,8 @@ import {
 
 export type StoredPerson = PersonRecord & { entityId: string };
 export type ProfileDerivedField =
+  | 'highestKnownQualification'
+  | 'maxAllowedDepthM'
   | 'highestRecreationalCertification'
   | 'highestTechnicalCertification'
   | 'highestProfessionalCertification'
@@ -156,34 +159,6 @@ function average(values: Array<number | null | undefined>) {
     : null;
 }
 
-function highestCertification(
-  certifications: CertificationRecord[],
-  track: 'rec' | 'tec' | 'pro',
-) {
-  const filtered = certifications.filter((certification) => {
-    const text =
-      `${certification.certification} ${certification.level} ${certification.courseType ?? ''}`.toLowerCase();
-    const pro =
-      /professional|divemaster|dive master|instructor|course director/.test(
-        text,
-      );
-    const tec =
-      /technical|\btec\b|trimix|decompression|extended range|ccr|rebreather/.test(
-        text,
-      );
-    return track === 'pro' ? pro : track === 'tec' ? tec : !pro && !tec;
-  });
-  return (
-    filtered.sort(
-      (a, b) =>
-        (b.awardPriority ?? 0) - (a.awardPriority ?? 0) ||
-        (b.issuedAt || '').localeCompare(a.issuedAt || ''),
-    )[0]?.certification ||
-    filtered[0]?.level ||
-    ''
-  );
-}
-
 export function derivePersonProfileStats(
   person: EditablePerson,
   dives: Array<DiveRecord & { entityId: string }>,
@@ -204,15 +179,7 @@ export function derivePersonProfileStats(
         );
       });
   const values = {
-    highestRecreationalCertification: highestCertification(
-      certifications,
-      'rec',
-    ),
-    highestTechnicalCertification: highestCertification(certifications, 'tec'),
-    highestProfessionalCertification: highestCertification(
-      certifications,
-      'pro',
-    ),
+    ...certificationProfileEvidence(person, certifications),
     totalLinkedDives: linked.length,
     maxDepthM: linked.length
       ? Math.max(
@@ -249,7 +216,7 @@ export function derivePersonProfileStats(
   const sources: DerivedPersonStats['sources'] = {};
   (Object.keys(values) as ProfileDerivedField[]).forEach((key) => {
     const value = values[key];
-    sources[key] = key.startsWith('highest')
+    sources[key] = key.startsWith('highest') || key === 'maxAllowedDepthM'
       ? value
         ? 'auto-certifications'
         : 'unknown'
@@ -270,8 +237,18 @@ export function refreshPersonDerivedStats<
   };
   (Object.keys(derived.sources) as ProfileDerivedField[]).forEach((key) => {
     if (overrides.has(key) && !overwriteOverrides) return;
+    if (person.profileValueSources?.[key] === 'owner-entered' && !overwriteOverrides) return;
+    if (key === 'maxAllowedDepthM' && person.maxAllowedDepthSource === 'owner-entered' && !overwriteOverrides) return;
+    // Preserve legacy owner-entered limits and qualifications until explicitly restored to auto.
+    if (!overwriteOverrides && !person.profileValueSources?.[key] && (key.startsWith('highest') || key === 'maxAllowedDepthM') && person[key]) return;
+    if (!overwriteOverrides && key === 'highestKnownQualification' && !person.highestKnownQualification && person.highestQualification && !person.profileValueSources?.highestKnownQualification) {
+      next.highestKnownQualification=person.highestQualification;
+      next.profileValueSources!.highestKnownQualification='owner-entered';
+      return;
+    }
     (next as Record<string, unknown>)[key] = derived[key];
     next.profileValueSources![key] = derived.sources[key] ?? 'unknown';
+    if (key === 'maxAllowedDepthM') next.maxAllowedDepthSource = derived.maxAllowedDepthM == null ? 'unknown' : 'certification-derived';
   });
   next.derivedStatsUpdatedAt = new Date().toISOString();
   next.derivedStatsSource = 'Canonical Dive and Certification records';
@@ -287,3 +264,4 @@ export function sourceLabel(source?: string, overridden = false) {
   if (source === 'owner-entered') return 'Owner-entered';
   return 'Unknown';
 }
+

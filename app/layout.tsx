@@ -7,6 +7,7 @@ import './theme-overrides.css';
 import './focus.css';
 import './issue-register.css';
 import './audit-improvements.css';
+import './t14-record-workspaces.css';
 import { PwaRegister } from '@/components/pwa-register';
 
 const geistSans = Inter({

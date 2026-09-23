@@ -24,7 +24,7 @@ describe('equipment category icons', () => {
       ]),
     ).toBe('/api/media?id=custom-icon-id');
     expect(equipmentIconSource('DPV / scooter', [])).toBe(
-      '/equipment-icons/blank.png',
+      '/brand/icons/zeustek-single/06_water_entry_and_dive_types/other.png',
     );
   });
 

@@ -61,6 +61,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
+import { buddyInitials } from '@/lib/people/buddy-links';
 import { AppChangelog, AppVersionLink } from '@/components/app-changelog';
 import { listOperators, saveOperator, deleteOperator, type OperatorRecord } from '@/lib/offline/dive-planning';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
@@ -1271,9 +1272,10 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                 <p>{dive.notes || 'Manual dive log'}</p>
                 <div className="log-metrics">
                   <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
-                  <span className="log-metric" title="Maximum depth"><Waves size={18}/>{dive.maxDepthM ?? '—'} m</span>
-                  <span className="log-metric" title="Bottom time"><Clock size={18}/>{dive.bottomTimeMin ?? '—'} min</span>
-                  <span className="log-metric" title="Breathing gas"><Cylinder size={18}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><Thermometer size={18}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><Waves size={18}/>{dive.visibilityM ?? '—'} m vis</span>
+                  <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
+                  <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
+                  <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
+                  {(dive.buddyIds??[]).map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
                   <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
                   <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
                 </div>
@@ -1392,6 +1394,8 @@ function Equipment() {
   const [editing, setEditing] = useState<Stored<EquipmentRecord> | null>(null);
   const [adding, setAdding] = useState(false);
   const [viewing, setViewing] = useState<Stored<EquipmentRecord> | null>(null);
+  const openedEquipment=useRef('');
+  useEffect(()=>{const id=new URLSearchParams(window.location.search).get('equipmentId');if(!id||openedEquipment.current===id)return;const item=items.find(row=>row.entityId===id);if(item){const frame=requestAnimationFrame(()=>{openedEquipment.current=id;setViewing(item);});return()=>cancelAnimationFrame(frame);}},[items]);
   const refresh = useCallback(() => {
     void Promise.all([
       listEquipment(),
@@ -1434,7 +1438,7 @@ function Equipment() {
       return a.name.localeCompare(b.name);
     });
   return (
-    <>
+    <div className="t14-record-domain t14-equipment">
       <Heading
         eyebrow="SERVICE · OWNERSHIP · HISTORY"
         title="Equipment"
@@ -1621,7 +1625,7 @@ function Equipment() {
         </RecordDetail>
       )}
       <EquipmentSets items={equipmentItems} sets={sets} saved={refresh} />
-    </>
+    </div>
   );
 }
 
@@ -2934,7 +2938,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
     setAdding(true);
   }, []);
   return (
-    <>
+    <div className="t14-record-domain t14-sites">
       <Heading
         eyebrow="SITE INTELLIGENCE · WEATHER · HISTORY"
         title="Dive sites"
@@ -3197,7 +3201,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
           <SiteOverheadSection key={viewing.entityId} site={viewing}/>
         </RecordDetail>
       )}
-    </>
+    </div>
   );
 }
 function SiteDetail({
@@ -3969,6 +3973,10 @@ function CertificationForm({
 }) {
   const [agency, setAgency] = useState(item?.agency ?? '');
   const [certification, setCertification] = useState(item?.certification ?? '');
+  const [certificatePersonId,setCertificatePersonId]=useState(item?.personId??'');
+  const [certificatePeople,setCertificatePeople]=useState<Stored<PersonRecord>[]>([]);
+  const [certifiedDepth,setCertifiedDepth]=useState(item?.certifiedDepthM?.toString()??'');
+  const [qualificationRank,setQualificationRank]=useState(item?.qualificationRank?.toString()??'');
   const [level, setLevel] = useState(item?.level ?? '');
   const [number, setNumber] = useState(item?.certificationNumber ?? '');
   const [issued, setIssued] = useState(item?.issuedAt ?? '');
@@ -3992,6 +4000,7 @@ function CertificationForm({
   );
   useEffect(() => {
     void Promise.all([listCatalogOptions(), listPeople()]).then(([options, people]) => {
+      setCertificatePeople(people);
       setAgencyOptions(
         options
           .filter((option) => option.group === 'agency')
@@ -4034,6 +4043,9 @@ function CertificationForm({
       ...(item?.entityId ? { entityId: item.entityId } : {}),
       agency: agency.trim(),
       certification: certification.trim(),
+      personId:certificatePersonId,
+      certifiedDepthM:certifiedDepth===''?null:Number(certifiedDepth),
+      qualificationRank:qualificationRank===''?null:Number(qualificationRank),
       level: level.trim(),
       certificationNumber: number.trim(),
       issuedAt: issued,
@@ -4103,9 +4115,12 @@ function CertificationForm({
           </select>
         </label>
         <label>
-          Award priority (optional)
+          Award priority (display only)
           <input type="number" value={awardPriority} onChange={(e) => setAwardPriority(e.target.value)} placeholder="Higher number wins" />
         </label>
+        <label>Certificate holder<select value={certificatePersonId} onChange={event=>setCertificatePersonId(event.target.value)}><option value="">My Profile · legacy owner evidence</option>{certificatePeople.map(person=><option key={person.entityId} value={person.entityId}>{person.displayName||person.name}</option>)}{certificatePersonId&&!certificatePeople.some(person=>person.entityId===certificatePersonId)&&<option value={certificatePersonId}>Unavailable holder · reference retained</option>}</select></label>
+        <label>Recorded certification depth limit (m)<input type="number" min="0" value={certifiedDepth} onChange={event=>setCertifiedDepth(event.target.value)}/><small>Enter only the limit documented by this certification. Logged depth does not set this limit.</small></label>
+        <label>Qualification ordering (optional)<input type="number" min="0" step="1" value={qualificationRank} onChange={event=>setQualificationRank(event.target.value)}/><small>Orders qualifications within their track for My Profile. This does not change planning limits.</small></label>
         <label>
           Certificate number
           <input value={number} onChange={(e) => setNumber(e.target.value)} />
@@ -4635,12 +4650,12 @@ function DiveBucketList() {
   const [adding, setAdding] = useState(false);
   const refresh = useCallback(() => { void listBucketList().then(setItems); }, []);
   useRecordRefresh(refresh);
-  return <>
+  return <div className="t14-record-domain t14-bucket">
     <Heading eyebrow="DREAM · RESEARCH · PLAN" title="Bucket List" copy="Keep future dive locations, liveaboards and dive safaris together until they become real plans." action={<button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add bucket-list dive</button>} />
     {adding && <RevealOnMount><BucketListForm item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}
-    <div className="wishlist-grid">{items.sort((a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name)).map((item) => <Card key={item.entityId} className="wish-card"><div className="focus-card-head"><div><span className="focus-eyebrow">{item.kind.replaceAll('-', ' ')} · {item.status}</span><h2>{item.name}</h2></div><div className="record-actions"><button onClick={() => { setEditing(item); setAdding(true); }}><Pencil size={15}/></button><button onClick={() => { if (confirm(`Delete ${item.name}?`)) void deleteBucketList(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><p>{item.country}</p><p className="focus-copy">{item.description || item.why}</p><div className="wish-meta">{item.targetDate && <span>Target {item.targetDate}</span>}{item.approximateCost && <span>{item.approximateCost}</span>}</div>{externalUrl(item.url) && <a className="focus-link" href={externalUrl(item.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open research link</a>}</Card>)}</div>
+    <div className="wishlist-grid">{items.sort((a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name)).map((item) => <Card key={item.entityId} className="wish-card"><div className="focus-card-head"><div><span className="focus-eyebrow">{item.kind.replaceAll('-', ' ')} · {item.status}</span><h2>{item.name}</h2></div><div className="record-actions"><button aria-label={`Edit ${item.name}`} onClick={() => { setEditing(item); setAdding(true); }}><Pencil size={15}/></button><button aria-label={`Delete ${item.name}`} onClick={() => { if (confirm(`Delete ${item.name}?`)) void deleteBucketList(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><p>{item.country}</p><p className="focus-copy">{item.description || item.why}</p><div className="wish-meta">{item.targetDate && <span>Target {item.targetDate}</span>}{item.approximateCost && <span>{item.approximateCost}</span>}</div>{externalUrl(item.url) && <a className="focus-link" href={externalUrl(item.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open research link</a>}</Card>)}</div>
     {!items.length && !adding && <Card className="focus-empty"><ListChecks size={32}/><h2>Your bucket list is empty</h2><p>Add the wreck, reef, liveaboard or safari you keep thinking about.</p></Card>}
-  </>;
+  </div>;
 }
 
 function BucketListForm({ item, close, saved }: { item: Stored<BucketListRecord> | null; close: () => void; saved: () => void }) {
@@ -6043,3 +6058,5 @@ function DiveModal({
     </div>
   );
 }
+
+
