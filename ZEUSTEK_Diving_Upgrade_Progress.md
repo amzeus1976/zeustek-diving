@@ -835,7 +835,8 @@ Owner-returned SOL_RETURN_INSTRUCTIONS are focused diagnostic/review input, not 
 
 - Scope: T14A Snagging / Brand Icon Foundation / Must-fix Display Pass only. T14B, T14C, and T15 were not started.
 - Baseline: app `1.0.50` / Sites `121` / deployment `appgdep_6ab2a6ca7d288191a3283eb5899f8ac0` / GitHub main `b1df4e26327ada47346ffbcce315652f0baf0648`.
-- Release: app `1.0.51` / Sites `123` / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_3f9753a8f72481918844385c337f56f2` / deployment `appgdep_6ab39b75f6f48191aff767c4d4aa7c3a` / exact published product source `bef6a3a8e3413eca5b7e9cb084f9b9c9ca8462db`.
+- Release: app `1.0.52` / Sites `124` / saved version `appgprj_6a91926878b48191a80d70f1681ef135~appgver_921e3d981e848191b042bac6640ca80e` / deployment `appgdep_6ab3a2f736688191bc630fc86bf3d42e` / exact published product source `5547a2eacdb33e2f58924b4a91efc2b91275177c`.
+- Sites123 was superseded during acceptance after its single-image Equipment viewer remained left-aligned on desktop. Sites124 centres that same contained image on desktop and phone without changing media records.
 - Rollback remains app `1.0.50` / Sites `121` / deployment `appgdep_6ab2a6ca7d288191a3283eb5899f8ac0`.
 - Delivered: selected-award inclusion/cap correction and zero-selection state; shared viewport-centred discard confirmation with safe Escape/focus restoration; 131-icon ZeusTek registry and accessible fallback component; compact Overview; centred Equipment media; refreshed Gear Wishlist with broken price search removed; denser Cylinders table with column visibility controls; cyan brand focus treatment.
 - Verification: focused release set 11 files / 60 tests passed; full regression 91 files / 522 tests passed; typecheck, production build/PWA, version/cache gate, and targeted new/shared-file lint passed.
@@ -843,5 +844,5 @@ Owner-returned SOL_RETURN_INSTRUCTIONS are focused diagnostic/review input, not 
 - Logbook retained exactly 66 Dives. Owner records changed by T14A: no.
 - The supplied baseline stated zero Gas Plans, but one pre-existing owner Gas Plan was present at final smoke. T14A did not create, edit, or delete it; Gas Plan delta is zero.
 - Protected Gas Planner calculation files were unchanged. `CALCULATION_TOUCHPOINT: NONE`.
-- GitHub release-source commit: `bef6a3a8e3413eca5b7e9cb084f9b9c9ca8462db`; final main merge SHA is recorded in the owner-facing completion report.
+- GitHub release-source commit: `5547a2eacdb33e2f58924b4a91efc2b91275177c`; final main merge SHA is recorded in the owner-facing completion report.
 - Actual usage: NOT_EXPOSED. Max/Astra: not invoked or recommended.
