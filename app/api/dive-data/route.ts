@@ -1,10 +1,11 @@
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '../../chatgpt-auth';
-import { householdAreaAccess, householdAreaUserIds, householdCanEditGear, householdUserIds, registerHouseholdUser } from '@/lib/server/household';
+import { householdAreaAccess, householdCanEditGear, readHouseholdAreaUserIds, readHouseholdUserIds, allowedHouseholdUser, registerHouseholdUser } from '@/lib/server/household';
 
 import { DIVE_RECORD_KINDS, recordIdentity } from '@/lib/record-identity';
 import { OPERATOR_DELETE_CONSTRAINT } from '@/lib/operators/operator-dependencies';
 const kinds = new Set<string>(DIVE_RECORD_KINDS);
+const sortText = (value: unknown) => typeof value === 'string' ? value : '';
 async function ensureSchema() {
   await env.DB.batch([
     env.DB.prepare(
@@ -24,11 +25,11 @@ async function renumberUserDives(userId: string, startAt: number) {
     id: row.id,
     data: JSON.parse(row.dataJson) as Record<string, unknown>,
   })).sort((a, b) => {
-    const aKey = `${String(a.data.date ?? '')}T${String(a.data.timeIn ?? '23:59')}`;
-    const bKey = `${String(b.data.date ?? '')}T${String(b.data.timeIn ?? '23:59')}`;
+    const aKey = `${sortText(a.data.date)}T${sortText(a.data.timeIn) || '23:59'}`;
+    const bKey = `${sortText(b.data.date)}T${sortText(b.data.timeIn) || '23:59'}`;
     return aKey.localeCompare(bKey) || a.id.localeCompare(b.id);
   });
-  let now = Date.now();
+  const now = Date.now();
   const updates = dives.flatMap((dive, index) => {
     const diveNumber = Math.max(1, startAt) + index;
     if (Number(dive.data.diveNumber) === diveNumber) return [];
@@ -44,14 +45,15 @@ export async function GET(request: Request) {
   const user = await getChatGPTUser();
   if (!user)
     return Response.json({ error: 'Authentication required' }, { status: 401 });
+  if (!allowedHouseholdUser(user)) return Response.json({ error: 'This account is not invited.' }, { status: 403 });
   const kind = new URL(request.url).searchParams.get('kind') ?? '';
   if (!kinds.has(kind))
     return Response.json({ error: 'Unsupported record type' }, { status: 400 });
-  await ensureSchema();
-  await registerHouseholdUser(env, user);
+  const table = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='dive_records'").first<{ name: string }>();
+  if (!table) return Response.json({ items: [] });
   const sharedGear = kind === 'equipment' || kind === 'equipment-set' || kind === 'equipment-event';
   const collaborativeAlbums = kind === 'album' || kind === 'dive-media';
-  const householdIds = sharedGear ? await householdUserIds(env, user) : collaborativeAlbums ? await householdAreaUserIds(env,user,'albums') : [user.userId];
+  const householdIds = sharedGear ? await readHouseholdUserIds(env, user) : collaborativeAlbums ? await readHouseholdAreaUserIds(env,user,'albums') : [user.userId];
   const placeholders = householdIds.map(() => '?').join(',');
   const result = await env.DB.prepare(
     `SELECT id,user_id AS ownerUserId,data_json AS dataJson,created_at AS createdAt,updated_at AS updatedAt FROM dive_records WHERE user_id IN (${placeholders}) AND kind=? AND deleted_at IS NULL ORDER BY updated_at DESC`,
@@ -74,8 +76,8 @@ export async function GET(request: Request) {
     } catch {}
     const numbers = new Map(
       [...items].sort((a, b) => {
-        const aKey = `${String(a.date ?? '')}T${String(a.timeIn ?? '23:59')}`;
-        const bKey = `${String(b.date ?? '')}T${String(b.timeIn ?? '23:59')}`;
+        const aKey = `${sortText(a.date)}T${sortText(a.timeIn) || '23:59'}`;
+        const bKey = `${sortText(b.date)}T${sortText(b.timeIn) || '23:59'}`;
         return aKey.localeCompare(bKey) || String(a.id).localeCompare(String(b.id));
       }).map((item, index) => [item.id, startAt + index]),
     );

@@ -1,5 +1,11 @@
 # ZeusTek T14 master forward build — owner-approved corrected plan
 
+## Owner-directed scoped release amendment — 2026-09-23
+
+The owner has authorised one production release of verified Stages 0–8, including Stage 5W, after completing Stage 8 and the full security, data and release gates. This supersedes the earlier hold for all Stage 9 finishing and additional optional work. It does not waive the frozen-calculation boundary, owner-record comparison, single authorised Gmail acceptance sync, rollback to healthy app1.0.52 / Sites124, or exact accepted-source reconciliation. Stage 9 non-blocking finishing and the disabled-by-default public/API profile stay in the named follow-up backlog. Do not call this scoped release the full T14 master build.
+
+Release order: complete/checkpoint Stage 8; fix release blockers; rerun full candidate gates; smoke the production build locally with isolated fixtures; freeze source; publish once to the existing Sites project; read-only live smoke; perform the one separately authorised bounded Gmail sync if not already recorded; verify owner data and release; only then reconcile the accepted source to GitHub main. On failed live verification, restore Sites124, verify rollback, retain candidate and evidence, and keep rejected source off main.
+
 Approved in task 01a0ce79-b5d5-7ee0-bcc7-74dff317d45d on 2026-09-23. Execute inline using executing-plans, with tests before implementation, stage checkpoints, and one fresh whole-branch review. This durable specification preserves the approved user plan; later explicit owner corrections override package candidates.
 
 ## Authority and release invariants
@@ -242,4 +248,3 @@ Final gate: every new T14 test, retained T14A, Insights, People/operator, Dive P
 On production failure restore Sites124/app1.0.52 and verify; preserve branch/evidence, keep rejected source out of main, report BLOCKED_DEPLOYMENT. Another rollback target requires proven Sites124 failure plus explicit owner direction. Recheck latest main before source freeze; integrate legitimate changes then repeat gates. No source edits after freeze without regating.
 
 Final report only says T14 MASTER FORWARD BUILD COMPLETE after acceptance. Include app/Sites/deployment/source/rollback, PR/mainSHA/tree match, stage/issue matrices, icons extracted/mapped, all feature/optional status, hashes/additive touchpoint, tests/regression/typecheck/build/PWA/lint, responsive/console/overflow, owner count/identity/content deltas and separate Gmail acceptance. STOP after final report.
-

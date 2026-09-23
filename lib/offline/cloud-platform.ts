@@ -31,7 +31,7 @@ export async function createDiveBackup(passphrase: string) {
         if (known.has(entityId) || !(DIVE_RECORD_KINDS as readonly string[]).includes(row.kind)) continue;
         snapshot.entities.push({entityId,module:`dive:${snapshot.account}`,entityType:row.kind,schemaVersion:1,record:{...JSON.parse(row.dataJson),entityId:row.id,createdAt:new Date(row.createdAt).toISOString(),modifiedAt:new Date(row.updatedAt).toISOString()},recordHash:'',deleted:0,updatedEventId:'',updatedAt:new Date(row.updatedAt).toISOString()});
       }
-      snapshot.coverage = 'Cloud records plus local records, history, pending edits and locally available card/profile images. Cloud-only gallery media is not included.';
+      snapshot.coverage = 'Cloud records plus local records, history, pending edits and locally available card/profile images. Cloud-only gallery media and server connection credentials are not included. Reconnect the Dive News mailbox after a restore.';
     } catch { /* The local snapshot remains a usable offline backup; its coverage text is explicit. */ }
   }
   const salt = crypto.getRandomValues(new Uint8Array(16)); const iv = crypto.getRandomValues(new Uint8Array(12));

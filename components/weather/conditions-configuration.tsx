@@ -72,12 +72,9 @@ export function ConditionsConfiguration() {
       setMessage(
         `${result.result?.message ?? 'Provider check finished.'}${result.result?.costAccesses !== undefined ? ` Accesses used: ${result.result.costAccesses}.` : ''}`,
       );
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : 'Provider could not be checked.',
-      );
+    } catch {
+      window.dispatchEvent(new CustomEvent('zeustek-diagnostic',{detail:{code:'weather-error'}}));
+      setMessage('Provider could not be checked. Saved conditions and fallback sources remain available.');
     } finally {
       setBusy('');
     }

@@ -1,6 +1,16 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.53',
+    date: '2026-09-23',
+    title: 'T14 scoped release through Stage 8',
+    changes: [
+      'Added the Dive Centres workspace, analysis workbench, in-route planning editors and plan-first gas allocation while preserving the protected calculation engines.',
+      'Added weather and marine conditions with explicit retrieval and truthful provider access status, plus guided professional development and manual Dive News mailbox sync.',
+      'Reorganised Site Configuration, added redacted application diagnostics, repaired Diver Summary downloads and excluded connection secrets from backups.',
+    ],
+  },
+  {
     version: '1.0.52',
     date: '2026-09-23',
     title: 'Equipment media centring correction',
