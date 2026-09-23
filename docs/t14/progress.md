@@ -30,7 +30,7 @@ Read this ledger and implementation-plan.md, inspect git log/status, then contin
 
 ## Remaining checkpoints
 
-Stages0–5 checkpointed; Stage6 is next. No production deployment or GitHub source push performed.
+Stages0–6 checkpointed; expanded Stage5W is next. No production deployment or GitHub source push performed.
 
 Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS. 748 PNGs extracted/validated in ignored staging, manifest748, curated131 unchanged,112 overlapping basenames. Owner baseline captured2026-09-23T16:17:52.726Z; hashes of sorted [id,dataJson,createdAt,updatedAt] per kind in ignored work/t14-evidence/owner-baseline.csv. Sites124 rollback verified. Next: Stage1 foundations and focused tests.
 
@@ -101,3 +101,13 @@ Fresh browser session: Gas Plan workspace mounted and cancelled; application con
 - Met Office now belongs to 5W; no duplicate adapter in Stage 9B. Other provider integrations depend on verified access. SwellCloud remains approval-dependent; do not claim enabled without access.
 - Provider/access reference contains secrets: no secret values are persisted in repository materials. Existing server-only credential and no-partial-release rules apply.
 - Stage 6 allocation work remains uncommitted and preserved. Finish its checkpoint, then execute 5W before Stage 7. The original 51-row issue matrix is retained; supplemental weather requirements have their own ledger.
+
+## Stage 6 — complete
+
+- One full-page Gas Plan editor replaces the duplicate legacy form. Requirements-only, own-empty/fill-required, own-full, hire and temporary/manual workflows preserve canonical identities, immutable snapshots, analysis/fill provenance and legacy assumptions.
+- Authorised ADDITIVE CALCULATION_TOUCHPOINT: versioned allocation outside all nine frozen files. Independent cylinders retain pressure, consumption, reserves, availability, checkpoint and scenario results; compatible explicitly connected manifolds alone combine accessible supply. Aggregate surplus never hides an individual failure. Explicit switches, reserve coverage and scenario assignments are required; alternative scenarios are assessed separately. Advanced owner inputs are disabled by default and apply once to their identified basis.
+- Existing most-conservative reserve and all legacy engine outputs retained. Independent numerical fixture confirms 860.625 L emergency reserve versus 800 L thirds. Allocation, evidence freshness and physiological validation remain separate; unsupported different-gas physiological validation cannot yield Ready.
+- Requested-pressure tolerance replaces the global full-cylinder threshold in T14 selection. Actual analysis/current pressure and inspection evidence are reviewed without repairs or saves; dated snapshots cannot silently become current. Specific remedies, route cylinder dropdowns, depth continuity, field help and contextual NDL/MOD/PPO2 delivered. Linked Dive Plan readiness honours allocation blockers.
+- New focused28 tests plus protected10 PASS; full regression105files/610tests PASS; typecheck PASS; production build/PWA PASS; all modified Gas/Dive Plan files targeted lint PASS; git diff check PASS. Retained static tests now inspect the relocated canonical editor, preserving their behavioural assertions.
+- Local browser editor and saved summary: overflow0 at390/820/1024/1440; application console errors0. A disposable fixture first passed, then an independently deficient cylinder blocked Ready despite aggregate surplus. Draft save retained individual reasons; route end/start continuity and cancel/discard preservation verified. One local Gas Plan, no cylinder/fill/analysis records created; canonical local Dive count remains75. Fixture hash265a34afa97c3b1d04a28e16ba9a4fcbc3013effdb58f1fadc7ed092f532bc2f.
+- Production owner records were not accessed or changed. No production release or GitHub push. All protected calculation hashes unchanged. Next: Stage5W expanded weather, then Stage7.
