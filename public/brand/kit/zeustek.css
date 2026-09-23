@@ -1,0 +1,32 @@
+/* ZeusTek brand override: technical platform, private apps, dashboards, cyber/data systems. */
+:root,
+[data-brand="zeustek"] {
+  --brand-name: "ZeusTek";
+  --brand-primary: #ff7a00;
+  --brand-secondary: #00d8ff;
+  --brand-tertiary: #008cff;
+  --brand-gradient: linear-gradient(90deg, #00d8ff 0%, #008cff 52%, #ff7a00 100%);
+  --brand-glow: 0 0 12px rgba(0, 216, 255, 0.55), 0 0 28px rgba(255, 122, 0, 0.24);
+}
+
+.ztk-console {
+  background:
+    linear-gradient(rgba(0,216,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,216,255,.03) 1px, transparent 1px),
+    var(--zt-surface);
+  background-size: 24px 24px;
+  border-color: rgba(0,216,255,.28);
+}
+
+.ztk-data-number {
+  font-family: var(--zt-font-mono);
+  color: var(--brand-secondary);
+  text-shadow: var(--zt-shadow-neon-aqua);
+}
+
+.ztk-command-bar {
+  border: 1px solid var(--zt-border);
+  border-radius: var(--zt-radius-lg);
+  background: rgba(0,0,0,.34);
+  padding: .75rem;
+}

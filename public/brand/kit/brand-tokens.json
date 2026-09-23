@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "family": "Arron Martin Zeus Brown brand family",
+  "brands": ["AMZeus", "ZeusTek", "ZeusTek Diving"],
+  "colors": {
+    "bg": "#080808",
+    "surface": "#121212",
+    "surface2": "#1b1b1b",
+    "border": "#343434",
+    "text": "#f7f7f7",
+    "muted": "#b8b8b8",
+    "orange": "#ff7a00",
+    "orangeStrong": "#ff8c1a",
+    "aqua": "#00d8ff",
+    "aquaStrong": "#00f0ff",
+    "blue": "#008cff",
+    "silver": "#cfd7de",
+    "danger": "#ff453a",
+    "warning": "#ffd60a",
+    "success": "#30d158",
+    "focus": "#ff9f4a"
+  },
+  "radii": {
+    "sm": "8px",
+    "md": "12px",
+    "lg": "18px",
+    "xl": "24px"
+  },
+  "fonts": {
+    "ui": "Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+    "display": "Orbitron, Rajdhani, Segoe UI, Inter, Arial, sans-serif",
+    "mono": "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace"
+  }
+}

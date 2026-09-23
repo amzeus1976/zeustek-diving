@@ -16,6 +16,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
+import { ZeusTekAssetIcon } from './brand/zeustek-asset-icon';
 import { MediaGallery } from './media-gallery';
 import { useRecordRefresh } from './record-status';
 import {
@@ -63,6 +64,7 @@ import {
   type ReusableLoadoutRecord,
 } from '../lib/offline/loadouts-gas';
 import styles from './loadouts-gas.module.css';
+import { CYLINDER_COLUMNS, CYLINDER_COLUMN_LABELS, DEFAULT_CYLINDER_COLUMNS, normaliseCylinderColumns, type CylinderColumn } from '../lib/cylinders/cylinder-column-preferences';
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string | undefined }) {
   return <section className={`focus-card ${className}`}>{children}</section>;
@@ -126,6 +128,12 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
   const [editingCylinder, setEditingCylinder] = useState<Stored<CylinderEquipmentRecord> | null | undefined>(undefined);
   const [cylinders, setCylinders] = useState<Array<Stored<CylinderEquipmentRecord>>>([]);
   const [query, setQuery] = useState('');
+  const [visibleColumns, setVisibleColumns] = useState<CylinderColumn[]>(() => {
+    if (typeof window === 'undefined') return DEFAULT_CYLINDER_COLUMNS;
+    try { return normaliseCylinderColumns(JSON.parse(localStorage.getItem('zeustek-cylinder-columns') ?? 'null') as string[] | null); }
+    catch { return DEFAULT_CYLINDER_COLUMNS; }
+  });
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('zeustek-cylinder-columns', JSON.stringify(visibleColumns)); }, [visibleColumns]);
 
   const refresh = useCallback(async () => {
     const [gear, cylinderRows, sets, fillRows, analysisRows, persons, planRows, diveRows] = await Promise.all([
@@ -170,12 +178,16 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
 
   return <>
     <header className={styles.heading}>
-      <div className={styles.iconHeading}><ZeusTekIcon id={tab === 'loadouts' ? 'equipment' : 'dive-cylinder'} size="heading"/><div><span className="focus-eyebrow">GEAR</span><h1>{tab === 'loadouts' ? 'Reusable Loadouts' : 'Cylinders & Gas'}</h1><p>{tab === 'loadouts' ? 'Build reusable configurations from canonical Equipment references. Cylinder fills and analyses live in their own workspace.' : 'Review physical cylinders in one table, then open a row for service, fill, analysis, media and history.'}</p></div></div>
+      <div className={styles.iconHeading}><ZeusTekAssetIcon name={tab === 'loadouts' ? 'core-logbook-icons-equipment' : 'core-logbook-icons-dive-cylinder'} size={48} fallback={<ZeusTekIcon id={tab === 'loadouts' ? 'equipment' : 'dive-cylinder'} size="heading"/>}/><div><span className="focus-eyebrow">GEAR</span><h1>{tab === 'loadouts' ? 'Reusable Loadouts' : 'Cylinders & Gas'}</h1><p>{tab === 'loadouts' ? 'Build reusable configurations from canonical Equipment references. Cylinder fills and analyses live in their own workspace.' : 'Review physical cylinders in one table, then open a row for service, fill, analysis, media and history.'}</p></div></div>
       {tab === 'loadouts' ? <button className="focus-primary" onClick={() => setEditing(null)}><Plus size={17}/>New loadout</button> : <button className="focus-primary" onClick={() => setEditingCylinder(null)}><Plus size={17}/>Add cylinder</button>}
     </header>
 
     <div className={styles.tabs}>
       <label className={styles.search}>Search<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={tab === 'loadouts' ? 'Search loadouts' : 'Search cylinders'} /></label>
+      {tab === 'cylinders' && <details className={styles.columnChooser}><summary>Cylinder table columns</summary><div>{CYLINDER_COLUMNS.map((column) => <label key={column}><input type="checkbox" checked={visibleColumns.includes(column)} onChange={(event) => setVisibleColumns((current) => {
+        const next = event.target.checked ? normaliseCylinderColumns([...current, column]) : current.filter((value) => value !== column);
+        return next.length ? next : current;
+      })}/>{CYLINDER_COLUMN_LABELS[column]}</label>)}</div></details>}
     </div>
 
     {tab === 'loadouts' ? <div className={styles.grid}>
@@ -192,7 +204,7 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
       {!visibleLoadouts.length && <Card className="focus-empty"><Wrench size={30}/><h2>{loadouts.length ? 'No matching loadouts' : 'No reusable loadouts yet'}</h2><p>Existing Equipment Sets remain compatible. Open one to assign semantic slots, or create a new loadout.</p><button className="focus-primary" onClick={() => setEditing(null)}>Create loadout</button></Card>}
     </div> : <Card className={styles.tableCard}>
       {visibleCylinders.length ? <div className={styles.tableWrap}><table className={styles.cylinderTable}>
-        <thead><tr><th>ID #</th><th>Gas</th><th>O₂ %</th><th>He %</th><th>Fill bar</th><th>Litres</th><th>O₂ cleaned</th><th>Analysis</th><th>Last fill date</th><th>Fill location</th><th>Next test</th></tr></thead>
+        <thead><tr>{visibleColumns.map((column) => <th key={column}>{CYLINDER_COLUMN_LABELS[column]}</th>)}</tr></thead>
         <tbody>{visibleCylinders.map((item) => {
           const itemFills = fills.filter((fill) => fill.cylinderEquipmentId === item.entityId);
           const state = deriveCylinderCurrentState(item, itemFills, analyses.filter((analysis) => analysis.cylinderEquipmentId === item.entityId));
@@ -201,7 +213,19 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
           const schedule = deriveCylinderInspectionSchedule(item);
           const nextTest = [schedule.hydroDueAt, schedule.visualDueAt, monthOnly(item.oxygenCleanUntil)].filter(Boolean).sort((a, b) => String(a).localeCompare(String(b)))[0] ?? null;
           return <tr key={item.entityId} tabIndex={0} onClick={() => setCylinder(item)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setCylinder(item); } }} aria-label={`Open ${item.name} cylinder details`}>
-            <td>{item.cylinderNumber || String(cylinders.findIndex((row) => row.entityId === item.entityId) + 1).padStart(2, '0')}</td><td>{state.declaredMixLabel}</td><td>{analysis?.oxygenFraction == null ? '—' : Math.round(analysis.oxygenFraction * 100)}</td><td>{analysis?.heliumFraction == null ? '—' : Math.round(analysis.heliumFraction * 100)}</td><td>{fill?.pressureBar ?? '—'}</td><td>{item.waterVolumeLiters ?? '—'}</td><td>{item.oxygenClean ? 'Yes' : 'No'}</td><td className={state.analysisState === 'current' ? styles.current : styles.stale}>{state.analysisState}</td><td>{fill?.filledAt ? new Date(fill.filledAt).toLocaleDateString() : '—'}</td><td>{fill?.provider || '—'}</td><td>{displayMonth(nextTest)}</td>
+            {visibleColumns.includes('id') && <td>{item.cylinderNumber || '—'}</td>}
+            {visibleColumns.includes('serial') && <td>{item.serialNumber || '—'}</td>}
+            {visibleColumns.includes('gas') && <td>{state.declaredMixLabel}</td>}
+            {visibleColumns.includes('oxygen') && <td>{analysis?.oxygenFraction == null ? '—' : Math.round(analysis.oxygenFraction * 100)}</td>}
+            {visibleColumns.includes('helium') && <td>{analysis?.heliumFraction == null ? '—' : Math.round(analysis.heliumFraction * 100)}</td>}
+            {visibleColumns.includes('pressure') && <td>{fill?.pressureBar ?? '—'}</td>}
+            {visibleColumns.includes('volume') && <td>{item.waterVolumeLiters ?? '—'}</td>}
+            {visibleColumns.includes('oxygenClean') && <td>{item.oxygenClean ? 'Yes' : 'No'}</td>}
+            {visibleColumns.includes('analysis') && <td className={state.analysisState === 'current' ? styles.current : styles.stale}>{state.analysisState}</td>}
+            {visibleColumns.includes('lastFill') && <td>{fill?.filledAt ? new Date(fill.filledAt).toLocaleDateString() : '—'}</td>}
+            {visibleColumns.includes('fillLocation') && <td>{fill?.provider || '—'}</td>}
+            {visibleColumns.includes('valve') && <td>{item.valveType || '—'}</td>}
+            {visibleColumns.includes('nextTest') && <td>{displayMonth(nextTest)}</td>}
           </tr>;
         })}</tbody>
       </table></div> : <div className="focus-empty"><Cylinder size={30}/><h2>No cylinders found</h2><p>Add and manage physical cylinders here. Equipment is reserved for non-cylinder gear.</p><button className="focus-primary" onClick={() => setEditingCylinder(null)}>Add first cylinder</button></div>}

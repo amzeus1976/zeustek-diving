@@ -24,3 +24,12 @@
 .heading button:focus-visible,.tabs button:focus-visible,.loadoutCard button:focus-visible,.cylinderCard button:focus-visible,.editor :focus-visible,.applyDialog :focus-visible,.cylinderDetail :focus-visible{outline-color:var(--zt-focus)}
 .editor :is(input,select,textarea),.applyDialog :is(input,select,textarea),.cylinderDetail :is(input,select,textarea),.search input{border-color:var(--zt-border-muted);background:#070b0d;color:var(--zt-text)}
 .cylinderDetail form>footer{background:linear-gradient(180deg,transparent,var(--zt-surface-card) 28%);border-color:var(--zt-border-cyan)}
+
+/* T14A presentation-only cylinder table controls. */
+.cylinderTable{min-width:44rem}
+.cylinderTable th,.cylinderTable td{padding:.62rem .55rem}
+.columnChooser{position:relative;margin-left:auto;border:1px solid var(--zt-border-muted);border-radius:.65rem;background:var(--zt-surface-card);min-width:12rem}
+.columnChooser>summary{cursor:pointer;display:flex;align-items:center;min-height:44px;padding:.55rem .75rem;color:var(--zt-text);font-weight:700}
+.columnChooser>div{position:absolute;right:0;z-index:8;display:grid;grid-template-columns:repeat(2,minmax(9rem,1fr));gap:.25rem;width:min(26rem,calc(100vw - 2rem));padding:.7rem;border:1px solid var(--zt-border-cyan);border-radius:.65rem;background:var(--zt-surface-raised);box-shadow:0 18px 50px #000}
+.columnChooser label{display:flex;align-items:center;gap:.45rem;min-height:38px;font-size:.78rem}.columnChooser input{width:18px;height:18px}
+@media(max-width:640px){.columnChooser{width:100%;margin-left:0}.columnChooser>div{left:0;right:auto;grid-template-columns:1fr}.cylinderTable{min-width:36rem}}

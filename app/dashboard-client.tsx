@@ -60,6 +60,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
+import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
 import { AppChangelog, AppVersionLink } from '@/components/app-changelog';
 import { listOperators, saveOperator, deleteOperator, type OperatorRecord } from '@/lib/offline/dive-planning';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
@@ -67,7 +68,6 @@ import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/li
 import {fillMissingGasRates} from '@/lib/gas-rates';
 import { diveHeat } from '@/lib/dive-heat';
 import { logTimeRange } from '@/lib/log-time';
-import { matchesProduct } from '@/lib/product-match';
 import { EditorSections } from '@/components/editor-sections';
 import { SiteCoordinateAudit } from '@/components/site-coordinate-audit';
 import { DiveSettingActivity } from '@/components/dive-setting-activity';
@@ -136,7 +136,6 @@ import {
   deleteGearWishlistGroup,
   deleteNewsSource,
   deletePerson,
-  deletePriceStore,
   deleteTrainingProgress,
   listAlbums,
   listBucketList,
@@ -155,8 +154,6 @@ import {
   listNewsPreferences,
   listGmailNews,
   listPeople,
-  listPriceStores,
-  listPriceStoreSettings,
   listTrainingProgress,
   saveAlbum,
   saveBucketList,
@@ -173,8 +170,6 @@ import {
   saveNewsArticle,
   saveNewsPreferences,
   savePerson,
-  savePriceStore,
-  savePriceStoreSettings,
   saveTrainingProgress,
   type AlbumRecord,
   type BucketListRecord,
@@ -192,7 +187,6 @@ import {
   type NewsArticleRecord,
   type NewsPreferencesRecord,
   type PersonRecord,
-  type PriceStoreRecord,
   type TrainingProgressRecord,
   type Stored,
   DEFAULT_GEAR_CATEGORIES,
@@ -460,7 +454,7 @@ function RecordDetail({
           </div>
         )}
         {children}
-        <MediaGallery ownerKind={ownerKind} ownerId={ownerId} />
+        <MediaGallery ownerKind={ownerKind} ownerId={ownerId} accessibleViewer />
         <footer>
           {remove && (
             <button className="focus-secondary danger" onClick={remove}>
@@ -628,7 +622,6 @@ const configurationLinks = [
   ['training-agency-logos', 'Training agency logos'],
   ['overview-layout-awards', 'Insights layout / awards'],
   ['dive-news-settings', 'Dive News settings'],
-  ['wishlist-price-search', 'Wishlist price search'],
   ['acceptance-fixture-review', 'Synthetic data & record controls'],
   ['other-site-data-tools', 'Other site data tools'],
 ] as const;
@@ -649,7 +642,6 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
       <CollapsibleWorkCard id="skill-catalogue" defaultMinimized className="site-configuration-card" title="Skill Catalogue" eyebrow="DIVING CPD" status="Canonical groups, CSV and evidence definitions"><SkillCatalogue /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Insights layout / awards" eyebrow="INSIGHTS" status="Choose 4, 8, 12, 16 or 20 analytics awards"><DashboardAwardsSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><NewsSourceSettings /></CollapsibleWorkCard>
-      <CollapsibleWorkCard id="wishlist-price-search" defaultMinimized className="site-configuration-card" title="Wishlist price search" eyebrow="GEAR" status="Stores used by online price checks"><PriceStoreSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Synthetic data & record controls" eyebrow="OWNER CONFIRMATION" status="All canonical kinds, dependencies and safe actions" alert="No automatic deletion"><SyntheticFixtureReview go={go}/></CollapsibleWorkCard>
       <CollapsibleWorkCard id="other-site-data-tools" defaultMinimized className="site-configuration-card" title="Other site data tools" eyebrow="ADMIN" status="Diagnostics and records needing attention"><AdminPanel /></CollapsibleWorkCard>
     </div>
@@ -736,17 +728,13 @@ function DashboardAwardsSettings() {
       if (current) {
         setMaximum(normaliseInsightAwardCount(current.maxAwards));
         setDiveNumberStart(Math.max(1, current.diveNumberStart || 1));
-        setSelected(current.selectedAwards?.length ? current.selectedAwards : DEFAULT_DASHBOARD_AWARDS);
+        setSelected(current.selectedAwards ?? DEFAULT_DASHBOARD_AWARDS);
         setCustomGoogleMapEmbedUrl(current.customGoogleMapEmbedUrl ?? '');
         setNewsletterEmail(current.newsletterEmail ?? DEFAULT_NEWSLETTER_EMAIL);
       }
     });
   }, []);
   function toggleAward(id: string, checked: boolean) {
-    if (checked && selected.length >= maximum) {
-      setMessage(`Choose no more than ${maximum} awards, or increase the maximum first.`);
-      return;
-    }
     setMessage('');
     setSelected((current) => checked ? [...current, id] : current.filter((value) => value !== id));
   }
@@ -754,7 +742,7 @@ function DashboardAwardsSettings() {
     setSaving(true);
     setMessage('Saving…');
     try {
-      const nextSelected = selected.slice(0, maximum);
+      const nextSelected = selected;
       const result = await saveDashboardSettings({
         ...(record ? { entityId: record.entityId } : {}),
         selectedAwards: nextSelected,
@@ -781,7 +769,6 @@ function DashboardAwardsSettings() {
       <label className="award-limit">Maximum shown<select value={maximum} onChange={(event) => {
         const next = Number(event.target.value);
         setMaximum(next);
-        setSelected((current) => current.slice(0, next));
       }}>{INSIGHT_AWARD_COUNTS.map((value) => <option key={value}>{value}</option>)}</select></label>
       <label className="award-limit">First lifetime dive number<input type="number" min="1" value={diveNumberStart} onChange={(event) => setDiveNumberStart(Math.max(1, Number(event.target.value) || 1))} /></label>
       <label className="record-wide">Google My Maps share URL or map ID<input type="text" value={customGoogleMapEmbedUrl} onChange={(event) => setCustomGoogleMapEmbedUrl(event.target.value)} placeholder="https://www.google.com/maps/d/viewer?mid=YOUR_MAP_ID" /><small>Paste a My Maps viewer, share or embed link, or its map ID. This opens your custom map in the Google Maps view. Export KML to update its pins; changes are not automatic.</small></label>
@@ -960,7 +947,7 @@ function Overview({
     if (nextIds.length > 6 || weatherSelectionSaving) return;
     const current = awardSettings;
     const optimistic: DashboardSettingsRecord = {
-      selectedAwards: current?.selectedAwards?.length ? current.selectedAwards : DEFAULT_DASHBOARD_AWARDS,
+      selectedAwards: current?.selectedAwards ?? DEFAULT_DASHBOARD_AWARDS,
       maxAwards: current?.maxAwards || 8,
       diveNumberStart: current?.diveNumberStart || 1,
       customGoogleMapEmbedUrl: current?.customGoogleMapEmbedUrl ?? '',
@@ -1000,6 +987,8 @@ function Overview({
           </button>
         }
       />
+      <div className="overview-dashboard-layout">
+      <div className="overview-dashboard-main">
       <div className="overview-glance-grid">
         <div className="next-dive-card overview-next-dive">
           <span className="focus-eyebrow">NEXT DIVE</span>
@@ -1050,12 +1039,14 @@ function Overview({
           </button></>}
         </CollapsibleWorkCard>
       </div>
+      </div>
       <section className="home-weather-section">
         <div className="focus-card-head"><div><span className="focus-eyebrow">HOME DIVE FORECASTS</span><h2>Seven-day conditions</h2><p className="focus-copy">Choose up to six saved sites, or show no forecast cards.</p></div><button className="focus-secondary" aria-expanded={weatherPickerOpen} onClick={() => setWeatherPickerOpen((current) => !current)}>{weatherPickerOpen ? 'Close selector' : 'Choose sites'}</button></div>
         {weatherPickerOpen && <Card className="home-weather-picker"><div className="home-weather-picker-head"><div><h3>Forecast sites</h3><p className="focus-copy">Selections save automatically and sync across devices.</p></div><label><input type="checkbox" checked={selectedHomeWeatherSiteIds.length === 0} disabled={weatherSelectionSaving} onChange={(event) => { if (event.target.checked) void saveHomeWeatherSelection([]); }} /> Don’t show any</label></div><div className="home-weather-options">{weatherCandidateSites.map((site) => { const checked = selectedHomeWeatherSiteIds.includes(site.entityId); return <label key={site.entityId}><input type="checkbox" checked={checked} disabled={weatherSelectionSaving || (!checked && selectedHomeWeatherSiteIds.length >= 6)} onChange={(event) => void saveHomeWeatherSelection(event.target.checked ? [...selectedHomeWeatherSiteIds, site.entityId] : selectedHomeWeatherSiteIds.filter((siteId) => siteId !== site.entityId))} /><span><b>{site.name}</b><small>{site.location || site.country || 'Location not recorded'}</small></span></label>; })}</div><small className="home-weather-picker-status">{weatherSelectionSaving ? 'Saving selection…' : `${selectedHomeWeatherSiteIds.length} of 6 selected`}</small></Card>}
-        {featuredSites.length ? <div className="home-weather-grid">{featuredSites.map((site) => <SevenDayForecastCard key={site.entityId} site={site} forecast={forecasts[site.entityId]} />)}</div> : <Card className="focus-empty"><CloudSun size={30}/><h2>No forecast sites selected</h2><p>Open the selector and tick up to six sites whenever you want forecasts here.</p><button className="focus-primary" onClick={() => setWeatherPickerOpen(true)}>Choose forecast sites</button></Card>}
+        {featuredSites.length ? <div className="home-weather-grid">{featuredSites.map((site) => <SevenDayForecastCard key={site.entityId} site={site} forecast={forecasts[site.entityId]} compact />)}</div> : <Card className="focus-empty"><CloudSun size={30}/><h2>No forecast sites selected</h2><p>Open the selector and tick up to six sites whenever you want forecasts here.</p><button className="focus-primary" onClick={() => setWeatherPickerOpen(true)}>Choose forecast sites</button></Card>}
         {forecastError && <div className="focus-notice"><CloudRain size={15}/>{forecastError}</div>}
       </section>
+      </div>
     </>
   );
 }
@@ -4679,24 +4670,6 @@ async function normaliseWishlistCost(value: string) {
   return { approximateCost: pounds(result.gbp), originalApproximateCost: original, exchangeRateDate: result.date ?? '' };
 }
 
-const DEFAULT_PRICE_STORES: Array<Omit<PriceStoreRecord, keyof { createdAt: string; modifiedAt: string }>> = [
-  { name: "Mike's Dive Store", searchUrl: 'https://www.mikesdivestore.com/search?q={query}&type=product', enabled: true },
-  { name: 'DirDirect', searchUrl: 'https://www.dirdirect.com/search?q={query}&type=product', enabled: true },
-  { name: 'Oyster Diving Shop', searchUrl: 'https://oysterdivingshop.com/search?q={query}&type=product', enabled: true },
-  { name: 'Watersports Warehouse', searchUrl: 'https://www.watersportswarehouse.co.uk/search?q={query}&type=product', enabled: true },
-];
-async function ensurePriceStores() {
-  const stores = await listPriceStores();
-  const settings = await listPriceStoreSettings();
-  if (!settings[0]?.seeded && await hasCloudSnapshot('price-store') && await hasCloudSnapshot('price-store-settings')) {
-    void diveOperation('seed-price-stores','Preparing price stores…',async()=>{
-      for (const [index,store] of DEFAULT_PRICE_STORES.entries()) if(!stores.some(existing=>existing.searchUrl===store.searchUrl)) await savePriceStore({...store,entityId:`${currentDiveAccount()}-default-store-${index}`});
-      await savePriceStoreSettings({ seeded: true });
-    });
-  }
-  return stores;
-}
-
 function wishlistGroupPath(group: Stored<GearWishlistGroupRecord>, groups: Array<Stored<GearWishlistGroupRecord>>) {
   const names = [group.name];
   let parentId = group.parentId;
@@ -4715,10 +4688,9 @@ function GearWishlist() {
   const [items, setItems] = useState<Array<Stored<GearWishlistRecord>>>([]);
   const [editing, setEditing] = useState<Stored<GearWishlistRecord> | null>(null);
   const [adding, setAdding] = useState(false);
-  const [priceStores, setPriceStores] = useState<Array<Stored<PriceStoreRecord>>>([]);
   const [groups, setGroups] = useState<Array<Stored<GearWishlistGroupRecord>>>([]); const [groupName, setGroupName] = useState((DEFAULT_GEAR_CATEGORIES[0] ?? 'Other')); const [groupParent, setGroupParent] = useState(''); const [addingGroup, setAddingGroup] = useState(false); const [catalogOptions, setCatalogOptions] = useState<Array<Stored<CatalogOptionRecord>>>([]);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
-  const refresh = useCallback(() => { void Promise.all([listGearWishlist(), ensurePriceStores(), listGearWishlistGroups(), listCatalogOptions()]).then(([nextItems, stores, nextGroups, options]) => { setItems(nextItems); setPriceStores(stores); setGroups(nextGroups); setCatalogOptions(options); }); }, []);
+  const refresh = useCallback(() => { void Promise.all([listGearWishlist(), listGearWishlistGroups(), listCatalogOptions()]).then(([nextItems, nextGroups, options]) => { setItems(nextItems); setGroups(nextGroups); setCatalogOptions(options); }); }, []);
   useRecordRefresh(refresh);
   const savingsItems = items.filter((item) => item.includeInSavings);
   const savingsTotal = savingsItems.reduce((total, item) => total + wishlistCostValue(item.approximateCost), 0);
@@ -4737,14 +4709,14 @@ function GearWishlist() {
     return minimum === maximum ? format(minimum) : `${format(minimum)}–${format(maximum)}`;
   };
   const toggleGroup = (groupId: string) => setCollapsedGroups((current) => { const next = new Set(current); if (next.has(groupId)) next.delete(groupId); else next.add(groupId); return next; });
-  const itemCard = (item: Stored<GearWishlistRecord>) => <div className="wishlist-drag-item" draggable onDragStart={(event) => { event.dataTransfer.setData('text/wishlist-item', item.entityId); event.dataTransfer.effectAllowed = 'move'; }}><GearWishlistCard item={item} stores={priceStores.filter((store) => store.enabled)} refresh={refresh} edit={() => { setEditing(item); setAdding(true); }} toggleSavings={() => void toggleSavings(item)}/><WishlistGroupControls item={item} groups={groups} moveItem={moveItem}/></div>;
+  const itemCard = (item: Stored<GearWishlistRecord>) => <div className="wishlist-drag-item" draggable onDragStart={(event) => { event.dataTransfer.setData('text/wishlist-item', item.entityId); event.dataTransfer.effectAllowed = 'move'; }}><GearWishlistCard item={item} refresh={refresh} edit={() => { setEditing(item); setAdding(true); }} toggleSavings={() => void toggleSavings(item)}/><WishlistGroupControls item={item} groups={groups} moveItem={moveItem}/></div>;
   const groupSection = (group: Stored<GearWishlistGroupRecord>, depth = 0): React.ReactNode => {
     const collapsed = collapsedGroups.has(group.entityId);
     return <section key={group.entityId} className={`wishlist-group${collapsed ? ' is-collapsed' : ''}`} style={{ '--group-depth': depth } as React.CSSProperties} onDragOver={(event) => { if (event.dataTransfer.types.includes('text/wishlist-item')) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); void moveItem(event.dataTransfer.getData('text/wishlist-item'), group.entityId); }}><header><div className="wishlist-group-title">{depth === 0 && <img src={equipmentIconSource(group.name, catalogOptions)} alt=""/>}<span><span className="focus-eyebrow">{depth ? 'CUSTOM SUBGROUP' : 'EQUIPMENT GROUP'}</span><h2>{group.name}</h2><small>{items.filter((item) => item.wishlistGroupId === group.entityId).length} direct items{depth === 0 && <> · <strong>{groupPriceRange(group.entityId)}</strong></>}</small></span></div><div><button className="focus-icon wishlist-collapse density-symbol" onClick={() => toggleGroup(group.entityId)} aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${group.name}`} title={collapsed ? 'Expand group' : 'Collapse group'}><span aria-hidden="true">{collapsed ? '+' : '−'}</span></button><button className="focus-secondary" onClick={() => { setGroupName(''); setGroupParent(group.entityId); setAddingGroup(true); }}><Plus size={14}/> Subgroup</button><button className="focus-icon" aria-label={`Remove group ${group.name}`} onClick={() => void removeGroup(group)}><Trash2 size={14}/></button></div></header>{!collapsed && <><div className="wishlist-grid">{items.filter((item) => item.wishlistGroupId === group.entityId).map(itemCard)}</div>{groups.filter((child) => child.parentId === group.entityId).map((child) => groupSection(child, depth + 1))}</>}</section>;
   };
   return <>
-    <Heading eyebrow="RESEARCH · COMPARE · BUY" title="Gear wishlist" copy="Save equipment ideas, compare prices and drag items into your own nested groups." action={<div className="wishlist-heading-actions"><button className="focus-secondary" onClick={() => { setGroupName((DEFAULT_GEAR_CATEGORIES[0] ?? 'Other')); setGroupParent(''); setAddingGroup((value) => !value); }}><Plus size={16}/> Add group</button><button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add wishlist item</button></div>} />
-    <Card className="wishlist-savings-total"><div><span className="focus-eyebrow">SHOPPING TOTAL</span><strong>{new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(savingsTotal)}</strong><small>{savingsItems.length} {savingsItems.length === 1 ? 'item' : 'items'} selected to save for</small></div><ShoppingBag size={30}/></Card>
+    <Heading eyebrow="RESEARCH · SHORTLIST · BUY" title="Gear wishlist" copy="Save equipment ideas and drag items into your own nested groups." action={<div className="wishlist-heading-actions"><button className="focus-secondary" onClick={() => { setGroupName((DEFAULT_GEAR_CATEGORIES[0] ?? 'Other')); setGroupParent(''); setAddingGroup((value) => !value); }}><Plus size={16}/> Add group</button><button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add wishlist item</button></div>} />
+    <Card className="wishlist-savings-total"><div><span className="focus-eyebrow">SHOPPING TOTAL</span><strong>{new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(savingsTotal)}</strong><small>{savingsItems.length} {savingsItems.length === 1 ? 'item' : 'items'} selected to save for</small></div><ZeusTekAssetIcon name="core-logbook-icons-equipment" label="Equipment wishlist" size={42} fallback={<ShoppingBag size={30}/>}/></Card>
     {addingGroup && <Card className="wishlist-group-form"><label>{groupParent ? 'Custom subgroup name' : 'Equipment group'}{groupParent ? <input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="e.g. XDeep Stealth Tec"/> : <select value={groupName} onChange={(event) => setGroupName(event.target.value)}>{[...new Set([...DEFAULT_GEAR_CATEGORIES, ...catalogOptions.filter((option) => option.group === 'category').map((option) => option.value)])].sort().map((value) => <option key={value} value={value}>{value}</option>)}</select>}</label><label>Inside<select value={groupParent} onChange={(event) => { setGroupParent(event.target.value); setGroupName(event.target.value ? '' : (DEFAULT_GEAR_CATEGORIES[0] ?? 'Other')); }}><option value="">Top level</option>{groups.map((group) => <option key={group.entityId} value={group.entityId}>{group.name}</option>)}</select></label><button className="focus-secondary" onClick={() => setAddingGroup(false)}>Cancel</button><button className="focus-primary" disabled={!groupName.trim()} onClick={() => void addGroup()}>Save group</button></Card>}
     {adding && <RevealOnMount><GearWishlistForm item={editing} groups={groups} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}
     {groups.filter((group) => !group.parentId).map((group) => groupSection(group))}
@@ -4763,26 +4735,10 @@ function WishlistGroupControls({ item, groups, moveItem }: { item: Stored<GearWi
   </div>;
 }
 
-function GearWishlistCard({ item, stores, refresh, edit, toggleSavings }: { item: Stored<GearWishlistRecord>; stores: Array<Stored<PriceStoreRecord>>; refresh: () => void; edit: () => void; toggleSavings: () => void }) {
-  const [checking, setChecking] = useState(false);
+function GearWishlistCard({ item, refresh, edit, toggleSavings }: { item: Stored<GearWishlistRecord>; refresh: () => void; edit: () => void; toggleSavings: () => void }) {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false); const [descriptionOverflows, setDescriptionOverflows] = useState(false); const descriptionRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => { const measure = () => { const element = descriptionRef.current; if (element && !descriptionExpanded) setDescriptionOverflows(element.scrollHeight > element.clientHeight + 1); }; measure(); window.addEventListener('resize', measure); return () => window.removeEventListener('resize', measure); }, [item.description, descriptionExpanded]);
-  async function checkPrices() {
-    if ((!item.links.length && !stores.length) || checking) return;
-    setChecking(true);
-    try {
-      const query = [item.brand, item.model].filter(Boolean).join(' ') || item.itemType;
-      const response = await fetch('/api/product-prices', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query, links: item.links, stores: stores.map(({ name, searchUrl }) => ({ name, searchUrl })) }) });
-      if (!response.ok) throw new Error('Price check unavailable');
-      const result = await response.json() as { checkedAt: string; results: NonNullable<GearWishlistRecord['priceChecks']> };
-      await saveGearWishlist({ ...item, priceChecks: result.results, pricesCheckedAt: result.checkedAt });
-      appendAdminLogs(result.results.map((entry) => ({ timestamp: result.checkedAt, category: 'wishlist-price-check', status: entry.available ? 'updated' : 'skipped', subject: `${[item.brand, item.model].filter(Boolean).join(' ') || item.itemType} · ${entry.description}`, detail: entry.available ? `Price read successfully: ${new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(entry.gbp))}` : `Price check failed: ${entry.error || 'No readable offer'}` })));
-      refresh();
-    } finally { setChecking(false); }
-  }
-  const available = (item.priceChecks ?? []).filter((price) => price.available && price.matchVerified === true && matchesProduct([item.brand,item.model].filter(Boolean).join(' ') || item.itemType,price.productTitle || '') && Number.isFinite(price.gbp)).sort((a, b) => Number(a.gbp) - Number(b.gbp));
-  const best = available[0];
-  return <Card className="wish-card">{item.coverImage && <img className="wishlist-card-image" src={item.coverImage.startsWith('media:') ? `/api/media?id=${encodeURIComponent(item.coverImage.slice(6))}` : item.coverImage} alt={`${[item.brand, item.model].filter(Boolean).join(' ') || item.itemType} wishlist item`}/>}<div className="focus-card-head"><div><span className="focus-eyebrow">{item.itemType} · {item.status}</span><h2>{[item.brand, item.model].filter(Boolean).join(' ') || item.itemType}</h2></div><div className="record-actions"><button aria-label={`Edit ${item.brand} ${item.model}`} onClick={edit}><Pencil size={15}/></button><button aria-label={`Delete ${item.brand} ${item.model}`} onClick={() => { if (confirm(`Delete ${item.brand} ${item.model}?`)) void deleteGearWishlist(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><label className="wishlist-saving-toggle"><input type="checkbox" checked={item.includeInSavings ?? false} onChange={toggleSavings}/><span>Count toward savings total</span></label>{item.approximateCost && <div className="wish-cost"><strong className="wish-price">{item.approximateCost}</strong>{item.originalApproximateCost && <small>Converted from {item.originalApproximateCost}{item.exchangeRateDate ? ` · rate ${item.exchangeRateDate}` : ''}</small>}</div>}{item.description && <div className="wishlist-description"><p ref={descriptionRef} className={`focus-copy${descriptionExpanded ? ' is-expanded' : ''}`}>{item.description}</p>{(descriptionOverflows || descriptionExpanded) && <button type="button" onClick={() => setDescriptionExpanded((value) => !value)}>{descriptionExpanded ? 'Show less' : '… more'}</button>}</div>}{item.why && <details className="wishlist-notes"><summary>My notes</summary><blockquote>{item.why}</blockquote></details>}{(item.links.length > 0 || stores.length > 0) && <div className="wishlist-price-check"><button className="focus-secondary" disabled={checking} onClick={() => void checkPrices()}><ShoppingBag size={14}/>{checking ? `Checking ${stores.length + item.links.length} sources…` : 'Find best online price'}</button>{best && <a href={best.url} target="_blank" rel="noreferrer"><b>Best found: {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(best.gbp))}</b><span>{best.description}</span></a>}{item.pricesCheckedAt && !best && <span className="price-no-match">No verified price match. Check again to refresh.</span>}{item.pricesCheckedAt && <small>Checked {new Date(item.pricesCheckedAt).toLocaleString('en-GB')} · {available.length} of {item.priceChecks?.length ?? 0} sources have a verified product price.</small>}</div>}<div className="wish-links">{item.links.filter((link) => externalUrl(link.url)).map((link, index) => <a className="focus-link" key={`${link.url}-${index}`} href={externalUrl(link.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/>{link.description || `Link ${index + 1}`}</a>)}</div></Card>;
+  return <Card className="wish-card">{item.coverImage && <img className="wishlist-card-image" src={item.coverImage.startsWith('media:') ? `/api/media?id=${encodeURIComponent(item.coverImage.slice(6))}` : item.coverImage} alt={`${[item.brand, item.model].filter(Boolean).join(' ') || item.itemType} wishlist item`}/>}<div className="focus-card-head"><div><span className="focus-eyebrow">{item.itemType} · {item.status}</span><h2>{[item.brand, item.model].filter(Boolean).join(' ') || item.itemType}</h2></div><div className="record-actions"><button aria-label={`Edit ${item.brand} ${item.model}`} onClick={edit}><Pencil size={15}/></button><button aria-label={`Delete ${item.brand} ${item.model}`} onClick={() => { if (confirm(`Delete ${item.brand} ${item.model}?`)) void deleteGearWishlist(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><label className="wishlist-saving-toggle"><input type="checkbox" checked={item.includeInSavings ?? false} onChange={toggleSavings}/><span>Count toward savings total</span></label>{item.approximateCost && <div className="wish-cost"><strong className="wish-price">{item.approximateCost}</strong>{item.originalApproximateCost && <small>Converted from {item.originalApproximateCost}{item.exchangeRateDate ? ` · rate ${item.exchangeRateDate}` : ''}</small>}</div>}{item.description && <div className="wishlist-description"><p ref={descriptionRef} className={`focus-copy${descriptionExpanded ? ' is-expanded' : ''}`}>{item.description}</p>{(descriptionOverflows || descriptionExpanded) && <button type="button" onClick={() => setDescriptionExpanded((value) => !value)}>{descriptionExpanded ? 'Show less' : '… more'}</button>}</div>}{item.why && <details className="wishlist-notes"><summary>My notes</summary><blockquote>{item.why}</blockquote></details>}<div className="wish-links">{item.links.filter((link) => externalUrl(link.url)).map((link, index) => <a className="focus-link" key={`${link.url}-${index}`} href={externalUrl(link.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/>{link.description || `Link ${index + 1}`}</a>)}</div></Card>;
 }
 
 function GearWishlistForm({ item, groups, close, saved }: { item: Stored<GearWishlistRecord> | null; groups: Array<Stored<GearWishlistGroupRecord>>; close: () => void; saved: () => void }) {
@@ -4818,14 +4774,6 @@ function GearWishlistForm({ item, groups, close, saved }: { item: Stored<GearWis
   const addImageUrl = () => { const url = externalUrl(imageUrlDraft); if (!url || imageUrls.includes(url)) return; setImageUrls((current) => [...current, url]); if (!coverImage) setCoverImage(url); setImageUrlDraft(''); };
   const imageEditor = <div className="record-wide wishlist-image-editor"><div className="wishlist-image-editor-head"><span>Images (optional)</span><label className="focus-secondary file-action"><ImagePlus size={15}/> Upload images<input type="file" accept="image/*" multiple onChange={(event) => { const files = Array.from(event.target.files ?? []); setNewImages((current) => [...current, ...files]); if (!coverImage && files.length) setCoverImage(`new:${newImages.length}`); event.target.value = ''; }}/></label></div><div className="wishlist-url-add"><input type="url" value={imageUrlDraft} onChange={(event) => setImageUrlDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addImageUrl(); } }} placeholder="Paste an image URL…"/><button type="button" className="focus-secondary" onClick={addImageUrl}><Plus size={14}/> Add URL</button></div>{(imageUrls.length > 0 || existingUploads.length > 0 || newImages.length > 0) && <div className="wishlist-image-options">{imageUrls.map((url) => <label key={url}><img src={url} alt="Wishlist reference"/><span><input type="radio" name="wishlist-cover" checked={coverImage === url} onChange={() => setCoverImage(url)}/> Show on card</span><button type="button" className="focus-icon" onClick={() => { setImageUrls((current) => current.filter((value) => value !== url)); if (coverImage === url) setCoverImage(''); }} aria-label="Remove image URL"><X size={14}/></button></label>)}{existingUploads.map((image) => <label key={image.id}><img src={`/api/media?id=${encodeURIComponent(image.id)}`} alt={image.fileName}/><span><input type="radio" name="wishlist-cover" checked={coverImage === `media:${image.id}`} onChange={() => setCoverImage(`media:${image.id}`)}/> Show on card</span><button type="button" className="focus-icon" onClick={() => void removeUpload(image.id)} aria-label={`Remove ${image.fileName}`}><Trash2 size={14}/></button></label>)}{newImages.map((file, index) => <label key={`${file.name}-${file.lastModified}-${index}`}><span className="wishlist-new-image"><FileImage size={22}/>{file.name}</span><span><input type="radio" name="wishlist-cover" checked={coverImage === `new:${index}`} onChange={() => setCoverImage(`new:${index}`)}/> Show on card</span><button type="button" className="focus-icon" onClick={() => { setNewImages((current) => current.filter((_, position) => position !== index)); if (coverImage === `new:${index}`) setCoverImage(''); }} aria-label={`Remove ${file.name}`}><X size={14}/></button></label>)}</div>}<small>Choose one image to display on the wishlist card. Other images stay attached to this item.</small></div>;
   return <Card className="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT GEAR IDEA' : 'NEW GEAR IDEA'}</span><h3>{item ? 'Update wishlist item' : 'Add to gear wishlist'}</h3></div><button className="focus-icon" aria-label="Close editor" onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Item type<select value={itemType} onChange={(event) => setItemType(event.target.value)}>{itemTypes.map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label>Group / subgroup<select value={wishlistGroupId} onChange={(event) => setWishlistGroupId(event.target.value)}><option value="">Unsorted</option>{groups.map((group) => <option key={group.entityId} value={group.entityId}>{wishlistGroupPath(group, groups)}</option>)}</select></label><label>Brand<input value={brand} onChange={(event) => setBrand(event.target.value)}/></label><label>Model<input value={model} onChange={(event) => setModel(event.target.value)}/></label><label>Approximate cost<input value={approximateCost} onChange={(event) => setApproximateCost(event.target.value)} placeholder="e.g. £650"/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as GearWishlistRecord['status'])}><option value="researching">Researching</option><option value="shortlisted">Shortlisted</option><option value="purchased">Purchased</option></select></label><label className="wishlist-saving-toggle form-toggle"><input type="checkbox" checked={includeInSavings} onChange={(event) => setIncludeInSavings(event.target.checked)}/><span>Count toward savings total</span></label><label className="record-wide">Description<textarea value={description} onChange={(event) => setDescription(event.target.value)}/></label><label className="record-wide">Why I want it<textarea value={why} onChange={(event) => setWhy(event.target.value)}/></label><div className="record-wide wishlist-links-editor"><span>Links</span>{links.map((link, index) => <div key={index}><input type="url" value={link.url} onChange={(event) => setLinks((current) => current.map((value, position) => position === index ? { ...value, url: event.target.value } : value))} placeholder="https://…"/><input value={link.description} onChange={(event) => setLinks((current) => current.map((value, position) => position === index ? { ...value, description: event.target.value } : value))} placeholder="Shop, review or manufacturer"/><button className="focus-icon" onClick={() => setLinks((current) => current.filter((_, position) => position !== index))}><X size={14}/></button></div>)}<button className="focus-secondary" onClick={() => setLinks((current) => [...current, { url: '', description: '' }])}><Plus size={14}/> Add another link</button></div>{imageEditor}</div><footer><button className="focus-secondary" onClick={close}>Cancel</button><button className="focus-primary" disabled={saving} onClick={() => void submit()}>{saving ? 'Saving…' : 'Save wishlist item'}</button></footer></Card>;
-}
-
-function PriceStoreSettings() {
-  const [stores, setStores] = useState<Array<Stored<PriceStoreRecord>>>([]); const [name, setName] = useState(''); const [searchUrl, setSearchUrl] = useState('');
-  const refresh = useCallback(() => { void ensurePriceStores().then(setStores); }, []);
-  useRecordRefresh(refresh);
-  async function add() { if (!name.trim() || !searchUrl.startsWith('https://') || !searchUrl.includes('{query}')) return; await savePriceStore({ name: name.trim(), searchUrl: searchUrl.trim(), enabled: true }); setName(''); setSearchUrl(''); refresh(); }
-  return <Card className="price-store-settings"><div className="focus-card-head"><div><span className="focus-eyebrow">WISHLIST PRICE SEARCH</span><h2>Retailers to check</h2><p className="focus-copy">Add or remove shops searched by “Check online prices”. Use <code>{'{query}'}</code> where the product name belongs in the retailer’s search URL.</p></div></div><div className="price-store-list">{stores.map((store) => <div key={store.entityId}><label><input type="checkbox" checked={store.enabled} onChange={(event) => void savePriceStore({ ...store, enabled: event.target.checked }).then(refresh)}/><span><b>{store.name}</b><small>{store.searchUrl}</small></span></label><button className="focus-icon" onClick={() => { if (confirm(`Remove ${store.name}?`)) void deletePriceStore(store.entityId).then(refresh); }} aria-label={`Remove ${store.name}`}><Trash2 size={15}/></button></div>)}</div><div className="price-store-add"><label>Store name<input value={name} onChange={(event) => setName(event.target.value)} placeholder="My preferred dive shop"/></label><label>Search URL template<input type="url" value={searchUrl} onChange={(event) => setSearchUrl(event.target.value)} placeholder="https://shop.example/search?q={query}"/></label><button className="focus-primary" disabled={!name.trim() || !searchUrl.startsWith('https://') || !searchUrl.includes('{query}')} onClick={() => void add()}><Plus size={15}/> Add retailer</button></div></Card>;
 }
 
 const DEFAULT_NEWS_SOURCES: Array<Omit<NewsSourceRecord, keyof { createdAt: string; modifiedAt: string }>> = [

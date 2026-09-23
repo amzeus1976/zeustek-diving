@@ -76,7 +76,7 @@
 }
 .kpi {
   box-sizing: border-box;
-  flex: 0 0 12.5%;
+  flex: 0 0 25%;
   min-width: 0;
   padding: 16px 9px 13px;
   border: 0;
@@ -87,6 +87,13 @@
   display: grid;
   justify-items: center;
   gap: 4px;
+}
+.awardEmpty {
+  width: 100%;
+  margin: 0;
+  padding: 24px;
+  color: #b8c7cf;
+  text-align: center;
 }
 .kpi:last-child {
   border-right: 0;

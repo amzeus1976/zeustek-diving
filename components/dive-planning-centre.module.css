@@ -3,7 +3,7 @@
 .iconHeading > div { min-width:0; }
 .warningList{grid-column:1/-1;margin:4px 0;padding-left:20px;color:#ffb44f;font-size:12px;line-height:1.45}.warningList li+li{margin-top:4px}
 .infoButton{display:inline-flex;align-items:center;justify-content:center;min-width:30px;min-height:30px;margin-left:4px;border:1px solid #3ac9e8;border-radius:50%;background:#102c36;color:#8deaff;cursor:pointer}
-.infoButton:focus-visible{outline:3px solid #fff21b;outline-offset:2px}
+.infoButton:focus-visible{outline:3px solid var(--zt-focus);outline-offset:2px}
 .editorGrid label>.infoButton{display:inline-flex;width:30px;height:30px;min-width:30px;min-height:30px;justify-self:start;vertical-align:middle;padding:0;line-height:1;flex:none}
 .editorGrid label:has(>.infoButton){grid-template-columns:max-content 30px;justify-content:start;align-items:center;column-gap:6px}.editorGrid label:has(>.infoButton)>textarea,.editorGrid label:has(>.infoButton)>input{grid-column:1/-1}
 .editorGrid .selectedFact{border:1px solid #1d566b;border-radius:7px;padding:8px;background:#0d2029;color:#d8e9ef;overflow-wrap:anywhere}
@@ -11,7 +11,7 @@
 .pickerResults{grid-column:1/-1;display:grid;gap:5px;max-height:185px;overflow:auto;min-width:0}
 .pickerResults button{width:100%;min-height:44px;text-align:left;border:1px solid #215368;border-radius:7px;background:#0b2029;color:#effaff;padding:7px 10px;overflow-wrap:anywhere}
 .pickerResults button:hover{border-color:#54dfff}
-.pickerResults button:focus-visible{outline:3px solid #fff21b;outline-offset:2px}
+.pickerResults button:focus-visible{outline:3px solid var(--zt-focus);outline-offset:2px}
 .selectedPills{grid-column:1/-1;display:grid;gap:8px;min-width:0}
 .selectedPills>div{border:1px solid #1c4a59;border-radius:8px;padding:9px;background:#0b1d25;min-width:0}
 .selectedPills button{min-height:40px}
@@ -36,7 +36,7 @@
 .gasSegments{margin:6px 0;padding-left:18px;color:#c8e2e8;font-size:11px;line-height:1.45}
 .gasWarningButton{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 10px;border:1px solid #f8a443;border-radius:8px;background:#342211;color:#ffe1b5;cursor:pointer;text-align:left}
 .gasWarningButton:hover{background:#513015}
-.gasWarningButton:focus-visible{outline:3px solid #fff11a;outline-offset:2px}
+.gasWarningButton:focus-visible{outline:3px solid var(--zt-focus);outline-offset:2px}
 @media(max-width:720px){.gasSummaryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* T13 shared ZeusTek presentation layer; planning behaviour remains unchanged. */

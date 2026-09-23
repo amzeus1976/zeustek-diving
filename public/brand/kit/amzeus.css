@@ -1,0 +1,26 @@
+/* AMZeus brand override: personal umbrella, journal, family, professional identity. */
+:root,
+[data-brand="amzeus"] {
+  --brand-name: "AMZeus";
+  --brand-primary: #ff7a00;
+  --brand-secondary: #cfd7de;
+  --brand-tertiary: #00d8ff;
+  --brand-gradient: linear-gradient(90deg, #cfd7de 0%, #00d8ff 42%, #ff7a00 100%);
+  --brand-glow: 0 0 10px rgba(207, 215, 222, 0.34), 0 0 24px rgba(255, 122, 0, 0.28);
+}
+
+.amz-hero {
+  border-left: 4px solid var(--brand-primary);
+  background: linear-gradient(90deg, rgba(255,122,0,.11), rgba(0,216,255,.045), transparent), var(--zt-surface);
+}
+
+.amz-signature {
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--zt-silver);
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.amz-note-card {
+  border-color: rgba(207, 215, 222, 0.24);
+}

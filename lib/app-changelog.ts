@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.51',
+    date: '2026-09-23',
+    title: 'Brand icon foundation and must-fix display corrections',
+    changes: [
+      'Added a manifest-backed ZeusTek domain icon registry for 131 supplied brand assets, with accessible labels and a safe vector fallback while retaining vector icons for core controls.',
+      'Corrected Insights awards so Site Configuration selections are the inclusion list, the 4/8/12/16/20 setting is only a layout cap, empty selections stay empty and incomplete rows remain centred.',
+      'Strengthened shared editor dismissal so Cancel and Escape use a viewport-centred discard confirmation, Escape returns to editing, and focus is restored without leaving the app blurred.',
+      'Compacted Overview, centred Equipment media, removed the inactive Wishlist price-search controls, and added a compact configurable Cylinders & Gas table layout.',
+      'Replaced the remaining non-brand focus treatment with the shared cyan focus ring without changing records, cylinder identity, or Gas Planner calculations.',
+    ],
+  },
+  {
     version: '1.0.50',
     date: '2026-09-22',
     title: 'Whole-site design ethos and accessibility convergence',
