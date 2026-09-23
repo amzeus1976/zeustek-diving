@@ -1,7 +1,7 @@
 # T14 resumable handover
 
 Branch: `t14/master-forward-build`.
-Latest completed checkpoint: `adb8aed` — T14 Stage 7. Stage 8 is locally complete in the working tree; its checkpoint commit is the next source action.
+Latest completed checkpoint: `ca58c72` — T14 Stage 8 Admin, configuration, safe exports and backup boundary. This handover update is documentation-only; check `git rev-parse HEAD` for the current branch tip.
 Implementation checkout: `zeustek-t14-master` in the Zeus Dive project workspace. Reference material remains outside this checkout and synced `sources/` is read-only.
 
 ## Authority
@@ -23,7 +23,7 @@ Stages 0–5, 6, 5W and 7 have checkpoints. See `progress.md`, `issue-matrix.csv
 
 ## Outstanding required work
 
-1. Commit the locally complete Stage 8 checkpoint and record its exact SHA. Stage8 requirements ADMIN-01/02/03 pass locally; ADMIN-04 is owner-deferred optional. See `stage8-admin-export-boundary.md` and the Stage8 `progress.md` entry. The guarded remaining legacy editors and household footer are a named Stage9 follow-up, not part of this scoped release.
+1. Stage8 checkpoint `ca58c72` is committed. ADMIN-01/02/03 pass locally; ADMIN-04 is owner-deferred optional. See `stage8-admin-export-boundary.md` and the Stage8 `progress.md` entry. The guarded remaining legacy editors and household footer are a named Stage9 follow-up, not part of this scoped release.
 2. Complete the final candidate acceptance audit: staged secret scan, frozen hashes, full regression/typecheck/build/PWA/version/cache/targeted lint, four widths, console/overflow, production-built isolated smoke and owner-data fingerprints. Current local evidence is 121 files/697 tests, typecheck/build/PWA pass, 24 Stage8 focused tests, 8 routes at four widths with overflow0/console0, nine frozen hashes unchanged, and local75Dives+1GasPlan unchanged. Re-run anything affected by edits after checkpoint.
 3. Freeze commit/artifact, confirm live Sites124 and GitHub main unchanged, and confirm Sites124 rollback readiness and production owner66Dives+1GasPlan identities/content. Do not print or commit private backup values. No live Gmail sync has run; review durable sync status before invocation.
 4. Publish **one** scoped release to the existing Sites project, do read-only live smoke and owner-data checks, then the separately authorised **one** bounded Gmail acceptance sync at its designated point. Never repeat solely for a passing result; on failure preserve diagnostics and stop further mailbox operations. Verify expected newsletter/connection metadata separately from canonical protected records.
@@ -31,9 +31,9 @@ Stages 0–5, 6, 5W and 7 have checkpoints. See `progress.md`, `issue-matrix.csv
 
 ## Exact continuation and current work
 
-Stage8 is locally complete but not yet committed. **Do not reset the working tree.** Focused real-route backups, local backup secret reviews, diagnostics, settings preservation, PDF/DOCX content, TXT/CSV/JSON and no-write GET tests pass. The initial candidate build exposed a new-account cloud-backup 500, which was fixed and re-smoked at HTTP200. The production-built local smoke created one isolated fixture Dive in Wrangler's local D1; it did not touch the preserved Vite fixture DB or production.
+Stage8 is locally complete and committed at `ca58c72`. Focused real-route backups, local backup secret reviews, diagnostics, settings preservation, PDF/DOCX content, TXT/CSV/JSON and no-write GET tests pass. The initial candidate build exposed a new-account cloud-backup 500, which was fixed and re-smoked at HTTP200. The production-built local smoke created one isolated fixture Dive in Wrangler's ephemeral local D1; it did not touch the preserved Vite fixture DB or production. The final build also returned HTTP200 for shell, data, backup and service worker after that smoke server was restarted.
 
-Next exact commands: `git status --short`, stage only intended source/docs/tests, run `node work/check-weather-bundle-privacy.mjs` against staged diff, verify nine hashes from `protected-calculations.json`, `pnpm test`, `pnpm typecheck`, `pnpm build`, targeted lint, then commit Stage8. Reconfirm Sites124 via @Sites and main SHA via @GitHub immediately before release freeze. The scope amendment is at the top of `implementation-plan.md`.
+Next exact steps: verify this handover-only diff, commit it, and record the exact tip SHA and tree. Reconfirm Sites124 via @Sites and main SHA via @GitHub immediately before release freeze. The full 697-test regression, typecheck, build/PWA, targeted new/security-path lint, baseline-neutral monolith lint (80 vs 100 original diagnostics), protected hashes, privacy, owner aggregate and four-width browser gates passed for the application source in `ca58c72`. After the docs-only commit, repeat source/hash checks and rebuild the exact tip if the Sites archive includes docs. Then publish the one scoped release, verify live, run the single designated Gmail sync and reconcile GitHub only after acceptance. The scope amendment is at the top of `implementation-plan.md`.
 
 ## Local operation and private evidence
 
