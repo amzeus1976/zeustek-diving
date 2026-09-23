@@ -1,6 +1,26 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.54',
+    date: '2026-09-24',
+    title: 'T14 scoped release through Stage 8; Gmail sync deferred',
+    changes: [
+      'Released the completed Stage 0–8 work, including Weather & Conditions, Dive Centres, Insights, planning, CPD, Admin diagnostics and privacy-aware exports.',
+      'Temporarily disabled live Gmail mailbox sync by owner-approved exception after one failed upstream-provider acceptance run. Cached newsletter stories and public News feeds remain available; the connection is retained.',
+      'Excluded encrypted connection records from cloud and local backups. Protected diving calculations and canonical owner records remain unchanged.',
+    ],
+  },
+  {
+    version: '1.0.53',
+    date: '2026-09-23',
+    title: 'T14 scoped release candidate (rolled back)',
+    changes: [
+      'Added the Dive Centres workspace, analysis workbench, in-route planning editors and plan-first gas allocation while preserving the protected calculation engines.',
+      'Added weather and marine conditions with explicit retrieval and truthful provider access status, plus guided professional development and manual Dive News mailbox sync.',
+      'Reorganised Site Configuration, added redacted application diagnostics, repaired Diver Summary downloads and excluded connection secrets from backups.',
+    ],
+  },
+  {
     version: '1.0.52',
     date: '2026-09-23',
     title: 'Equipment media centring correction',

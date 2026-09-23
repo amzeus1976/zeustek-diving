@@ -29,7 +29,8 @@ describe('T10.6 universal user-data controls shell', () => {
     expect(dashboard).toContain('Synthetic data & record controls');
     expect(dashboard).toContain('deleteCertification');
     expect(planning).toContain('Save / edit draft');
-    expect(planning).toContain('Start dive');
+    expect(planning).toContain('Log dive');
+    expect(planning).toContain('Link logged dive');
     expect(media).toContain('Edit selected files');
     expect(media).toContain('Delete selected files');
     expect(evidence).toContain('Unlink evidence');

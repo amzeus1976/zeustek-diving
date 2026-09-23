@@ -234,7 +234,8 @@ describe('Equipment event safety and canonical compatibility', () => {
     );
     expect(source).toContain('Equipment event association cannot be changed.');
     expect(source).toContain("kind='equipment' AND deleted_at IS NULL");
-    expect(source).toContain('householdUserIds(env, user)');
+    expect(source).toContain('readHouseholdUserIds(env, user)');
+    expect(source.split('export async function POST')[0]).not.toContain('registerHouseholdUser(env, user)');
     expect(source).toContain('existing.ownerUserId');
   });
 });

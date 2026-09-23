@@ -256,3 +256,5 @@
     flex: 1 1 140px;
   }
 }
+
+:global([data-record-editor-workspace]) .dialog{width:100%;max-width:100%;max-height:none;overflow:visible}

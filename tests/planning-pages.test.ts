@@ -297,7 +297,7 @@ describe('T12.3 route and shell integration', () => {
     expect(`${calendar}\n${gas}`).not.toContain('WorkflowContextStrip');
     expect(card).toContain("minimized ? '+' : '−'");
     expect(calendar).toContain('role="tablist"');
-    expect(gas).toContain('This is not decompression software');
+    expect(read('components/planning/t14-gas-plan-editor.tsx')).toContain('This is not decompression software');
   });
 });
 

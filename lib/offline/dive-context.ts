@@ -278,24 +278,21 @@ export async function createDiveDraftFromPlan(planId: string): Promise<Partial<D
   const account = currentDiveAccount();
   if (!account) throw new Error('Sign in to use this Dive Plan.');
   const key = `dive:${account}:${planId}`;
-  let entity = await zeustekDb.entities.get(key);
+  const entity = await zeustekDb.entities.get(key);
   if (!entity || entity.deleted || entity.entityType !== 'trip' || !entity.record) throw new Error('Load this Dive Plan before creating a log.');
-  let event = entity.updatedEventId ? await zeustekDb.events.get(entity.updatedEventId) : undefined;
-  // Legacy cloud projections have no immutable local revision. Retain a revision
-  // through the SAME Plan mutation API/ID before linking it, never a copied Plan.
-  if (!event || event.recordHash !== await recordHash(entity.record)) {
-    if (currentDiveAccount() !== account) throw new Error('Account changed. Reopen this Dive Plan.');
-    await saveLocalRecord('trip', { entityId: planId });
-    entity = await zeustekDb.entities.get(key);
-    event = entity?.updatedEventId ? await zeustekDb.events.get(entity.updatedEventId) : undefined;
-  }
-  if (currentDiveAccount() !== account || !entity?.record || entity.deleted || !event?.record || event.entityId !== key || event.recordHash !== await recordHash(entity.record)) throw new Error('The Plan changed while preparing this log. Reopen it and try again.');
+  const event = entity.updatedEventId ? await zeustekDb.events.get(entity.updatedEventId) : undefined;
+  const hash = await recordHash(entity.record);
+  if (currentDiveAccount() !== account) throw new Error('Account changed. Reopen this Dive Plan.');
+  // Capture the exact viewed revision in the draft. Only saving the Dive persists it.
+  // Legacy cloud projections must not trigger a Plan repair merely by opening a log.
+  const eventId = event?.entityId === key && event.recordHash === hash ? event.eventId : `snapshot:${hash}`;
   const plan = entity.record as unknown as DiveTripRecord;
   const start = plan.startAt || plan.startDate;
   return {
     site: plan.siteName || plan.name, siteId: plan.siteId ?? '',
     originatingPlanId: planId,
-    originatingPlanRevision: { eventId: event.eventId, recordHash: event.recordHash, modifiedAt: plan.modifiedAt },
+    originatingPlanRevision: { eventId, recordHash: hash, modifiedAt: plan.modifiedAt,
+      snapshot: { version: 1, accountId: account, record: structuredClone(entity.record) as Record<string, import('./types').JsonValue> } },
     date: start?.slice(0, 10) || new Date().toISOString().slice(0, 10),
     timeIn: start?.includes('T') ? start.slice(11, 16) : '',
     notes: [plan.notes, `Created from dive plan: ${plan.name}`].filter(Boolean).join('\n\n'),
@@ -312,6 +309,11 @@ export async function loadOriginatingPlan(dive: DiveRecord): Promise<DiveTripRec
   const revision = dive.originatingPlanRevision;
   const account = currentDiveAccount();
   if (!account || !dive.originatingPlanId || !revision) return null;
+  if (revision.snapshot) {
+    const snapshot = revision.snapshot;
+    if (snapshot.version !== 1 || snapshot.accountId !== account || snapshot.record.entityId !== dive.originatingPlanId || await recordHash(snapshot.record) !== revision.recordHash || currentDiveAccount() !== account) return null;
+    return structuredClone(snapshot.record) as unknown as DiveTripRecord;
+  }
   const event = await zeustekDb.events.get(revision.eventId);
   if (currentDiveAccount() !== account || !event?.record || event.entityId !== `dive:${account}:${dive.originatingPlanId}` || event.entityType !== 'trip' || event.recordHash !== revision.recordHash || await recordHash(event.record) !== revision.recordHash) return null;
   return event.record as unknown as DiveTripRecord;

@@ -1,5 +1,5 @@
 import { listDiveTrips, saveDiveTrip, type DiveTripRecord, type DiveSiteRecord, type Stored } from './dive-planning';
-import { createDiveDraftFromPlan } from './dive-context';
+import { createDiveDraftFromPlan, loadOriginatingPlan } from './dive-context';
 import type { DiveRecord } from './dives';
 import type { LoadoutApplication } from './loadouts-gas';
 import type { PlannedCylinderAssignment } from './technical-workspace';
@@ -16,6 +16,12 @@ export interface PlanTeamMember {
   specialties?: string | null;
 }
 export interface PlanConditionSnapshot {
+  conditionsV1?:import('../weather/conditions-model').ConditionsSnapshot;
+  surfaceTemperatureC?:number|null;
+  providerId?: import('../weather/provider-contract').WeatherProviderId;
+  sourceCoordinates?: {latitude:number;longitude:number};
+  sourceTime?: string;
+  requestKey?: string;
   capturedAt?: string | null;
   provenance?: 'recorded' | 'imported' | 'calculated' | 'inferred' | 'forecast' | 'seasonal' | 'unavailable';
   weatherAvailability?: 'available' | 'rate-limited' | 'unavailable';
@@ -94,6 +100,7 @@ export interface PlanGasReference {
   };
 }
 export interface EnrichedDivePlanExtension {
+  weatherProvider?: import('../weather/provider-contract').WeatherProviderId;
   lifecycleStatus?: PlanLifecycleStatus;
   tripId?: string | null;
   objective?: string | null;
@@ -273,8 +280,8 @@ export async function setPlanLifecycleStatus(plan: StoredEnrichedDivePlan, lifec
 }
 
 export async function createDiveDraftFromEnrichedPlan(planId: string): Promise<Partial<DiveRecord>> {
-  const [base, plans] = await Promise.all([createDiveDraftFromPlan(planId), listEnrichedDivePlans()]);
-  const plan = plans.find((item) => item.entityId === planId);
+  const base = await createDiveDraftFromPlan(planId);
+  const plan = await loadOriginatingPlan(base as DiveRecord) as EnrichedDivePlan | null;
   if (!plan) throw new Error('This Dive Plan is no longer available on this device.');
   const equipmentSetId = plan.equipmentSetId ?? plan.equipmentSetIds?.[0];
   return {

@@ -20,7 +20,7 @@
 }
 .hero span,
 .detailGrid h3,
-.editor legend {
+.editorContent legend {
   color: #ffb000;
   font-weight: 800;
   letter-spacing: 0.07em;
@@ -137,12 +137,12 @@
   text-align: center;
   padding: 2rem;
 }
-.dialog,
-.editor {
+.dialog {
   width: min(72rem, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
   overflow: auto;
 }
+.editorContent { width:100%; min-width:0; }
 .detailGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -150,7 +150,7 @@
   padding: 0.2rem;
 }
 .detailGrid section,
-.editor fieldset {
+.editorContent fieldset {
   border: 1px solid rgba(30, 211, 255, 0.34);
   border-radius: 14px;
   background: #061218;
@@ -167,7 +167,7 @@
   display: grid;
   gap: 1rem;
 }
-.editor fieldset {
+.editorContent fieldset {
   display: grid;
   gap: 0.9rem;
 }
@@ -226,7 +226,7 @@
   padding: 0.75rem;
 }
 .dialog footer,
-.editor footer {
+.editorContent footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.7rem;
@@ -249,8 +249,7 @@
   .grid {
     grid-template-columns: 1fr;
   }
-  .dialog,
-  .editor {
+  .dialog {
     width: calc(100vw - 0.7rem);
     max-height: calc(100vh - 0.7rem);
   }
@@ -271,14 +270,14 @@
 .personCard,
 .empty,
 .detailGrid section,
-.editor fieldset {
+.editorContent fieldset {
   border-color: var(--zt-border-cyan);
   background-color: var(--zt-surface-card);
   border-radius: var(--zt-radius-card);
 }
 .hero span,
 .detailGrid h3,
-.editor legend {
+.editorContent legend {
   color: var(--zt-accent-orange);
 }
 .hero p,
@@ -300,7 +299,7 @@
 }
 .personCard:focus-within,
 .toolbar :is(input,select):focus-visible,
-.editor :is(input,select,textarea):focus-visible,
+.editorContent :is(input,select,textarea):focus-visible,
 .dialog :is(button,a):focus-visible {
   outline: 3px solid var(--zt-focus);
   outline-offset: 3px;
@@ -314,6 +313,6 @@
   border-color: var(--zt-caution);
 }
 .dialog footer,
-.editor footer {
+.editorContent footer {
   flex-wrap: wrap;
 }

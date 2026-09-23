@@ -466,3 +466,5 @@
 .heroIntro {
   min-width: 0;
 }
+
+:global([data-record-editor-workspace]) .editor,:global([data-record-editor-workspace]) .referenceEditor{width:100%;max-width:100%;max-height:none;overflow:visible}

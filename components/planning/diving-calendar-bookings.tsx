@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { AccessibleDialog } from '../accessible-dialog';
+import { bookingRecordLinks } from '../../lib/planning/booking-record-links';
 import { useRecordRefresh } from '../record-status';
 import { CollapsibleWorkCard } from '../workflow/collapsible-work-card';
 import { ZeusTekIcon } from '../zeustek-icon';
@@ -466,24 +467,9 @@ function BookingDetail({
           <dd>{item.notes || item.quickNotes || 'No notes yet.'}</dd>
         </div>
       </dl>
-      <h3>Linked to</h3>
-      <div className={styles.linkRows}>
-        <button disabled={!item.linkedTripId} onClick={() => go?.('Trips')}>
-          Trip <ChevronRight size={14} />
-        </button>
-        <button
-          disabled={!item.linkedDivePlanId}
-          onClick={() => go?.('Dive Plans')}
-        >
-          Dive Plan <ChevronRight size={14} />
-        </button>
-        <button
-          disabled={!item.linkedGasPlanId}
-          onClick={() => go?.('Gas Planning')}
-        >
-          Gas Plan <ChevronRight size={14} />
-        </button>
-      </div>
+      {bookingRecordLinks(item).length>0&&<><h3>Linked records</h3><div className={styles.linkRows}>
+        {bookingRecordLinks(item).map(link=><a className="focus-secondary" key={link.label} href={link.href} onClick={go?event=>{event.preventDefault();go(link.destination);}:undefined}>{link.label}<ChevronRight size={14}/></a>)}
+      </div></>}
       <h3>Quick actions</h3>
       <div className={styles.actionGrid}>
         <button className="focus-secondary" onClick={() => go?.('Dive Plans')}>

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Download, FileArchive, Upload, X } from 'lucide-react';
+import {QuestionMaintenance} from './question-maintenance';
+import {RecordEditorWorkspace} from './shared/record-editor-workspace';
 import { AccessibleDialog } from './accessible-dialog';
 import { CollapsibleWorkCard } from './workflow/collapsible-work-card';
 import {
@@ -83,10 +85,9 @@ export function KnowledgeReviewWorkflow({
   } | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
-  const rows = useMemo(
-    () => sortedQuestionManagementRows(sets, reviewStates),
-    [sets, reviewStates],
-  );
+  const [showHistorical,setShowHistorical]=useState(false);
+  const latestVersions=useMemo(()=>new Map(sets.map(set=>[set.setId,Math.max(...sets.filter(other=>other.setId===set.setId).map(other=>other.version))])),[sets]);
+  const rows=useMemo(()=>sortedQuestionManagementRows(sets,reviewStates).filter(row=>showHistorical||row.set.version===latestVersions.get(row.set.setId)),[sets,reviewStates,showHistorical,latestVersions]);
   const diagnostics = useMemo(
     () => learningDiagnostics(attempts, reviewStates),
     [attempts, reviewStates],
@@ -300,6 +301,7 @@ export function KnowledgeReviewWorkflow({
                 Attempts
               </button>
             </fieldset>
+            {reviewMode==='questions'&&<label><input type="checkbox" checked={showHistorical} onChange={event=>setShowHistorical(event.target.checked)}/> Show historical bank versions</label>}
             <div className={styles.list}>
               {reviewMode === 'questions' &&
                 (expanded ? rows : rows.slice(0, previewLimit)).map(
@@ -316,7 +318,7 @@ export function KnowledgeReviewWorkflow({
                       <span>
                         <b>{question.prompt}</b>
                         <small>
-                          {question.topic} ·{' '}
+                          v{set.version} · {set.version===latestVersions.get(set.setId)?'Current bank':'Historical bank · not selected for new tests'} · {question.topic} ·{' '}
                           {question.exactTopic || question.topic} ·{' '}
                           {question.objective || 'Objective not recorded'} ·{' '}
                           {difficultyLabel(question.difficulty)}
@@ -508,6 +510,7 @@ function QuestionReviewDialog({
   );
   const [note, setNote] = useState(target.state?.reviewNote ?? '');
   const [busy, setBusy] = useState(false);
+  const [maintaining,setMaintaining]=useState(false);
   const [error, setError] = useState('');
   const act = async (action: 'flag' | 'restore' | 'suppress') => {
     setBusy(true);
@@ -539,13 +542,14 @@ function QuestionReviewDialog({
     }
   };
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        editable
-        containDismiss
+    <>
+      <RecordEditorWorkspace
+        busy={busy}
+        {...(!maintaining?{save:()=>act('flag'),saveLabel:'Mark needs review',saveDisabled:reason==='other'&&!note.trim()}: {})}
+        value={{reason,note}}
         label="Review or suppress question"
         close={close}
-        className={`focus-modal ${styles.dialog}`}
+        contentClassName={styles.dialog}
       >
         <header>
           <div>
@@ -594,6 +598,8 @@ function QuestionReviewDialog({
           <b>Expected answer:</b> {target.question.answers.join(' / ')}
         </p>
         <p>{target.question.explanation}</p>
+        <QuestionMaintenance set={target.set} question={target.question} saved={saved} opened={()=>setMaintaining(true)}/>
+        {!maintaining&&<>
         <label>
           Reason
           <select
@@ -617,13 +623,14 @@ function QuestionReviewDialog({
             placeholder="Required when the reason is Other"
           />
         </label>
+        </>}
         <p className={styles.warning}>
           <AlertTriangle />
           Suppression affects new tests only. Historical attempt snapshots,
           scores and question wording remain unchanged and auditable.
         </p>
         {error && <p role="alert">{error}</p>}
-        <footer className={styles.detailActions}>
+        {!maintaining&&<div className={styles.detailActions}>
           <button
             type="button"
             className="focus-secondary"
@@ -661,9 +668,9 @@ function QuestionReviewDialog({
           >
             Mark needs review
           </button>
-        </footer>
-      </AccessibleDialog>
-    </div>
+        </div>}
+      </RecordEditorWorkspace>
+    </>
   );
 }
 

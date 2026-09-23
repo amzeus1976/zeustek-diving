@@ -1,0 +1,50 @@
+{
+  "baseline": "b2e86827c19239776c80b51fc93067c7dc4b18ac",
+  "files": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "workingTreeSha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206"
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "workingTreeSha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec"
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "workingTreeSha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8"
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "workingTreeSha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba"
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "workingTreeSha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6"
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "sha256": "0e4e7054e7c858e351ad5a9b6a4130d08e108e114a57001294c9d9a41fb94104",
+      "workingTreeSha256": "0e4e7054e7c858e351ad5a9b6a4130d08e108e114a57001294c9d9a41fb94104"
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "workingTreeSha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633"
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "workingTreeSha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1"
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "workingTreeSha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485"
+    }
+  ]
+}

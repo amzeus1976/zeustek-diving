@@ -1,0 +1,11 @@
+.workspace{display:grid;gap:1rem;width:100%;min-width:0;color:var(--foreground,#edf6fa);outline:none;scroll-margin-top:var(--record-editor-top,80px)}
+.header{position:sticky;top:var(--record-editor-top,80px);z-index:12;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem;border:1px solid #1b5361;border-radius:14px;background:#08151ded;backdrop-filter:blur(14px)}
+.header h1{font-size:clamp(1.25rem,2.2vw,1.85rem);line-height:1.2;margin:.35rem 0;color:#ff9e48}
+.header small{color:#abc5d0}
+.actions{display:flex;gap:.65rem;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.body{min-width:0;display:grid;gap:1rem}
+.body>header,.body>footer{display:none}
+.workspace input,.workspace select,.workspace textarea{max-width:100%;min-width:0}
+.workspace fieldset{min-width:0}
+.workspace textarea{min-height:7rem;resize:vertical}
+@media(max-width:600px){.header{position:static;align-items:stretch;flex-direction:column;padding:.85rem}.actions>button{flex:1}.workspace{gap:.75rem}}

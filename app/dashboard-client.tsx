@@ -1,8 +1,10 @@
 'use client';
+import {useSiteForecasts,SevenDayForecastCard} from '../components/weather/overview-conditions';
+import {ConditionsWorkspace} from '../components/weather/conditions-workspace';
+import {ConditionsConfiguration} from '../components/weather/conditions-configuration';
 import {
   Anchor,
   Clock,
-  Thermometer,
   Hash,
   Archive,
   BarChart3,
@@ -18,8 +20,6 @@ import {
   ChevronRight,
   ChevronsUpDown,
   Cloud,
-  CloudFog,
-  CloudLightning,
   CloudRain,
   CloudSun,
   Compass,
@@ -46,8 +46,6 @@ import {
   ShieldCheck,
   ShipWheel,
   Star,
-  Sun,
-  Snowflake,
   ShoppingBag,
   Trash2,
   Upload,
@@ -57,12 +55,20 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
+import { buddyInitials } from '@/lib/people/buddy-links';
 import { AppChangelog, AppVersionLink } from '@/components/app-changelog';
 import { listOperators, saveOperator, deleteOperator, type OperatorRecord } from '@/lib/offline/dive-planning';
+import {newsArticleInput,newsRecordForStory} from '@/lib/news-records';
+import {applySettingsPatch,type ConfigurationDomain} from '@/lib/admin/configuration';
+import {buildDiverSummary,summaryText,summaryCsv,summaryJson,type SummaryOptions} from '@/lib/exports/diver-summary';
+import {renderSummaryPdf,renderSummaryDocx,collectSummaryImages} from '@/lib/exports/summary-documents';
+import {safeDiagnostic,retainDiagnostics,diagnosticCsv,diagnosticJson,type DiagnosticEntry} from '@/lib/admin/diagnostics';
+import {GMAIL_SYNC_DISABLED_MESSAGE,gmailDiagnostic,type GmailDiagnosticCode,type GmailConnectionStatus,type GmailSyncRun} from '@/lib/gmail-contract';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
 import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/lib/zeustek-icons';
 import {fillMissingGasRates} from '@/lib/gas-rates';
@@ -95,17 +101,20 @@ import { CylindersGas, Loadouts } from '@/components/loadouts-gas';
 import { isCylinderEquipment } from '@/lib/offline/loadouts-gas';
 import { SkillsCurrency } from '@/components/skills-currency';
 import { TechnicalWorkspace } from '@/components/technical-workspace';
-import { ProfessionalDevelopment } from '@/components/professional-development';
+const ProfessionalDevelopment=lazy(()=>import('@/components/professional-development').then(module=>({default:module.ProfessionalDevelopment})));
 import { DivePlanningCentre } from '@/components/dive-planning-centre';
-import { ExperienceAnalytics } from '@/components/experience-analytics';
-import { KnowledgeCentre } from '@/components/knowledge-centre';
-import { DiveComputerData } from '@/components/dive-computer-data';
+const ExperienceAnalytics=lazy(()=>import('@/components/experience-analytics').then(module=>({default:module.ExperienceAnalytics})));
+const KnowledgeCentre=lazy(()=>import('@/components/knowledge-centre').then(module=>({default:module.KnowledgeCentre})));
+const DiveComputerData=lazy(()=>import('@/components/dive-computer-data').then(module=>({default:module.DiveComputerData})));
 import { DivingCalendarBookings } from '@/components/planning/diving-calendar-bookings';
-import { GasPlanning } from '@/components/planning/gas-planning';
+const GasPlanning=lazy(()=>import('@/components/planning/gas-planning').then(module=>({default:module.GasPlanning})));
 import { CollapsibleWorkCard } from '@/components/workflow/collapsible-work-card';
 import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-review';
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
-import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, resolveWorkflowRoute, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
+import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
+import { useWorkflowNavigation } from '@/components/shared/use-workflow-navigation';
+import { DiveCentres } from '@/components/dive-centres/dive-centres';
+import { workflowDestinationUrl } from '@/lib/workflow/workflow-destination';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
 import {
@@ -247,18 +256,20 @@ const workflowIcons: Record<string, LucideIcon> = {
   'Dive News': Newspaper, 'Professional Development': GraduationCap, Admin: ListChecks,
   Settings: Settings2, 'Data & Backups': Database, 'Diver Summary Export': Download,
 };
+const domainIconNames: Record<string,string> = {Overview:'overview',Insights:'insights',Logbook:'logbook','Dive Computer Imports':'dive-computer-imports',Sites:'sites','Dive Site Map':'dive-location-map',People:'people','Dive Centres':'dive-centres','Diving Calendar & Bookings':'calendar',Trips:'trips','Dive Plans':'dive-planning','Gas Planning':'gas-planning',Equipment:'equipment','Loadouts & Gas':'equipment','Cylinders & Gas':'cylinders','Dive Bucket List':'bucket-list',Training:'certifications','Skills & Currency':'dive-skills','Technical Diving':'technical-diving'};
 const quickNavigation = ['Overview', 'Logbook', 'Dive Plans', 'Equipment', 'Data & Backups']
   .map((route) => WORKFLOW_ROUTES.find((item) => item.route === route))
   .filter((item): item is (typeof WORKFLOW_ROUTES)[number] => Boolean(item));
 type AdminLogEntry = { timestamp: string; category: string; status: 'updated' | 'skipped' | 'info'; subject: string; detail: string };
 const ADMIN_LOG_KEY = 'zeustek-admin-diagnostics';
-function appendAdminLogs(entries: AdminLogEntry[]) {
-  if (typeof window === 'undefined' || !entries.length) return;
-  try {
-    const current = JSON.parse(localStorage.getItem(ADMIN_LOG_KEY) || '[]') as AdminLogEntry[];
-    localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify([...entries, ...current].slice(0, 2000)));
-  } catch { /* diagnostics must never interrupt the main operation */ }
+function readApplicationDiagnostics():DiagnosticEntry[]{
+  try {const raw=JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)||'[]') as unknown;return retainDiagnostics(Array.isArray(raw)?raw:[]);}catch{return [];}
 }
+function appendApplicationDiagnostic(code:DiagnosticEntry['code'],detail?:DiagnosticEntry['detail']){
+  if(typeof window==='undefined')return;
+  try{const entry=safeDiagnostic({code,time:new Date().toISOString(),detail});if(!entry)return;localStorage.setItem(ADMIN_LOG_KEY,JSON.stringify(retainDiagnostics([entry,...readApplicationDiagnostics()])));window.dispatchEvent(new Event('zeustek-admin-diagnostics-updated'));}catch{/* Logging must not interrupt application work. */}
+}
+function appendAdminLogs(entries:AdminLogEntry[]){if(entries.length)appendApplicationDiagnostic('operation-complete',{count:entries.length});}
 function WorkflowNavigation({ active, go }: { active: string; go: (route: string) => void }) {
   const [navigationState, setNavigationState] = useState(() => ({
     active,
@@ -277,7 +288,7 @@ function WorkflowNavigation({ active, go }: { active: string; go: (route: string
       const routes = workflowRoutesForSection(section.key);
       return <details className="workflow-nav-group" key={section.key} open={openSections.has(section.key)} onToggle={(event) => { const isOpen = event.currentTarget.open; setNavigationState((current) => { const next = new Set(current.openSections); if (isOpen) next.add(section.key); else next.delete(section.key); return { ...current, openSections: next }; }); }}>
         <summary>{section.label}<ChevronDown size={15}/></summary>
-        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><Icon size={18}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
+        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><ZeusTekAssetIcon name={domainIconNames[route.route] ?? null} decorative size={26} fallback={<Icon size={18}/>}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
       </details>;
     })}
   </nav>;
@@ -480,19 +491,28 @@ export default function DiveApp({ userId }: { userId: string }) {
   configureDiveStore(userId);
   const [active, setActive] = useState('Overview');
   const [destinationTab,setDestinationTab]=useState('');
+  const [destinationKey,setDestinationKey]=useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [draftDive, setDraftDive] = useState<(Partial<DiveRecord> & { entityId?: string }) | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const go = (next: string) => {
-    const resolved = resolveWorkflowRoute(next);
-    setDestinationTab(resolved === 'Diver Summary Export' ? 'Diver summary' : next);
+  const [compactViewport,setCompactViewport]=useState(false);
+  useEffect(()=>{const query=window.matchMedia('(max-width: 1000px)');const update=()=>setCompactViewport(query.matches);update();query.addEventListener('change',update);return()=>query.removeEventListener('change',update);},[]);
+  const go = useWorkflowNavigation((destination) => {
+    const resolved = destination.route;
+    setDestinationTab(resolved === 'Diver Summary Export' ? 'Diver summary' : destination.params?.tab ?? resolved);
     setActive(resolved === 'Diver Summary Export' ? 'Data & Backups' : resolved);
+    setDestinationKey(workflowDestinationUrl(destination));
     setMenuOpen(false);
-  };
+  });
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[active]);
+  useEffect(()=>{
+    const clientError=()=>appendApplicationDiagnostic('client-error');
+    const operation=(event:Event)=>{const detail=(event as CustomEvent<{state?:string}>).detail;if(detail?.state==='error')appendApplicationDiagnostic('sync-error');};
+    const diagnostic=(event:Event)=>{const detail=(event as CustomEvent<{code?:string}>).detail;const safe=safeDiagnostic({code:detail?.code,time:new Date().toISOString()});if(safe)appendApplicationDiagnostic(safe.code);};
+    window.addEventListener('error',clientError);window.addEventListener('unhandledrejection',clientError);window.addEventListener('zeustek-operation',operation);window.addEventListener('zeustek-diagnostic',diagnostic);
+    return()=>{window.removeEventListener('error',clientError);window.removeEventListener('unhandledrejection',clientError);window.removeEventListener('zeustek-operation',operation);window.removeEventListener('zeustek-diagnostic',diagnostic);};
+  },[]);
   useEffect(() => {
-    const requestedSection = new URLSearchParams(window.location.search).get('section');
-    if (requestedSection) go(requestedSection);
     const root = document.querySelector('.focus-content');
     if (!root) return;
     const reveal = (node: Node) => {
@@ -514,7 +534,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           onClick={() => setMenuOpen(false)}
         />
       )}
-      <aside className={`focus-sidebar ${menuOpen ? 'open' : ''}`}>
+      <aside className={`focus-sidebar ${menuOpen ? 'open' : ''}`} inert={compactViewport&&!menuOpen} aria-hidden={compactViewport&&!menuOpen}>
         <div className="focus-brand">
           <img src="/zeustek-wordmark.png" alt="ZeusTek Diving" />
           <button
@@ -557,10 +577,11 @@ export default function DiveApp({ userId }: { userId: string }) {
           </button>
         </header>
         <RecordOperationStatus />
-        <div className="focus-content"><ScreenTiming screen={active}>
+        <div className="focus-content"><ScreenTiming key={destinationKey} screen={active}>
           {active === 'Overview' && (
             <Overview openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />
           )}
+          <Suspense fallback={<output className="focus-copy">Loading workspace…</output>}>
           {active === 'Changelog' && <AppChangelog />}
           {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />}
           {active === 'Equipment' && <Equipment />}{' '}
@@ -575,7 +596,8 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
-          {active === 'People' && <PeopleOperators />}{' '}
+          {active === 'People' && <PeopleOperators go={go} />}{' '}
+          {active === 'Dive Centres' && <DiveCentres go={go} />}{' '}
           {active === 'Albums' && <Albums />}{' '}
           {active === 'Conservation & AWARE' && <ConservationPage go={go} />}{' '}
           {active === 'Training' && <TrainingV2 go={go} />}{' '}
@@ -593,6 +615,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sync' && <SyncCentre />}{' '}
           {active === 'Backups' && <BackupsScreen />}{' '}
           {active === 'Settings' && <SiteConfiguration go={go} />}
+          </Suspense>
         </ScreenTiming></div>
       </section>
       <nav className="focus-mobile-nav">
@@ -621,7 +644,10 @@ const configurationLinks = [
   ['equipment-category-icons', 'Equipment category icons'],
   ['training-agency-logos', 'Training agency logos'],
   ['overview-layout-awards', 'Insights layout / awards'],
+  ['map-settings', 'Google My Maps'],
+  ['record-settings', 'Dive numbering'],
   ['dive-news-settings', 'Dive News settings'],
+  ['weather-conditions', 'Weather & Conditions'],
   ['acceptance-fixture-review', 'Synthetic data & record controls'],
   ['other-site-data-tools', 'Other site data tools'],
 ] as const;
@@ -637,11 +663,17 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
     <Heading eyebrow="ADMIN · CONFIGURATION" title="Site Configuration" copy="Manage ZeusTek in compact sections; minimise anything you do not need today." action={<button className="focus-secondary" onClick={() => go('Data & Backups')}><Database size={15}/>Data & Backups</button>}/>
     <nav className="site-configuration-directory" aria-label="Site Configuration sections">{configurationLinks.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
     <div className="site-configuration-grid">
-      <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage, controlled lists, equipment icons and agency logos"><PlatformSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage and local device controls"><PlatformSettings section="overview" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="equipment-training-lists" defaultMinimized className="site-configuration-card" title="Equipment & training lists" eyebrow="GEAR · TRAINING" status="Agencies, qualifications, equipment categories and manufacturers"><PlatformSettings section="lists" /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="equipment-category-icons" defaultMinimized className="site-configuration-card" title="Equipment category icons" eyebrow="GEAR" status="Built-in and owner-uploaded category visuals"><PlatformSettings section="icons" /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="training-agency-logos" defaultMinimized className="site-configuration-card" title="Training agency logos" eyebrow="TRAINING" status="Owner-selected agency visuals"><PlatformSettings section="logos" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="skill-catalogue" defaultMinimized className="site-configuration-card" title="Skill Catalogue" eyebrow="DIVING CPD" status="Canonical groups, CSV and evidence definitions"><SkillCatalogue /></CollapsibleWorkCard>
-      <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Insights layout / awards" eyebrow="INSIGHTS" status="Choose 4, 8, 12, 16 or 20 analytics awards"><DashboardAwardsSettings /></CollapsibleWorkCard>
-      <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><NewsSourceSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="overview-layout-awards" defaultMinimized className="site-configuration-card" title="Insights layout / awards" eyebrow="INSIGHTS" status="Choose 4, 8, 12, 16 or 20 analytics awards"><ConfigurationPreferenceCard domain="insights" /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="map-settings" defaultMinimized className="site-configuration-card" title="Google My Maps" eyebrow="MAPS" status="Custom map link and export guidance"><ConfigurationPreferenceCard domain="maps" /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="record-settings" defaultMinimized className="site-configuration-card" title="Dive numbering" eyebrow="RECORDS" status="First lifetime Dive number"><ConfigurationPreferenceCard domain="records" /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="weather-conditions" defaultMinimized className="site-configuration-card" title="Weather & Conditions" eyebrow="DIVE CONDITIONS" status="Providers, official operators, source status and offline cache"><ConditionsConfiguration /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><><ConfigurationPreferenceCard domain="news"/><NewsSourceSettings /></></CollapsibleWorkCard>
       <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Synthetic data & record controls" eyebrow="OWNER CONFIRMATION" status="All canonical kinds, dependencies and safe actions" alert="No automatic deletion"><SyntheticFixtureReview go={go}/></CollapsibleWorkCard>
       <CollapsibleWorkCard id="other-site-data-tools" defaultMinimized className="site-configuration-card" title="Other site data tools" eyebrow="ADMIN" status="Diagnostics and records needing attention"><AdminPanel /></CollapsibleWorkCard>
     </div>
@@ -712,157 +744,31 @@ const DEFAULT_DASHBOARD_AWARDS = [
 ];
 const DEFAULT_NEWSLETTER_EMAIL = 'zeustekdivenews@gmail.com';
 
-function DashboardAwardsSettings() {
-  const [record, setRecord] = useState<Stored<DashboardSettingsRecord> | null>(null);
-  const [selected, setSelected] = useState<string[]>(DEFAULT_DASHBOARD_AWARDS);
-  const [maximum, setMaximum] = useState(8);
-  const [diveNumberStart, setDiveNumberStart] = useState(1);
-  const [customGoogleMapEmbedUrl, setCustomGoogleMapEmbedUrl] = useState('');
-  const [newsletterEmail, setNewsletterEmail] = useState(DEFAULT_NEWSLETTER_EMAIL);
-  const [message, setMessage] = useState('');
-  const [saving, setSaving] = useState(false);
-  useEffect(() => {
-    void listDashboardSettings().then((records) => {
-      const current = records[0] ?? null;
-      setRecord(current);
-      if (current) {
-        setMaximum(normaliseInsightAwardCount(current.maxAwards));
-        setDiveNumberStart(Math.max(1, current.diveNumberStart || 1));
-        setSelected(current.selectedAwards ?? DEFAULT_DASHBOARD_AWARDS);
-        setCustomGoogleMapEmbedUrl(current.customGoogleMapEmbedUrl ?? '');
-        setNewsletterEmail(current.newsletterEmail ?? DEFAULT_NEWSLETTER_EMAIL);
-      }
-    });
-  }, []);
-  function toggleAward(id: string, checked: boolean) {
-    setMessage('');
-    setSelected((current) => checked ? [...current, id] : current.filter((value) => value !== id));
-  }
-  async function save() {
-    setSaving(true);
-    setMessage('Saving…');
-    try {
-      const nextSelected = selected;
-      const result = await saveDashboardSettings({
-        ...(record ? { entityId: record.entityId } : {}),
-        selectedAwards: nextSelected,
-        maxAwards: maximum,
-        diveNumberStart,
-        customGoogleMapEmbedUrl: normaliseMyMaps(customGoogleMapEmbedUrl),
-        newsletterEmail: newsletterEmail.trim(),
-        homeWeatherSiteIds: record?.homeWeatherSiteIds ?? [],
-      });
-      setSelected(nextSelected);
-      if (!record) setRecord({ entityId: result.id, selectedAwards: nextSelected, maxAwards: maximum, diveNumberStart, customGoogleMapEmbedUrl: customGoogleMapEmbedUrl.trim(), newsletterEmail: newsletterEmail.trim(), homeWeatherSiteIds: [], createdAt: '', modifiedAt: '' });
-      setMessage('Saved. Dive numbers were recalculated by date and time.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not save the settings. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
-  return (
-    <Card className="dashboard-award-settings">
-      <span className="focus-eyebrow">INSIGHTS LAYOUT</span>
-      <h2>Insights awards</h2>
-      <p className="focus-copy">Choose the achievements and statistics shown in Experience &amp; Analytics. Overview remains an at-a-glance status page.</p>
-      <label className="award-limit">Maximum shown<select value={maximum} onChange={(event) => {
-        const next = Number(event.target.value);
-        setMaximum(next);
-      }}>{INSIGHT_AWARD_COUNTS.map((value) => <option key={value}>{value}</option>)}</select></label>
-      <label className="award-limit">First lifetime dive number<input type="number" min="1" value={diveNumberStart} onChange={(event) => setDiveNumberStart(Math.max(1, Number(event.target.value) || 1))} /></label>
-      <label className="record-wide">Google My Maps share URL or map ID<input type="text" value={customGoogleMapEmbedUrl} onChange={(event) => setCustomGoogleMapEmbedUrl(event.target.value)} placeholder="https://www.google.com/maps/d/viewer?mid=YOUR_MAP_ID" /><small>Paste a My Maps viewer, share or embed link, or its map ID. This opens your custom map in the Google Maps view. Export KML to update its pins; changes are not automatic.</small></label>
-      <label className="record-wide">Dive newsletter inbox<input type="email" value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} placeholder={DEFAULT_NEWSLETTER_EMAIL} /><small>This address is shown on Dive News for newsletter signups and can be connected through the read-only Google mailbox panel there.</small></label>
-      <div className="award-choice-grid">
-        {DASHBOARD_AWARDS.map(([id, label]) => <label key={id}><input type="checkbox" checked={selected.includes(id)} onChange={(event) => toggleAward(id, event.target.checked)} />{label}</label>)}
-      </div>
-      <div className="award-settings-footer"><span>{message}</span><button className="focus-primary" disabled={saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Insights awards'}</button></div>
-    </Card>
-  );
-}
-
-type ForecastPayload = {
-  daily?: {
-    time?: string[];
-    weather_code?: number[];
-    temperature_2m_max?: number[];
-    temperature_2m_min?: number[];
-    precipitation_probability_max?: number[];
-    precipitation_sum?: number[];
-    wind_speed_10m_max?: number[];
-  };
-  daily_units?: Record<string, string>;
-};
-
-function weatherIcon(code = 3, size = 18) {
-  if (code === 0) return <Sun size={size} />;
-  if ([1, 2].includes(code)) return <CloudSun size={size} />;
-  if ([45, 48].includes(code)) return <CloudFog size={size} />;
-  if (code >= 71 && code <= 77) return <Snowflake size={size} />;
-  if (code >= 95) return <CloudLightning size={size} />;
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return <CloudRain size={size} />;
-  return <Cloud size={size} />;
-}
-
-function forecastDescription(code = 3) {
-  if (code === 0) return 'Clear';
-  if ([1, 2].includes(code)) return 'Partly cloudy';
-  if (code === 3) return 'Overcast';
-  if ([45, 48].includes(code)) return 'Fog';
-  if (code >= 71 && code <= 77) return 'Snow';
-  if (code >= 95) return 'Thunderstorms';
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'Rain';
-  return 'Mixed conditions';
-}
-
-function useSiteForecasts(sites: Array<Stored<DiveSiteRecord>>) {
-  const [forecasts, setForecasts] = useState<Record<string, ForecastPayload>>({});
-  const [error, setError] = useState('');
-  const signature = sites.map((site) => `${site.entityId}:${site.latitude}:${site.longitude}`).join('|');
-  useEffect(() => {
-    const located = sites.filter((site) => site.latitude != null && site.longitude != null).slice(0, 8);
-    if (!located.length) { setForecasts({}); setError(''); return; }
-    let cancelled = false;
-    async function load() {
-      const points = located.map((site) => `${site.latitude},${site.longitude}`).join('|');
-      let locations: Array<{ weather?: ForecastPayload | null }> = [];
-      try {
-        const response = await fetch(`/api/site-weather?${new URLSearchParams({ points })}`, { cache: 'no-store' });
-        const result = await response.json() as { locations?: Array<{ weather?: ForecastPayload | null }>; error?: string };
-        if (!response.ok || !result.locations) throw new Error(result.error || 'Shared forecast unavailable');
-        locations = result.locations;
-      } catch {
-        const direct = new URL('https://api.open-meteo.com/v1/forecast');
-        direct.search = new URLSearchParams({
-          latitude: located.map((site) => String(site.latitude)).join(','),
-          longitude: located.map((site) => String(site.longitude)).join(','),
-          daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max',
-          timezone: 'auto', forecast_days: '7', wind_speed_unit: 'mph',
-        }).toString();
-        const response = await fetch(direct);
-        if (!response.ok) throw new Error('Forecast service unavailable');
-        const result = await response.json() as ForecastPayload | ForecastPayload[];
-        locations = (Array.isArray(result) ? result : [result]).map((weather) => ({ weather }));
-      }
-      if (cancelled) return;
-      setForecasts(Object.fromEntries(located.flatMap((site, index) => locations[index]?.weather ? [[site.entityId, locations[index].weather as ForecastPayload]] : [])));
-      setError('');
-    }
-    void load().catch(() => { if (!cancelled) { setForecasts({}); setError('Forecast temporarily unavailable.'); } });
-    return () => { cancelled = true; };
-  }, [signature]);
-  return { forecasts, error };
-}
-
-function SevenDayForecastCard({ site, forecast, compact = false }: { site: Pick<DiveSiteRecord, 'name' | 'location'>; forecast?: ForecastPayload | undefined; compact?: boolean }) {
-  const daily = forecast?.daily;
-  const days = daily?.time?.slice(0, compact ? 4 : 7) ?? [];
-  return <Card className={`mini-forecast-card ${compact ? 'compact' : ''}`}>
-    <div className="mini-forecast-head"><div><span className="focus-eyebrow">{compact ? 'FORECAST' : '7-DAY DIVE WEATHER'}</span><h3>{site.name}</h3><small>{site.location}</small></div><CloudSun /></div>
-    {days.length ? <div className="forecast-days">{days.map((date, index) => {
-      const code = daily?.weather_code?.[index] ?? 3;
-      return <div key={date} title={forecastDescription(code)}><b>{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</b>{weatherIcon(code, compact ? 17 : 20)}<span>{Math.round(daily?.temperature_2m_max?.[index] ?? 0)}°</span><small>{Math.round(daily?.wind_speed_10m_max?.[index] ?? 0)} mph</small></div>;
-    })}</div> : <p className="focus-copy">Loading seven-day forecast…</p>}
+function ConfigurationPreferenceCard({domain}:{domain:ConfigurationDomain}) {
+  const [record,setRecord]=useState<Stored<DashboardSettingsRecord>|null>(null);
+  const [selected,setSelected]=useState<string[]>(DEFAULT_DASHBOARD_AWARDS);
+  const [maximum,setMaximum]=useState(8);
+  const [diveNumberStart,setDiveNumberStart]=useState(1);
+  const [customGoogleMapEmbedUrl,setMap]=useState('');
+  const [newsletterEmail,setNewsletter]=useState(DEFAULT_NEWSLETTER_EMAIL);
+  const [message,setMessage]=useState('');
+  const [saving,setSaving]=useState(false);
+  useEffect(()=>{let active=true;void listDashboardSettings().then(rows=>{if(!active)return;const row=rows[0]??null;setRecord(row);setSelected(row?.selectedAwards??DEFAULT_DASHBOARD_AWARDS);setMaximum(normaliseInsightAwardCount(row?.maxAwards));setDiveNumberStart(Math.max(1,row?.diveNumberStart??1));setMap(row?.customGoogleMapEmbedUrl??'');setNewsletter(row?.newsletterEmail??DEFAULT_NEWSLETTER_EMAIL);}).catch(()=>{if(active)setMessage('Settings could not be loaded. Reopen this card to retry.');});return()=>{active=false;};},[]);
+  async function save(){setSaving(true);setMessage('Saving…');try{
+    const patch=domain==='insights'?{selectedAwards:selected,maxAwards:maximum}:domain==='maps'?{customGoogleMapEmbedUrl}:domain==='news'?{newsletterEmail:newsletterEmail.trim()}:{diveNumberStart};
+    const latest=(await listDashboardSettings())[0]??null;
+    const merged=applySettingsPatch({selectedAwards:DEFAULT_DASHBOARD_AWARDS,maxAwards:8,diveNumberStart:1,customGoogleMapEmbedUrl:'',newsletterEmail:DEFAULT_NEWSLETTER_EMAIL,homeWeatherSiteIds:[],...latest},domain,patch);
+    await saveDashboardSettings(merged);
+    const fresh=(await listDashboardSettings())[0]??null;setRecord(fresh);setMessage('Saved.');
+  }catch(error){setMessage(error instanceof Error?error.message:'Settings could not be saved.');}finally{setSaving(false);}}
+  return <Card className="dashboard-award-settings">
+    <span className="focus-eyebrow">{domain==='insights'?'INSIGHTS LAYOUT':domain==='maps'?'MAPS':domain==='news'?'DIVE NEWS':'RECORDS'}</span>
+    <h2>{domain==='insights'?'Insights awards':domain==='maps'?'Google My Maps':domain==='news'?'Newsletter inbox':'Dive numbering'}</h2>
+    {domain==='insights'&&<><p className="focus-copy">Select the achievements shown in Experience & Analytics.</p><label className="award-limit">Maximum shown<select value={maximum} onChange={event=>setMaximum(Number(event.target.value))}>{INSIGHT_AWARD_COUNTS.map(value=><option key={value}>{value}</option>)}</select></label><div className="award-choice-grid">{DASHBOARD_AWARDS.map(([id,label])=><label key={id}><input type="checkbox" checked={selected.includes(id)} onChange={event=>setSelected(current=>event.target.checked?[...current,id]:current.filter(item=>item!==id))}/>{label}</label>)}</div></>}
+    {domain==='maps'&&<label className="record-wide">Google My Maps share URL or map ID<input value={customGoogleMapEmbedUrl} onChange={event=>setMap(event.target.value)} placeholder="https://www.google.com/maps/d/viewer?mid=YOUR_MAP_ID"/><small>Paste a Google My Maps viewer, share or embed link. Export KML to update its pins.</small></label>}
+    {domain==='news'&&<label className="record-wide">Dive newsletter inbox<input type="email" value={newsletterEmail} onChange={event=>setNewsletter(event.target.value)} placeholder={DEFAULT_NEWSLETTER_EMAIL}/><small>The connected read-only Google mailbox is managed from Dive News.</small></label>}
+    {domain==='records'&&<label className="record-wide">First lifetime Dive number<input type="number" min="1" step="1" value={diveNumberStart} onChange={event=>setDiveNumberStart(Number(event.target.value))}/><small>Changes the displayed lifetime sequence derived from Dive dates.</small></label>}
+    <div className="award-settings-footer"><output>{message}</output><button className="focus-primary" disabled={saving||!record&&Boolean(message)&&message.startsWith('Settings could not')} onClick={()=>void save()}>{saving?'Saving…':`Save ${domain} settings`}</button></div>
   </Card>;
 }
 
@@ -937,10 +843,8 @@ function Overview({
     .flatMap((siteId) => { const site = weatherCandidateSites.find((candidate) => candidate.entityId === siteId); return site ? [site] : []; })
     .slice(0, 6);
   const forecastSites = [...featuredSites, ...(nextSite && !featuredSites.some((site) => site.entityId === nextSite.entityId) ? [nextSite] : [])].slice(0, 8);
-  const { forecasts, error: forecastError } = useSiteForecasts(forecastSites);
-  const nextDaily = nextSite ? forecasts[nextSite.entityId]?.daily : undefined;
-  const nextDateIndex = nextTrip?.startDate && nextDaily?.time ? nextDaily.time.indexOf(nextTrip.startDate) : -1;
-  const nextWeatherIndex = nextDateIndex != null && nextDateIndex >= 0 ? nextDateIndex : 0;
+  const { forecasts, error: forecastError, busy:forecastBusy, refresh:refreshForecasts } = useSiteForecasts(forecastSites);
+  const nextForecast = nextSite ? forecasts[nextSite.entityId]?.days.find(day=>day.date===nextTrip?.startDate) : undefined;
   const serviceOverviewItems = overviewServiceItems(equipment, dives, 8);
   const serviceWarningCount = serviceOverviewItems.filter((item) => equipmentServiceStatus(item, dives).state !== 'current').length;
   async function saveHomeWeatherSelection(nextIds: string[]) {
@@ -1006,10 +910,7 @@ function Overview({
                   .join(' · ')
               : 'Add a trip when the plan is confirmed and it will appear here.'}
           </p>
-          {nextSite && nextDaily?.time?.length ? <div className="next-dive-weather">
-            {weatherIcon(nextDaily.weather_code?.[nextWeatherIndex] ?? 3, 24)}
-            <div><b>{forecastDescription(nextDaily.weather_code?.[nextWeatherIndex] ?? 3)}</b><span>{Math.round(nextDaily.temperature_2m_min?.[nextWeatherIndex] ?? 0)}–{Math.round(nextDaily.temperature_2m_max?.[nextWeatherIndex] ?? 0)}°C · wind to {Math.round(nextDaily.wind_speed_10m_max?.[nextWeatherIndex] ?? 0)} mph</span></div>
-          </div> : nextTrip && <small className="next-weather-note">{nextSite ? 'Loading forecast…' : 'Link this plan to a saved site to show its weather.'}</small>}
+          {nextForecast ? <div className="next-dive-weather"><CloudSun size={24}/><div><b>{nextForecast.summary??'Atmospheric forecast'}</b><span>{nextForecast.minimumC==null?'Unknown':Math.round(nextForecast.minimumC)}–{nextForecast.maximumC==null?'Unknown':Math.round(nextForecast.maximumC)}°C · wind {nextForecast.windMaximumMps==null?'unknown':`to ${Math.round(nextForecast.windMaximumMps*2.236936)} mph`}</span></div></div> : nextTrip && <small className="next-weather-note">{nextSite ? 'Choose Get weather. Forecasts are shown only for the actual planned date.' : 'Link this plan to a saved site to show its weather.'}</small>}
           <button onClick={() => go('Dive Plans')}>
             Open dive plans <ChevronRight size={15} />
           </button>
@@ -1043,6 +944,7 @@ function Overview({
       <section className="home-weather-section">
         <div className="focus-card-head"><div><span className="focus-eyebrow">HOME DIVE FORECASTS</span><h2>Seven-day conditions</h2><p className="focus-copy">Choose up to six saved sites, or show no forecast cards.</p></div><button className="focus-secondary" aria-expanded={weatherPickerOpen} onClick={() => setWeatherPickerOpen((current) => !current)}>{weatherPickerOpen ? 'Close selector' : 'Choose sites'}</button></div>
         {weatherPickerOpen && <Card className="home-weather-picker"><div className="home-weather-picker-head"><div><h3>Forecast sites</h3><p className="focus-copy">Selections save automatically and sync across devices.</p></div><label><input type="checkbox" checked={selectedHomeWeatherSiteIds.length === 0} disabled={weatherSelectionSaving} onChange={(event) => { if (event.target.checked) void saveHomeWeatherSelection([]); }} /> Don’t show any</label></div><div className="home-weather-options">{weatherCandidateSites.map((site) => { const checked = selectedHomeWeatherSiteIds.includes(site.entityId); return <label key={site.entityId}><input type="checkbox" checked={checked} disabled={weatherSelectionSaving || (!checked && selectedHomeWeatherSiteIds.length >= 6)} onChange={(event) => void saveHomeWeatherSelection(event.target.checked ? [...selectedHomeWeatherSiteIds, site.entityId] : selectedHomeWeatherSiteIds.filter((siteId) => siteId !== site.entityId))} /><span><b>{site.name}</b><small>{site.location || site.country || 'Location not recorded'}</small></span></label>; })}</div><small className="home-weather-picker-status">{weatherSelectionSaving ? 'Saving selection…' : `${selectedHomeWeatherSiteIds.length} of 6 selected`}</small></Card>}
+        <button className="focus-secondary" disabled={forecastBusy||!forecastSites.length} onClick={()=>void refreshForecasts()}>{forecastBusy?'Getting conditions…':'Get weather'}</button>
         {featuredSites.length ? <div className="home-weather-grid">{featuredSites.map((site) => <SevenDayForecastCard key={site.entityId} site={site} forecast={forecasts[site.entityId]} compact />)}</div> : <Card className="focus-empty"><CloudSun size={30}/><h2>No forecast sites selected</h2><p>Open the selector and tick up to six sites whenever you want forecasts here.</p><button className="focus-primary" onClick={() => setWeatherPickerOpen(true)}>Choose forecast sites</button></Card>}
         {forecastError && <div className="focus-notice"><CloudRain size={15}/>{forecastError}</div>}
       </section>
@@ -1072,30 +974,29 @@ function StatusRow({
   );
 }
 
-function AdminPanel() {
-  const [logs, setLogs] = useState<AdminLogEntry[]>([]);
-  const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
-  const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>([]);
-  useEffect(() => {
-    try { setLogs(JSON.parse(localStorage.getItem(ADMIN_LOG_KEY) || '[]') as AdminLogEntry[]); } catch { setLogs([]); }
-    void Promise.all([listDiveSites(), listDives()]).then(([nextSites, nextDives]) => { setSites(nextSites); setDives(nextDives); });
-  }, []);
-  const sitesWithoutCoordinates = sites.filter((site) => site.latitude == null || site.longitude == null);
-  const divesMissingTemperatures = dives.filter((dive) => dive.airTemperatureC == null || dive.surfaceTemperatureC == null);
-  function downloadLogs() {
-    const escape = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
-    const csv = [['Timestamp','Category','Status','Dive / site','Detail'], ...logs.map((entry) => [entry.timestamp,entry.category,entry.status,entry.subject,entry.detail])].map((row) => row.map(escape).join(',')).join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = `zeustek-admin-log-${new Date().toISOString().slice(0,10)}.csv`; anchor.click(); URL.revokeObjectURL(url);
+function AdminPanel(){
+  const [logs,setLogs]=useState<DiagnosticEntry[]>([]);
+  const [sites,setSites]=useState<Array<Stored<DiveSiteRecord>>>([]);
+  const [dives,setDives]=useState<Array<DiveRecord&{entityId:string}>>([]);
+  const [filterAt,setFilterAt] = useState(() => Date.now());
+  const [domain,setDomain]=useState('all');const [severity,setSeverity]=useState('all');const [since,setSince]=useState('all');const [message,setMessage]=useState('');
+  const refresh=useCallback(()=>{setLogs(readApplicationDiagnostics());setFilterAt(Date.now());},[]);
+  useEffect(()=>{refresh();window.addEventListener('zeustek-admin-diagnostics-updated',refresh);void Promise.all([listDiveSites(),listDives()]).then(([nextSites,nextDives])=>{setSites(nextSites);setDives(nextDives);}).catch(()=>setMessage('Record readiness could not be loaded; diagnostics remain available.'));return()=>window.removeEventListener('zeustek-admin-diagnostics-updated',refresh);},[refresh]);
+  const visible=logs.filter(row=>(domain==='all'||row.domain===domain)&&(severity==='all'||row.severity===severity)&&(since==='all'||Date.parse(row.time)>=filterAt-Number(since)*86_400_000));
+  const sitesWithoutCoordinates=sites.filter(site=>site.latitude==null||site.longitude==null);
+  const divesMissingTemperatures=dives.filter(dive=>dive.airTemperatureC==null||dive.surfaceTemperatureC==null);
+  function download(format:'csv'|'json'){
+    const content=format==='csv'?diagnosticCsv(visible):diagnosticJson(visible);const url=URL.createObjectURL(new Blob([content],{type:format==='csv'?'text/csv;charset=utf-8':'application/json'}));const anchor=document.createElement('a');anchor.href=url;anchor.download=`zeustek-application-diagnostics-${new Date().toISOString().slice(0,10)}.${format}`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   return <>
-    <Heading eyebrow="DIAGNOSTICS · IMPORTS · WEATHER" title="Admin" copy="See which records need attention and review detailed results from background data operations." action={<button className="focus-secondary" disabled={!logs.length} onClick={downloadLogs}><Upload size={15}/> Download log CSV</button>} />
-    <div className="course-summary-strip"><span><b>{logs.length}</b> diagnostic entries</span><span><b>{divesMissingTemperatures.length}</b> dives missing temperatures</span><span><b>{sitesWithoutCoordinates.length}</b> sites missing coordinates</span></div>
-    <Card><div className="focus-card-head"><div><span className="focus-eyebrow">LATEST OPERATIONS</span><h2>Site, weather and price-check logs</h2></div>{logs.length > 0 && <button className="focus-secondary" onClick={() => { localStorage.removeItem(ADMIN_LOG_KEY); setLogs([]); }}>Clear logs</button>}</div>
-      {logs.length ? <div className="admin-log-table">{logs.map((entry, index) => <div key={`${entry.timestamp}-${index}`} className={entry.status}><time>{new Date(entry.timestamp).toLocaleString()}</time><strong>{entry.subject}</strong><span>{entry.detail}</span><b>{entry.status}</b></div>)}</div> : <p className="focus-copy">No diagnostic operations have been recorded yet. Weather backfills and wishlist price checks will add detailed results here.</p>}
+    <Heading eyebrow="ZEUSTEK APPLICATION DIAGNOSTICS" title="Site Logs" copy="Review local application operations and errors on this device. Hosting security logs are not included." />
+    <div className="course-summary-strip"><span><b>{logs.length}</b> retained entries</span><span><b>{divesMissingTemperatures.length}</b> Dives missing temperatures</span><span><b>{sitesWithoutCoordinates.length}</b> Sites missing coordinates</span></div>
+    <Card><div className="focus-card-head"><div><span className="focus-eyebrow">APPLICATION LOG</span><h2>Operations and errors</h2></div><div className="record-actions"><button className="focus-secondary" disabled={!visible.length} onClick={()=>download('csv')}>CSV</button><button className="focus-secondary" disabled={!visible.length} onClick={()=>download('json')}>JSON</button><button className="focus-secondary" disabled={!logs.length} onClick={()=>{localStorage.removeItem(ADMIN_LOG_KEY);setLogs([]);setMessage('Local application diagnostics cleared.');}}>Clear logs</button></div></div>
+      <div className="record-fields"><label>Domain<select value={domain} onChange={event=>setDomain(event.target.value)}><option value="all">All domains</option>{[...new Set(logs.map(row=>row.domain))].sort().map(value=><option key={value}>{value}</option>)}</select></label><label>Severity<select value={severity} onChange={event=>setSeverity(event.target.value)}><option value="all">All severities</option><option value="error">Error</option><option value="warning">Warning</option><option value="info">Info</option></select></label><label>Period<select value={since} onChange={event=>{setSince(event.target.value);setFilterAt(Date.now());}}><option value="all">Retained 30 days</option><option value="1">Past day</option><option value="7">Past week</option></select></label></div>
+      {visible.length?<div className="admin-log-table">{visible.map((entry,index)=><div key={`${entry.time}-${entry.code}-${index}`} className={entry.severity}><time>{new Date(entry.time).toLocaleString()}</time><strong>{entry.domain} · {entry.source}</strong><span>{entry.message}</span><b>{entry.severity}</b></div>)}</div>:<p className="focus-copy">No application diagnostics match these filters.</p>}
+      {message&&<output className="focus-notice">{message}</output>}
     </Card>
-    <Card><span className="focus-eyebrow">SITE READINESS</span><h2>Sites preventing weather lookup</h2>{sitesWithoutCoordinates.length ? <div className="admin-site-list">{sitesWithoutCoordinates.slice(0,100).map((site) => <span key={site.entityId}>{site.name}<small>{site.location || 'Location not recorded'}</small></span>)}</div> : <p className="focus-copy">Every site has coordinates.</p>}</Card>
+    <Card><span className="focus-eyebrow">SITE READINESS</span><h2>Sites preventing weather lookup</h2>{sitesWithoutCoordinates.length?<div className="admin-site-list">{sitesWithoutCoordinates.slice(0,100).map(site=><span key={site.entityId}>{site.name}<small>{site.location||'Location not recorded'}</small></span>)}</div>:<p className="focus-copy">Every Site has coordinates.</p>}</Card>
   </>;
 }
 
@@ -1266,9 +1167,10 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                 <p>{dive.notes || 'Manual dive log'}</p>
                 <div className="log-metrics">
                   <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
-                  <span className="log-metric" title="Maximum depth"><Waves size={18}/>{dive.maxDepthM ?? '—'} m</span>
-                  <span className="log-metric" title="Bottom time"><Clock size={18}/>{dive.bottomTimeMin ?? '—'} min</span>
-                  <span className="log-metric" title="Breathing gas"><Cylinder size={18}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><Thermometer size={18}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><Waves size={18}/>{dive.visibilityM ?? '—'} m vis</span>
+                  <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
+                  <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
+                  <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
+                  {(dive.buddyIds??[]).map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
                   <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
                   <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
                 </div>
@@ -1387,6 +1289,8 @@ function Equipment() {
   const [editing, setEditing] = useState<Stored<EquipmentRecord> | null>(null);
   const [adding, setAdding] = useState(false);
   const [viewing, setViewing] = useState<Stored<EquipmentRecord> | null>(null);
+  const openedEquipment=useRef('');
+  useEffect(()=>{const id=new URLSearchParams(window.location.search).get('equipmentId');if(!id||openedEquipment.current===id)return;const item=items.find(row=>row.entityId===id);if(item){const frame=requestAnimationFrame(()=>{openedEquipment.current=id;setViewing(item);});return()=>cancelAnimationFrame(frame);}},[items]);
   const refresh = useCallback(() => {
     void Promise.all([
       listEquipment(),
@@ -1429,7 +1333,7 @@ function Equipment() {
       return a.name.localeCompare(b.name);
     });
   return (
-    <>
+    <div className="t14-record-domain t14-equipment">
       <Heading
         eyebrow="SERVICE · OWNERSHIP · HISTORY"
         title="Equipment"
@@ -1616,7 +1520,7 @@ function Equipment() {
         </RecordDetail>
       )}
       <EquipmentSets items={equipmentItems} sets={sets} saved={refresh} />
-    </>
+    </div>
   );
 }
 
@@ -2762,7 +2666,7 @@ function SiteMapPage({ go }: { go: (next: string) => void }) {
   }),[sites,search,typeFilter,reliability,visitFilter,visitedSiteIds,bucketIds]);
   useEffect(() => {
     if (!selected || !located.some((site) => site.entityId === selected.entityId)) setSelected(located[0] ?? null);
-  }, [located.map((site) => site.entityId).join('|')]);
+  }, [located, selected]);
   useEffect(() => {
     if (!mapOverlaySite) return;
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setMapOverlaySite(null); };
@@ -2929,7 +2833,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
     setAdding(true);
   }, []);
   return (
-    <>
+    <div className="t14-record-domain t14-sites">
       <Heading
         eyebrow="SITE INTELLIGENCE · WEATHER · HISTORY"
         title="Dive sites"
@@ -3189,10 +3093,11 @@ function SitesV2({ go }: { go: (next: string) => void }) {
         >
           {viewing.diveMapImage && <section className="site-map-image"><h3>Dive map</h3><CardImageView image={viewing.diveMapImage} label={`${viewing.name} dive map`}/></section>}
           <SiteAlbums site={viewing}/>
+          <SiteWeather item={viewing}/>
           <SiteOverheadSection key={viewing.entityId} site={viewing}/>
         </RecordDetail>
       )}
-    </>
+    </div>
   );
 }
 function SiteDetail({
@@ -3209,132 +3114,8 @@ function SiteDetail({
     </div>
   );
 }
-function SiteWeather({ item }: { item: DiveSiteRecord }) {
-  const [data, setData] = useState<{
-    weather?: {
-      current?: Record<string, number>;
-      current_units?: Record<string, string>;
-      daily?: Record<string, unknown[]>;
-    };
-    marine?: {
-      current?: Record<string, number>;
-      current_units?: Record<string, string>;
-    };
-    attribution?: string;
-  } | null>(null);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    setData(null);
-    setError('');
-    const params = new URLSearchParams({
-      latitude: String(item.latitude),
-      longitude: String(item.longitude),
-      marine: String(
-        ['shore', 'boat', 'wreck', 'sea'].includes(item.siteType ?? ''),
-      ),
-    });
-    let cancelled = false;
-    async function load() {
-      try {
-        const response = await fetch(`/api/site-weather?${params}`, { cache: 'no-store' });
-        const result = (await response.json()) as {
-          weather?: {
-            current?: Record<string, number>;
-            current_units?: Record<string, string>;
-            daily?: Record<string, unknown[]>;
-          };
-          marine?: {
-            current?: Record<string, number>;
-            current_units?: Record<string, string>;
-          };
-          attribution?: string;
-          error?: string;
-        };
-        if (!response.ok) throw new Error(result.error || 'Shared forecast unavailable');
-        if (!cancelled) setData(result);
-      } catch {
-        const direct = new URL('https://api.open-meteo.com/v1/forecast');
-        direct.search = new URLSearchParams({ latitude: String(item.latitude), longitude: String(item.longitude), current: 'temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m', daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max', timezone: 'auto', forecast_days: '7', wind_speed_unit: 'mph' }).toString();
-        const response = await fetch(direct);
-        if (!response.ok) throw new Error('Forecast temporarily unavailable.');
-        const weather = await response.json() as NonNullable<NonNullable<typeof data>['weather']>;
-        if (!cancelled) setData({ weather, attribution: 'Weather data by Open-Meteo. Forecasts are guidance only and are not dive-safety advice.' });
-      }
-    }
-    void load().catch((reason) => { if (!cancelled) setError(reason instanceof Error ? reason.message : 'Forecast temporarily unavailable.'); });
-    return () => { cancelled = true; };
-  }, [item.latitude, item.longitude, item.siteType]);
-  const current = data?.weather?.current;
-  const units = data?.weather?.current_units;
-  const marine = data?.marine?.current;
-  return (
-    <aside className="weather-card">
-      <div className="weather-title">
-        <CloudRain />
-        <div>
-          <span>SELECTED SITE WEATHER</span>
-          <strong>{item.name}</strong>
-        </div>
-      </div>
-      {error ? (
-        <p>{error}</p>
-      ) : !current ? (
-        <p>Loading forecast…</p>
-      ) : (
-        <>
-          <div className="weather-now">
-            <strong>
-              {current.temperature_2m}
-              {units?.temperature_2m}
-            </strong>
-            <span>
-              Feels {current.apparent_temperature}
-              {units?.apparent_temperature}
-            </span>
-          </div>
-          <div className="weather-metrics">
-            <span>
-              Wind{' '}
-              <b>
-                {current.wind_speed_10m} {units?.wind_speed_10m}
-              </b>
-            </span>
-            <span>
-              Gusts{' '}
-              <b>
-                {current.wind_gusts_10m} {units?.wind_gusts_10m}
-              </b>
-            </span>
-            <span>
-              Rain{' '}
-              <b>
-                {current.precipitation} {units?.precipitation}
-              </b>
-            </span>
-            {marine && (
-              <>
-                <span>
-                  Wave <b>{marine.wave_height ?? '—'}m</b>
-                </span>
-                <span>
-                  Water <b>{marine.sea_surface_temperature ?? '—'}°C</b>
-                </span>
-                <span>
-                  Current <b>{marine.ocean_current_velocity ?? '—'} kn</b>
-                </span>
-              </>
-            )}
-          </div>
-          <div className="weather-week">{data?.weather?.daily?.time?.slice(0, 7).map((date, index) => {
-            const daily = data.weather?.daily;
-            const code = Number(daily?.weather_code?.[index] ?? 3);
-            return <div key={String(date)} title={forecastDescription(code)}><b>{new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</b>{weatherIcon(code, 18)}<span>{Math.round(Number(daily?.temperature_2m_max?.[index] ?? 0))}°</span><small>{Math.round(Number(daily?.wind_speed_10m_max?.[index] ?? 0))} mph</small></div>;
-          })}</div>
-          <small>{data?.attribution}</small>
-        </>
-      )}
-    </aside>
-  );
+function SiteWeather({ item }: { item: DiveSiteRecord & { entityId?: string } }) {
+  return <ConditionsWorkspace key={(item.entityId??item.name)+String(item.latitude)+String(item.longitude)} site={item}/>;
 }
 function SiteV2Form({
   item,
@@ -3886,7 +3667,7 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
               <div className="focus-card-head">
                 <AgencyMark agency={item.agency} options={catalogOptions} />
                 <div className="record-actions">
-                  <button
+                  <button aria-label={`Edit ${item.certification}`}
                     onClick={() => {
                       setEditing(item);
                       setAdding(true);
@@ -3894,7 +3675,7 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
                   >
                     <Pencil size={15} />
                   </button>
-                  <button onClick={() => void remove(item)}>
+                  <button aria-label={`Delete ${item.certification}`} onClick={() => void remove(item)}>
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -3964,6 +3745,10 @@ function CertificationForm({
 }) {
   const [agency, setAgency] = useState(item?.agency ?? '');
   const [certification, setCertification] = useState(item?.certification ?? '');
+  const [certificatePersonId,setCertificatePersonId]=useState(item?.personId??'');
+  const [certificatePeople,setCertificatePeople]=useState<Stored<PersonRecord>[]>([]);
+  const [certifiedDepth,setCertifiedDepth]=useState(item?.certifiedDepthM?.toString()??'');
+  const [qualificationRank,setQualificationRank]=useState(item?.qualificationRank?.toString()??'');
   const [level, setLevel] = useState(item?.level ?? '');
   const [number, setNumber] = useState(item?.certificationNumber ?? '');
   const [issued, setIssued] = useState(item?.issuedAt ?? '');
@@ -3981,12 +3766,14 @@ function CertificationForm({
   const [notes, setNotes] = useState(item?.notes ?? '');
   const [image, setImage] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [saveError,setSaveError]=useState('');
   const [agencyOptions, setAgencyOptions] = useState<string[]>([]);
   const [qualificationOptions, setQualificationOptions] = useState<string[]>(
     [],
   );
   useEffect(() => {
     void Promise.all([listCatalogOptions(), listPeople()]).then(([options, people]) => {
+      setCertificatePeople(people);
       setAgencyOptions(
         options
           .filter((option) => option.group === 'agency')
@@ -4023,12 +3810,16 @@ function CertificationForm({
   ];
   async function submit() {
     if (!agency.trim() || !certification.trim()) return;
-    setBusy(true);
+    setBusy(true);setSaveError('');
+    try {
     const linkedInstructor = instructors.find((person) => person.entityId === instructorId) ?? instructors.find((person) => person.name.toLowerCase() === instructor.trim().toLowerCase() || person.membershipNumber.toLowerCase() === instructor.trim().toLowerCase());
     await saveCertification({
       ...(item?.entityId ? { entityId: item.entityId } : {}),
       agency: agency.trim(),
       certification: certification.trim(),
+      personId:certificatePersonId,
+      certifiedDepthM:certifiedDepth===''?null:Number(certifiedDepth),
+      qualificationRank:qualificationRank===''?null:Number(qualificationRank),
       level: level.trim(),
       certificationNumber: number.trim(),
       issuedAt: issued,
@@ -4046,9 +3837,10 @@ function CertificationForm({
     });
     saved();
     close();
+    }catch(error){setSaveError(error instanceof Error?error.message:'Certification could not be saved. Your edits are retained.');}finally{setBusy(false);}
   }
   return (
-    <Card className="record-form">
+    <RecordEditorWorkspace label={item?'Edit certification':'New certification'} close={close} busy={busy} save={submit} saveLabel="Save certification" saveDisabled={!agency.trim()||!certification.trim()} contentClassName="record-form">
       <div className="record-form-head">
         <div>
           <span className="focus-eyebrow">
@@ -4056,7 +3848,7 @@ function CertificationForm({
           </span>
           <h3>Qualification details</h3>
         </div>
-        <button className="focus-icon" aria-label="Close editor" onClick={close}>
+        <button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}>
           <X size={17} />
         </button>
       </div>
@@ -4098,9 +3890,12 @@ function CertificationForm({
           </select>
         </label>
         <label>
-          Award priority (optional)
+          Award priority (display only)
           <input type="number" value={awardPriority} onChange={(e) => setAwardPriority(e.target.value)} placeholder="Higher number wins" />
         </label>
+        <label>Certificate holder<select value={certificatePersonId} onChange={event=>setCertificatePersonId(event.target.value)}><option value="">My Profile · legacy owner evidence</option>{certificatePeople.map(person=><option key={person.entityId} value={person.entityId}>{person.displayName||person.name}</option>)}{certificatePersonId&&!certificatePeople.some(person=>person.entityId===certificatePersonId)&&<option value={certificatePersonId}>Unavailable holder · reference retained</option>}</select></label>
+        <label>Recorded certification depth limit (m)<input type="number" min="0" value={certifiedDepth} onChange={event=>setCertifiedDepth(event.target.value)}/><small>Enter only the limit documented by this certification. Logged depth does not set this limit.</small></label>
+        <label>Qualification ordering (optional)<input type="number" min="0" step="1" value={qualificationRank} onChange={event=>setQualificationRank(event.target.value)}/><small>Orders qualifications within their track for My Profile. This does not change planning limits.</small></label>
         <label>
           Certificate number
           <input value={number} onChange={(e) => setNumber(e.target.value)} />
@@ -4138,8 +3933,9 @@ function CertificationForm({
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
       </div>
+      {saveError&&<p role="alert" className="dive-save-error">{saveError}</p>}
       <footer>
-        <button className="focus-secondary" onClick={close}>
+        <button className="focus-secondary" data-dialog-close onClick={close}>
           Cancel
         </button>
         <button
@@ -4150,7 +3946,7 @@ function CertificationForm({
           {busy ? 'Saving…' : 'Save certification'}
         </button>
       </footer>
-    </Card>
+    </RecordEditorWorkspace>
   );
 }
 function Training() {
@@ -4630,12 +4426,12 @@ function DiveBucketList() {
   const [adding, setAdding] = useState(false);
   const refresh = useCallback(() => { void listBucketList().then(setItems); }, []);
   useRecordRefresh(refresh);
-  return <>
+  return <div className="t14-record-domain t14-bucket">
     <Heading eyebrow="DREAM · RESEARCH · PLAN" title="Bucket List" copy="Keep future dive locations, liveaboards and dive safaris together until they become real plans." action={<button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add bucket-list dive</button>} />
     {adding && <RevealOnMount><BucketListForm item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}
-    <div className="wishlist-grid">{items.sort((a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name)).map((item) => <Card key={item.entityId} className="wish-card"><div className="focus-card-head"><div><span className="focus-eyebrow">{item.kind.replaceAll('-', ' ')} · {item.status}</span><h2>{item.name}</h2></div><div className="record-actions"><button onClick={() => { setEditing(item); setAdding(true); }}><Pencil size={15}/></button><button onClick={() => { if (confirm(`Delete ${item.name}?`)) void deleteBucketList(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><p>{item.country}</p><p className="focus-copy">{item.description || item.why}</p><div className="wish-meta">{item.targetDate && <span>Target {item.targetDate}</span>}{item.approximateCost && <span>{item.approximateCost}</span>}</div>{externalUrl(item.url) && <a className="focus-link" href={externalUrl(item.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open research link</a>}</Card>)}</div>
+    <div className="wishlist-grid">{items.sort((a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name)).map((item) => <Card key={item.entityId} className="wish-card"><div className="focus-card-head"><div><span className="focus-eyebrow">{item.kind.replaceAll('-', ' ')} · {item.status}</span><h2>{item.name}</h2></div><div className="record-actions"><button aria-label={`Edit ${item.name}`} onClick={() => { setEditing(item); setAdding(true); }}><Pencil size={15}/></button><button aria-label={`Delete ${item.name}`} onClick={() => { if (confirm(`Delete ${item.name}?`)) void deleteBucketList(item.entityId).then(refresh); }}><Trash2 size={15}/></button></div></div><p>{item.country}</p><p className="focus-copy">{item.description || item.why}</p><div className="wish-meta">{item.targetDate && <span>Target {item.targetDate}</span>}{item.approximateCost && <span>{item.approximateCost}</span>}</div>{externalUrl(item.url) && <a className="focus-link" href={externalUrl(item.url)} target="_blank" rel="noreferrer"><ExternalLink size={14}/> Open research link</a>}</Card>)}</div>
     {!items.length && !adding && <Card className="focus-empty"><ListChecks size={32}/><h2>Your bucket list is empty</h2><p>Add the wreck, reef, liveaboard or safari you keep thinking about.</p></Card>}
-  </>;
+  </div>;
 }
 
 function BucketListForm({ item, close, saved }: { item: Stored<BucketListRecord> | null; close: () => void; saved: () => void }) {
@@ -4846,11 +4642,7 @@ function DiveNews() {
   </>;
 }
 
-type DiveNewsArticle = { sources?: Array<{source:string;link:string}>; title: string; link: string; summary: string; publishedAt: string; source: string };
-type GmailConnectionStatus = {
-  configured: boolean; missing: string[]; redirectUri: string; connected: boolean; email: string;
-  connectedAt: string; lastSyncAt: string; lastSyncCount: number; lastError: string; syncMode: 'when-open';
-};
+type DiveNewsArticle = import('../lib/record-identity').NewsStory;
 const EMPTY_NEWS_PREFERENCES: Omit<NewsPreferencesRecord, 'createdAt' | 'modifiedAt'> = { interestedKeywords: [], mutedKeywords: [], mutedMode: 'hide' };
 
 function DiveNewsV2() {
@@ -4866,13 +4658,18 @@ function DiveNewsV2() {
   const [status, setStatus] = useState('Loading dive news…');
   const [newsletterEmail, setNewsletterEmail] = useState(DEFAULT_NEWSLETTER_EMAIL);
   const [copied, setCopied] = useState(false);
+  const [deleting,setDeleting]=useState<DiveNewsArticle|null>(null);
+  const [disconnecting,setDisconnecting]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const requestBusy=useRef(false);
+  const pendingRun=useRef<string|null>(null);
   const activePreferences = preferences[0] ?? EMPTY_NEWS_PREFERENCES;
 
   const refreshLocalNews=useCallback(async()=>{
     const [nextSources, nextArticleRecords, nextPreferences, gmailArticles] = await Promise.all([
-      ensureNewsSources(), listNewsArticles(), listNewsPreferences(), listGmailNews(),
+      listNewsSources(), listNewsArticles(), listNewsPreferences(), listGmailNews(),
     ]);
-    setSources(nextSources); setArticleRecords(nextArticleRecords); setPreferences(nextPreferences);
+    setSources(nextSources.length?nextSources:DEFAULT_NEWS_SOURCES.map((source,index)=>({...source,entityId:`default-news-${index}`,createdAt:'',modifiedAt:''}))); setArticleRecords(nextArticleRecords); setPreferences(nextPreferences);
     const savedPreferences = nextPreferences[0];
     setInterestedText(savedPreferences?.interestedKeywords.join(', ') ?? '');
     setMutedText(savedPreferences?.mutedKeywords.join(', ') ?? '');
@@ -4880,72 +4677,93 @@ function DiveNewsV2() {
     const cache=await zeustekDb.settings.get(`news-cache:${currentDiveAccount()}`);
     const cached=Array.isArray(cache?.value)?cache.value as unknown as DiveNewsArticle[]:[];
     setArticles(groupNewsStories([...gmailArticles,...cached]));
-    return {nextSources,gmailArticles};
+    return {nextSources:nextSources.length?nextSources:DEFAULT_NEWS_SOURCES,gmailArticles};
   },[]);
   const localNewsChanged=useCallback(()=>{void refreshLocalNews();},[refreshLocalNews]); useRecordRefresh(localNewsChanged);
-  const refresh = useCallback(async (forceMailboxSync = false) => {
-    const {nextSources,gmailArticles}=await refreshLocalNews();
-    if(!navigator.onLine){setStatus('Offline — showing cached stories.');return;}
-
-    const statusResponse = await fetch('/api/gmail/status', { cache: 'no-store' });
-    let gmailStatus = statusResponse.ok ? await statusResponse.json() as GmailConnectionStatus : null;
-    if (gmailStatus?.connected) {
-      const due = !gmailStatus.lastSyncAt || Date.now() - Date.parse(gmailStatus.lastSyncAt) > 15 * 60_000;
-      if (forceMailboxSync || due) {
-        const syncResponse = await fetch('/api/gmail/sync', { method: 'POST' });
-        const syncResult = await syncResponse.json() as { count?: number; error?: string };
-        if (!syncResponse.ok) setStatus(syncResult.error || 'The newsletter mailbox could not be refreshed.');
-        else setStatus(`${syncResult.count ?? 0} newsletter emails checked.`);
-        const updatedStatus = await fetch('/api/gmail/status', { cache: 'no-store' });
-        if (updatedStatus.ok) gmailStatus = await updatedStatus.json() as GmailConnectionStatus;
-      }
-    }
-    setGmail(gmailStatus);
-    const feeds = nextSources.filter((source) => source.enabled && source.type !== 'newsletter');
-    const response = await fetch('/api/dive-news', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sources: feeds.map(({ name, url, type }) => ({ name, url, type })) }) });
-    const result = await response.json() as { articles?: DiveNewsArticle[]; failures?: Array<{ source: string }> };
-    const combined = [...gmailArticles.map(({ source, title, link, summary, publishedAt }) => ({ source, title, link, summary, publishedAt })), ...(result.articles ?? [])];
-    const unique = groupNewsStories(combined);
-    setArticles(unique);
-    await zeustekDb.settings.put({key:`news-cache:${currentDiveAccount()}`,value:JSON.parse(JSON.stringify(unique))});
-    if (!gmailStatus?.connected || !forceMailboxSync) setStatus(unique.length ? `${unique.length} recent stories${gmailArticles.length ? ` · ${gmailArticles.length} from Gmail` : ''}${result.failures?.length ? ` · ${result.failures.length} source unavailable` : ''}` : 'No news stories are available just now.');
-  }, [refreshLocalNews]);
-
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (query.get('gmailError')) setStatus(query.get('gmailError') ?? 'Gmail connection failed.');
-    else if (query.get('gmail') === 'connected') setStatus('Gmail connected. Checking the newsletter inbox…');
-    void refresh().catch(() => setStatus('News refresh is unavailable — saved and cached stories remain available.'));
-    void listDashboardSettings().then((records) => setNewsletterEmail(records[0]?.newsletterEmail ?? DEFAULT_NEWSLETTER_EMAIL));
-    const timer = window.setInterval(() => void refresh(), 15 * 60_000);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
+  const readConnection=useCallback(async()=>{
+    const response=await fetch('/api/gmail/status',{cache:'no-store'});
+    if(!response.ok)throw new Error('Mailbox status could not be read. Cached stories remain available.');
+    const result=await response.json() as GmailConnectionStatus;setGmail(result);return result;
+  },[]);
+  const refresh=useCallback(async()=>{
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    try{
+      const {nextSources,gmailArticles}=await refreshLocalNews();
+      if(!navigator.onLine){setStatus('Offline — showing cached stories.');return;}
+      const feeds=nextSources.filter(source=>source.enabled&&source.type!=='newsletter');
+      const response=await fetch('/api/dive-news',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sources:feeds.map(({name,url,type})=>({name,url,type}))})});
+      if(!response.ok)throw new Error('Public feeds could not be refreshed. Cached stories remain available.');
+      const result=await response.json() as {articles?:DiveNewsArticle[];failures?:Array<{source:string}>};
+      const cached=await zeustekDb.settings.get(`news-cache:${currentDiveAccount()}`);
+      const prior=Array.isArray(cached?.value)?cached.value as unknown as DiveNewsArticle[]:[];
+      const unique=groupNewsStories([...gmailArticles,...(result.articles??[]),...prior]);
+      setArticles(unique);await zeustekDb.settings.put({key:`news-cache:${currentDiveAccount()}`,value:JSON.parse(JSON.stringify(unique.slice(0,500)))});
+      setStatus(`${unique.length} cached stories${result.failures?.length?` · ${result.failures.length} feeds unavailable`:''}. ${gmail?.syncMode==='disabled'?GMAIL_SYNC_DISABLED_MESSAGE:'Mailbox sync runs only when selected.'}`);
+    }catch(error){appendApplicationDiagnostic('news-error');setStatus(error instanceof Error?error.message:'News refresh failed. Cached stories remain available.');}
+    finally{requestBusy.current=false;setBusy(false);}
+  },[refreshLocalNews,gmail?.syncMode]);
+  const showSyncResult=(run:GmailSyncRun)=>setStatus(run.status==='completed'?`Mailbox sync completed: ${run.imported} imported, ${run.updated} updated, ${run.unchanged} unchanged${run.hasMore?' · 100-message limit reached; more remain in the 90-day window':''}.`:`${run.diagnostic?.message??'Mailbox sync is in progress.'} ${run.diagnostic?.remedy??'Refresh connection status before starting another run.'}`);
+  async function syncMailbox(){
+    if(gmail?.syncMode==='disabled'){setStatus(GMAIL_SYNC_DISABLED_MESSAGE);return;}
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    const key=`gmail-pending-run:${currentDiveAccount()}`;
+    try{
+      pendingRun.current=pendingRun.current??sessionStorage.getItem(key)??crypto.randomUUID();sessionStorage.setItem(key,pendingRun.current);
+      const response=await fetch('/api/gmail/sync',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({runId:pendingRun.current})});
+      const result=await response.json() as GmailSyncRun & {error?:string};
+      if(!response.ok)throw new Error(result.error??'Mailbox sync could not be confirmed.');
+      showSyncResult(result);
+      if(result.status==='completed'||result.status==='failed'){pendingRun.current=null;sessionStorage.removeItem(key);}
+      await Promise.all([readConnection(),refreshLocalNews()]);
+    }catch{appendApplicationDiagnostic('news-error');setStatus('The sync response was not confirmed. Refresh connection status before retrying; the same run ID is retained.');await readConnection().catch(()=>{});}
+    finally{requestBusy.current=false;setBusy(false);}
+  }
+  async function refreshConnection(){
+    try{const connection=await readConnection();if(connection.lastRun)showSyncResult(connection.lastRun);
+      const key=`gmail-pending-run:${currentDiveAccount()}`;const id=pendingRun.current??sessionStorage.getItem(key);
+      if(connection.lastRun?.runId===id&&['completed','failed'].includes(connection.lastRun.status)){pendingRun.current=null;sessionStorage.removeItem(key);await refreshLocalNews();}
+    }catch(error){setStatus(error instanceof Error?error.message:'Connection status unavailable.');}
+  }
+  useEffect(()=>{
+    let active=true;
+    void readConnection().then(connection=>{if(active&&!new URLSearchParams(window.location.search).has('gmailError'))setStatus(connection.syncMode==='disabled'?`Showing cached stories. ${GMAIL_SYNC_DISABLED_MESSAGE}`:'Showing cached stories. Refresh public feeds or explicitly sync the newsletter mailbox.');}).catch(error=>{if(active)setStatus(error instanceof Error?error.message:'Connection status unavailable.');});
+    const query=new URLSearchParams(window.location.search);
+    const error=query.get('gmailError');
+    if(error){const allowed=['missing_configuration','callback_mismatch','consent_denied','wrong_account','reconnect_required','insufficient_scope','rate_limited','upstream_failure','invalid_request'];const diagnostic=gmailDiagnostic(allowed.includes(error)?error as GmailDiagnosticCode:'upstream_failure');setStatus(`${diagnostic.message} ${diagnostic.remedy}`);}
+    void listDashboardSettings().then(records=>{if(active)setNewsletterEmail(records[0]?.newsletterEmail??DEFAULT_NEWSLETTER_EMAIL);});
+    return()=>{active=false;};
+  },[readConnection]);
 
   const newsletters = sources.filter((source) => source.enabled && source.type === 'newsletter');
-  const recordByLink = new Map(articleRecords.map((record) => [record.link, record]));
+  const recordByLink = new Map(articles.map(article=>[article.link,newsRecordForStory(article,articleRecords)]));
+  for(const record of articleRecords)if(!recordByLink.has(record.link))recordByLink.set(record.link,record);
   const currentArticles = articles.filter((article) => !['archived', 'deleted'].includes(recordByLink.get(article.link)?.state ?? ''));
   const learnedProfile = learnedNewsProfile(articleRecords);
   const visibleArticles: DiveNewsArticle[] = view === 'current'
     ? sortNewsByPriority(currentArticles, activePreferences, articleRecords)
-    : articleRecords.filter((record) => record.state === view).map(({ source, title, link, summary, publishedAt }) => ({ source, title, link, summary, publishedAt })).sort((a, b) => Date.parse(b.publishedAt || '0') - Date.parse(a.publishedAt || '0'));
+    : articleRecords.filter((record) => record.state === view).map(({ source, title, link, summary, publishedAt,sources }) => ({ source, title, link, summary, publishedAt,...(sources?{sources}:{}) })).sort((a, b) => Date.parse(b.publishedAt || '0') - Date.parse(a.publishedAt || '0'));
 
   async function setArticleState(article: DiveNewsArticle, state: NewsArticleRecord['state']) {
+    try {
     const current = recordByLink.get(article.link);
     if (state === 'saved') { const media=await listDiveMedia(); const match=media.find(item => canonicalUrl(item.url) === canonicalUrl(article.link)); await saveDiveMedia({...match, ...(match ? {entityId:match.entityId}:{}),title:article.title,format:'article',creator:article.source,url:article.link,status:'consumed',rating:match?.rating ?? null,topics:match?.topics ?? [],notes:match?.notes || article.summary,recommendedFor:match?.recommendedFor ?? '',sources:article.sources ?? [{source:article.source,link:article.link}]}); }
-    await saveNewsArticle({ ...(current ? { entityId: current.entityId } : {}), ...article, state, ...(current?.reaction ? { reaction: current.reaction, ...(current.reactionAt ? { reactionAt: current.reactionAt } : {}) } : {}) });
+    await saveNewsArticle(newsArticleInput(article,state,current));
     setArticleRecords(await listNewsArticles());
     setStatus(state === 'saved' ? 'Story saved to Dive Media as consumed.' : state === 'archived' ? 'Story archived.' : 'Story deleted from your news views.');
+    }catch(error){setStatus(error instanceof Error?error.message:'The story could not be updated. Please try again.');}
   }
   async function setArticleReaction(article: DiveNewsArticle, reaction: NonNullable<NewsArticleRecord['reaction']>) {
+    try {
     const current = recordByLink.get(article.link);
     const nextReaction = current?.reaction === reaction ? undefined : reaction;
+    const input=newsArticleInput(article,current?.state??'rated',current);delete input.reaction;delete input.reactionAt;
     await saveNewsArticle({
-      ...(current ? { entityId: current.entityId } : {}), ...article,
-      state: current?.state ?? 'rated',
+      ...input,
       ...(nextReaction ? { reaction: nextReaction, reactionAt: new Date().toISOString() } : {}),
     });
     setArticleRecords(await listNewsArticles());
     setStatus(nextReaction === 'shaka' ? '🤙 Marked very good — the priority system is learning.' : nextReaction === 'okay' ? '🤚 Marked okay — saved as a mild positive signal.' : nextReaction === 'not-interested' ? '🙅 Marked not interested — similar stories will move down.' : 'Reaction removed.');
+    }catch(error){setStatus(error instanceof Error?error.message:'The reaction could not be saved.');}
   }
   async function shareArticle(article: DiveNewsArticle) {
     try {
@@ -4957,15 +4775,15 @@ function DiveNewsV2() {
     await navigator.clipboard.writeText(value); setStatus(message); setCopied(true); window.setTimeout(() => setCopied(false), 1800);
   }
   async function connectGmail() {
-    const response = await fetch('/api/gmail/connect', { method: 'POST' });
-    const result = await response.json() as { authorizationUrl?: string; error?: string };
-    if (response.ok && result.authorizationUrl) window.location.assign(result.authorizationUrl);
-    else setStatus(result.error || 'Google mailbox access still needs its OAuth client details.');
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    try{const response=await fetch('/api/gmail/connect',{method:'POST'});const result=await response.json() as {authorizationUrl?:string;error?:string};
+      if(response.ok&&result.authorizationUrl)window.location.assign(result.authorizationUrl);else setStatus(result.error||'Google mailbox access still needs its server OAuth configuration.');
+    }catch{setStatus('Google sign-in could not be started. Check the connection status and try again.');}finally{requestBusy.current=false;setBusy(false);}
   }
-  async function disconnectGmail() {
-    if (!window.confirm('Disconnect Gmail from Dive News? Saved and archived stories will be kept.')) return;
-    await fetch('/api/gmail/disconnect', { method: 'POST' });
-    await refresh(); setStatus('Gmail disconnected.');
+  async function disconnectGmail(){
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    try{const response=await fetch('/api/gmail/disconnect',{method:'POST'});if(!response.ok)throw new Error();await readConnection();setDisconnecting(false);setStatus('Gmail disconnected. Cached stories are retained.');}
+    catch{setStatus('Gmail could not be disconnected. Check connection status before retrying.');}finally{requestBusy.current=false;setBusy(false);}
   }
   async function savePrioritySettings() {
     const current = preferences[0];
@@ -4974,14 +4792,16 @@ function DiveNewsV2() {
   }
 
   return <>
-    <Heading eyebrow="NEWS · DESTINATIONS · EQUIPMENT" title="Dive news" copy="Public dive feeds and your private newsletter inbox, ranked around the subjects you care about." action={<button className="focus-secondary" onClick={() => void refresh(true)}><Cloud size={15}/> Refresh news</button>}/>
+    {disconnecting&&<AccessibleDialog label="Disconnect newsletter mailbox" className="focus-modal" close={()=>{if(!busy)setDisconnecting(false);}} containDismiss><h2>Disconnect newsletter mailbox?</h2><p>Cached and saved stories will remain available.</p><footer><button className="focus-secondary" disabled={busy} onClick={()=>setDisconnecting(false)}>Keep connection</button><button className="focus-primary" disabled={busy} onClick={()=>void disconnectGmail()}>Disconnect mailbox</button></footer></AccessibleDialog>}
+    {deleting&&<AccessibleDialog label="Remove story from News" className="focus-modal" close={()=>setDeleting(null)} containDismiss><h2>Remove story from News?</h2><p>{deleting.title}</p><p>This hides the story from your News views. The original mailbox message and source records are retained.</p><footer><button className="focus-secondary" onClick={()=>setDeleting(null)}>Keep story</button><button className="focus-primary" onClick={()=>{const article=deleting;setDeleting(null);void setArticleState(article,'deleted');}}>Remove story</button></footer></AccessibleDialog>}
+    <Heading eyebrow="NEWS · DESTINATIONS · EQUIPMENT" title="Dive news" copy="Public dive feeds and your private newsletter inbox, ranked around the subjects you care about." action={<button className="focus-secondary" disabled={busy} onClick={() => void refresh()}><Cloud size={15}/> Refresh public feeds</button>}/>
     <div className="focus-notice" aria-live="polite"><Newspaper size={15}/>{status}</div>
     <div className="news-view-tabs"><button className={view === 'current' ? 'active' : ''} onClick={() => setView('current')}>Current <b>{currentArticles.length}</b></button><button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>Saved <b>{articleRecords.filter((record) => record.state === 'saved').length}</b></button><button className={view === 'archived' ? 'active' : ''} onClick={() => setView('archived')}>Archived <b>{articleRecords.filter((record) => record.state === 'archived').length}</b></button></div>
-    <div className="news-layout"><div>{visibleArticles.length ? <div className="news-grid">{visibleArticles.map((article) => { const savedRecord = recordByLink.get(article.link); const savedState = savedRecord?.state; const priority = priorityForArticle(article, activePreferences); return <Card key={`${article.source}-${article.link}`} className="news-card"><div className="news-card-kicker"><span className="focus-eyebrow">{article.source}</span>{view === 'current' && priority.interestedMatches.length > 0 && <span className="news-priority-badge">Priority · {priority.interestedMatches.slice(0, 2).join(', ')}</span>}{view === 'current' && priority.mutedMatches.length > 0 && activePreferences.mutedMode === 'deprioritize' && <span className="news-muted-badge">Low priority</span>}</div><h2>{article.title}</h2>{article.publishedAt && <time>{new Date(article.publishedAt).toLocaleDateString()}</time>}<p>{article.summary || 'Open the original story to read more.'}</p>{article.sources && article.sources.length > 1 && <div className="topic-list">{article.sources.map(source => <a key={source.link} className="focus-link" href={externalUrl(source.link)} target="_blank" rel="noreferrer">{source.source}</a>)}</div>}<div className="news-reactions" role="group" aria-label={`Rate ${article.title}`}><span>Teach priorities</span><button className={savedRecord?.reaction === 'shaka' ? 'active' : ''} title="Shaka — very good" aria-label="Very good" onClick={() => void setArticleReaction(article, 'shaka')}>🤙</button><button className={savedRecord?.reaction === 'okay' ? 'active' : ''} title="Flat hand — okay" aria-label="Okay" onClick={() => void setArticleReaction(article, 'okay')}>🤚</button><button className={savedRecord?.reaction === 'not-interested' ? 'active' : ''} title="Crossed arms — not interested" aria-label="Not interested" onClick={() => void setArticleReaction(article, 'not-interested')}>🙅</button></div><div className="news-card-actions"><a className="focus-link" href={article.link} target="_blank" rel="noreferrer">Read <ExternalLink size={14}/></a>{savedState !== 'saved' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Save</button>}{savedState !== 'archived' && <button onClick={() => void setArticleState(article, 'archived')}><Archive size={14}/> Archive</button>}{savedState === 'archived' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Restore</button>}<button onClick={() => void shareArticle(article)}><Share2 size={14}/> Share</button><button onClick={() => { if (window.confirm(`Delete “${article.title}” from your news views?`)) void setArticleState(article, 'deleted'); }}><Trash2 size={14}/> Delete</button></div></Card>; })}</div> : <Card className="focus-empty"><Newspaper size={30}/><h2>No {view} stories</h2><p>{view === 'current' ? 'No stories match the current priority filters.' : `Stories you mark as ${view} will appear here.`}</p></Card>}</div>
+    <div className="news-layout"><div>{visibleArticles.length ? <div className="news-grid">{visibleArticles.map((article) => { const savedRecord = recordByLink.get(article.link); const savedState = savedRecord?.state; const priority = priorityForArticle(article, activePreferences); return <Card key={`${article.source}-${article.link}`} className="news-card"><div className="news-card-kicker"><span className="focus-eyebrow">{article.source}</span>{view === 'current' && priority.interestedMatches.length > 0 && <span className="news-priority-badge">Priority · {priority.interestedMatches.slice(0, 2).join(', ')}</span>}{view === 'current' && priority.mutedMatches.length > 0 && activePreferences.mutedMode === 'deprioritize' && <span className="news-muted-badge">Low priority</span>}</div><h2>{article.title}</h2>{article.publishedAt && <time>{new Date(article.publishedAt).toLocaleDateString()}</time>}<p>{article.summary || 'Open the original story to read more.'}</p>{article.sources && article.sources.length > 1 && <div className="topic-list">{article.sources.map(source => <a key={source.link} className="focus-link" href={externalUrl(source.link)} target="_blank" rel="noreferrer">{source.source}</a>)}</div>}<div className="news-reactions" role="group" aria-label={`Rate ${article.title}`}><span>Teach priorities</span><button className={savedRecord?.reaction === 'shaka' ? 'active' : ''} title="Shaka — very good" aria-label="Very good" onClick={() => void setArticleReaction(article, 'shaka')}>🤙</button><button className={savedRecord?.reaction === 'okay' ? 'active' : ''} title="Flat hand — okay" aria-label="Okay" onClick={() => void setArticleReaction(article, 'okay')}>🤚</button><button className={savedRecord?.reaction === 'not-interested' ? 'active' : ''} title="Crossed arms — not interested" aria-label="Not interested" onClick={() => void setArticleReaction(article, 'not-interested')}>🙅</button></div><div className="news-card-actions"><a className="focus-link" href={article.link} target="_blank" rel="noreferrer">Read <ExternalLink size={14}/></a>{savedState !== 'saved' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Save</button>}{savedState !== 'archived' && <button onClick={() => void setArticleState(article, 'archived')}><Archive size={14}/> Archive</button>}{savedState === 'archived' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Restore</button>}<button onClick={() => void shareArticle(article)}><Share2 size={14}/> Share</button><button onClick={() => setDeleting(article)}><Trash2 size={14}/> Delete</button></div></Card>; })}</div> : <Card className="focus-empty"><Newspaper size={30}/><h2>No {view} stories</h2><p>{view === 'current' ? 'No stories match the current priority filters.' : `Stories you mark as ${view} will appear here.`}</p></Card>}</div>
       <aside className="news-sidebar"><Card><span className="focus-eyebrow">NEWSLETTERS</span><h2>Email reading list</h2><button type="button" className="newsletter-inbox" onClick={() => void copyText(newsletterEmail, 'Newsletter email copied to the clipboard.')}><Newspaper size={18}/><span><small>Dedicated newsletter inbox · click to copy</small><b>{newsletterEmail}</b></span>{copied ? <Check size={18}/> : <Copy size={18}/>}</button><p className="focus-copy">Use this address when subscribing to the newsletters below.</p>
-        {!gmail?.configured && <div className="newsletter-connection-note"><b>Google connection needs one setup step</b><p>Create a Google Web OAuth client with the Gmail API enabled, add this authorised redirect URI, then supply its client ID and client secret to the site.</p><button className="copy-value" onClick={() => gmail?.redirectUri && void copyText(gmail.redirectUri, 'Google redirect URI copied.')}><span>{gmail?.redirectUri || 'Loading redirect URI…'}</span><Copy size={14}/></button><small>The dashboard requests read-only Gmail access. It cannot send, change or delete email.</small></div>}
-        {gmail?.configured && !gmail.connected && <div className="gmail-connect-panel"><b>Newsletter Gmail is ready to connect</b><p>Google will show exactly which account and read-only permission the dashboard is requesting.</p><button className="focus-primary" onClick={() => void connectGmail()}>Connect Gmail</button></div>}
-        {gmail?.connected && <div className="gmail-connected-panel"><div><Check size={16}/><span><b>{gmail.email}</b><small>{gmail.lastSyncAt ? `Last checked ${new Date(gmail.lastSyncAt).toLocaleString()} · ${gmail.lastSyncCount} emails` : 'Ready for its first check'}</small></span></div>{gmail.lastError && <p>{gmail.lastError}</p>}<p>Checks when Dive News opens and every 15 minutes while this page is open.</p><div><button className="focus-secondary" onClick={() => void refresh(true)}>Check now</button><button className="focus-secondary danger" onClick={() => void disconnectGmail()}>Disconnect</button></div></div>}
+        {!gmail?.configured && <div className="newsletter-connection-note"><b>Google connection needs one setup step</b>{Boolean(gmail?.missing.length)&&<p>Missing server configuration: {gmail?.missing.join(', ')}.</p>}<p>Create a Google Web OAuth client with the Gmail API enabled, add this authorised redirect URI, then supply its client ID and client secret to the site.</p><button className="copy-value" onClick={() => gmail?.redirectUri && void copyText(gmail.redirectUri, 'Google redirect URI copied.')}><span>{gmail?.redirectUri || 'Loading redirect URI…'}</span><Copy size={14}/></button><small>The dashboard requests read-only Gmail access. It cannot send, change or delete email.</small></div>}
+        {gmail?.configured && !gmail.connected && <div className="gmail-connect-panel"><b>Newsletter Gmail is ready to connect</b><p>Google will show exactly which account and read-only permission the dashboard is requesting.</p><button className="focus-primary" disabled={busy} onClick={() => void connectGmail()}>Connect Gmail</button></div>}
+        {gmail?.connected && <div className="gmail-connected-panel"><div><Check size={16}/><span><b>{gmail.email}</b><small>{gmail.lastSyncAt ? `Last checked ${new Date(gmail.lastSyncAt).toLocaleString()} · ${gmail.lastSyncCount} emails` : 'Ready for its first check'}</small></span></div>{gmail.lastError && <p>{gmail.lastError}</p>}<p>{gmail.syncMode==='disabled'?GMAIL_SYNC_DISABLED_MESSAGE:'Sync runs only when you select it. Gmail access is read-only; no mail is sent, changed or deleted.'}</p>{gmail.diagnostic&&<p role="alert">{gmail.diagnostic.remedy}</p>}{gmail.reconnectRequired&&<button className="focus-primary" onClick={()=>void connectGmail()}>Reconnect Gmail</button>}<div><button className="focus-secondary" disabled={busy||gmail.syncMode==='disabled'||gmail.reconnectRequired||Boolean(gmail.lastRun&&['running','uncertain'].includes(gmail.lastRun.status))} onClick={() => void syncMailbox()}>Sync newsletter mailbox</button><button className="focus-secondary" disabled={busy} onClick={()=>void refreshConnection()}>Refresh connection status</button><button className="focus-secondary danger" disabled={busy} onClick={() => setDisconnecting(true)}>Disconnect</button></div></div>}
         {newsletters.map((source) => <a key={source.entityId} className="newsletter-link" href={source.url} target="_blank" rel="noreferrer"><b>{source.name}</b><small>{source.description}</small><ExternalLink size={14}/></a>)}</Card>
         <Card className="news-priority-settings"><span className="focus-eyebrow">NEWS PRIORITY</span><h2>What matters to you</h2><p className="focus-copy">Use commas between words or phrases. Matches in headlines rank highest.</p>{learnedProfile.ratingCount > 0 && <div className="learned-news-profile"><b>Learning from {learnedProfile.ratingCount} rating{learnedProfile.ratingCount === 1 ? '' : 's'}</b>{learnedProfile.liked.length > 0 && <small>More: {learnedProfile.liked.join(', ')}</small>}{learnedProfile.avoided.length > 0 && <small>Less: {learnedProfile.avoided.join(', ')}</small>}</div>}<label>Interested in<textarea value={interestedText} onChange={(event) => setInterestedText(event.target.value)} placeholder="wrecks, technical diving, Red Sea, equipment reviews"/></label><label>Not interested in<textarea value={mutedText} onChange={(event) => setMutedText(event.target.value)} placeholder="competitions, freediving"/></label><label>When a muted keyword matches<select value={mutedMode} onChange={(event) => setMutedMode(event.target.value as NewsPreferencesRecord['mutedMode'])}><option value="hide">Hide the story</option><option value="deprioritize">Move it to the bottom</option></select></label><button className="focus-primary" onClick={() => void savePrioritySettings()}>Save priorities</button></Card>
       </aside></div>
@@ -5056,41 +4876,42 @@ function DiveMediaForm({ item, close, saved }: { item: Stored<DiveMediaRecord> |
   const [interestScore,setInterestScore]=useState(item?.interestScore?.toString() ?? '');
   const [title, setTitle] = useState(item?.title ?? ''); const [format, setFormat] = useState<DiveMediaRecord['format']>(item?.format ?? 'book'); const [creator, setCreator] = useState(item?.creator ?? ''); const [url, setUrl] = useState(item?.url ?? ''); const [status, setStatus] = useState<DiveMediaRecord['status']>(item?.status ?? 'planned'); const [rating, setRating] = useState(item?.rating?.toString() ?? ''); const [topics, setTopics] = useState(item?.topics.join(', ') ?? ''); const [notes, setNotes] = useState(item?.notes ?? ''); const [recommendedFor, setRecommendedFor] = useState(item?.recommendedFor ?? '');
   async function submit() { if (!title.trim()) return; const cleanUrl=externalUrl(url); const thumbnailUrl=item?.url===cleanUrl ? item?.thumbnailUrl ?? '' : await mediaPreviewImage(cleanUrl); await saveDiveMedia({ ...(item ? { entityId: item.entityId } : {}), ...item, title: title.trim(), thumbnailUrl, format, priority, knowledgeGrowth: knowledgeGrowth === '' ? null : Number(knowledgeGrowth), interestScore: interestScore === '' ? null : Number(interestScore), creator: creator.trim(), url: cleanUrl, status, rating: rating ? Math.min(5, Math.max(1, Number(rating))) : null, topics: topics.split(',').map((topic) => topic.trim()).filter(Boolean), notes: notes.trim(), recommendedFor: recommendedFor.trim() }); saved(); close(); }
-  return <Card className="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT DIVE MEDIA' : 'NEW DIVE MEDIA'}</span><h3>{item ? 'Update media item' : 'Add something to consume'}</h3></div><button className="focus-icon" aria-label="Close editor" onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Title<input value={title} onChange={(event) => setTitle(event.target.value)}/></label><label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DiveMediaRecord['format'])}><option value="book">Book</option><option value="video">Video</option><option value="podcast">Podcast</option><option value="article">Article</option><option value="documentary">Documentary</option><option value="course">Online course</option><option value="other">Other</option></select></label><label>Reading priority<select value={priority} onChange={event => setPriority(event.target.value as NonNullable<DiveMediaRecord['priority']>)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Knowledge growth / 10<select value={knowledgeGrowth} onChange={event => setKnowledgeGrowth(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Interest / 10<select value={interestScore} onChange={event => setInterestScore(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Creator / publisher<input value={creator} onChange={(event) => setCreator(event.target.value)}/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as DiveMediaRecord['status'])}><option value="planned">Want to consume</option><option value="in-progress">In progress</option><option value="consumed">Consumed</option></select></label><label>Rating<select value={rating} onChange={(event) => setRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className="record-wide">URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)}/></label><label className="record-wide">Topics (comma separated)<input value={topics} onChange={(event) => setTopics(event.target.value)} placeholder="decompression, wrecks, buoyancy"/></label><label className="record-wide">Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)}/></label><label className="record-wide">Recommended for / knowledge gap<textarea value={recommendedFor} onChange={(event) => setRecommendedFor(event.target.value)}/></label></div><footer><button className="focus-secondary" onClick={close}>Cancel</button><button className="focus-primary" disabled={!title.trim()} onClick={() => void submit()}>Save media</button></footer></Card>;
+  return <RecordEditorWorkspace label={item?'Edit bibliography item':'New bibliography item'} close={close} save={submit} saveDisabled={!title.trim()} contentClassName="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT DIVE MEDIA' : 'NEW DIVE MEDIA'}</span><h3>{item ? 'Update media item' : 'Add something to consume'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Title<input value={title} onChange={(event) => setTitle(event.target.value)}/></label><label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DiveMediaRecord['format'])}><option value="book">Book</option><option value="video">Video</option><option value="podcast">Podcast</option><option value="article">Article</option><option value="documentary">Documentary</option><option value="course">Online course</option><option value="other">Other</option></select></label><label>Reading priority<select value={priority} onChange={event => setPriority(event.target.value as NonNullable<DiveMediaRecord['priority']>)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Knowledge growth / 10<select value={knowledgeGrowth} onChange={event => setKnowledgeGrowth(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Interest / 10<select value={interestScore} onChange={event => setInterestScore(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Creator / publisher<input value={creator} onChange={(event) => setCreator(event.target.value)}/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as DiveMediaRecord['status'])}><option value="planned">Want to consume</option><option value="in-progress">In progress</option><option value="consumed">Consumed</option></select></label><label>Rating<select value={rating} onChange={(event) => setRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className="record-wide">URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)}/></label><label className="record-wide">Topics (comma separated)<input value={topics} onChange={(event) => setTopics(event.target.value)} placeholder="decompression, wrecks, buoyancy"/></label><label className="record-wide">Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)}/></label><label className="record-wide">Recommended for / knowledge gap<textarea value={recommendedFor} onChange={(event) => setRecommendedFor(event.target.value)}/></label></div></RecordEditorWorkspace>;
 }
 
-function DiverSummaryExport() {
-  const [dives,setDives]=useState<Array<DiveRecord & {entityId:string}>>([]);
+function DiverSummaryExport(){
+  const [dives,setDives]=useState<Array<DiveRecord&{entityId:string}>>([]);
   const [certifications,setCertifications]=useState<Array<Stored<CertificationRecord>>>([]);
+  const [equipment,setEquipment]=useState<Array<Stored<EquipmentRecord>>>([]);
   const [diverName,setDiverName]=useState('');
   const [selectedCertIds,setSelectedCertIds]=useState<Set<string>>(new Set());
   const [selectedDiveIds,setSelectedDiveIds]=useState<Set<string>>(new Set());
-  const [sections,setSections]=useState({certifications:true,cards:true,summary:true,types:true,deep:true,logs:true});
-  const [busy,setBusy]=useState('');
-  const [message,setMessage]=useState('');
-  const initialised=useRef(false);
-  const refresh=useCallback(()=>{void Promise.all([listDives(),listCertifications()]).then(([nextDives,nextCertifications])=>{setDives(nextDives);setCertifications(nextCertifications);if(!initialised.current){setSelectedDiveIds(new Set(nextDives.map(dive=>dive.entityId)));setSelectedCertIds(new Set(nextCertifications.map(cert=>cert.entityId)));initialised.current=true;}});},[]);
+  const [selectedGearIds,setSelectedGearIds]=useState<Set<string>>(new Set());
+  const [sections,setSections]=useState<SummaryOptions&{cards:boolean}>({summary:true,types:true,deep:true,certifications:true,equipment:true,logs:true,certificationNumbers:false,cards:false});
+  const [busy,setBusy]=useState('');const [message,setMessage]=useState('');const initialised=useRef(false);
+  const refresh=useCallback(()=>{void Promise.all([listDives(),listCertifications(),listEquipment()]).then(([nextDives,nextCertifications,nextEquipment])=>{setDives(nextDives);setCertifications(nextCertifications);setEquipment(nextEquipment);if(!initialised.current){setSelectedDiveIds(new Set(nextDives.map(row=>row.entityId)));setSelectedCertIds(new Set(nextCertifications.map(row=>row.entityId)));setSelectedGearIds(new Set(nextEquipment.map(row=>row.entityId)));initialised.current=true;}}).catch(()=>setMessage('Records could not be loaded. Reopen this export to retry.'));},[]);
   useRecordRefresh(refresh);
-  const chosenDives=dives.filter(dive=>selectedDiveIds.has(dive.entityId)).sort((a,b)=>(a.diveNumber??0)-(b.diveNumber??0));
-  const chosenCertifications=certifications.filter(cert=>selectedCertIds.has(cert.entityId));
-  const totalMinutes=chosenDives.reduce((sum,dive)=>sum+(dive.totalElapsedMin??dive.bottomTimeMin??0),0);
-  const diveMode=(dive:DiveRecord)=>dive.diveMode==='technical-training'?'Technical training':dive.diveMode==='technical'||dive.isTechnicalDive?'Technical':dive.diveMode==='recreational-training'?'Training':'Recreational';
-  const typeCounts=useMemo(()=>{const counts=new Map<string,number>();for(const dive of chosenDives){for(const type of new Set([diveMode(dive),...(dive.diveTypes??[])])){counts.set(type,(counts.get(type)??0)+1);}}return [...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));},[chosenDives]);
+  const chosenDives=dives.filter(row=>selectedDiveIds.has(row.entityId)).sort((a,b)=>(a.diveNumber??0)-(b.diveNumber??0));
+  const chosenCertifications=certifications.filter(row=>selectedCertIds.has(row.entityId));
+  const chosenGear=equipment.filter(row=>selectedGearIds.has(row.entityId));
   const toggleSection=(key:keyof typeof sections)=>setSections(current=>({...current,[key]:!current[key]}));
   const toggleId=(setter:React.Dispatch<React.SetStateAction<Set<string>>>,id:string,checked:boolean)=>setter(current=>{const next=new Set(current);if(checked)next.add(id);else next.delete(id);return next;});
-  function saveBlob(blob:Blob,name:string){const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=name;anchor.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  async function renderedCard(image:CardImage){const source=await imageSource(image,currentDiveAccount());if(!source)return null;try{const response=await fetch(source);if(!response.ok)return null;const blob=await response.blob();const bitmap=await createImageBitmap(blob);const width=952,height=600;const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d');if(!context)return null;context.fillStyle='#111';context.fillRect(0,0,width,height);const scale=Math.max(width/bitmap.width,height/bitmap.height)*image.zoom;const drawWidth=bitmap.width*scale,drawHeight=bitmap.height*scale;context.drawImage(bitmap,(width-drawWidth)*(image.x/100),(height-drawHeight)*(image.y/100),drawWidth,drawHeight);bitmap.close();const output=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));if(!output)return null;const dataUrl=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(reader.error);reader.readAsDataURL(output);});return {dataUrl,bytes:new Uint8Array(await output.arrayBuffer())};}finally{if(source.startsWith('blob:'))URL.revokeObjectURL(source);}}
-  async function exportPdf(){setBusy('PDF');setMessage('Preparing PDF…');try{const {jsPDF}=await import('jspdf');const pdf=new jsPDF({unit:'mm',format:'a4'});let y=18;const addPage=(needed=10)=>{if(y+needed>282){pdf.addPage();y=18;}};const heading=(text:string)=>{addPage(14);pdf.setTextColor(230,105,10);pdf.setFontSize(14);pdf.setFont('helvetica','bold');pdf.text(text,16,y);y+=8;};const line=(text:string,bold=false)=>{const wrapped=pdf.splitTextToSize(text,178) as string[];addPage(wrapped.length*5+2);pdf.setTextColor(35,35,35);pdf.setFontSize(10);pdf.setFont('helvetica',bold?'bold':'normal');pdf.text(wrapped,16,y);y+=wrapped.length*5+2;};pdf.setFillColor(10,24,31);pdf.rect(0,0,210,30,'F');pdf.setTextColor(255,122,0);pdf.setFontSize(19);pdf.setFont('helvetica','bold');pdf.text(diverName.trim()||'Diver summary',16,14);pdf.setTextColor(255,255,255);pdf.setFontSize(10);pdf.setFont('helvetica','normal');pdf.text(`Prepared ${new Date().toLocaleDateString('en-GB')}`,16,22);y=40;
-      if(sections.summary){heading('Dive summary');line(`${chosenDives.length} dives`);line(`${Math.floor(totalMinutes/60)} hours ${totalMinutes%60} minutes underwater`);}
-      if(sections.deep){heading('Depth experience');line(`${chosenDives.filter(dive=>(dive.maxDepthM??0)>20).length} dives deeper than 20 m`);line(`${chosenDives.filter(dive=>(dive.maxDepthM??0)>30).length} dives deeper than 30 m`);}
-      if(sections.types){heading('Dive types and activities');for(const [type,count] of typeCounts)line(`${type}: ${count}`);}
-      if(sections.certifications){heading('Certifications');for(const cert of chosenCertifications){addPage(sections.cards?72:24);line(`${cert.agency} — ${cert.certification}`,true);line([cert.certificationNumber&&`No. ${cert.certificationNumber}`,cert.issuedAt&&`Issued ${cert.issuedAt}`,cert.expiresAt?`Expires ${cert.expiresAt}`:'No expiry',cert.instructor&&`Instructor ${cert.instructor}`].filter(Boolean).join(' | '));if(sections.cards){for(const [side,image] of [['Front',cert.cardFront],['Back',cert.cardBack]] as const){if(!image)continue;const rendered=await renderedCard(image);if(rendered){addPage(58);pdf.setTextColor(90,90,90);pdf.setFontSize(8);pdf.text(side,16,y);y+=3;pdf.addImage(rendered.dataUrl,'JPEG',16,y,80,50);y+=56;}}}}}
-      if(sections.logs){heading('Minimal dive log');for(const dive of chosenDives){line(`#${dive.diveNumber??'—'} | ${dive.date||'Date not recorded'} | ${dive.maxDepthM??'—'} m | ${dive.totalElapsedMin??dive.bottomTimeMin??'—'} min | ${dive.site||'Location not recorded'} | ${diveMode(dive)}`);}}
-      pdf.save(`zeustek-diver-summary-${new Date().toISOString().slice(0,10)}.pdf`);setMessage('PDF downloaded.');}catch(error){setMessage(error instanceof Error?error.message:'PDF export failed.');}finally{setBusy('');}}
-  async function exportWord(){setBusy('Word');setMessage('Preparing Word document…');try{const docx=await import('docx');const children:any[]=[new docx.Paragraph({text:diverName.trim()||'Diver summary',heading:docx.HeadingLevel.TITLE}),new docx.Paragraph({text:`Prepared ${new Date().toLocaleDateString('en-GB')}`})];const heading=(text:string)=>children.push(new docx.Paragraph({text,heading:docx.HeadingLevel.HEADING_1}));const line=(text:string,bold=false)=>children.push(new docx.Paragraph({children:[new docx.TextRun({text,bold})]}));if(sections.summary){heading('Dive summary');line(`${chosenDives.length} dives`);line(`${Math.floor(totalMinutes/60)} hours ${totalMinutes%60} minutes underwater`);}if(sections.deep){heading('Depth experience');line(`${chosenDives.filter(dive=>(dive.maxDepthM??0)>20).length} dives deeper than 20 m`);line(`${chosenDives.filter(dive=>(dive.maxDepthM??0)>30).length} dives deeper than 30 m`);}if(sections.types){heading('Dive types and activities');typeCounts.forEach(([type,count])=>line(`${type}: ${count}`));}if(sections.certifications){heading('Certifications');for(const cert of chosenCertifications){line(`${cert.agency} — ${cert.certification}`,true);line([cert.certificationNumber&&`No. ${cert.certificationNumber}`,cert.issuedAt&&`Issued ${cert.issuedAt}`,cert.expiresAt?`Expires ${cert.expiresAt}`:'No expiry',cert.instructor&&`Instructor ${cert.instructor}`].filter(Boolean).join(' | '));if(sections.cards){for(const [side,image] of [['Front',cert.cardFront],['Back',cert.cardBack]] as const){if(!image)continue;const rendered=await renderedCard(image);if(rendered){line(side);children.push(new docx.Paragraph({children:[new docx.ImageRun({data:rendered.bytes,transformation:{width:420,height:265},type:'jpg'})]}));}}}}}if(sections.logs){heading('Minimal dive log');children.push(new docx.Table({width:{size:100,type:docx.WidthType.PERCENTAGE},rows:[new docx.TableRow({children:['Dive','Date','Depth','Duration','Location','Type'].map(value=>new docx.TableCell({children:[new docx.Paragraph({children:[new docx.TextRun({text:value,bold:true})]})]}))}),...chosenDives.map(dive=>new docx.TableRow({children:[`#${dive.diveNumber??'—'}`,dive.date||'—',`${dive.maxDepthM??'—'} m`,`${dive.totalElapsedMin??dive.bottomTimeMin??'—'} min`,dive.site||'—',diveMode(dive)].map(value=>new docx.TableCell({children:[new docx.Paragraph(String(value))]}))}))]}));}const document=new docx.Document({sections:[{properties:{},children}]});saveBlob(await docx.Packer.toBlob(document),`zeustek-diver-summary-${new Date().toISOString().slice(0,10)}.docx`);setMessage('Word document downloaded.');}catch(error){setMessage(error instanceof Error?error.message:'Word export failed.');}finally{setBusy('');}}
-  return <div className="diver-summary"><Card><span className="focus-eyebrow">SHAREABLE DIVER RECORD</span><h2>Diver summary export</h2><p className="focus-copy">Choose exactly what a dive centre or training agency may see, then download a real PDF or Word document.</p><label>Diver name<input value={diverName} onChange={event=>setDiverName(event.target.value)} placeholder="Name shown on the document"/></label><fieldset><legend>Include sections</legend>{Object.entries({summary:'Dive totals',types:'Dive types and activities',deep:'Deep-dive counts',certifications:'Certification details',cards:'Certification card images',logs:'Minimal dive log'}).map(([key,label])=><label key={key}><input type="checkbox" checked={sections[key as keyof typeof sections]} disabled={key==='cards'&&!sections.certifications} onChange={()=>toggleSection(key as keyof typeof sections)}/>{label}</label>)}</fieldset><div className="record-actions"><button className="focus-primary" disabled={Boolean(busy)} onClick={()=>void exportPdf()}><Download size={16}/>{busy==='PDF'?'Preparing PDF…':'Download PDF'}</button><button className="focus-secondary" disabled={Boolean(busy)} onClick={()=>void exportWord()}><Download size={16}/>{busy==='Word'?'Preparing Word…':'Download Word'}</button></div>{message&&<p role="status" className="focus-notice">{message}</p>}</Card>
-    <div className="diver-summary-selectors"><Card><div className="focus-card-head"><div><span className="focus-eyebrow">CERTIFICATIONS</span><h3>{selectedCertIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedCertIds(new Set(certifications.map(cert=>cert.entityId)))}>All</button><button onClick={()=>setSelectedCertIds(new Set())}>None</button></div></div><div className="summary-check-list">{certifications.map(cert=><label key={cert.entityId}><input type="checkbox" checked={selectedCertIds.has(cert.entityId)} onChange={event=>toggleId(setSelectedCertIds,cert.entityId,event.target.checked)}/><span><b>{cert.certification}</b><small>{cert.agency}{cert.certificationNumber?` · ${cert.certificationNumber}`:''}</small></span></label>)}</div></Card>
-    <Card><div className="focus-card-head"><div><span className="focus-eyebrow">DIVES</span><h3>{selectedDiveIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedDiveIds(new Set(dives.map(dive=>dive.entityId)))}>All</button><button onClick={()=>setSelectedDiveIds(new Set())}>None</button></div></div><div className="summary-check-list dive-list">{dives.map(dive=><label key={dive.entityId}><input type="checkbox" checked={selectedDiveIds.has(dive.entityId)} onChange={event=>toggleId(setSelectedDiveIds,dive.entityId,event.target.checked)}/><span><b>#{dive.diveNumber??'—'} · {dive.site}</b><small>{dive.date} · {dive.maxDepthM??'—'} m · {dive.totalElapsedMin??dive.bottomTimeMin??'—'} min</small></span></label>)}</div></Card></div></div>;
+  function saveBlob(blob:Blob,extension:string){const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=`zeustek-diver-summary-${new Date().toISOString().slice(0,10)}.${extension}`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  async function renderedCard(image:CardImage){const source=await imageSource(image,currentDiveAccount());if(!source)return null;try{const response=await fetch(source);if(!response.ok)return null;const blob=await response.blob();const bitmap=await createImageBitmap(blob);const width=952,height=600;const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d');if(!context)return null;context.fillStyle='#111';context.fillRect(0,0,width,height);const scale=Math.max(width/bitmap.width,height/bitmap.height)*image.zoom;const drawWidth=bitmap.width*scale,drawHeight=bitmap.height*scale;context.drawImage(bitmap,(width-drawWidth)*(image.x/100),(height-drawHeight)*(image.y/100),drawWidth,drawHeight);bitmap.close();const output=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));return output?{bytes:new Uint8Array(await output.arrayBuffer()),type:'jpg' as const,width,height}:null;}finally{if(source.startsWith('blob:'))URL.revokeObjectURL(source);}}
+  async function exportFile(format:'pdf'|'docx'|'txt'|'csv'|'json'){
+    if(busy)return;setBusy(format);setMessage('Preparing selected records…');
+    try{const document=buildDiverSummary({name:diverName.trim(),generatedAt:new Date().toISOString(),options:sections,dives:chosenDives,certifications:chosenCertifications,equipment:chosenGear});
+      const images=sections.cards&&sections.certifications?await collectSummaryImages(chosenCertifications.flatMap(cert=>[...(cert.cardFront?[{label:`${cert.agency} ${cert.certification} Front`,load:()=>renderedCard(cert.cardFront!)}]:[]),...(cert.cardBack?[{label:`${cert.agency} ${cert.certification} Back`,load:()=>renderedCard(cert.cardBack!)}]:[])])):{images:[],warnings:[]};
+      if(format==='pdf')saveBlob(new Blob([new Uint8Array(await renderSummaryPdf(document,images.images)).buffer as ArrayBuffer],{type:'application/pdf'}),format);
+      else if(format==='docx')saveBlob(new Blob([new Uint8Array(await renderSummaryDocx(document,images.images)).buffer as ArrayBuffer],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),format);
+      else saveBlob(new Blob([format==='txt'?summaryText(document):format==='csv'?summaryCsv(document):summaryJson(document)],{type:format==='json'?'application/json':format==='csv'?'text/csv;charset=utf-8':'text/plain;charset=utf-8'}),format);
+      setMessage(`${format.toUpperCase()} downloaded.${images.warnings.length?` ${images.warnings.length} card image(s) unavailable; certification text was retained.`:''}`);
+    }catch{setMessage('The export could not be prepared. Your records were not changed; try another format or review selected images.');}finally{setBusy('');}
+  }
+  return <div className="diver-summary"><Card><span className="focus-eyebrow">OWNER-SELECTED EXPORT</span><h2>Diver summary export</h2><p className="focus-copy">Select the records and fields to include. The same selection is used for every format.</p><label>Diver name<input value={diverName} onChange={event=>setDiverName(event.target.value)} placeholder="Name shown on the document"/></label><fieldset><legend>Include sections</legend>{([['summary','Dive totals'],['types','Dive types and activities'],['deep','Depth experience'],['certifications','Certification details'],['equipment','Equipment'],['logs','Selected Dive log']] as const).map(([key,label])=><label key={key}><input type="checkbox" checked={sections[key]} onChange={()=>toggleSection(key)}/>{label}</label>)}<label><input type="checkbox" disabled={!sections.certifications} checked={sections.certificationNumbers} onChange={()=>toggleSection('certificationNumbers')}/>Include certification numbers</label><label htmlFor="summary-card-images"><input id="summary-card-images" type="checkbox" disabled={!sections.certifications} checked={sections.cards} onChange={()=>toggleSection('cards')}/>Include certification card images in PDF/DOCX</label></fieldset><div className="record-actions">{(['pdf','docx','txt','csv','json'] as const).map(format=><button key={format} className={format==='pdf'?'focus-primary':'focus-secondary'} disabled={Boolean(busy)} onClick={()=>void exportFile(format)}><Download size={16}/>{busy===format?'Preparing…':`Download ${format.toUpperCase()}`}</button>)}</div>{message&&<p role="status" className="focus-notice">{message}</p>}</Card>
+    <div className="diver-summary-selectors"><Card><div className="focus-card-head"><div><span className="focus-eyebrow">CERTIFICATIONS</span><h3>{selectedCertIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedCertIds(new Set(certifications.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedCertIds(new Set())}>None</button></div></div><div className="summary-check-list">{certifications.map(cert=><label key={cert.entityId}><input type="checkbox" checked={selectedCertIds.has(cert.entityId)} onChange={event=>toggleId(setSelectedCertIds,cert.entityId,event.target.checked)}/><span><b>{cert.certification}</b><small>{cert.agency}</small></span></label>)}</div></Card>
+      <Card><div className="focus-card-head"><div><span className="focus-eyebrow">EQUIPMENT</span><h3>{selectedGearIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedGearIds(new Set(equipment.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedGearIds(new Set())}>None</button></div></div><div className="summary-check-list">{equipment.map(gear=><label key={gear.entityId} aria-label={`Select ${gear.name}`}><input type="checkbox" checked={selectedGearIds.has(gear.entityId)} onChange={event=>toggleId(setSelectedGearIds,gear.entityId,event.target.checked)}/><span><b>{gear.name}</b><small>{gear.category}</small></span></label>)}</div></Card>
+      <Card><div className="focus-card-head"><div><span className="focus-eyebrow">DIVES</span><h3>{selectedDiveIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedDiveIds(new Set(dives.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedDiveIds(new Set())}>None</button></div></div><div className="summary-check-list dive-list">{dives.map(dive=><label key={dive.entityId}><input type="checkbox" checked={selectedDiveIds.has(dive.entityId)} onChange={event=>toggleId(setSelectedDiveIds,dive.entityId,event.target.checked)}/><span><b>#{dive.diveNumber??'—'} · {dive.site}</b><small>{dive.date} · {dive.maxDepthM??'—'} m · {dive.totalElapsedMin??dive.bottomTimeMin??'—'} min</small></span></label>)}</div></Card></div></div>;
 }
 
 function DataCentre({initialTab}:{initialTab:string}) {
@@ -5138,7 +4959,7 @@ function Imports() {
           error?: string;
         };
         if (!response.ok) {
-          setError(result.error || 'PADI import failed.');
+          appendApplicationDiagnostic('import-error');setError('PADI import failed. Review the import result and retry.');
           continue;
         }
         imported += result.added ?? 0; skipped += result.skipped ?? 0;
@@ -5149,7 +4970,7 @@ function Imports() {
           body: form,
         });
         if (response.ok) preserved++;
-        else setError('One or more files could not be uploaded.');
+        else {appendApplicationDiagnostic('import-error');setError('One or more files could not be uploaded.');}
       }
     }
     if (imported || skipped)
@@ -5161,7 +4982,7 @@ function Imports() {
         `${preserved} original file${preserved === 1 ? '' : 's'} preserved for review`,
       );
     await refreshDiveRecords('dive',true);
-    }catch(reason){setError(reason instanceof Error?reason.message:'Import failed. Your saved records remain available.');}finally{setBusy(false);if(fileRef.current)fileRef.current.value='';}
+    }catch{appendApplicationDiagnostic('import-error');setError('Import failed. Your saved records remain available.');}finally{setBusy(false);if(fileRef.current)fileRef.current.value='';}
   }
   return (
     <>
@@ -5551,7 +5372,7 @@ function DiveModal({
       attribution?: string; provider?:string;resolution?:string;
     };
     if (!response.ok || !result.logConditions) {
-      setWeatherStatus(result.error || 'Weather conditions are unavailable for that date.');
+      appendApplicationDiagnostic('weather-error');setWeatherStatus('Weather conditions are unavailable for that date. Earlier saved observations remain available.');
       return;
     }
     const conditions = result.logConditions;

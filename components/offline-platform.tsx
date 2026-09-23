@@ -254,10 +254,10 @@ function PadiSyncPanel({ onSynced }: { onSynced: () => void }) {
         username or password here.
       </small>
       {message && (
-        <p className="platform-notice success">
+        <output className="platform-notice success">
           <CheckCircle2 size={16} />
           {message}
-        </p>
+        </output>
       )}
       {error && <p className="platform-notice error">{error}</p>}
     </section>
@@ -333,7 +333,7 @@ export function BackupsScreen() {
             <h3>Download dive data</h3>
             <p>
               Includes local records, history and locally stored images, plus available cloud records for your
-              account. Cloud-only gallery media is excluded. The download reports its exact coverage.
+              account. Cloud-only gallery media and server connection credentials are excluded. Reconnect the Dive News mailbox after restoration. The download reports its exact coverage.
             </p>
           </div>
           <label>
@@ -392,7 +392,7 @@ export function BackupsScreen() {
   );
 }
 
-export function PlatformSettings() {
+export function PlatformSettings({section='overview'}:{section?:'overview'|'lists'|'icons'|'logos'}) {
   const [message, setMessage] = useState('');
   const [options, setOptions] = useState<Array<Stored<CatalogOptionRecord>>>(
     [],
@@ -621,14 +621,14 @@ export function PlatformSettings() {
   }
   return (
     <>
-      <div className="page-head">
+      {section==='overview' && <div className="page-head">
         <div>
           <span className="eyebrow">PLAIN-LANGUAGE CONTROLS</span>
           <h1>Site Configuration</h1>
           <p>See where your data lives and what this device stores.</p>
         </div>
-      </div>
-      <section id="settings-overview-details" className="panel platform-panel">
+      </div>}
+      {section==='overview' && <section id="settings-overview-details" className="panel platform-panel">
         <div className="panel-row">
           <div>
             <strong>Where dive data is saved</strong>
@@ -668,8 +668,8 @@ export function PlatformSettings() {
             Clear cache
           </button>
         </div>
-      </section>
-      <section id="equipment-training-lists" className="panel option-settings">
+      </section>}
+      {section==='lists' && <section id="equipment-training-lists-details" className="panel option-settings">
         <div>
           <span className="eyebrow">CONTROLLED LISTS</span>
           <h2>Equipment & training choices</h2>
@@ -757,8 +757,8 @@ export function PlatformSettings() {
           The standard scuba lists remain available; your additions are stored
           in your private cloud account and appear on every device.
         </small>
-      </section>
-      <section id="equipment-category-icons" className="panel equipment-icon-settings">
+      </section>}
+      {section==='icons' && <section id="equipment-category-icons-details" className="panel equipment-icon-settings">
         <div>
           <span className="eyebrow">EQUIPMENT APPEARANCE</span>
           <h2>Equipment category icons</h2>
@@ -812,8 +812,8 @@ export function PlatformSettings() {
           Add a new equipment category above and it will appear here with a
           neutral icon ready for your own image.
         </small>
-      </section>
-      <section id="training-agency-logos" className="panel agency-logo-settings">
+      </section>}
+      {section==='logos' && <section id="training-agency-logos-details" className="panel agency-logo-settings">
         <div>
           <span className="eyebrow">TRAINING APPEARANCE</span>
           <h2>Training agency logos</h2>
@@ -910,7 +910,7 @@ export function PlatformSettings() {
         <small className="padi-help">
           Custom agencies added above appear here automatically.
         </small>
-      </section>
+      </section>}
       {message && (
         <p className="platform-notice success">
           <ShieldCheck size={16} />

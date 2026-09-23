@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {AnalysisScopePanel} from '../components/insights/analysis-scope-panel';
+import {DEFAULT_ANALYSIS_SCOPE} from '../lib/offline/experience-analytics';
 const read = (path: string) =>
   readFileSync(resolve(process.cwd(), path), 'utf8');
 
@@ -8,7 +12,7 @@ describe('T09 shell integration', () => {
   it('mounts Insights in the current dashboard shell', () => {
     const source = read('app/dashboard-client.tsx');
     expect(source).toContain(
-      "import { ExperienceAnalytics } from '@/components/experience-analytics';",
+      "const ExperienceAnalytics=lazy(()=>import('@/components/experience-analytics').then(module=>({default:module.ExperienceAnalytics})));",
     );
     expect(source).toContain('Insights: BarChart3');
     expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Insights', label: 'Insights'");
@@ -40,15 +44,14 @@ describe('T09 shell integration', () => {
     expect(css).toContain("url('/course-art/open-water-diver.webp')");
     expect(component).toContain('AccessibleDialog');
     expect(component).toContain('Saltwater vs freshwater');
-    expect(component).toContain('Include pool dives');
-    expect(component).toContain('Include training dives');
-    expect(component).toContain('Water type');
+    const scope=renderToStaticMarkup(createElement(AnalysisScopePanel,{value:DEFAULT_ANALYSIS_SCOPE,apply:()=>{},close:()=>{},sites:[],loadouts:[]}));
+    expect(scope).toContain('Include pool dives');
+    expect(scope).toContain('Include training dives');
+    expect(scope).toContain('Water type');
     expect(component).toContain('Dive environment / activity');
     expect(component).toContain('Apply Saltwater to dashboard');
-    expect(component).toContain("recordHref('Logbook', 'diveId'");
-    expect(component).toMatch(/<AccessibleDialog\s+label="Analysis filters"/);
-    expect(component).not.toMatch(
-      /<AccessibleDialog\s+editable\s+label="Analysis filters"/,
-    );
+    expect(read('components/insights/analysis-source-records.tsx')).toContain("route:'Logbook',recordId:dive.entityId");
+    expect(scope).toContain('data-record-editor-workspace');
+    expect(scope).not.toContain('<dialog');
   });
 });

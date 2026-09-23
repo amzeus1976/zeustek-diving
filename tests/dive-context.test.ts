@@ -35,12 +35,12 @@ describe('shared Dive references and save boundary', () => {
     expect(await zeustekDb.entities.count()).toBe(2);
     configureDiveStore('other-account'); expect(await loadOriginatingPlan(dive)).toBeNull();
   });
-  it('retains a legacy cloud Plan in its SAME history/ID before conversion, without losing fields', async () => {
+  it('retains a legacy cloud Plan revision in the unsaved draft without changing its history or fields', async () => {
     await zeustekDb.entities.put({ entityId: 'dive:context-test:same-plan', module: 'dive:context-test', entityType: 'trip', schemaVersion: 1, record: { ...plan, modifiedAt: '2026-09-01', createdAt: '2026-09-01' }, recordHash: '', deleted: 0, updatedEventId: '', updatedAt: '2026-09-01' });
     const draft = await createDiveDraftFromPlan(plan.entityId);
     expect(draft.originatingPlanRevision?.eventId).toBeTruthy();
     expect(await zeustekDb.entities.count()).toBe(1);
-    expect(await zeustekDb.events.count()).toBe(1);
+    expect(await zeustekDb.events.count()).toBe(0);
     expect(await loadOriginatingPlan(draft as never)).toMatchObject({ futurePlanField: 'retain', siteId: 'same-site' });
     await expect(createDiveDraftFromPlan('missing')).rejects.toThrow('Load this Dive Plan');
     expect(await loadOriginatingPlan({ originatingPlanId: plan.entityId } as never)).toBeNull();

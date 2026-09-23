@@ -7,7 +7,6 @@ import {
   Clock3,
   Download,
   Gauge,
-  MapPin,
   Settings2,
   Waves,
   X,
@@ -17,8 +16,6 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -86,7 +83,11 @@ import {
 } from '../lib/offline/experience-analytics';
 import styles from './experience-analytics.module.css';
 import { INSIGHT_AWARD_DEFINITIONS, normaliseInsightAwardCount, type InsightAwardCount } from '../lib/insights/insight-awards';
-import { selectAllDataPoints, selectNoDataPoints, toggleDataPoint } from '../lib/insights/data-point-selection';
+import {AnalysisScopePanel,AnalysisScopeChips} from './insights/analysis-scope-panel';
+import {AnalysisWorkbench} from './insights/analysis-workbench';
+import {AnalysisSourceRecords} from './insights/analysis-source-records';
+import {normaliseAnalysisCards,DEFAULT_ANALYSIS_CARDS,type AnalysisCardConfig} from '../lib/insights/analysis-card-registry';
+import {saveWorkbenchSettings} from '../lib/insights/workbench-settings';
 
 type DetailKind =
   | 'total-dives'
@@ -133,15 +134,6 @@ type CountProgress = {
   sourceIds: string[];
 };
 
-const palette = [
-  '#10b9f2',
-  '#31d27c',
-  '#ffae2a',
-  '#9b6cff',
-  '#ff6c47',
-  '#5ce1e6',
-  '#9aa6b2',
-];
 const round = (value: number | null, digits = 1) =>
   value == null ? '—' : value.toFixed(digits).replace(/\.0$/, '');
 const formatMinutes = (minutes: number | null) => {
@@ -168,6 +160,8 @@ function analysisScopeSummary(scope: AnalysisScope) {
   if (scope.siteIds.length) parts.push(`${scope.siteIds.length} Site filter`);
   if (scope.equipmentSetIds.length)
     parts.push(`${scope.equipmentSetIds.length} Equipment Set filter`);
+  if(scope.advancedFilter)parts.push('Advanced AND / OR / NOT');
+  if(scope.environmentFocus)parts.push('Environment: '+scope.environmentFocus);
   if (scope.excludedDiveIds.length) parts.push(`${scope.excludedDiveIds.length} data point${scope.excludedDiveIds.length === 1 ? '' : 's'} excluded`);
   return parts.length
     ? parts.join(' · ')
@@ -204,6 +198,7 @@ export function ExperienceAnalytics({ go }: Props) {
   const [detail, setDetail] = useState<DetailKind | null>(null);
   const [awardCount, setAwardCount] = useState<InsightAwardCount>(8);
   const [awardIds, setAwardIds] = useState<string[]>([]);
+  const [workbenchCards,setWorkbenchCards]=useState<AnalysisCardConfig[]>(DEFAULT_ANALYSIS_CARDS);
 
   const refresh = useCallback(async () => {
     const [
@@ -250,6 +245,7 @@ export function ExperienceAnalytics({ go }: Props) {
     const dashboardSettings = nextDashboardSettings[0] as DashboardSettingsRecord | undefined;
     setAwardCount(normaliseInsightAwardCount(dashboardSettings?.maxAwards));
     setAwardIds(dashboardSettings?.selectedAwards ?? []);
+    setWorkbenchCards(normaliseAnalysisCards(dashboardSettings?.analysisWorkbench?.cards));
   }, []);
   useRecordRefresh(refresh);
 
@@ -576,6 +572,7 @@ export function ExperienceAnalytics({ go }: Props) {
     ['average-rmv', Waves, 'Average RMV', h.averageRmvLMin.value == null ? '—' : `${round(h.averageRmvLMin.value)} L/min`, h.averageRmvLMin],
   ] as const;
 
+  if(detail==='filters')return <AnalysisScopePanel value={scope} sites={sites} loadouts={loadouts} close={()=>setDetail(null)} apply={next=>{setScope(next);setDetail(null);}}/>;
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
@@ -614,14 +611,16 @@ export function ExperienceAnalytics({ go }: Props) {
           onClick={() => setDetail('filters')}
         >
           <Settings2 size={16} />
-          Analysis filters
+          Analysis Scope
         </button>
+        <button className="focus-secondary" onClick={()=>setScope(structuredClone(DEFAULT_ANALYSIS_SCOPE))}>Show all data</button>
         <button className="focus-primary" onClick={exportInsights}>
           <Download size={16} />
           Export insights
         </button>
       </div>
 
+      <AnalysisScopeChips value={scope} change={setScope} sites={sites} loadouts={loadouts}/>
       <section className={styles.kpis} aria-label="Headline analytics">
         {!orderedAwards.length && <p className={styles.awardEmpty}>{insightAwardsEmptyState}</p>}
         {orderedAwards.map(({ id, label, value }) => {
@@ -647,188 +646,7 @@ export function ExperienceAnalytics({ go }: Props) {
         );})}
       </section>
 
-      <section className={styles.grid}>
-        <AnalyticsCard
-          title="DEPTH BANDS"
-          onOpen={() => setDetail('depth-bands')}
-        >
-          <div className={styles.chart} aria-hidden="true">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={projection.depthBands}
-                margin={{ top: 10, right: 8, bottom: 0, left: -20 }}
-              >
-                <CartesianGrid
-                  stroke="rgba(255,255,255,.08)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: '#a7b2bc', fontSize: 11 }}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fill: '#a7b2bc', fontSize: 11 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: '#0a1115',
-                    border: '1px solid #16435a',
-                  }}
-                />
-                <Bar dataKey="count" fill="#08baf2" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <span className={styles.srOnly}>
-            {projection.depthBands
-              .map((row) => `${row.label}: ${row.count} dives`)
-              .join('; ')}
-          </span>
-        </AnalyticsCard>
-
-        <AnalyticsCard
-          title="ENVIRONMENT SPLIT"
-          onOpen={() => setDetail('environment')}
-        >
-          <div className={styles.environmentCard}>
-            <div className={styles.environmentChart} aria-hidden="true">
-              <ResponsiveContainer width="100%" height={170}>
-                <PieChart>
-                  <Pie
-                    data={projection.environmentSplit.map((row, index) => ({
-                      ...row,
-                      fill: palette[index % palette.length]!,
-                    }))}
-                    dataKey="count"
-                    nameKey="label"
-                    innerRadius={48}
-                    outerRadius={70}
-                    paddingAngle={1}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: '#0a1115',
-                      border: '1px solid #16435a',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <ul>
-              {projection.environmentSplit.slice(0, 5).map((row, index) => (
-                <li key={row.key}>
-                  <i style={{ background: palette[index % palette.length]! }} />
-                  <span>{row.label}</span>
-                  <b>{row.percent}%</b>
-                  <small>{row.count}</small>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </AnalyticsCard>
-
-        <AnalyticsCard
-          title="SAC TREND"
-          onOpen={() => setDetail('sac-trend')}
-          trailing={
-            h.averageSacBarMin.value == null
-              ? 'No valid gas data'
-              : `Avg ${round(h.averageSacBarMin.value)} bar/min`
-          }
-        >
-          <div className={styles.chart} aria-hidden="true">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart
-                margin={{ top: 10, right: 12, bottom: 0, left: -18 }}
-              >
-                <CartesianGrid stroke="rgba(255,255,255,.08)" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: '#a7b2bc', fontSize: 10 }}
-                  tickFormatter={(value) => String(value).slice(2, 7)}
-                />
-                <YAxis
-                  dataKey="sacBarMin"
-                  tick={{ fill: '#a7b2bc', fontSize: 10 }}
-                  unit=""
-                />
-                <Tooltip
-                  cursor={{ strokeDasharray: '3 3' }}
-                  contentStyle={{
-                    background: '#0a1115',
-                    border: '1px solid #16435a',
-                  }}
-                />
-                <Scatter data={projection.sacTrend} fill="#08baf2" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-          <span className={styles.srOnly}>
-            {projection.sacTrend.length
-              ? projection.sacTrend
-                  .map(
-                    (row) =>
-                      `${row.date}: ${round(row.sacBarMin)} bar per minute`,
-                  )
-                  .join('; ')
-              : 'No valid pressure SAC evidence in scope.'}
-          </span>
-        </AnalyticsCard>
-
-        <AnalyticsCard title="RMV TREND" onOpen={() => setDetail('rmv-trend')} trailing={h.averageRmvLMin.value == null ? 'No valid gas data' : `Avg ${round(h.averageRmvLMin.value)} L/min`}>
-          <div className={styles.chart} aria-hidden="true"><ResponsiveContainer width="100%" height="100%"><ScatterChart margin={{ top: 10, right: 12, bottom: 0, left: -18 }}><CartesianGrid stroke="rgba(255,255,255,.08)"/><XAxis dataKey="date" tick={{ fill:'#a7b2bc',fontSize:10 }} tickFormatter={(value)=>String(value).slice(2,7)}/><YAxis dataKey="rmvLMin" tick={{ fill:'#a7b2bc',fontSize:10 }}/><Tooltip contentStyle={{background:'#0a1115',border:'1px solid #16435a'}}/><Scatter data={projection.rmvTrend} fill="#ff8b1f"/></ScatterChart></ResponsiveContainer></div>
-          <span className={styles.srOnly}>{projection.rmvTrend.length ? projection.rmvTrend.map((row)=>`${row.date}: ${round(row.rmvLMin)} litres per minute`).join('; ') : 'No valid RMV evidence in scope.'}</span>
-        </AnalyticsCard>
-
-        <AnalyticsCard
-          title="MOST-USED EQUIPMENT SETS"
-          onOpen={() => setDetail('equipment')}
-        >
-          <RankList
-            rows={projection.equipmentSetUsage.slice(0, 5).map((row) => ({
-              label: row.name,
-              value: `${row.dives} dives`,
-              percent: row.percent,
-            }))}
-          />
-        </AnalyticsCard>
-
-        <AnalyticsCard
-          title="MOST-DIVED SITES"
-          onOpen={() => setDetail('sites')}
-        >
-          <div className={styles.siteList}>
-            {projection.siteUsage.slice(0, 5).map((row) =>
-              row.siteId ? (
-                <a
-                  key={`${row.siteId}-${row.name}`}
-                  href={recordHref('Sites', 'siteId', row.siteId)}
-                >
-                  <MapPin />
-                  <span>
-                    <b>{row.name}</b>
-                    <small>{row.percent}% of scoped dives</small>
-                  </span>
-                  <em>{row.dives} dives</em>
-                </a>
-              ) : (
-                <button key={`name-${row.name}`} onClick={() => go?.('Sites')}>
-                  <MapPin />
-                  <span>
-                    <b>{row.name}</b>
-                    <small>
-                      {row.percent}% of scoped dives · legacy name reference
-                    </small>
-                  </span>
-                  <em>{row.dives} dives</em>
-                </button>
-              ),
-            )}
-          </div>
-        </AnalyticsCard>
-
-      </section>
+      <AnalysisWorkbench cards={workbenchCards} saveCards={async cards=>{await saveWorkbenchSettings(cards);setWorkbenchCards(cards);}} scope={scope} changeScope={setScope} projection={projection} dives={dives} sites={sites} loadouts={loadouts} go={go}/>
 
       {detail && (
         <AnalyticsDetailDialog
@@ -850,52 +668,6 @@ export function ExperienceAnalytics({ go }: Props) {
   );
 }
 
-function AnalyticsCard({
-  title,
-  trailing,
-  onOpen,
-  children,
-}: {
-  title: string;
-  trailing?: string;
-  onOpen: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={styles.card}>
-      <header>
-        <button onClick={onOpen}>
-          <span>{title}</span>
-          <small>{trailing}</small>
-          <b>›</b>
-        </button>
-      </header>
-      {children}
-    </section>
-  );
-}
-function RankList({
-  rows,
-}: {
-  rows: Array<{ label: string; value: string; percent: number }>;
-}) {
-  return (
-    <div className={styles.rankList}>
-      {rows.map((row) => (
-        <div key={`${row.label}-${row.value}`}>
-          <span>
-            <b>{row.label}</b>
-            <small>{row.value}</small>
-          </span>
-          <div>
-            <i style={{ width: `${Math.min(100, row.percent)}%` }} />
-          </div>
-          <em>{row.percent}%</em>
-        </div>
-      ))}
-    </div>
-  );
-}
 function AnalyticsDetailDialog({
   kind,
   close,
@@ -925,7 +697,7 @@ function AnalyticsDetailDialog({
 }) {
   if (kind === 'filters')
     return (
-      <AnalysisFilters
+      <AnalysisScopePanel
         close={close}
         value={scope}
         apply={(next) => {
@@ -957,7 +729,7 @@ function AnalyticsDetailDialog({
   const sourceIds =
     kind === 'qualifying'
       ? [...new Set(countProgress.flatMap((row) => row.diveIds))]
-      : detailSourceIds(kind, projection);
+      : detailSourceIds(kind, buildExperienceAnalyticsProjection(dives,sites,loadouts,{...scope,excludedDiveIds:[]}));
   const sourceDives = dives.filter((dive) => sourceIds.includes(dive.entityId));
   return (
     <div className="focus-modal-bg">
@@ -1235,30 +1007,7 @@ function AnalyticsDetailDialog({
         {sourceDives.length > 0 && (
           <section className={styles.detailPanel}>
             <h3>Source dives</h3>
-            <DataPointSelector ids={sourceDives.map((dive) => dive.entityId)} excludedIds={scope.excludedDiveIds} apply={(excludedDiveIds) => { setScope({ ...scope, excludedDiveIds }); close(); }} />
-            <div className={styles.sourceTable}>
-              {sourceDives.slice(0, 60).map((dive) => (
-                <a
-                  key={dive.entityId}
-                  href={recordHref('Logbook', 'diveId', dive.entityId)}
-                >
-                  <span>
-                    <b>{dive.date}</b>
-                    <small>{dive.site}</small>
-                  </span>
-                  <em>
-                    {dive.maxDepthM == null ? '—' : `${dive.maxDepthM} m`} ·{' '}
-                    {dive.totalElapsedMin ?? dive.bottomTimeMin ?? '—'} min
-                  </em>
-                </a>
-              ))}
-            </div>
-            {sourceDives.length > 60 && (
-              <small>
-                Showing the first 60 source Dives. Export Insights contains
-                every source ID.
-              </small>
-            )}
+            <AnalysisSourceRecords dives={sourceDives} excludedIds={scope.excludedDiveIds} changeExcluded={excludedDiveIds=>setScope({...scope,excludedDiveIds})} go={go?route=>{close();go(route);}:undefined}/>
           </section>
         )}
         <footer>
@@ -1269,18 +1018,6 @@ function AnalyticsDetailDialog({
       </AccessibleDialog>
     </div>
   );
-}
-
-function DataPointSelector({ ids, excludedIds, apply }: { ids: string[]; excludedIds: string[]; apply: (excludedDiveIds: string[]) => void }) {
-  const selectedIds = ids.filter((id) => !excludedIds.includes(id));
-  const [selection, setSelection] = useState(() => ({ mode: selectedIds.length === ids.length ? 'all' as const : selectedIds.length === 1 ? 'one' as const : 'many' as const, selectedIds, excludedIds: ids.filter((id) => !selectedIds.includes(id)) }));
-  return <div className={styles.dataPointPicker}>
-    <span>{selection.selectedIds.length} of {ids.length} selected</span>
-    <button className="focus-secondary" onClick={() => setSelection(selectAllDataPoints(ids))}>Select all</button>
-    <button className="focus-secondary" onClick={() => setSelection(selectNoDataPoints(ids))}>Select none</button>
-    <details><summary>Choose one or many</summary><div>{ids.map((id, index) => <label key={id}><input type="checkbox" checked={selection.selectedIds.includes(id)} onChange={() => setSelection((current) => toggleDataPoint(current, id))}/>Data point {index + 1}</label>)}</div></details>
-    <button className="focus-primary" onClick={() => apply([...new Set([...excludedIds.filter((id) => !ids.includes(id)), ...selection.excludedIds])])}>Apply to dashboard</button>
-  </div>;
 }
 
 function MetricDetail({
@@ -1348,205 +1085,6 @@ function detailSourceIds(
     readiness: projection.includedDiveIds,
   };
   return [...new Set(map[kind])];
-}
-
-function AnalysisFilters({
-  value,
-  apply,
-  close,
-  sites,
-  loadouts,
-}: {
-  value: AnalysisScope;
-  apply: (value: AnalysisScope) => void;
-  close: () => void;
-  sites: Array<Stored<DiveSiteRecord>>;
-  loadouts: Array<Stored<ReusableLoadoutRecord>>;
-}) {
-  const [draft, setDraft] = useState(value);
-  const [siteQuery, setSiteQuery] = useState('');
-  const toggle = <T extends string>(items: T[], item: T) =>
-    items.includes(item)
-      ? items.filter((value) => value !== item)
-      : [...items, item];
-  return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        label="Analysis filters"
-        close={close}
-        className={`focus-modal ${styles.filterDialog}`}
-      >
-        <header>
-          <div>
-            <span className="focus-eyebrow">ANALYSIS SCOPE</span>
-            <h2>Filters &amp; exclusions</h2>
-            <p>
-              Filters change only this derived dashboard. Canonical Dive records
-              are never edited.
-            </p>
-          </div>
-          <button
-            className="focus-icon"
-            data-dialog-close
-            onClick={close}
-            aria-label="Close filters"
-          >
-            <X />
-          </button>
-        </header>
-        <div className={styles.filterGrid}>
-          <fieldset>
-            <legend>Date range</legend>
-            <label>
-              From
-              <input
-                type="date"
-                value={draft.dateFrom ?? ''}
-                onChange={(event) =>
-                  setDraft({ ...draft, dateFrom: event.target.value || null })
-                }
-              />
-            </label>
-            <label>
-              To
-              <input
-                type="date"
-                value={draft.dateTo ?? ''}
-                onChange={(event) =>
-                  setDraft({ ...draft, dateTo: event.target.value || null })
-                }
-              />
-            </label>
-          </fieldset>
-          <fieldset>
-            <legend>Include / exclude</legend>
-            <label className="record-check">
-              <input
-                type="checkbox"
-                checked={draft.includePool}
-                onChange={(event) =>
-                  setDraft({ ...draft, includePool: event.target.checked })
-                }
-              />
-              Include pool dives
-            </label>
-            <label className="record-check">
-              <input
-                type="checkbox"
-                checked={draft.includeTraining}
-                onChange={(event) =>
-                  setDraft({ ...draft, includeTraining: event.target.checked })
-                }
-              />
-              Include training dives
-            </label>
-            {([['includeShore','Shore dives'],['includeBoat','Boat dives'],['includeNight','Night dives'],['includeUnknownOther','Unknown / other dives']] as const).map(([field,label]) => <label className="record-check" key={field}><input type="checkbox" checked={draft[field]} onChange={(event)=>setDraft({...draft,[field]:event.target.checked})}/>{label}</label>)}
-          </fieldset>
-          <fieldset>
-            <legend>Depth and time</legend>
-            <label>Minimum depth (m)<input type="number" min="0" value={draft.minDepthM ?? ''} onChange={(event)=>setDraft({...draft,minDepthM:event.target.value===''?null:Number(event.target.value)})}/></label>
-            <label>Maximum depth (m)<input type="number" min="0" value={draft.maxDepthM ?? ''} onChange={(event)=>setDraft({...draft,maxDepthM:event.target.value===''?null:Number(event.target.value)})}/></label>
-            <label>Minimum time (min)<input type="number" min="0" value={draft.minTimeMin ?? ''} onChange={(event)=>setDraft({...draft,minTimeMin:event.target.value===''?null:Number(event.target.value)})}/></label>
-            <label>Maximum time (min)<input type="number" min="0" value={draft.maxTimeMin ?? ''} onChange={(event)=>setDraft({...draft,maxTimeMin:event.target.value===''?null:Number(event.target.value)})}/></label>
-          </fieldset>
-          <fieldset>
-            <legend>Water type</legend>
-            {(['Saltwater', 'Freshwater', 'Brackish', 'Other'] as const).map(
-              (water) => (
-                <label className="record-check" key={water}>
-                  <input
-                    type="checkbox"
-                    checked={
-                      !draft.waterTypes.length ||
-                      draft.waterTypes.includes(water)
-                    }
-                    onChange={() =>
-                      setDraft({
-                        ...draft,
-                        waterTypes: toggle(draft.waterTypes, water),
-                      })
-                    }
-                  />
-                  {water}
-                </label>
-              ),
-            )}
-            <small>
-              Leave all unchecked to include every recorded water type.
-            </small>
-          </fieldset>
-          <fieldset>
-            <legend>Dive mode</legend>
-            {(
-              [
-                'recreational',
-                'recreational-training',
-                'technical',
-                'technical-training',
-              ] as const
-            ).map((mode) => (
-              <label className="record-check" key={mode}>
-                <input
-                  type="checkbox"
-                  checked={
-                    !draft.diveModes.length || draft.diveModes.includes(mode)
-                  }
-                  onChange={() =>
-                    setDraft({
-                      ...draft,
-                      diveModes: toggle(draft.diveModes, mode),
-                    })
-                  }
-                />
-                {mode.replace('-', ' ')}
-              </label>
-            ))}
-          </fieldset>
-          <fieldset className={styles.sitePicker}>
-            <legend>Locations · one, many or all</legend>
-            <label>Type and search<input type="search" value={siteQuery} onChange={(event)=>setSiteQuery(event.target.value)} placeholder="Search Sites"/></label>
-            <div><label className="record-check"><input type="checkbox" checked={draft.siteIds.length===0} onChange={(event)=>{if(event.target.checked)setDraft({...draft,siteIds:[]});}}/>All locations</label>{sites.filter((site)=>!siteQuery.trim()||`${site.name} ${site.location??''} ${site.country??''}`.toLowerCase().includes(siteQuery.trim().toLowerCase())).slice(0,80).map((site)=><label className="record-check" key={site.entityId}><input type="checkbox" checked={draft.siteIds.includes(site.entityId)} onChange={()=>setDraft({...draft,siteIds:toggle(draft.siteIds,site.entityId)})}/><span>{site.name}<small>{site.location||site.country||'Location not recorded'}</small></span></label>)}</div>
-          </fieldset>
-          <label>
-            Equipment set
-            <select
-              value={draft.equipmentSetIds[0] ?? ''}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  equipmentSetIds: event.target.value
-                    ? [event.target.value]
-                    : [],
-                })
-              }
-            >
-              <option value="">All equipment sets</option>
-              {loadouts.map((item) => (
-                <option key={item.entityId} value={item.entityId}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <footer>
-          <button
-            className="focus-secondary"
-            onClick={() => setDraft(DEFAULT_ANALYSIS_SCOPE)}
-          >
-            Reset
-          </button>
-          <span />
-          <button className="focus-secondary" data-dialog-close onClick={close}>
-            Cancel
-          </button>
-          <button className="focus-primary" onClick={() => apply(draft)}>
-            Apply filters
-          </button>
-        </footer>
-      </AccessibleDialog>
-    </div>
-  );
 }
 
 function AccessibleRows({ rows }: { rows: Array<[string, string, string]> }) {

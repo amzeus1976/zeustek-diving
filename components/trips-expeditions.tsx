@@ -13,7 +13,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
@@ -150,6 +150,13 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const [editing, setEditing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
   const [viewing, setViewing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
   const [adding, setAdding] = useState(false);
+  const openedTrip=useRef('');
+  useEffect(()=>{
+    const id=new URLSearchParams(window.location.search).get('tripId');
+    if(!id||openedTrip.current===id)return;
+    const item=items.find(row=>row.entityId===id);
+    if(item){const frame=requestAnimationFrame(()=>{openedTrip.current=id;setViewing(item);});return()=>cancelAnimationFrame(frame);}
+  },[items]);
 
   const refresh = useCallback(() => {
     void Promise.all([

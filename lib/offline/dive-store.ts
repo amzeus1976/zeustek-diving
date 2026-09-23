@@ -5,6 +5,7 @@ import type { JsonValue } from './types';
 import { recordIdentity } from '../record-identity';
 import { prepareCardImages } from './dive-images';
 import { flushComputerEvidenceAttachments } from './evidence-attachments';
+import { personReferencesOperator } from '../operators/operator-dependencies';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
@@ -109,6 +110,11 @@ export async function deleteLocalRecord(id: string) {
 async function deleteLocalRecordInternal(id:string){
   const module=moduleName();const localId=`${module}:${id}`;const old=await zeustekDb.entities.get(localId);
   if (!old) throw new Error('Load this record before deleting it.');
+  if(old.entityType==='operator'){
+    const people=await zeustekDb.entities.where('[module+entityType]').equals([module,'person']).toArray();
+    if(people.some(row=>!row.deleted&&personReferencesOperator(row.record,id)))
+      throw new Error('This Dive Centre has linked Person records. Reassign or unlink them before deleting.');
+  }
   const prior=old.record as Record<string,JsonValue>;
   const queued=(await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending|undefined;
   const pending:Pending={id,kind:old.entityType,record:null,baseModifiedAt:queued ? queued.baseModifiedAt : String(prior.modifiedAt),token:crypto.randomUUID(),state:'pending'};

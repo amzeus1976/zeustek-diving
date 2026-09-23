@@ -124,3 +124,10 @@
   .detail, .editor { width: calc(100vw - 1rem); max-height: 96vh; }
   .repeatRow :global(.record-wide), .notes h3 { grid-column: auto; }
 }
+
+/* T14 trip cards share the Gear / Dive Data record surfaces. */
+.tripCard{border-color:var(--zt-border-cyan);border-radius:var(--zt-radius-card);background:linear-gradient(145deg,var(--zt-surface-card),#08171e);box-shadow:0 10px 24px #0002;min-width:0}
+.tripCard h2,.hero h2{color:var(--zt-accent-orange)}
+.tripCard>p,.dates{color:var(--zt-text-muted);line-height:1.6}
+.toolbar{background:var(--zt-surface-card);border:1px solid var(--zt-border-cyan);border-radius:var(--zt-radius-card)}
+.toolbar :is(input,select){min-height:44px;background:#081921;border-color:var(--zt-border-muted);color:var(--zt-text)}

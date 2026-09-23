@@ -1,6 +1,7 @@
 import type { DiveRecord } from './dives';
 import type { ReusableLoadoutRecord } from './loadouts-gas';
 import type { DiveSiteRecord, Stored } from './dive-planning';
+import {matchesAnalysisFilter,type AnalysisFilterNode} from '../insights/analysis-filter-expression';
 
 export type DiveWithId = DiveRecord & { entityId: string };
 export type AnalysisWaterType =
@@ -11,6 +12,8 @@ export type AnalysisWaterType =
 export type AnalysisDiveMode = NonNullable<DiveRecord['diveMode']>;
 
 export interface AnalysisScope {
+  advancedFilter?:AnalysisFilterNode|null;
+  environmentFocus?:string|null;
   dateFrom: string | null;
   dateTo: string | null;
   includePool: boolean;
@@ -218,7 +221,6 @@ export function diveMatchesAnalysisScope(
   dive: DiveWithId,
   scope: AnalysisScope,
 ) {
-  if (scope.excludedDiveIds.includes(dive.entityId)) return false;
   if (scope.dateFrom && dive.date < scope.dateFrom) return false;
   if (scope.dateTo && dive.date > scope.dateTo) return false;
   if (!scope.includePool && isPoolDive(dive)) return false;
@@ -252,7 +254,9 @@ export function diveMatchesAnalysisScope(
     const refs = new Set(diveEquipmentSetIds(dive));
     if (!scope.equipmentSetIds.some((id) => refs.has(id))) return false;
   }
-  return true;
+  if(scope.environmentFocus&&primaryEnvironment(dive).toLocaleLowerCase('en-GB').replace(/\s+/g,'-')!==scope.environmentFocus)return false;
+  if(!matchesAnalysisFilter(dive,scope.advancedFilter))return false;
+  return !scope.excludedDiveIds.includes(dive.entityId);
 }
 
 export function applyAnalysisScope(dives: DiveWithId[], scope: AnalysisScope) {

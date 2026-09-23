@@ -26,6 +26,9 @@
 .teamRow:has(.teamDetails){grid-template-columns:1fr;grid-column:1/-1;border:1px solid #1c4a59;border-radius:8px;padding:9px}
 @media(max-width:720px){.teamDetails{grid-template-columns:1fr}}
 .gasPlanSummaries{display:grid;gap:10px;min-width:0;padding:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;padding:9px;position:static}.actions button{flex:0 1 auto;min-height:44px;padding:8px 12px;display:inline-flex;align-items:center;gap:7px}.actions svg{width:16px;height:16px}.linkedLogs{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px}.linkedLogs a{color:var(--zt-accent-cyan)}
+.editorGrid .objective textarea{min-height:112px;resize:vertical;line-height:1.5}.editorGrid label>.infoButton,.infoButton{width:36px;height:36px;min-width:36px;min-height:36px;max-width:36px;padding:0;flex:none}.editorGrid label:has(>.infoButton){grid-template-columns:minmax(0,1fr) 36px;justify-content:start}.editorGrid label:has(>.infoButton)>textarea,.editorGrid label:has(>.infoButton)>input{width:100%;grid-column:1/-1}
+@media(max-width:720px){.actions{position:static}.actions button{flex:1 1 135px}.editorGrid .objective textarea{min-height:128px}.hero{grid-template-columns:minmax(0,1fr)}.hero>button{grid-column:1;justify-self:start}}
 .gasSummary{min-width:0;border:1px solid #1d566b;border-radius:9px;padding:10px;background:#091a22;overflow-wrap:anywhere}
 .gasSummary header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;color:#f4fafc}
 .gasSummary header span{color:#9fb5be;font-size:12px}

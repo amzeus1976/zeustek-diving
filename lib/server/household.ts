@@ -59,6 +59,30 @@ export async function householdUserIds(env: HouseholdEnv, user: ChatGPTUser) {
   return result.results.map((row) => row.userId);
 }
 
+/** Cloud record GETs must not register or rewrite household membership. */
+export async function readHouseholdUserIds(env: HouseholdEnv, user: ChatGPTUser) {
+  if (!allowedHouseholdUser(user)) throw new Error('This account is not invited.');
+  if (isLocalPreviewUser(user)) return [user.userId];
+  try {
+    const result = await env.DB.prepare('SELECT user_id AS userId FROM dive_household_members WHERE household_id=? AND user_id IS NOT NULL').bind(HOUSEHOLD_ID).all<{userId:string}>();
+    const ids = result.results.map(row=>row.userId);
+    return ids.includes(user.userId) ? ids : [user.userId];
+  } catch { return [user.userId]; }
+}
+
+export async function readHouseholdAreaUserIds(env: HouseholdEnv, user: ChatGPTUser, area: string) {
+  const ids = await readHouseholdUserIds(env,user);
+  const allowed = [user.userId];
+  for (const id of ids) {
+    if (id === user.userId) continue;
+    try {
+      const share = await env.DB.prepare('SELECT can_view AS canView FROM dive_household_shares WHERE household_id=? AND owner_user_id=? AND area=?').bind(HOUSEHOLD_ID,id,area).first<{canView:number}>();
+      if (share?.canView) allowed.push(id);
+    } catch { /* No existing share grants access. */ }
+  }
+  return allowed;
+}
+
 export async function householdCanEditGear(env: HouseholdEnv, user: ChatGPTUser, ownerUserId: string) {
   const ids = await householdUserIds(env, user);
   return ids.includes(ownerUserId);

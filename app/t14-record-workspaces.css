@@ -1,0 +1,16 @@
+/* Shared record presentation: restrained surfaces, branded domains and readable metadata. */
+.t14-record-domain{min-width:0;display:grid;gap:1rem}
+.t14-record-domain>.focus-heading{border-bottom:1px solid var(--zt-border-cyan);padding-bottom:1rem;margin-bottom:0}
+.t14-record-domain :is(.focus-card,.site-card,.wish-card){border:1px solid var(--zt-border-cyan);border-radius:var(--zt-radius-card);background:linear-gradient(145deg,var(--zt-surface-card),#08171e);box-shadow:0 10px 24px #0002}
+.t14-record-domain :is(.focus-grid,.wishlist-grid){grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:1rem;align-items:stretch}
+.t14-record-domain :is(h2,h3){color:var(--zt-accent-orange)}
+.t14-record-domain .equipment-icon{width:64px;height:64px;border-radius:12px;background:#08161e;border:1px solid var(--zt-border-muted);padding:4px}
+.t14-record-domain .equipment-icon img{width:100%;height:100%;object-fit:contain}
+.t14-record-domain .record-summary{display:flex;gap:.6rem;flex-wrap:wrap;margin:0}
+.t14-record-domain .record-summary>span,.t14-record-domain .wish-meta>span{padding:.45rem .75rem;background:#0c2632;border:1px solid var(--zt-border-muted);border-radius:999px}
+.t14-record-domain .focus-copy{color:var(--zt-text-muted);line-height:1.6;overflow-wrap:anywhere}
+.t14-record-domain .site-catalog-tools{gap:.7rem;align-items:end}
+.t14-record-domain .site-card .focus-card-head{gap:.75rem}
+.t14-record-domain :is(input,select){min-height:44px;min-width:0}
+.buddy-initials{border-color:var(--zt-border-cyan);color:#a5e8ff;letter-spacing:.03em}
+@media(max-width:640px){.t14-record-domain{gap:.75rem}.t14-record-domain :is(.focus-grid,.wishlist-grid){grid-template-columns:1fr}.t14-record-domain .record-summary>span{font-size:.85rem}}

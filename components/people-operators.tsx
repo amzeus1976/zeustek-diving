@@ -1,8 +1,10 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { BuddyDiveWorkspace } from './people/buddy-dive-workspace';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { CardImageView } from './certification-images';
 import { ProfilePicture } from './profile-picture';
 import { useRecordRefresh } from './record-status';
@@ -10,6 +12,7 @@ import {
   deletePerson,
   listCertifications,
   listPeople,
+  listOperators,
   savePerson,
   type PersonRecord,
 } from '@/lib/offline/dive-planning';
@@ -104,7 +107,7 @@ const valueOrUnknown = (
   suffix = '',
 ) => (value === '' || value == null ? 'Unknown' : `${value}${suffix}`);
 
-export function PeopleOperators() {
+export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   const [people, setPeople] = useState<StoredPerson[]>([]);
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>(
     [],
@@ -116,21 +119,31 @@ export function PeopleOperators() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [editing, setEditing] = useState<DraftPerson | null>(null);
   const [viewing, setViewing] = useState<StoredPerson | null>(null);
+  const [buddyView,setBuddyView]=useState<StoredPerson|null>(null);
   const [error, setError] = useState('');
+  const [operators,setOperators]=useState<Awaited<ReturnType<typeof listOperators>>>([]);
+  const openedPersonLink=useRef(false);
   const refresh = useCallback(() => {
-    void Promise.all([listPeople(), listDives(), listCertifications()]).then(
-      ([nextPeople, nextDives, nextCertifications]) => {
+    void Promise.all([listPeople(), listDives(), listCertifications(),listOperators()]).then(
+      ([nextPeople, nextDives, nextCertifications,nextOperators]) => {
         setPeople(nextPeople);
         setDives(nextDives);
         setCertifications(nextCertifications);
+        setOperators(nextOperators);
       },
     );
   }, []);
   useRecordRefresh(refresh);
+  useEffect(()=>{
+    if(openedPersonLink.current)return;
+    const query=new URLSearchParams(window.location.search),id=query.get('personId')??query.get('recordId');
+    const person=people.find(row=>row.entityId===id);
+    if(person){const frame=requestAnimationFrame(()=>{setViewing(person);openedPersonLink.current=true;});return()=>cancelAnimationFrame(frame);}
+  },[people]);
   const owner = findOwnerProfile(people);
   const visible = useMemo(
     () =>
-      people
+      people.map(person=>refreshPersonDerivedStats(person,derivePersonProfileStats(person,dives,certifications)))
         .filter((person) => {
           const haystack = [
             personDisplayName(person),
@@ -164,7 +177,7 @@ export function PeopleOperators() {
               Number(Boolean(a.roles?.ownerProfile)) ||
             personDisplayName(a).localeCompare(personDisplayName(b)),
         ),
-    [people, query, roleFilter],
+    [people, dives, certifications, query, roleFilter],
   );
 
   async function remove(person: StoredPerson) {
@@ -225,6 +238,11 @@ export function PeopleOperators() {
     }
   }
 
+  if (editing) return <ProfileEditor person={editing} people={people} dives={dives}
+    certifications={certifications} error={error} operators={operators}
+    close={() => { setEditing(null); setError(''); }} save={save}/>;
+  if (buddyView) return <BuddyDiveWorkspace person={buddyView} dives={dives} close={()=>setBuddyView(null)} saved={refresh} go={go}/>;
+
   return (
     <>
       <header className={styles.hero}>
@@ -232,8 +250,8 @@ export function PeopleOperators() {
           <span>PEOPLE · OPERATORS · OWNER PROFILE</span>
           <h1>People &amp; Operators</h1>
           <p>
-            One profile source for My Profile, buddies, instructors, operators,
-            planning and emergency contacts.
+            People profiles for My Profile, buddies, instructors, guides and contacts.
+            Organisations and services live in Dive Centres.
           </p>
         </div>
         <button
@@ -242,6 +260,7 @@ export function PeopleOperators() {
         >
           <Plus size={17} /> Add profile
         </button>
+        {go&&<button className="focus-secondary" onClick={()=>go('Dive Centres')}>Open Dive Centres</button>}
       </header>
       <section className={`${styles.ownerCard} ${owner ? '' : styles.setup}`}>
         <div>
@@ -350,26 +369,13 @@ export function PeopleOperators() {
       </section>
       {viewing && (
         <ProfileDetail
-          person={viewing}
+          person={refreshPersonDerivedStats(viewing,derivePersonProfileStats(viewing,dives,certifications))}
+          showDives={()=>{setBuddyView(viewing);setViewing(null);}}
           close={() => setViewing(null)}
           edit={() => {
             setEditing({ ...viewing });
             setViewing(null);
           }}
-        />
-      )}
-      {editing && (
-        <ProfileEditor
-          person={editing}
-          people={people}
-          dives={dives}
-          certifications={certifications}
-          error={error}
-          close={() => {
-            setEditing(null);
-            setError('');
-          }}
-          save={save}
         />
       )}
     </>
@@ -380,10 +386,12 @@ function ProfileDetail({
   person,
   close,
   edit,
+  showDives,
 }: {
   person: StoredPerson;
   close: () => void;
   edit: () => void;
+  showDives: () => void;
 }) {
   const stats = [
     ['Linked dives', valueOrUnknown(person.totalLinkedDives)],
@@ -512,6 +520,7 @@ function ProfileDetail({
         </section>
       </div>
       <footer>
+        <button className="focus-secondary" onClick={showDives}>Dives together / link history</button>
         <button className="focus-secondary" onClick={edit}>
           Edit profile
         </button>
@@ -528,6 +537,7 @@ function ProfileEditor({
   people,
   dives,
   certifications,
+  operators,
   error,
   close,
   save,
@@ -536,6 +546,7 @@ function ProfileEditor({
   people: StoredPerson[];
   dives: Array<DiveRecord & { entityId: string }>;
   certifications: Awaited<ReturnType<typeof listCertifications>>;
+  operators: Awaited<ReturnType<typeof listOperators>>;
   error: string;
   close: () => void;
   save: (person: DraftPerson) => Promise<void>;
@@ -596,7 +607,7 @@ function ProfileEditor({
     draft.roles?.boatCharter,
   );
   return (
-    <AccessibleDialog
+    <RecordEditorWorkspace
       label={
         draft.entityId
           ? `Edit ${personDisplayName(draft)}`
@@ -605,28 +616,12 @@ function ProfileEditor({
             : 'Add profile'
       }
       close={close}
-      className={`focus-modal ${styles.editor}`}
+      value={draft}
+      save={() => save(draft)}
+      saveLabel="Save profile"
+      contentClassName={styles.editorContent}
     >
-      <header>
-        <div>
-          <span className="focus-eyebrow">PROFILE EDITOR</span>
-          <h2>
-            {draft.entityId
-              ? `Edit ${personDisplayName(draft)}`
-              : draft.roles?.ownerProfile
-                ? 'Create My Profile'
-                : 'Add person or operator'}
-          </h2>
-        </div>
-        <button
-          className="focus-icon"
-          data-dialog-close
-          aria-label="Close editor"
-          onClick={close}
-        >
-          <X />
-        </button>
-      </header>
+
       <div className={styles.editorSections}>
         <fieldset>
           <legend>Identity</legend>
@@ -1048,6 +1043,17 @@ function ProfileEditor({
             </div>
           </fieldset>
         )}
+        <fieldset><legend>Dive Centre relationships</legend>
+          <p>Link this person to an existing organisation. Their identity and qualifications remain in this Person record.</p>
+          <div className={styles.fields}>
+            {([['currentDiveOperatorId','Current Dive Centre'],['operatorId','Associated Dive Centre']] as const).map(([field,label])=><label key={field}>{label}
+              <select value={draft[field]??''} onChange={event=>update({[field]:event.target.value})}>
+                <option value="">Not linked</option>
+                {draft[field]&&!operators.some(row=>row.entityId===draft[field])&&<option value={draft[field]}>Unavailable linked centre · {draft[field]?.slice(-8)}</option>}
+                {operators.map(row=><option key={row.entityId} value={row.entityId}>{row.name}{row.active===false?' · inactive':''}</option>)}
+              </select></label>)}
+          </div>
+        </fieldset>
         {operatorEnabled && (
           <fieldset>
             <legend>Dive operator profile</legend>
@@ -1186,14 +1192,7 @@ function ProfileEditor({
           {error}
         </p>
       )}
-      <footer>
-        <button className="focus-secondary" data-dialog-close onClick={close}>
-          Cancel
-        </button>
-        <button className="focus-primary" onClick={() => void save(draft)}>
-          Save profile
-        </button>
-      </footer>
-    </AccessibleDialog>
+
+    </RecordEditorWorkspace>
   );
 }

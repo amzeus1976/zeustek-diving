@@ -29,7 +29,7 @@ describe('T12 shell', () => {
   it('mounts Dive Computer Imports as one current-app route', () => {
     const dashboard = read('app/dashboard-client.tsx');
     expect(dashboard).toContain(
-      "import { DiveComputerData } from '@/components/dive-computer-data';",
+      "const DiveComputerData=lazy(()=>import('@/components/dive-computer-data').then(module=>({default:module.DiveComputerData})));",
     );
     expect(dashboard).toContain("active === 'Dive Computer Imports'");
     const workflow = read('lib/workflow/workflow-model.ts');

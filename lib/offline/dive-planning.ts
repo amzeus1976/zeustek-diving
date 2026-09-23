@@ -280,6 +280,9 @@ export const deleteDiveSite = removeRecord;
 
 
 export interface DashboardSettingsRecord extends BaseRecord {
+  professionalGuides?:Record<string,import('../professional-guide').ProfessionalGuideProgress>;
+  weatherConditions?:import('../weather/conditions-settings').WeatherConditionsSettings;
+  analysisWorkbench?:{version:1;cards:import('../insights/analysis-card-registry').AnalysisCardConfig[]};
 
   selectedAwards: string[];
 
@@ -322,6 +325,11 @@ export const deleteDiveTrip = removeRecord;
 
 
 export interface CertificationRecord extends BaseRecord {
+  /** Unassigned legacy certificates belong to My Profile. instructorId is not ownership. */
+  personId?: string;
+  /** Explicit recorded evidence only; never inferred from a course title. */
+  certifiedDepthM?: number | null;
+  qualificationRank?: number | null;
   cardFront?: import('./dive-images').CardImage | null;
   cardBack?: import('./dive-images').CardImage | null;
 
@@ -446,6 +454,7 @@ export const deleteTrainingProgress = removeRecord;
 
 
 export interface NewsArticleRecord extends BaseRecord {
+  sources?: import('../record-identity').NewsSource[];
 
   source: string;
 
@@ -669,7 +678,15 @@ export const deleteDiveMedia = removeRecord;
 
 
 
-export interface OperatorRecord extends BaseRecord { name: string; location: string; website: string; notes: string; }
+export type OperatorType = 'dive-centre'|'dive-shop'|'resort'|'liveaboard'|'charter-boat'|'club'|'independent-instructor'|'gas-fill-station'|'other';
+export type OperatorService = 'training'|'equipmentRental'|'equipmentService'|'cylinderTesting'|'airFills'|'nitroxFills'|'trimixFills'|'oxygenFills'|'boatDiving'|'shoreDiving'|'accommodation';
+export interface OperatorRecord extends BaseRecord {
+  name:string;location:string;website:string;notes:string;
+  tradingName?:string;operatorType?:OperatorType;phone?:string;email?:string;emergencyPhone?:string;bookingUrl?:string;
+  streetAddress?:string;town?:string;region?:string;country?:string;postcode?:string;latitude?:number|null;longitude?:number|null;
+  agencies?:string[];services?:Partial<Record<OperatorService,boolean>>;favourite?:boolean;active?:boolean;
+  profileImage?:import('./dive-images').CardImage|null;
+}
 export const listOperators = () => listRecords<OperatorRecord>('operator');
 export const saveOperator = (input: Omit<OperatorRecord, keyof BaseRecord> & {entityId?: string}) => saveRecord('operator', input);
 export const deleteOperator = removeRecord;
@@ -931,7 +948,7 @@ export const DEFAULT_GEAR_CATEGORY_ICONS: Record<string, string> = {
 
   Wetsuit: '/equipment-icons/wetsuit.png',
 
-  Other: '/equipment-icons/blank.png',
+  Other: '/brand/icons/zeustek-single/06_water_entry_and_dive_types/other.png',
 
 };
 
@@ -959,7 +976,7 @@ export function equipmentIconSource(
 
     ? `/api/media?id=${encodeURIComponent(custom.iconMediaId)}`
 
-    : DEFAULT_GEAR_CATEGORY_ICONS[category] ?? '/equipment-icons/blank.png';
+    : DEFAULT_GEAR_CATEGORY_ICONS[category] ?? DEFAULT_GEAR_CATEGORY_ICONS.Other!;
 
 }
 

@@ -43,6 +43,8 @@ export async function GET(request: Request) {
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const url = new URL(request.url);
+  const provider = url.searchParams.get('provider') ?? 'open-meteo';
+  if (provider !== 'open-meteo') return Response.json({ error: 'The selected provider is not configured. Select Open-Meteo.' }, { status: 409 });
   const points = (url.searchParams.get('points') ?? '').split('|').filter(Boolean).flatMap((value) => {
     const [latitude = NaN, longitude = NaN] = value.split(',').map(Number);
     return Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
@@ -106,7 +108,7 @@ export async function GET(request: Request) {
       const average = Math.round(temperatures.reduce((sum, value) => sum + value, 0) / temperatures.length * 10) / 10;
       const wetDays = rain.filter(value => value >= 0.5).length;
       const value = {
-        provider: 'Open-Meteo historical archive', resolution: 'regional seasonal reference',
+        provider: 'Open-Meteo historical archive', providerId:'open-meteo', sourceCoordinates:{latitude,longitude}, sourceTime:'comparable seasonal days', resolution: 'regional seasonal reference',
         logConditions: { weatherSummary: `Regional seasonal reference: average air ${average} °C across ${temperatures.length} comparable days${rain.length ? `; rain on ${wetDays} of ${rain.length} days` : ''}. Not a dive-day forecast.`, airTemperatureC: average },
         attribution: `Open-Meteo historical model observations from comparable weeks in ${years.join(', ')}. Regional context only; no water, wave, current or visibility estimate. Not dive-safety advice.`,
       };
@@ -166,7 +168,7 @@ export async function GET(request: Request) {
     }
     const result = {
       weather,
-      provider:'Open-Meteo',resolution:date?'hourly':'forecast',
+      provider:'Open-Meteo',providerId:'open-meteo',sourceCoordinates:{latitude:Number(weather.latitude??latitude),longitude:Number(weather.longitude??longitude)},sourceTime:date?`${date}T${String(Math.min(23,Math.max(0,Number(time.slice(0,2))||0))).padStart(2,'0')}:00`:null,resolution:date?'hourly':'forecast',
       marine: marineData,
       ...(logConditions ? { logConditions } : {}),
       attribution: 'Weather data by Open-Meteo. Model data are guidance only and are not for navigation or dive-safety decisions.',

@@ -91,7 +91,10 @@ export interface DiveRecord {
   debrief?: DiveDebrief;
   story?: DiveStory;
   originatingPlanId?: string;
-  originatingPlanRevision?: { eventId: string; recordHash: string; modifiedAt: string };
+  originatingPlanRevision?: { eventId: string; recordHash: string; modifiedAt: string;
+    /** Immutable, owner-scoped provenance saved with the Dive; draft creation has no writes. */
+    snapshot?: { version: 1; accountId: string; record: Record<string, import('./types').JsonValue> };
+  };
   weatherProvider?: string; weatherResolution?: string; weatherAttribution?: string;
 
   schemaVersion?: 'zeustek-universal-dive-log/1.0';

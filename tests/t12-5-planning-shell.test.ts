@@ -36,7 +36,8 @@ describe('T12.5 Plan/Gas UI integration', () => {
     const model = read('lib/offline/planning-pages.ts');
     const source = read('components/planning/gas-planning.tsx');
     expect(model).toContain("'PADI RDP Air' | 'PADI RDP EANx32' | 'SSI' | 'SSI Air/EANx' | 'US Navy Air'");
-    expect(source).toContain('Legacy table transcriptions remain in older records');
+    expect(read('components/planning/t14-gas-plan-editor.tsx')).toContain('Existing agency-table transcription retained unchanged');
+    expect(source).toContain('T14GasPlanEditor');
     expect(read('components/planning/recreational-gas-planner.tsx')).toContain('No backup table configured.');
   });
   it('preserves legacy Bühlmann provenance while the recreational engine remains schedule-free', () => {

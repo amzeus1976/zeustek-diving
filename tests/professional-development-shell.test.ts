@@ -94,7 +94,7 @@ describe('T08 Professional Development shell and architecture', () => {
 
   it('mounts Professional Development in the existing responsive ZeusTek shell', () => {
     const dashboard = read('app/dashboard-client.tsx');
-    expect(dashboard).toContain("import { ProfessionalDevelopment } from '@/components/professional-development'");
+    expect(dashboard).toContain("const ProfessionalDevelopment=lazy(()=>import('@/components/professional-development').then(module=>({default:module.ProfessionalDevelopment})));");
     expect(dashboard).toContain("'Professional Development': GraduationCap");
     expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Professional Development', label: 'Professional Development'");
     expect(dashboard).toContain("active === 'Professional Development' && <ProfessionalDevelopment go={go} />");
