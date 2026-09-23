@@ -28,6 +28,8 @@ import {
 } from 'recharts';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
+import { ZeusTekAssetIcon } from './brand/zeustek-asset-icon';
+import { buildVisibleInsightAwards, insightAwardsEmptyState } from '../lib/insights/visible-insight-awards';
 import { useRecordRefresh } from './record-status';
 import { listDives } from '../lib/offline/dives';
 import {
@@ -513,9 +515,12 @@ export function ExperienceAnalytics({ go }: Props) {
     saltwaterDives: String(scopedDives.filter((dive)=>dive.waterType==='Saltwater').length), freshwaterDives: String(scopedDives.filter((dive)=>dive.waterType==='Freshwater').length), otherWaterDives: String(scopedDives.filter((dive)=>!['Saltwater','Freshwater'].includes(dive.waterType ?? '')).length),
     deep20: String(depths.filter((value)=>value>=20).length), deep25: String(depths.filter((value)=>value>=25).length), deep30: String(depths.filter((value)=>value>=30).length), deep35: String(depths.filter((value)=>value>=35).length), deep40: String(depths.filter((value)=>value>=40).length), poolDives: String(diveTypeCount(/pool/)), shoreDives: String(diveTypeCount(/shore/)), boatDives: String(diveTypeCount(/boat/)), nightDives: String(diveTypeCount(/night/)), wreckDives: String(diveTypeCount(/^wreck$/)), wreckPenetrationDives: String(diveTypeCount(/wreck penetration/)), cavernDives: String(diveTypeCount(/cavern/)), caveDives: String(diveTypeCount(/^cave$/)), unknownOtherDives: String(scopedDives.filter((dive)=>!(dive.diveTypes?.length)).length),
   };
-  const orderedAwards = [...new Set([...awardIds, ...INSIGHT_AWARD_DEFINITIONS.map(([id])=>id)])]
-    .flatMap((id) => { const definition = INSIGHT_AWARD_DEFINITIONS.find(([candidate])=>candidate===id); return definition ? [{ id, label: definition[1], value: awardValues[id] ?? '—' }] : []; })
-    .slice(0, awardCount);
+  const orderedAwards = buildVisibleInsightAwards({
+    definitions: INSIGHT_AWARD_DEFINITIONS,
+    selectedAwardIds: awardIds,
+    maxAwards: awardCount,
+    values: awardValues,
+  });
   const headlineCards = [
     [
       'total-dives',
@@ -575,7 +580,7 @@ export function ExperienceAnalytics({ go }: Props) {
     <main className={styles.page}>
       <header className={styles.hero}>
         <div className="focus-heading-title">
-          <ZeusTekIcon id="sac-rmv" size="hero" />
+          <ZeusTekAssetIcon name="core-logbook-icons-sac-rmv" size={64} fallback={<ZeusTekIcon id="sac-rmv" size="hero" />}/>
           <div>
           <span className="focus-eyebrow">ANALYTICS &amp; PROGRESS</span>
           <h1>Experience &amp; Analytics</h1>
@@ -618,6 +623,7 @@ export function ExperienceAnalytics({ go }: Props) {
       </div>
 
       <section className={styles.kpis} aria-label="Headline analytics">
+        {!orderedAwards.length && <p className={styles.awardEmpty}>{insightAwardsEmptyState}</p>}
         {orderedAwards.map(({ id, label, value }) => {
           const headline = headlineCards.find(([kind]) => kind === id);
           const Icon = headline?.[1] ?? BarChart3;

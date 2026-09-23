@@ -1,0 +1,46 @@
+/* ZeusTek Diving brand override: dive log, training, sites, gear, ocean exploration. */
+:root,
+[data-brand="zeustek-diving"] {
+  --brand-name: "ZeusTek Diving";
+  --brand-primary: #ff7a00;
+  --brand-secondary: #00d8ff;
+  --brand-tertiary: #004f8f;
+  --brand-gradient: linear-gradient(90deg, #00d8ff 0%, #008cff 45%, #ff7a00 100%);
+  --brand-glow: 0 0 12px rgba(0, 216, 255, 0.58), 0 0 32px rgba(255, 122, 0, 0.26);
+}
+
+.ztd-dive-card {
+  display: grid;
+  gap: .65rem;
+  border: 1px solid rgba(0, 216, 255, .20);
+  border-radius: var(--zt-radius-lg);
+  background: linear-gradient(180deg, rgba(0,216,255,.05), rgba(255,122,0,.018)), var(--zt-surface);
+  padding: 1rem;
+}
+
+.ztd-dive-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1rem;
+  color: var(--zt-text-soft);
+  font-size: .95rem;
+}
+
+.ztd-depth {
+  color: var(--brand-secondary);
+  font-family: var(--zt-font-mono);
+  text-shadow: var(--zt-shadow-neon-aqua);
+}
+
+.ztd-training-pill {
+  border-color: rgba(255,122,0,.55);
+  color: #ffd7b2;
+  background: rgba(255,122,0,.10);
+}
+
+.ztd-ocean-backdrop {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(0,216,255,.12), transparent 26rem),
+    radial-gradient(circle at 80% 12%, rgba(255,122,0,.08), transparent 22rem),
+    linear-gradient(180deg, #05090b, #080808 54%, #020506);
+}

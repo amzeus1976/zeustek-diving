@@ -69,7 +69,7 @@ describe('TWEAKS workflow, Insights and Gear acceptance', () => {
     expect(insights).not.toContain('Layout choice is local to this view');
     const styles = read('components/experience-analytics.module.css');
     expect(styles).toContain('justify-content: center');
-    expect(styles).toContain('flex: 0 0 12.5%');
+    expect(styles).toContain('flex: 0 0 25%');
     expect(styles).toContain('flex-basis: 25%');
   });
 
@@ -116,13 +116,14 @@ describe('TWEAKS workflow, Insights and Gear acceptance', () => {
   it('keeps individual Equipment, removes gas ownership from Loadouts, and exposes a cylinder table/detail history', () => {
     const dashboard = read('app/dashboard-client.tsx');
     const workspace = read('components/loadouts-gas.tsx');
+    const columns = read('lib/cylinders/cylinder-column-preferences.ts');
     expect(dashboard).toContain("active === 'Equipment' && <Equipment />");
     expect(dashboard).toContain("active === 'Loadouts & Gas' && <Loadouts />");
     expect(dashboard).toContain("active === 'Cylinders & Gas' && <CylindersGas />");
     expect(workspace).toContain('Cylinder fills and analyses live in their own workspace.');
     expect(workspace).toContain('<table className={styles.cylinderTable}>');
-    expect(workspace).toContain('O₂ cleaned');
-    expect(workspace).toContain('Fill location');
+    expect(columns).toContain("oxygenClean: 'O₂ cleaned'");
+    expect(columns).toContain("fillLocation: 'Fill location'");
     expect(workspace).toContain('Hydro: 5 years');
     expect(workspace).toContain('Visual: 30 months');
     expect(workspace).toContain('optional 12–15 months');

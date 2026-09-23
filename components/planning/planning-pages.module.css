@@ -515,14 +515,14 @@
 .contextChecks{display:grid;gap:7px;margin-top:10px;overflow-wrap:anywhere}
 .warningIconButton{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:4px 8px;border:1px solid #f8a443;border-radius:8px;background:#342211;color:#ffe1b5;cursor:pointer;text-align:left;font:inherit}
 .warningIconButton:hover{background:#513015}
-.warningIconButton:focus-visible{outline:3px solid #fff11a;outline-offset:2px}
+.warningIconButton:focus-visible{outline:3px solid var(--zt-focus);outline-offset:2px}
 .contextChecks p{margin:0;border-left:2px solid #28c7e9;padding:7px 10px;background:#0b222b;color:#d7e9ee}
 .contextChecks .safetyWarning,.safetyWarning{border:1px solid #f8a443;border-radius:9px;background:#342211;color:#ffe1b5;padding:9px 11px;line-height:1.45;overflow-wrap:anywhere}
 .formulaResults{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin-top:10px}
 .formulaResults>div{display:grid;gap:5px;min-width:0;border:1px solid #1a7997;border-radius:9px;padding:9px;background:#09212b;overflow-wrap:anywhere}
 .formulaResults strong{color:#ffb146}.formulaResults small{color:#99c8d4}
 .infoButton{display:inline-flex;align-items:center;justify-content:center;min-width:30px;min-height:30px;border:1px solid #38caea;border-radius:50%;background:#102d38;color:#a7eeff;cursor:pointer}
-.infoButton:focus-visible{outline:3px solid #fff11a;outline-offset:2px}
+.infoButton:focus-visible{outline:3px solid var(--zt-focus);outline-offset:2px}
 .tableReference{min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:1px solid #26758d;border-radius:10px;padding:10px}
 .tableReference legend{color:#ffb146}.tableReference p{grid-column:1/-1;margin:0;color:#b9d6df}
 .inlineCheck{display:flex!important;align-items:center;gap:8px;min-height:44px}.inlineCheck input{width:auto!important}
