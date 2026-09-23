@@ -8,6 +8,7 @@ import './focus.css';
 import './issue-register.css';
 import './audit-improvements.css';
 import './t14-record-workspaces.css';
+import './t14-cpd-news.css';
 import { PwaRegister } from '@/components/pwa-register';
 
 const geistSans = Inter({

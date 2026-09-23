@@ -126,3 +126,15 @@ Fresh browser session: Gas Plan workspace mounted and cancelled; application con
 - Next: Stage7 CPD/News/Professional Development. One authorised Gmail live acceptance remains reserved for Stage10 after the complete release.
 
 - Navigation retest: the initial automation targeted an off-screen mobile-menu button (x=-330). Opening the menu correctly loads the lazy workspace. Stage9 will make closed mobile navigation inert to keyboard/assistive navigation.
+
+
+## Stage 7 — locally complete; live Gmail acceptance reserved for Stage 10
+
+- Single-question maintenance creates immutable versions with reasons, explicit approval, preserved attempt history and atomic conflict checks. Advisory AI exchanges bind to the exact question content; every finding needs an author decision. Only the latest reviewed bank feeds future attempts.
+- Guided Professional Development setup resumes per pathway and preserves unknown readiness. The requirement builder supports cited owner-entered rules without inventing agency thresholds. Certifications, Bibliography, question review and professional editors use the shared workspace; Bibliography cards flow naturally.
+- News uses canonical record DTOs, preserves grouped source provenance and hides removed stories without altering Gmail records. Accessible confirmations replace native dialogs. Opening News reads cached stories/status only; feed refresh and mailbox sync are separate explicit actions.
+- Gmail validates the dedicated account, callback and read-only scope, preserves or rotates encrypted refresh credentials, consumes OAuth state once and records bounded sync runs durably. Duplicate/concurrent/uncertain requests cannot silently repeat acceptance. Safe diagnostics distinguish configuration, consent, account, access, quota and upstream failures.
+- New focused23 tests PASS; full regression116files/673tests PASS; typecheck, production build/PWA, targeted modified-module lint and frozen hashes PASS. Local browser: Bibliography, News, Certifications/editor, question maintenance and Professional Development/editor overflow0 at390/820/1024/1440; application console errors0. Lazy Insights workspace also loads successfully.
+- Local UI verified question v1 retained after v2 edit, two active questions rather than duplicated versions; certification dirty-cancel preserves data/focus; professional step and mentor note resume; unknown readiness remains unknown. Newsletter story removal preserves the separate story and source mailbox record.
+- Local75Dives+1GasPlan fingerprint unchanged:221e9ff72ab5deb482b5ef0029e556c8ee7a3e667e54ff52e0671ca646411a10. No mailbox sync invoked. Production/GitHub unchanged. The sole live Gmail acceptance runs in Stage10 after the complete release.
+- Next: Stage8 Admin, domain configuration and privacy-aware exports.

@@ -14,6 +14,9 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import {ProfessionalRequirementBuilder} from './professional-requirement-builder';
+import {ProfessionalGuide} from './professional-guide';
+import {RecordEditorWorkspace} from './shared/record-editor-workspace';
 import { AccessibleDialog } from './accessible-dialog';
 import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
@@ -59,6 +62,8 @@ import {
   type ProfessionalRequirementDefinition,
 } from '../lib/offline/professional-development';
 import styles from './professional-development.module.css';
+
+const evidenceText=(value:unknown):string=>{if(value==null)return '';if(typeof value==='string')return value;if(typeof value==='number'||typeof value==='boolean')return String(value);return JSON.stringify(value)??'';};
 
 type Props = { go?: (next: string) => void };
 type EvidenceDraft = Stored<ProfessionalEvidenceRecord> | null;
@@ -267,6 +272,8 @@ export function ProfessionalDevelopment({ go }: Props) {
         </button>
       </header>
 
+      <ProfessionalGuide key={pathway?.entityId??'new'} pathwayId={pathway?.entityId??''} requirementSetId={requirementSet?.entityId??null} evidenceCount={pathwayEvidence.length} createPathway={()=>setEditingPathway(null)} captureRequirements={()=>setReferenceEditorOpen(true)} addEvidence={()=>setEditingEvidence(null)}/>
+
       {!pathways.length ? (
         <section className={`focus-card ${styles.empty}`}>
           <GraduationCap />
@@ -362,7 +369,7 @@ export function ProfessionalDevelopment({ go }: Props) {
             </div>
           </section>
           {referenceHealth.issues.length > 0 && (
-            <section className={styles.integrityWarning} role="status">
+            <section className={styles.integrityWarning} aria-live="polite">
               <AlertTriangle size={18} />
               <div>
                 <b>
@@ -465,8 +472,7 @@ export function ProfessionalDevelopment({ go }: Props) {
                               >
                                 <span>
                                   <b>
-                                    {String(
-                                      item.payload.title ||
+                                    {evidenceText(item.payload.title ||
                                         item.payload.activity ||
                                         category.label,
                                     )}
@@ -706,7 +712,7 @@ function PathwayEditor({
         set.pathwayKey.toLocaleLowerCase('en-GB') ===
           pathwayKey.toLocaleLowerCase('en-GB')),
   );
-  async function submit(event: React.FormEvent) {
+  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError('');
@@ -737,13 +743,13 @@ function PathwayEditor({
     }
   }
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        editable
+    <>
+      <RecordEditorWorkspace
+        busy={busy}
         label={
           existing ? 'Edit professional pathway' : 'Create professional pathway'
         }
-        className={`focus-modal ${styles.editor}`}
+        contentClassName={styles.editor}
         close={() => {
           if (!busy) close();
         }}
@@ -884,8 +890,8 @@ function PathwayEditor({
             </button>
           </footer>
         </form>
-      </AccessibleDialog>
-    </div>
+      </RecordEditorWorkspace>
+    </>
   );
 }
 
@@ -910,7 +916,7 @@ function ReferenceEditor({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function submit(event: React.FormEvent) {
+  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError('');
@@ -943,11 +949,11 @@ function ReferenceEditor({
     }
   }
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        editable
+    <>
+      <RecordEditorWorkspace
+        busy={busy}
         label="Capture professional requirement version"
-        className={`focus-modal ${styles.referenceEditor}`}
+        contentClassName={styles.referenceEditor}
         close={() => {
           if (!busy) close();
         }}
@@ -1009,6 +1015,8 @@ function ReferenceEditor({
                 placeholder="Official manual/page/version you checked"
               />
             </label>
+            <ProfessionalRequirementBuilder value={requirementsText} change={setRequirementsText}/>
+            <details className={styles.span2}><summary>Advanced requirement rules</summary>
             <label className={styles.span2}>
               Requirements JSON
               <textarea
@@ -1024,7 +1032,7 @@ function ReferenceEditor({
                 {`{"metric":"professional-evidence","evidenceType":"guided-dive","min":1}`}
                 .
               </small>
-            </label>
+            </label></details>
           </fieldset>
           {error && (
             <p role="alert" className="dive-save-error">
@@ -1045,8 +1053,8 @@ function ReferenceEditor({
             </button>
           </footer>
         </form>
-      </AccessibleDialog>
-    </div>
+      </RecordEditorWorkspace>
+    </>
   );
 }
 
@@ -1107,13 +1115,13 @@ function EvidenceEditor({
     base.relatedPersonIds ?? [],
   );
   const [title, setTitle] = useState(
-    String(base.payload.title ?? base.payload.activity ?? ''),
+    evidenceText(base.payload.title ?? base.payload.activity ?? ''),
   );
   const [detail, setDetail] = useState(
-    String(base.payload.detail ?? base.payload.outcome ?? ''),
+    evidenceText(base.payload.detail ?? base.payload.outcome ?? ''),
   );
   const [payloadValues, setPayloadValues] = useState<Record<string, unknown>>({
-    ...(base.payload ?? {}),
+    ...base.payload,
   });
   const [notes, setNotes] = useState(base.notes ?? '');
   const [busy, setBusy] = useState(false);
@@ -1122,7 +1130,7 @@ function EvidenceEditor({
     PROFESSIONAL_EVIDENCE_FIELDS[
       evidenceType as keyof typeof PROFESSIONAL_EVIDENCE_FIELDS
     ] ?? [];
-  async function submit(event: React.FormEvent) {
+  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError('');
@@ -1163,13 +1171,13 @@ function EvidenceEditor({
     }
   }
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        editable
+    <>
+      <RecordEditorWorkspace
+        busy={busy}
         label={
           existing ? 'Edit professional evidence' : 'Log professional evidence'
         }
-        className={`focus-modal ${styles.editor}`}
+        contentClassName={styles.editor}
         close={() => {
           if (!busy) close();
         }}
@@ -1348,7 +1356,7 @@ function EvidenceEditor({
                 {field.label}
                 {field.kind === 'textarea' ? (
                   <textarea
-                    value={String(payloadValues[field.key] ?? '')}
+                    value={evidenceText(payloadValues[field.key] ?? '')}
                     onChange={(event) =>
                       setPayloadValues((current) => ({
                         ...current,
@@ -1358,7 +1366,7 @@ function EvidenceEditor({
                   />
                 ) : field.kind === 'select' ? (
                   <select
-                    value={String(payloadValues[field.key] ?? '')}
+                    value={evidenceText(payloadValues[field.key] ?? '')}
                     onChange={(event) =>
                       setPayloadValues((current) => ({
                         ...current,
@@ -1406,7 +1414,7 @@ function EvidenceEditor({
                       value={
                         payloadValues[field.key] == null
                           ? ''
-                          : String(payloadValues[field.key])
+                          : evidenceText(payloadValues[field.key])
                       }
                       onChange={(event) =>
                         setPayloadValues((current) => ({
@@ -1422,7 +1430,7 @@ function EvidenceEditor({
                   </span>
                 ) : (
                   <input
-                    value={String(payloadValues[field.key] ?? '')}
+                    value={evidenceText(payloadValues[field.key] ?? '')}
                     placeholder={field.placeholder}
                     onChange={(event) =>
                       setPayloadValues((current) => ({
@@ -1468,8 +1476,8 @@ function EvidenceEditor({
             </button>
           </footer>
         </form>
-      </AccessibleDialog>
-    </div>
+      </RecordEditorWorkspace>
+    </>
   );
 }
 
@@ -1561,8 +1569,7 @@ function EvidenceDetail({
               {item.evidenceType.toUpperCase()}
             </span>
             <h2>
-              {String(
-                item.payload.title ||
+              {evidenceText(item.payload.title ||
                   item.payload.activity ||
                   'Professional evidence',
               )}
@@ -1646,7 +1653,7 @@ function EvidenceDetail({
             ))}
           </dl>
         )}
-        {Boolean(item.payload.detail) && <p>{String(item.payload.detail)}</p>}
+        {Boolean(item.payload.detail) && <p>{evidenceText(item.payload.detail)}</p>}
         {item.notes && <p>{item.notes}</p>}
         <MediaGallery
           ownerKind="professional-evidence"

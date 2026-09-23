@@ -56,12 +56,15 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
 import { buddyInitials } from '@/lib/people/buddy-links';
 import { AppChangelog, AppVersionLink } from '@/components/app-changelog';
 import { listOperators, saveOperator, deleteOperator, type OperatorRecord } from '@/lib/offline/dive-planning';
+import {newsArticleInput,newsRecordForStory} from '@/lib/news-records';
+import {gmailDiagnostic,type GmailDiagnosticCode,type GmailConnectionStatus,type GmailSyncRun} from '@/lib/gmail-contract';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
 import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/lib/zeustek-icons';
 import {fillMissingGasRates} from '@/lib/gas-rates';
@@ -3686,7 +3689,7 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
               <div className="focus-card-head">
                 <AgencyMark agency={item.agency} options={catalogOptions} />
                 <div className="record-actions">
-                  <button
+                  <button aria-label={`Edit ${item.certification}`}
                     onClick={() => {
                       setEditing(item);
                       setAdding(true);
@@ -3694,7 +3697,7 @@ function TrainingV2({ go }: { go: (next: string) => void }) {
                   >
                     <Pencil size={15} />
                   </button>
-                  <button onClick={() => void remove(item)}>
+                  <button aria-label={`Delete ${item.certification}`} onClick={() => void remove(item)}>
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -3785,6 +3788,7 @@ function CertificationForm({
   const [notes, setNotes] = useState(item?.notes ?? '');
   const [image, setImage] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [saveError,setSaveError]=useState('');
   const [agencyOptions, setAgencyOptions] = useState<string[]>([]);
   const [qualificationOptions, setQualificationOptions] = useState<string[]>(
     [],
@@ -3828,7 +3832,8 @@ function CertificationForm({
   ];
   async function submit() {
     if (!agency.trim() || !certification.trim()) return;
-    setBusy(true);
+    setBusy(true);setSaveError('');
+    try {
     const linkedInstructor = instructors.find((person) => person.entityId === instructorId) ?? instructors.find((person) => person.name.toLowerCase() === instructor.trim().toLowerCase() || person.membershipNumber.toLowerCase() === instructor.trim().toLowerCase());
     await saveCertification({
       ...(item?.entityId ? { entityId: item.entityId } : {}),
@@ -3854,9 +3859,10 @@ function CertificationForm({
     });
     saved();
     close();
+    }catch(error){setSaveError(error instanceof Error?error.message:'Certification could not be saved. Your edits are retained.');}finally{setBusy(false);}
   }
   return (
-    <Card className="record-form">
+    <RecordEditorWorkspace label={item?'Edit certification':'New certification'} close={close} busy={busy} save={submit} saveLabel="Save certification" saveDisabled={!agency.trim()||!certification.trim()} contentClassName="record-form">
       <div className="record-form-head">
         <div>
           <span className="focus-eyebrow">
@@ -3864,7 +3870,7 @@ function CertificationForm({
           </span>
           <h3>Qualification details</h3>
         </div>
-        <button className="focus-icon" aria-label="Close editor" onClick={close}>
+        <button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}>
           <X size={17} />
         </button>
       </div>
@@ -3949,8 +3955,9 @@ function CertificationForm({
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
       </div>
+      {saveError&&<p role="alert" className="dive-save-error">{saveError}</p>}
       <footer>
-        <button className="focus-secondary" onClick={close}>
+        <button className="focus-secondary" data-dialog-close onClick={close}>
           Cancel
         </button>
         <button
@@ -3961,7 +3968,7 @@ function CertificationForm({
           {busy ? 'Saving…' : 'Save certification'}
         </button>
       </footer>
-    </Card>
+    </RecordEditorWorkspace>
   );
 }
 function Training() {
@@ -4657,11 +4664,7 @@ function DiveNews() {
   </>;
 }
 
-type DiveNewsArticle = { sources?: Array<{source:string;link:string}>; title: string; link: string; summary: string; publishedAt: string; source: string };
-type GmailConnectionStatus = {
-  configured: boolean; missing: string[]; redirectUri: string; connected: boolean; email: string;
-  connectedAt: string; lastSyncAt: string; lastSyncCount: number; lastError: string; syncMode: 'when-open';
-};
+type DiveNewsArticle = import('../lib/record-identity').NewsStory;
 const EMPTY_NEWS_PREFERENCES: Omit<NewsPreferencesRecord, 'createdAt' | 'modifiedAt'> = { interestedKeywords: [], mutedKeywords: [], mutedMode: 'hide' };
 
 function DiveNewsV2() {
@@ -4677,13 +4680,18 @@ function DiveNewsV2() {
   const [status, setStatus] = useState('Loading dive news…');
   const [newsletterEmail, setNewsletterEmail] = useState(DEFAULT_NEWSLETTER_EMAIL);
   const [copied, setCopied] = useState(false);
+  const [deleting,setDeleting]=useState<DiveNewsArticle|null>(null);
+  const [disconnecting,setDisconnecting]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const requestBusy=useRef(false);
+  const pendingRun=useRef<string|null>(null);
   const activePreferences = preferences[0] ?? EMPTY_NEWS_PREFERENCES;
 
   const refreshLocalNews=useCallback(async()=>{
     const [nextSources, nextArticleRecords, nextPreferences, gmailArticles] = await Promise.all([
-      ensureNewsSources(), listNewsArticles(), listNewsPreferences(), listGmailNews(),
+      listNewsSources(), listNewsArticles(), listNewsPreferences(), listGmailNews(),
     ]);
-    setSources(nextSources); setArticleRecords(nextArticleRecords); setPreferences(nextPreferences);
+    setSources(nextSources.length?nextSources:DEFAULT_NEWS_SOURCES.map((source,index)=>({...source,entityId:`default-news-${index}`,createdAt:'',modifiedAt:''}))); setArticleRecords(nextArticleRecords); setPreferences(nextPreferences);
     const savedPreferences = nextPreferences[0];
     setInterestedText(savedPreferences?.interestedKeywords.join(', ') ?? '');
     setMutedText(savedPreferences?.mutedKeywords.join(', ') ?? '');
@@ -4691,72 +4699,92 @@ function DiveNewsV2() {
     const cache=await zeustekDb.settings.get(`news-cache:${currentDiveAccount()}`);
     const cached=Array.isArray(cache?.value)?cache.value as unknown as DiveNewsArticle[]:[];
     setArticles(groupNewsStories([...gmailArticles,...cached]));
-    return {nextSources,gmailArticles};
+    return {nextSources:nextSources.length?nextSources:DEFAULT_NEWS_SOURCES,gmailArticles};
   },[]);
   const localNewsChanged=useCallback(()=>{void refreshLocalNews();},[refreshLocalNews]); useRecordRefresh(localNewsChanged);
-  const refresh = useCallback(async (forceMailboxSync = false) => {
-    const {nextSources,gmailArticles}=await refreshLocalNews();
-    if(!navigator.onLine){setStatus('Offline — showing cached stories.');return;}
-
-    const statusResponse = await fetch('/api/gmail/status', { cache: 'no-store' });
-    let gmailStatus = statusResponse.ok ? await statusResponse.json() as GmailConnectionStatus : null;
-    if (gmailStatus?.connected) {
-      const due = !gmailStatus.lastSyncAt || Date.now() - Date.parse(gmailStatus.lastSyncAt) > 15 * 60_000;
-      if (forceMailboxSync || due) {
-        const syncResponse = await fetch('/api/gmail/sync', { method: 'POST' });
-        const syncResult = await syncResponse.json() as { count?: number; error?: string };
-        if (!syncResponse.ok) setStatus(syncResult.error || 'The newsletter mailbox could not be refreshed.');
-        else setStatus(`${syncResult.count ?? 0} newsletter emails checked.`);
-        const updatedStatus = await fetch('/api/gmail/status', { cache: 'no-store' });
-        if (updatedStatus.ok) gmailStatus = await updatedStatus.json() as GmailConnectionStatus;
-      }
-    }
-    setGmail(gmailStatus);
-    const feeds = nextSources.filter((source) => source.enabled && source.type !== 'newsletter');
-    const response = await fetch('/api/dive-news', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sources: feeds.map(({ name, url, type }) => ({ name, url, type })) }) });
-    const result = await response.json() as { articles?: DiveNewsArticle[]; failures?: Array<{ source: string }> };
-    const combined = [...gmailArticles.map(({ source, title, link, summary, publishedAt }) => ({ source, title, link, summary, publishedAt })), ...(result.articles ?? [])];
-    const unique = groupNewsStories(combined);
-    setArticles(unique);
-    await zeustekDb.settings.put({key:`news-cache:${currentDiveAccount()}`,value:JSON.parse(JSON.stringify(unique))});
-    if (!gmailStatus?.connected || !forceMailboxSync) setStatus(unique.length ? `${unique.length} recent stories${gmailArticles.length ? ` · ${gmailArticles.length} from Gmail` : ''}${result.failures?.length ? ` · ${result.failures.length} source unavailable` : ''}` : 'No news stories are available just now.');
-  }, [refreshLocalNews]);
-
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    if (query.get('gmailError')) setStatus(query.get('gmailError') ?? 'Gmail connection failed.');
-    else if (query.get('gmail') === 'connected') setStatus('Gmail connected. Checking the newsletter inbox…');
-    void refresh().catch(() => setStatus('News refresh is unavailable — saved and cached stories remain available.'));
-    void listDashboardSettings().then((records) => setNewsletterEmail(records[0]?.newsletterEmail ?? DEFAULT_NEWSLETTER_EMAIL));
-    const timer = window.setInterval(() => void refresh(), 15 * 60_000);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
+  const readConnection=useCallback(async()=>{
+    const response=await fetch('/api/gmail/status',{cache:'no-store'});
+    if(!response.ok)throw new Error('Mailbox status could not be read. Cached stories remain available.');
+    const result=await response.json() as GmailConnectionStatus;setGmail(result);return result;
+  },[]);
+  const refresh=useCallback(async()=>{
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    try{
+      const {nextSources,gmailArticles}=await refreshLocalNews();
+      if(!navigator.onLine){setStatus('Offline — showing cached stories.');return;}
+      const feeds=nextSources.filter(source=>source.enabled&&source.type!=='newsletter');
+      const response=await fetch('/api/dive-news',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sources:feeds.map(({name,url,type})=>({name,url,type}))})});
+      if(!response.ok)throw new Error('Public feeds could not be refreshed. Cached stories remain available.');
+      const result=await response.json() as {articles?:DiveNewsArticle[];failures?:Array<{source:string}>};
+      const cached=await zeustekDb.settings.get(`news-cache:${currentDiveAccount()}`);
+      const prior=Array.isArray(cached?.value)?cached.value as unknown as DiveNewsArticle[]:[];
+      const unique=groupNewsStories([...gmailArticles,...(result.articles??[]),...prior]);
+      setArticles(unique);await zeustekDb.settings.put({key:`news-cache:${currentDiveAccount()}`,value:JSON.parse(JSON.stringify(unique.slice(0,500)))});
+      setStatus(`${unique.length} cached stories${result.failures?.length?` · ${result.failures.length} feeds unavailable`:''}. Mailbox sync runs only when selected.`);
+    }catch(error){setStatus(error instanceof Error?error.message:'News refresh failed. Cached stories remain available.');}
+    finally{requestBusy.current=false;setBusy(false);}
+  },[refreshLocalNews]);
+  const showSyncResult=(run:GmailSyncRun)=>setStatus(run.status==='completed'?`Mailbox sync completed: ${run.imported} imported, ${run.updated} updated, ${run.unchanged} unchanged${run.hasMore?' · 100-message limit reached; more remain in the 90-day window':''}.`:`${run.diagnostic?.message??'Mailbox sync is in progress.'} ${run.diagnostic?.remedy??'Refresh connection status before starting another run.'}`);
+  async function syncMailbox(){
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    const key=`gmail-pending-run:${currentDiveAccount()}`;
+    try{
+      pendingRun.current=pendingRun.current??sessionStorage.getItem(key)??crypto.randomUUID();sessionStorage.setItem(key,pendingRun.current);
+      const response=await fetch('/api/gmail/sync',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({runId:pendingRun.current})});
+      const result=await response.json() as GmailSyncRun & {error?:string};
+      if(!response.ok)throw new Error(result.error??'Mailbox sync could not be confirmed.');
+      showSyncResult(result);
+      if(result.status==='completed'||result.status==='failed'){pendingRun.current=null;sessionStorage.removeItem(key);}
+      await Promise.all([readConnection(),refreshLocalNews()]);
+    }catch{setStatus('The sync response was not confirmed. Refresh connection status before retrying; the same run ID is retained.');await readConnection().catch(()=>{});}
+    finally{requestBusy.current=false;setBusy(false);}
+  }
+  async function refreshConnection(){
+    try{const connection=await readConnection();if(connection.lastRun)showSyncResult(connection.lastRun);
+      const key=`gmail-pending-run:${currentDiveAccount()}`;const id=pendingRun.current??sessionStorage.getItem(key);
+      if(connection.lastRun?.runId===id&&['completed','failed'].includes(connection.lastRun.status)){pendingRun.current=null;sessionStorage.removeItem(key);await refreshLocalNews();}
+    }catch(error){setStatus(error instanceof Error?error.message:'Connection status unavailable.');}
+  }
+  useEffect(()=>{
+    let active=true;
+    void readConnection().then(()=>{if(active&&!new URLSearchParams(window.location.search).has('gmailError'))setStatus('Showing cached stories. Refresh public feeds or explicitly sync the newsletter mailbox.');}).catch(error=>{if(active)setStatus(error instanceof Error?error.message:'Connection status unavailable.');});
+    const query=new URLSearchParams(window.location.search);
+    const error=query.get('gmailError');
+    if(error){const allowed=['missing_configuration','callback_mismatch','consent_denied','wrong_account','reconnect_required','insufficient_scope','rate_limited','upstream_failure','invalid_request'];const diagnostic=gmailDiagnostic(allowed.includes(error)?error as GmailDiagnosticCode:'upstream_failure');setStatus(`${diagnostic.message} ${diagnostic.remedy}`);}
+    void listDashboardSettings().then(records=>{if(active)setNewsletterEmail(records[0]?.newsletterEmail??DEFAULT_NEWSLETTER_EMAIL);});
+    return()=>{active=false;};
+  },[readConnection]);
 
   const newsletters = sources.filter((source) => source.enabled && source.type === 'newsletter');
-  const recordByLink = new Map(articleRecords.map((record) => [record.link, record]));
+  const recordByLink = new Map(articles.map(article=>[article.link,newsRecordForStory(article,articleRecords)]));
+  for(const record of articleRecords)if(!recordByLink.has(record.link))recordByLink.set(record.link,record);
   const currentArticles = articles.filter((article) => !['archived', 'deleted'].includes(recordByLink.get(article.link)?.state ?? ''));
   const learnedProfile = learnedNewsProfile(articleRecords);
   const visibleArticles: DiveNewsArticle[] = view === 'current'
     ? sortNewsByPriority(currentArticles, activePreferences, articleRecords)
-    : articleRecords.filter((record) => record.state === view).map(({ source, title, link, summary, publishedAt }) => ({ source, title, link, summary, publishedAt })).sort((a, b) => Date.parse(b.publishedAt || '0') - Date.parse(a.publishedAt || '0'));
+    : articleRecords.filter((record) => record.state === view).map(({ source, title, link, summary, publishedAt,sources }) => ({ source, title, link, summary, publishedAt,...(sources?{sources}:{}) })).sort((a, b) => Date.parse(b.publishedAt || '0') - Date.parse(a.publishedAt || '0'));
 
   async function setArticleState(article: DiveNewsArticle, state: NewsArticleRecord['state']) {
+    try {
     const current = recordByLink.get(article.link);
     if (state === 'saved') { const media=await listDiveMedia(); const match=media.find(item => canonicalUrl(item.url) === canonicalUrl(article.link)); await saveDiveMedia({...match, ...(match ? {entityId:match.entityId}:{}),title:article.title,format:'article',creator:article.source,url:article.link,status:'consumed',rating:match?.rating ?? null,topics:match?.topics ?? [],notes:match?.notes || article.summary,recommendedFor:match?.recommendedFor ?? '',sources:article.sources ?? [{source:article.source,link:article.link}]}); }
-    await saveNewsArticle({ ...(current ? { entityId: current.entityId } : {}), ...article, state, ...(current?.reaction ? { reaction: current.reaction, ...(current.reactionAt ? { reactionAt: current.reactionAt } : {}) } : {}) });
+    await saveNewsArticle(newsArticleInput(article,state,current));
     setArticleRecords(await listNewsArticles());
     setStatus(state === 'saved' ? 'Story saved to Dive Media as consumed.' : state === 'archived' ? 'Story archived.' : 'Story deleted from your news views.');
+    }catch(error){setStatus(error instanceof Error?error.message:'The story could not be updated. Please try again.');}
   }
   async function setArticleReaction(article: DiveNewsArticle, reaction: NonNullable<NewsArticleRecord['reaction']>) {
+    try {
     const current = recordByLink.get(article.link);
     const nextReaction = current?.reaction === reaction ? undefined : reaction;
+    const input=newsArticleInput(article,current?.state??'rated',current);delete input.reaction;delete input.reactionAt;
     await saveNewsArticle({
-      ...(current ? { entityId: current.entityId } : {}), ...article,
-      state: current?.state ?? 'rated',
+      ...input,
       ...(nextReaction ? { reaction: nextReaction, reactionAt: new Date().toISOString() } : {}),
     });
     setArticleRecords(await listNewsArticles());
     setStatus(nextReaction === 'shaka' ? '🤙 Marked very good — the priority system is learning.' : nextReaction === 'okay' ? '🤚 Marked okay — saved as a mild positive signal.' : nextReaction === 'not-interested' ? '🙅 Marked not interested — similar stories will move down.' : 'Reaction removed.');
+    }catch(error){setStatus(error instanceof Error?error.message:'The reaction could not be saved.');}
   }
   async function shareArticle(article: DiveNewsArticle) {
     try {
@@ -4768,15 +4796,15 @@ function DiveNewsV2() {
     await navigator.clipboard.writeText(value); setStatus(message); setCopied(true); window.setTimeout(() => setCopied(false), 1800);
   }
   async function connectGmail() {
-    const response = await fetch('/api/gmail/connect', { method: 'POST' });
-    const result = await response.json() as { authorizationUrl?: string; error?: string };
-    if (response.ok && result.authorizationUrl) window.location.assign(result.authorizationUrl);
-    else setStatus(result.error || 'Google mailbox access still needs its OAuth client details.');
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    try{const response=await fetch('/api/gmail/connect',{method:'POST'});const result=await response.json() as {authorizationUrl?:string;error?:string};
+      if(response.ok&&result.authorizationUrl)window.location.assign(result.authorizationUrl);else setStatus(result.error||'Google mailbox access still needs its server OAuth configuration.');
+    }catch{setStatus('Google sign-in could not be started. Check the connection status and try again.');}finally{requestBusy.current=false;setBusy(false);}
   }
-  async function disconnectGmail() {
-    if (!window.confirm('Disconnect Gmail from Dive News? Saved and archived stories will be kept.')) return;
-    await fetch('/api/gmail/disconnect', { method: 'POST' });
-    await refresh(); setStatus('Gmail disconnected.');
+  async function disconnectGmail(){
+    if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
+    try{const response=await fetch('/api/gmail/disconnect',{method:'POST'});if(!response.ok)throw new Error();await readConnection();setDisconnecting(false);setStatus('Gmail disconnected. Cached stories are retained.');}
+    catch{setStatus('Gmail could not be disconnected. Check connection status before retrying.');}finally{requestBusy.current=false;setBusy(false);}
   }
   async function savePrioritySettings() {
     const current = preferences[0];
@@ -4785,14 +4813,16 @@ function DiveNewsV2() {
   }
 
   return <>
-    <Heading eyebrow="NEWS · DESTINATIONS · EQUIPMENT" title="Dive news" copy="Public dive feeds and your private newsletter inbox, ranked around the subjects you care about." action={<button className="focus-secondary" onClick={() => void refresh(true)}><Cloud size={15}/> Refresh news</button>}/>
+    {disconnecting&&<AccessibleDialog label="Disconnect newsletter mailbox" className="focus-modal" close={()=>{if(!busy)setDisconnecting(false);}} containDismiss><h2>Disconnect newsletter mailbox?</h2><p>Cached and saved stories will remain available.</p><footer><button className="focus-secondary" disabled={busy} onClick={()=>setDisconnecting(false)}>Keep connection</button><button className="focus-primary" disabled={busy} onClick={()=>void disconnectGmail()}>Disconnect mailbox</button></footer></AccessibleDialog>}
+    {deleting&&<AccessibleDialog label="Remove story from News" className="focus-modal" close={()=>setDeleting(null)} containDismiss><h2>Remove story from News?</h2><p>{deleting.title}</p><p>This hides the story from your News views. The original mailbox message and source records are retained.</p><footer><button className="focus-secondary" onClick={()=>setDeleting(null)}>Keep story</button><button className="focus-primary" onClick={()=>{const article=deleting;setDeleting(null);void setArticleState(article,'deleted');}}>Remove story</button></footer></AccessibleDialog>}
+    <Heading eyebrow="NEWS · DESTINATIONS · EQUIPMENT" title="Dive news" copy="Public dive feeds and your private newsletter inbox, ranked around the subjects you care about." action={<button className="focus-secondary" disabled={busy} onClick={() => void refresh()}><Cloud size={15}/> Refresh public feeds</button>}/>
     <div className="focus-notice" aria-live="polite"><Newspaper size={15}/>{status}</div>
     <div className="news-view-tabs"><button className={view === 'current' ? 'active' : ''} onClick={() => setView('current')}>Current <b>{currentArticles.length}</b></button><button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>Saved <b>{articleRecords.filter((record) => record.state === 'saved').length}</b></button><button className={view === 'archived' ? 'active' : ''} onClick={() => setView('archived')}>Archived <b>{articleRecords.filter((record) => record.state === 'archived').length}</b></button></div>
-    <div className="news-layout"><div>{visibleArticles.length ? <div className="news-grid">{visibleArticles.map((article) => { const savedRecord = recordByLink.get(article.link); const savedState = savedRecord?.state; const priority = priorityForArticle(article, activePreferences); return <Card key={`${article.source}-${article.link}`} className="news-card"><div className="news-card-kicker"><span className="focus-eyebrow">{article.source}</span>{view === 'current' && priority.interestedMatches.length > 0 && <span className="news-priority-badge">Priority · {priority.interestedMatches.slice(0, 2).join(', ')}</span>}{view === 'current' && priority.mutedMatches.length > 0 && activePreferences.mutedMode === 'deprioritize' && <span className="news-muted-badge">Low priority</span>}</div><h2>{article.title}</h2>{article.publishedAt && <time>{new Date(article.publishedAt).toLocaleDateString()}</time>}<p>{article.summary || 'Open the original story to read more.'}</p>{article.sources && article.sources.length > 1 && <div className="topic-list">{article.sources.map(source => <a key={source.link} className="focus-link" href={externalUrl(source.link)} target="_blank" rel="noreferrer">{source.source}</a>)}</div>}<div className="news-reactions" role="group" aria-label={`Rate ${article.title}`}><span>Teach priorities</span><button className={savedRecord?.reaction === 'shaka' ? 'active' : ''} title="Shaka — very good" aria-label="Very good" onClick={() => void setArticleReaction(article, 'shaka')}>🤙</button><button className={savedRecord?.reaction === 'okay' ? 'active' : ''} title="Flat hand — okay" aria-label="Okay" onClick={() => void setArticleReaction(article, 'okay')}>🤚</button><button className={savedRecord?.reaction === 'not-interested' ? 'active' : ''} title="Crossed arms — not interested" aria-label="Not interested" onClick={() => void setArticleReaction(article, 'not-interested')}>🙅</button></div><div className="news-card-actions"><a className="focus-link" href={article.link} target="_blank" rel="noreferrer">Read <ExternalLink size={14}/></a>{savedState !== 'saved' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Save</button>}{savedState !== 'archived' && <button onClick={() => void setArticleState(article, 'archived')}><Archive size={14}/> Archive</button>}{savedState === 'archived' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Restore</button>}<button onClick={() => void shareArticle(article)}><Share2 size={14}/> Share</button><button onClick={() => { if (window.confirm(`Delete “${article.title}” from your news views?`)) void setArticleState(article, 'deleted'); }}><Trash2 size={14}/> Delete</button></div></Card>; })}</div> : <Card className="focus-empty"><Newspaper size={30}/><h2>No {view} stories</h2><p>{view === 'current' ? 'No stories match the current priority filters.' : `Stories you mark as ${view} will appear here.`}</p></Card>}</div>
+    <div className="news-layout"><div>{visibleArticles.length ? <div className="news-grid">{visibleArticles.map((article) => { const savedRecord = recordByLink.get(article.link); const savedState = savedRecord?.state; const priority = priorityForArticle(article, activePreferences); return <Card key={`${article.source}-${article.link}`} className="news-card"><div className="news-card-kicker"><span className="focus-eyebrow">{article.source}</span>{view === 'current' && priority.interestedMatches.length > 0 && <span className="news-priority-badge">Priority · {priority.interestedMatches.slice(0, 2).join(', ')}</span>}{view === 'current' && priority.mutedMatches.length > 0 && activePreferences.mutedMode === 'deprioritize' && <span className="news-muted-badge">Low priority</span>}</div><h2>{article.title}</h2>{article.publishedAt && <time>{new Date(article.publishedAt).toLocaleDateString()}</time>}<p>{article.summary || 'Open the original story to read more.'}</p>{article.sources && article.sources.length > 1 && <div className="topic-list">{article.sources.map(source => <a key={source.link} className="focus-link" href={externalUrl(source.link)} target="_blank" rel="noreferrer">{source.source}</a>)}</div>}<div className="news-reactions" role="group" aria-label={`Rate ${article.title}`}><span>Teach priorities</span><button className={savedRecord?.reaction === 'shaka' ? 'active' : ''} title="Shaka — very good" aria-label="Very good" onClick={() => void setArticleReaction(article, 'shaka')}>🤙</button><button className={savedRecord?.reaction === 'okay' ? 'active' : ''} title="Flat hand — okay" aria-label="Okay" onClick={() => void setArticleReaction(article, 'okay')}>🤚</button><button className={savedRecord?.reaction === 'not-interested' ? 'active' : ''} title="Crossed arms — not interested" aria-label="Not interested" onClick={() => void setArticleReaction(article, 'not-interested')}>🙅</button></div><div className="news-card-actions"><a className="focus-link" href={article.link} target="_blank" rel="noreferrer">Read <ExternalLink size={14}/></a>{savedState !== 'saved' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Save</button>}{savedState !== 'archived' && <button onClick={() => void setArticleState(article, 'archived')}><Archive size={14}/> Archive</button>}{savedState === 'archived' && <button onClick={() => void setArticleState(article, 'saved')}><BookMarked size={14}/> Restore</button>}<button onClick={() => void shareArticle(article)}><Share2 size={14}/> Share</button><button onClick={() => setDeleting(article)}><Trash2 size={14}/> Delete</button></div></Card>; })}</div> : <Card className="focus-empty"><Newspaper size={30}/><h2>No {view} stories</h2><p>{view === 'current' ? 'No stories match the current priority filters.' : `Stories you mark as ${view} will appear here.`}</p></Card>}</div>
       <aside className="news-sidebar"><Card><span className="focus-eyebrow">NEWSLETTERS</span><h2>Email reading list</h2><button type="button" className="newsletter-inbox" onClick={() => void copyText(newsletterEmail, 'Newsletter email copied to the clipboard.')}><Newspaper size={18}/><span><small>Dedicated newsletter inbox · click to copy</small><b>{newsletterEmail}</b></span>{copied ? <Check size={18}/> : <Copy size={18}/>}</button><p className="focus-copy">Use this address when subscribing to the newsletters below.</p>
-        {!gmail?.configured && <div className="newsletter-connection-note"><b>Google connection needs one setup step</b><p>Create a Google Web OAuth client with the Gmail API enabled, add this authorised redirect URI, then supply its client ID and client secret to the site.</p><button className="copy-value" onClick={() => gmail?.redirectUri && void copyText(gmail.redirectUri, 'Google redirect URI copied.')}><span>{gmail?.redirectUri || 'Loading redirect URI…'}</span><Copy size={14}/></button><small>The dashboard requests read-only Gmail access. It cannot send, change or delete email.</small></div>}
-        {gmail?.configured && !gmail.connected && <div className="gmail-connect-panel"><b>Newsletter Gmail is ready to connect</b><p>Google will show exactly which account and read-only permission the dashboard is requesting.</p><button className="focus-primary" onClick={() => void connectGmail()}>Connect Gmail</button></div>}
-        {gmail?.connected && <div className="gmail-connected-panel"><div><Check size={16}/><span><b>{gmail.email}</b><small>{gmail.lastSyncAt ? `Last checked ${new Date(gmail.lastSyncAt).toLocaleString()} · ${gmail.lastSyncCount} emails` : 'Ready for its first check'}</small></span></div>{gmail.lastError && <p>{gmail.lastError}</p>}<p>Checks when Dive News opens and every 15 minutes while this page is open.</p><div><button className="focus-secondary" onClick={() => void refresh(true)}>Check now</button><button className="focus-secondary danger" onClick={() => void disconnectGmail()}>Disconnect</button></div></div>}
+        {!gmail?.configured && <div className="newsletter-connection-note"><b>Google connection needs one setup step</b>{Boolean(gmail?.missing.length)&&<p>Missing server configuration: {gmail?.missing.join(', ')}.</p>}<p>Create a Google Web OAuth client with the Gmail API enabled, add this authorised redirect URI, then supply its client ID and client secret to the site.</p><button className="copy-value" onClick={() => gmail?.redirectUri && void copyText(gmail.redirectUri, 'Google redirect URI copied.')}><span>{gmail?.redirectUri || 'Loading redirect URI…'}</span><Copy size={14}/></button><small>The dashboard requests read-only Gmail access. It cannot send, change or delete email.</small></div>}
+        {gmail?.configured && !gmail.connected && <div className="gmail-connect-panel"><b>Newsletter Gmail is ready to connect</b><p>Google will show exactly which account and read-only permission the dashboard is requesting.</p><button className="focus-primary" disabled={busy} onClick={() => void connectGmail()}>Connect Gmail</button></div>}
+        {gmail?.connected && <div className="gmail-connected-panel"><div><Check size={16}/><span><b>{gmail.email}</b><small>{gmail.lastSyncAt ? `Last checked ${new Date(gmail.lastSyncAt).toLocaleString()} · ${gmail.lastSyncCount} emails` : 'Ready for its first check'}</small></span></div>{gmail.lastError && <p>{gmail.lastError}</p>}<p>Sync runs only when you select it. Gmail access is read-only; no mail is sent, changed or deleted.</p>{gmail.diagnostic&&<p role="alert">{gmail.diagnostic.remedy}</p>}{gmail.reconnectRequired&&<button className="focus-primary" onClick={()=>void connectGmail()}>Reconnect Gmail</button>}<div><button className="focus-secondary" disabled={busy||gmail.reconnectRequired||Boolean(gmail.lastRun&&['running','uncertain'].includes(gmail.lastRun.status))} onClick={() => void syncMailbox()}>Sync newsletter mailbox</button><button className="focus-secondary" disabled={busy} onClick={()=>void refreshConnection()}>Refresh connection status</button><button className="focus-secondary danger" disabled={busy} onClick={() => setDisconnecting(true)}>Disconnect</button></div></div>}
         {newsletters.map((source) => <a key={source.entityId} className="newsletter-link" href={source.url} target="_blank" rel="noreferrer"><b>{source.name}</b><small>{source.description}</small><ExternalLink size={14}/></a>)}</Card>
         <Card className="news-priority-settings"><span className="focus-eyebrow">NEWS PRIORITY</span><h2>What matters to you</h2><p className="focus-copy">Use commas between words or phrases. Matches in headlines rank highest.</p>{learnedProfile.ratingCount > 0 && <div className="learned-news-profile"><b>Learning from {learnedProfile.ratingCount} rating{learnedProfile.ratingCount === 1 ? '' : 's'}</b>{learnedProfile.liked.length > 0 && <small>More: {learnedProfile.liked.join(', ')}</small>}{learnedProfile.avoided.length > 0 && <small>Less: {learnedProfile.avoided.join(', ')}</small>}</div>}<label>Interested in<textarea value={interestedText} onChange={(event) => setInterestedText(event.target.value)} placeholder="wrecks, technical diving, Red Sea, equipment reviews"/></label><label>Not interested in<textarea value={mutedText} onChange={(event) => setMutedText(event.target.value)} placeholder="competitions, freediving"/></label><label>When a muted keyword matches<select value={mutedMode} onChange={(event) => setMutedMode(event.target.value as NewsPreferencesRecord['mutedMode'])}><option value="hide">Hide the story</option><option value="deprioritize">Move it to the bottom</option></select></label><button className="focus-primary" onClick={() => void savePrioritySettings()}>Save priorities</button></Card>
       </aside></div>
@@ -4867,7 +4897,7 @@ function DiveMediaForm({ item, close, saved }: { item: Stored<DiveMediaRecord> |
   const [interestScore,setInterestScore]=useState(item?.interestScore?.toString() ?? '');
   const [title, setTitle] = useState(item?.title ?? ''); const [format, setFormat] = useState<DiveMediaRecord['format']>(item?.format ?? 'book'); const [creator, setCreator] = useState(item?.creator ?? ''); const [url, setUrl] = useState(item?.url ?? ''); const [status, setStatus] = useState<DiveMediaRecord['status']>(item?.status ?? 'planned'); const [rating, setRating] = useState(item?.rating?.toString() ?? ''); const [topics, setTopics] = useState(item?.topics.join(', ') ?? ''); const [notes, setNotes] = useState(item?.notes ?? ''); const [recommendedFor, setRecommendedFor] = useState(item?.recommendedFor ?? '');
   async function submit() { if (!title.trim()) return; const cleanUrl=externalUrl(url); const thumbnailUrl=item?.url===cleanUrl ? item?.thumbnailUrl ?? '' : await mediaPreviewImage(cleanUrl); await saveDiveMedia({ ...(item ? { entityId: item.entityId } : {}), ...item, title: title.trim(), thumbnailUrl, format, priority, knowledgeGrowth: knowledgeGrowth === '' ? null : Number(knowledgeGrowth), interestScore: interestScore === '' ? null : Number(interestScore), creator: creator.trim(), url: cleanUrl, status, rating: rating ? Math.min(5, Math.max(1, Number(rating))) : null, topics: topics.split(',').map((topic) => topic.trim()).filter(Boolean), notes: notes.trim(), recommendedFor: recommendedFor.trim() }); saved(); close(); }
-  return <Card className="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT DIVE MEDIA' : 'NEW DIVE MEDIA'}</span><h3>{item ? 'Update media item' : 'Add something to consume'}</h3></div><button className="focus-icon" aria-label="Close editor" onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Title<input value={title} onChange={(event) => setTitle(event.target.value)}/></label><label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DiveMediaRecord['format'])}><option value="book">Book</option><option value="video">Video</option><option value="podcast">Podcast</option><option value="article">Article</option><option value="documentary">Documentary</option><option value="course">Online course</option><option value="other">Other</option></select></label><label>Reading priority<select value={priority} onChange={event => setPriority(event.target.value as NonNullable<DiveMediaRecord['priority']>)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Knowledge growth / 10<select value={knowledgeGrowth} onChange={event => setKnowledgeGrowth(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Interest / 10<select value={interestScore} onChange={event => setInterestScore(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Creator / publisher<input value={creator} onChange={(event) => setCreator(event.target.value)}/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as DiveMediaRecord['status'])}><option value="planned">Want to consume</option><option value="in-progress">In progress</option><option value="consumed">Consumed</option></select></label><label>Rating<select value={rating} onChange={(event) => setRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className="record-wide">URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)}/></label><label className="record-wide">Topics (comma separated)<input value={topics} onChange={(event) => setTopics(event.target.value)} placeholder="decompression, wrecks, buoyancy"/></label><label className="record-wide">Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)}/></label><label className="record-wide">Recommended for / knowledge gap<textarea value={recommendedFor} onChange={(event) => setRecommendedFor(event.target.value)}/></label></div><footer><button className="focus-secondary" onClick={close}>Cancel</button><button className="focus-primary" disabled={!title.trim()} onClick={() => void submit()}>Save media</button></footer></Card>;
+  return <RecordEditorWorkspace label={item?'Edit bibliography item':'New bibliography item'} close={close} save={submit} saveDisabled={!title.trim()} contentClassName="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT DIVE MEDIA' : 'NEW DIVE MEDIA'}</span><h3>{item ? 'Update media item' : 'Add something to consume'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Title<input value={title} onChange={(event) => setTitle(event.target.value)}/></label><label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DiveMediaRecord['format'])}><option value="book">Book</option><option value="video">Video</option><option value="podcast">Podcast</option><option value="article">Article</option><option value="documentary">Documentary</option><option value="course">Online course</option><option value="other">Other</option></select></label><label>Reading priority<select value={priority} onChange={event => setPriority(event.target.value as NonNullable<DiveMediaRecord['priority']>)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Knowledge growth / 10<select value={knowledgeGrowth} onChange={event => setKnowledgeGrowth(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Interest / 10<select value={interestScore} onChange={event => setInterestScore(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Creator / publisher<input value={creator} onChange={(event) => setCreator(event.target.value)}/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as DiveMediaRecord['status'])}><option value="planned">Want to consume</option><option value="in-progress">In progress</option><option value="consumed">Consumed</option></select></label><label>Rating<select value={rating} onChange={(event) => setRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className="record-wide">URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)}/></label><label className="record-wide">Topics (comma separated)<input value={topics} onChange={(event) => setTopics(event.target.value)} placeholder="decompression, wrecks, buoyancy"/></label><label className="record-wide">Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)}/></label><label className="record-wide">Recommended for / knowledge gap<textarea value={recommendedFor} onChange={(event) => setRecommendedFor(event.target.value)}/></label></div></RecordEditorWorkspace>;
 }
 
 function DiverSummaryExport() {

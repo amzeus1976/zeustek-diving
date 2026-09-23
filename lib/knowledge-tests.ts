@@ -55,7 +55,8 @@ export function relevantTopics(texts:string[],topics:string[]) {
 type SelectedQuestion=Question&{setId:string;setVersion:number};
 export function reviewedQuestions(sets:QuestionSet[],reviewStates:QuestionReviewStateLike[]=[]):SelectedQuestion[]{
   const suppressed=new Set(reviewStates.filter(row=>row.usageState==='suppressed').map(row=>`${row.setId}|${row.setVersion}|${row.questionId}`));
-  return sets.filter(set=>set.reviewed).flatMap(set=>set.questions.map(question=>({...normalizedQuestion(question),setId:set.setId,setVersion:set.version}))).filter(question=>!suppressed.has(`${question.setId}|${question.setVersion}|${question.id}`));
+  const latest=new Map<string,QuestionSet>();for(const set of sets){if(!latest.has(set.setId)||latest.get(set.setId)!.version<set.version)latest.set(set.setId,set);}
+  return [...latest.values()].filter(set=>set.reviewed).flatMap(set=>set.questions.map(question=>({...normalizedQuestion(question),setId:set.setId,setVersion:set.version}))).filter(question=>!suppressed.has(`${question.setId}|${question.setVersion}|${question.id}`));
 }
 export function chooseQuestions(sets:QuestionSet[],topics:string[],count=12,random=()=>crypto.getRandomValues(new Uint32Array(1))[0]!/4294967296,reviewStates:QuestionReviewStateLike[]=[]){
   const pool=reviewedQuestions(sets,reviewStates).filter(question=>!topics.length||topics.includes(question.topic));const groups=new Map<string,typeof pool>();

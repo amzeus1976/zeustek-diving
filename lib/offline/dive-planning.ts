@@ -280,6 +280,7 @@ export const deleteDiveSite = removeRecord;
 
 
 export interface DashboardSettingsRecord extends BaseRecord {
+  professionalGuides?:Record<string,import('../professional-guide').ProfessionalGuideProgress>;
   weatherConditions?:import('../weather/conditions-settings').WeatherConditionsSettings;
   analysisWorkbench?:{version:1;cards:import('../insights/analysis-card-registry').AnalysisCardConfig[]};
 
@@ -453,6 +454,7 @@ export const deleteTrainingProgress = removeRecord;
 
 
 export interface NewsArticleRecord extends BaseRecord {
+  sources?: import('../record-identity').NewsSource[];
 
   source: string;
 

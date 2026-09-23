@@ -16,6 +16,8 @@ export interface AtomicMutationInput {
 
 export interface AtomicMutationOptions {
   failAfterMutation?: number;
+  /** Checked inside the write transaction to prevent concurrent version creation. */
+  expectedAbsentEntityIds?: string[];
 }
 
 /**
@@ -53,6 +55,9 @@ export async function mutateEntitiesAtomically(
       zeustekDb.syncState,
     ],
     async () => {
+      for (const id of options.expectedAbsentEntityIds ?? []) {
+        if (await zeustekDb.entities.get(id)) throw new Error('This version was created elsewhere. Reload the latest bank before editing.');
+      }
       const actor = await zeustekDb.settings.get('actorUserId');
       const device = await zeustekDb.settings.get('deviceId');
       const lamportRow = await zeustekDb.syncState.get('lamport');
