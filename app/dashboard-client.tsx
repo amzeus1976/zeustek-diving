@@ -107,6 +107,7 @@ import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
 import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
 import { useWorkflowNavigation } from '@/components/shared/use-workflow-navigation';
+import { DiveCentres } from '@/components/dive-centres/dive-centres';
 import { workflowDestinationUrl } from '@/lib/workflow/workflow-destination';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
 import { uploadMediaBatch } from '@/lib/media-batch';
@@ -578,7 +579,8 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
           {active === 'Dive Bucket List' && <DiveBucketList />}{' '}
-          {active === 'People' && <PeopleOperators />}{' '}
+          {active === 'People' && <PeopleOperators go={go} />}{' '}
+          {active === 'Dive Centres' && <DiveCentres go={go} />}{' '}
           {active === 'Albums' && <Albums />}{' '}
           {active === 'Conservation & AWARE' && <ConservationPage go={go} />}{' '}
           {active === 'Training' && <TrainingV2 go={go} />}{' '}

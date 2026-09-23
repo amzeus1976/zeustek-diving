@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
@@ -11,6 +11,7 @@ import {
   deletePerson,
   listCertifications,
   listPeople,
+  listOperators,
   savePerson,
   type PersonRecord,
 } from '@/lib/offline/dive-planning';
@@ -105,7 +106,7 @@ const valueOrUnknown = (
   suffix = '',
 ) => (value === '' || value == null ? 'Unknown' : `${value}${suffix}`);
 
-export function PeopleOperators() {
+export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   const [people, setPeople] = useState<StoredPerson[]>([]);
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>(
     [],
@@ -118,16 +119,25 @@ export function PeopleOperators() {
   const [editing, setEditing] = useState<DraftPerson | null>(null);
   const [viewing, setViewing] = useState<StoredPerson | null>(null);
   const [error, setError] = useState('');
+  const [operators,setOperators]=useState<Awaited<ReturnType<typeof listOperators>>>([]);
+  const openedPersonLink=useRef(false);
   const refresh = useCallback(() => {
-    void Promise.all([listPeople(), listDives(), listCertifications()]).then(
-      ([nextPeople, nextDives, nextCertifications]) => {
+    void Promise.all([listPeople(), listDives(), listCertifications(),listOperators()]).then(
+      ([nextPeople, nextDives, nextCertifications,nextOperators]) => {
         setPeople(nextPeople);
         setDives(nextDives);
         setCertifications(nextCertifications);
+        setOperators(nextOperators);
       },
     );
   }, []);
   useRecordRefresh(refresh);
+  useEffect(()=>{
+    if(openedPersonLink.current)return;
+    const query=new URLSearchParams(window.location.search),id=query.get('personId')??query.get('recordId');
+    const person=people.find(row=>row.entityId===id);
+    if(person){setViewing(person);openedPersonLink.current=true;}
+  },[people]);
   const owner = findOwnerProfile(people);
   const visible = useMemo(
     () =>
@@ -227,7 +237,7 @@ export function PeopleOperators() {
   }
 
   if (editing) return <ProfileEditor person={editing} people={people} dives={dives}
-    certifications={certifications} error={error}
+    certifications={certifications} error={error} operators={operators}
     close={() => { setEditing(null); setError(''); }} save={save}/>;
 
   return (
@@ -237,8 +247,8 @@ export function PeopleOperators() {
           <span>PEOPLE · OPERATORS · OWNER PROFILE</span>
           <h1>People &amp; Operators</h1>
           <p>
-            One profile source for My Profile, buddies, instructors, operators,
-            planning and emergency contacts.
+            People profiles for My Profile, buddies, instructors, guides and contacts.
+            Organisations and services live in Dive Centres.
           </p>
         </div>
         <button
@@ -247,6 +257,7 @@ export function PeopleOperators() {
         >
           <Plus size={17} /> Add profile
         </button>
+        {go&&<button className="focus-secondary" onClick={()=>go('Dive Centres')}>Open Dive Centres</button>}
       </header>
       <section className={`${styles.ownerCard} ${owner ? '' : styles.setup}`}>
         <div>
@@ -519,6 +530,7 @@ function ProfileEditor({
   people,
   dives,
   certifications,
+  operators,
   error,
   close,
   save,
@@ -527,6 +539,7 @@ function ProfileEditor({
   people: StoredPerson[];
   dives: Array<DiveRecord & { entityId: string }>;
   certifications: Awaited<ReturnType<typeof listCertifications>>;
+  operators: Awaited<ReturnType<typeof listOperators>>;
   error: string;
   close: () => void;
   save: (person: DraftPerson) => Promise<void>;
@@ -1023,6 +1036,17 @@ function ProfileEditor({
             </div>
           </fieldset>
         )}
+        <fieldset><legend>Dive Centre relationships</legend>
+          <p>Link this person to an existing organisation. Their identity and qualifications remain in this Person record.</p>
+          <div className={styles.fields}>
+            {([['currentDiveOperatorId','Current Dive Centre'],['operatorId','Associated Dive Centre']] as const).map(([field,label])=><label key={field}>{label}
+              <select value={draft[field]??''} onChange={event=>update({[field]:event.target.value})}>
+                <option value="">Not linked</option>
+                {draft[field]&&!operators.some(row=>row.entityId===draft[field])&&<option value={draft[field]}>Unavailable linked centre · {draft[field]?.slice(-8)}</option>}
+                {operators.map(row=><option key={row.entityId} value={row.entityId}>{row.name}{row.active===false?' · inactive':''}</option>)}
+              </select></label>)}
+          </div>
+        </fieldset>
         {operatorEnabled && (
           <fieldset>
             <legend>Dive operator profile</legend>

@@ -30,7 +30,7 @@ Read this ledger and implementation-plan.md, inspect git log/status, then contin
 
 ## Remaining checkpoints
 
-Stage1 foundation complete; Stages2–10 remain. No production deployment or GitHub source push performed.
+Stages0–2 checkpointed; Stage3 is next. No production deployment or GitHub source push performed.
 
 Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS. 748 PNGs extracted/validated in ignored staging, manifest748, curated131 unchanged,112 overlapping basenames. Owner baseline captured2026-09-23T16:17:52.726Z; hashes of sorted [id,dataJson,createdAt,updatedAt] per kind in ignored work/t14-evidence/owner-baseline.csv. Sites124 rollback verified. Next: Stage1 foundations and focused tests.
 
@@ -47,3 +47,13 @@ Stage 0: complete — baseline522/522, typecheck PASS; new protection10/10 PASS.
 - Next: Stage2 canonical Dive Centres workspace and dependency-safe deletion.
 
 Fresh browser session: Gas Plan workspace mounted and cancelled; application console errors0.
+
+## Stage 2 — complete
+
+- Dive Centres route uses canonical operator records/functions. Optional type/contact/location/agencies/services/image fields preserve legacy records. Search/filter, details, full-page create/edit, People links and safe website/booking links delivered.
+- People can select current and associated centre through existing IDs. Linked record actions open exact Person detail; legacy organisation role metadata remains unchanged.
+- Local deletion guards all canonical operator deletes. Cloud tombstone paths use an atomic NOT EXISTS constraint covering both Person references; actual SQLite test verifies stale-client blocking. No cascade.
+- Focused8 new tests +20 retained/protection pass; regression95files/550tests PASS; typecheck/build/PWA PASS; new/shared module lint PASS.
+- Local fixture browser verification: create/edit, both Save controls, exact Person link and disabled linked-centre deletion PASS. List/detail and editor have no page overflow at390/820/1024/1440; fresh browser console errors0.
+- Browser finding corrected: shared sticky editor header now tracks the real topbar height, keeping Save/Cancel reachable after scrolling. No frozen calculations changed.
+- Production/GitHub remain untouched. Next: Stage3 Insights scope/expression/workbench.

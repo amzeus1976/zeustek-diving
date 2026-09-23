@@ -27,6 +27,13 @@ export function RecordEditorWorkspace({label,close,save,children,value,dirty=fal
     else action();
   },[working,changed]);
   useEffect(()=>{
+    const workspace=root.current,topbar=document.querySelector<HTMLElement>('.focus-topbar');
+    if(!workspace||!topbar)return;
+    const place=()=>workspace.style.setProperty('--record-editor-top',Math.ceil(topbar.getBoundingClientRect().height+8)+'px');
+    place();const observer=new ResizeObserver(place);observer.observe(topbar);
+    return ()=>observer.disconnect();
+  },[]);
+  useEffect(()=>{
     const trigger=editorReturnTrigger();
     const previous=trigger?.element??(document.activeElement instanceof HTMLElement?document.activeElement:null);
     const triggerLabel=trigger?.label??previous?.getAttribute('aria-label');

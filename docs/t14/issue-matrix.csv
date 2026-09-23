@@ -16,8 +16,8 @@ DIVE-02,Dive Data,Dive Computer Imports master/detail view,NICE,Stage 4,"Scrolla
 DIVE-03,Dive Data,Sites visual convergence,NICE,Stage 4,Use modern ZeusTek shell without data change.,PENDING,
 PEOPLE-01,People,My Profile derived certification/depth refresh,SHOULD,Stage 4,Fix highest known/Rec/Tec/Pro and max-depth source handling.,PENDING,
 PEOPLE-02,People,Buddy dives link and mass-link workflow,SHOULD,Stage 4,Explicit selection/confirmation; never silent bulk mutation.,PENDING,
-CENTRE-01,Dive Centres,Restore dedicated dive-centre/operator workspace,MUST,Stage 2,Use existing `operator` record kind; no second store.,PENDING,
-CENTRE-02,Dive Centres,Link people/instructors to centres,MUST,Stage 2,Use existing person operatorId/currentDiveOperatorId.,PENDING,
+CENTRE-01,Dive Centres,Restore dedicated dive-centre/operator workspace,MUST,Stage 2,Use existing `operator` record kind; no second store.,PASS,Stage2 persistence/dependency/SQLite tests and responsive browser checks
+CENTRE-02,Dive Centres,Link people/instructors to centres,MUST,Stage 2,Use existing person operatorId/currentDiveOperatorId.,PASS,Stage2 persistence/dependency/SQLite tests and responsive browser checks
 TRIP-01,Trip/Event,Calendar linked records visibility/links,SHOULD,Stage 4,Hide absent links; real deep links when present.,PENDING,
 TRIP-02,Trip/Event,Trips/Bucket visual convergence,NICE,Stage 4,Presentation only.,PENDING,
 PLAN-01,Dive Planning,Compact plan actions near upcoming-plan card,NICE,Stage 5,"Save/edit, mark ready, log/link dive.",PENDING,

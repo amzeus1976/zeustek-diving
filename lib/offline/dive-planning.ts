@@ -669,7 +669,15 @@ export const deleteDiveMedia = removeRecord;
 
 
 
-export interface OperatorRecord extends BaseRecord { name: string; location: string; website: string; notes: string; }
+export type OperatorType = 'dive-centre'|'dive-shop'|'resort'|'liveaboard'|'charter-boat'|'club'|'independent-instructor'|'gas-fill-station'|'other';
+export type OperatorService = 'training'|'equipmentRental'|'equipmentService'|'cylinderTesting'|'airFills'|'nitroxFills'|'trimixFills'|'oxygenFills'|'boatDiving'|'shoreDiving'|'accommodation';
+export interface OperatorRecord extends BaseRecord {
+  name:string;location:string;website:string;notes:string;
+  tradingName?:string;operatorType?:OperatorType;phone?:string;email?:string;emergencyPhone?:string;bookingUrl?:string;
+  streetAddress?:string;town?:string;region?:string;country?:string;postcode?:string;latitude?:number|null;longitude?:number|null;
+  agencies?:string[];services?:Partial<Record<OperatorService,boolean>>;favourite?:boolean;active?:boolean;
+  profileImage?:import('./dive-images').CardImage|null;
+}
 export const listOperators = () => listRecords<OperatorRecord>('operator');
 export const saveOperator = (input: Omit<OperatorRecord, keyof BaseRecord> & {entityId?: string}) => saveRecord('operator', input);
 export const deleteOperator = removeRecord;

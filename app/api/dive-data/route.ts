@@ -3,6 +3,7 @@ import { getChatGPTUser } from '../../chatgpt-auth';
 import { householdAreaAccess, householdAreaUserIds, householdCanEditGear, householdUserIds, registerHouseholdUser } from '@/lib/server/household';
 
 import { DIVE_RECORD_KINDS, recordIdentity } from '@/lib/record-identity';
+import { OPERATOR_DELETE_CONSTRAINT } from '@/lib/operators/operator-dependencies';
 const kinds = new Set<string>(DIVE_RECORD_KINDS);
 async function ensureSchema() {
   await env.DB.batch([
@@ -144,10 +145,10 @@ export async function POST(request: Request) {
     if (existing) {
       if (base === null) return Response.json({error:'This record already exists. Both versions are retained for review.'},{status:409});
       const updated = await env.DB.prepare(body.data === null
-        ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'
+        ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'+(kind==='operator'?OPERATOR_DELETE_CONSTRAINT:'')
         : 'UPDATE dive_records SET data_json=?,updated_at=?,deleted_at=NULL WHERE id=? AND user_id=? AND updated_at=?')
-        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base).run();
-      if (!updated.meta.changes) return Response.json({error:'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
+        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(kind==='operator'&&body.data===null?[ownerUserId,id,id]:[])).run();
+      if (!updated.meta.changes) return Response.json({error:kind==='operator'&&body.data===null?'The Dive Centre changed or has linked People. Refresh, then reassign or unlink People before deleting. Your local change is retained for review.':'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
     } else {
       if (base !== null) return Response.json({error:'The original cloud record is no longer accessible. Your local version is retained.'},{status:409});
       if (body.data !== null) {
@@ -186,7 +187,8 @@ export async function DELETE(request: Request) {
   const sharedGear = record?.kind === 'equipment' || record?.kind === 'equipment-set' || record?.kind === 'equipment-event';
   const collaborativeAlbums = record?.kind === 'album' || record?.kind === 'dive-media';
   if (!record || (record.ownerUserId !== user.userId && !(sharedGear && await householdCanEditGear(env,user,record.ownerUserId)) && !(collaborativeAlbums && await householdAreaAccess(env,user,record.ownerUserId,'albums',true)))) return Response.json({deleted:false},{status:404});
-  const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?').bind(Date.now(),Date.now(),id).run();
+  const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?'+(record.kind==='operator'?OPERATOR_DELETE_CONSTRAINT:'')).bind(Date.now(),Date.now(),id,...(record.kind==='operator'?[record.ownerUserId,id,id]:[])).run();
+  if(record.kind==='operator'&&!result.meta.changes)return Response.json({error:'Reassign or unlink the linked People before deleting this Dive Centre.'},{status:409});
   return Response.json({ deleted: result.meta.changes > 0 });
 }
 
