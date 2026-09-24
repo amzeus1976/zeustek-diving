@@ -1,9 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.56',
+    date: '2026-09-24',
+    title: 'Owner qualification display corrected',
+    changes: [
+      'The Dive Team shows the owner once as Me and selects the highest evidenced qualification even when an award is stored in a broad course category.',
+      'People, Dive Entity relationships, profile-photo cropping and all 31 owner-supplied navigation artworks remain included.',
+    ],
+  },
+  {
     version: '1.0.55',
     date: '2026-09-24',
-    title: 'People and Dive Entities; one owner Dive identity; complete navigation artwork',
+    title: 'People, Dive Entities and navigation candidate (rolled back)',
     changes: [
       'Separated human People from non-human Dive Entities while preserving canonical records and historical links; added explicit many-to-many relationships and circular profile-photo cropping.',
       'Displayed the owner once as Me in Dive Teams, using the canonical Person and certification evidence without rewriting old Dive records.',

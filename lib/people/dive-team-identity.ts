@@ -1,5 +1,5 @@
 import type {CertificationRecord,PersonRecord} from '../offline/dive-planning';
-import {certificationProfileEvidence} from './certification-evidence';
+import {personCertificationEvidence,qualificationDisplayPriority} from './certification-evidence';
 import {findOwnerProfile,personDisplayName} from '../offline/people-profiles';
 
 type StoredPerson=PersonRecord & {entityId:string};
@@ -7,10 +7,15 @@ type TeamRecord={diveTeamIds?:readonly string[];buddyIds?:readonly string[];dive
 
 /** The owner remains a Person, but the Dive record represents that human as `self`. */
 export function ownerDiveQualification(owner:StoredPerson,certifications:readonly CertificationRecord[]){
-  const evidence=certificationProfileEvidence(owner,[...certifications]);
-  return evidence.highestKnownQualification || owner.highestKnownQualification ||
-    owner.highestProfessionalCertification || owner.highestTechnicalCertification ||
-    owner.highestRecreationalCertification || owner.highestQualification || '';
+  const profileTitles=[owner.highestKnownQualification,owner.highestProfessionalCertification,
+    owner.highestTechnicalCertification,owner.highestRecreationalCertification].filter((title):title is string=>Boolean(title?.trim()));
+  const awardTitles=personCertificationEvidence(owner,[...certifications]).map(cert=>({
+    title:cert.certification||cert.level||'',priority:qualificationDisplayPriority(cert.certification||cert.level||'',cert.awardPriority),
+  }));
+  const candidates=[...profileTitles.map(title=>({title,priority:qualificationDisplayPriority(title)})),...awardTitles]
+    .filter(candidate=>candidate.title.trim())
+    .sort((a,b)=>b.priority-a.priority);
+  return candidates[0]?.title||owner.highestQualification||'';
 }
 
 export function diveTeamCandidates(people:readonly StoredPerson[],certifications:readonly CertificationRecord[]){

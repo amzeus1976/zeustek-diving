@@ -23,6 +23,19 @@ describe('one canonical owner identity in Dive records',()=>{
     expect(diveTeamCandidates([owner,gemma],certificates)[0]?.label).toBe('Me · Master Scuba Diver');
     expect(owner.highestQualification).toBe(original);
   });
+  it('ranks the owner’s actual awards even when a Master Scuba Diver award is stored as other',()=>{
+    const awards=[
+      {personId:'owner-person',certification:'Rescue Diver',courseType:'recreational'},
+      {personId:'',certification:'Master Scuba Diver',courseType:'other'},
+    ] as unknown as CertificationRecord[];
+    expect(ownerDiveQualification(owner,awards)).toBe('Master Scuba Diver');
+    expect(diveTeamCandidates([owner,gemma],awards)[0]?.label).toBe('Me · Master Scuba Diver');
+  });
+  it('updates Me from a later higher owner qualification without a fixed title',()=>{
+    const advancedOwner={...owner,highestProfessionalCertification:'Master Instructor'};
+    const awards=[{personId:'owner-person',certification:'Master Scuba Diver',courseType:'other'}] as unknown as CertificationRecord[];
+    expect(diveTeamCandidates([advancedOwner,gemma],awards)[0]?.label).toBe('Me · Master Instructor');
+  });
   it.each([
     [{diveTeamIds:['self'],buddyIds:[],diveLeaderId:'self'},['self']],
     [{diveTeamIds:['owner-person'],buddyIds:[],diveLeaderId:'owner-person'},['self']],

@@ -93,6 +93,7 @@ import { ProfilePicture } from '@/components/profile-picture';
 import { PeopleOperators } from '@/components/people-operators';
 import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
 import {diveTeamCandidates,normaliseDiveTeamIdentity} from '@/lib/people/dive-team-identity';
+import {certificationAwardPriority} from '@/lib/people/certification-evidence';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
@@ -363,21 +364,6 @@ async function mediaPreviewImage(url: string) {
   } catch {
     return '';
   }
-}
-
-function certificationAwardPriority(certification: CertificationRecord) {
-  if (certification.awardPriority != null && Number.isFinite(certification.awardPriority)) return certification.awardPriority;
-  const title = (certification.certification || certification.level).toLowerCase();
-  const explicit: Array<[RegExp, number]> = [
-    [/course director|instructor trainer/, 1000], [/master instructor/, 950], [/staff instructor/, 900],
-    [/master scuba diver trainer|specialty instructor/, 850], [/open water scuba instructor|\binstructor\b/, 800],
-    [/assistant instructor/, 750], [/divemaster|dive master/, 700], [/advanced trimix|tec 60|mixed gas ccr/, 650],
-    [/trimix|tec 50|extended range/, 620], [/tec 45|decompression procedures|advanced nitrox/, 590],
-    [/tec 40|intro to tech/, 560], [/master scuba diver/, 520], [/rescue diver/, 480],
-    [/advanced open water|advanced diver/, 400], [/open water|ocean diver|sports diver/, 300],
-    [/specialty|deep diver|night diver|wreck diver|nitrox|enriched air/, 220], [/emergency first response|\befr\b|first aid/, 100],
-  ];
-  return explicit.find(([pattern]) => pattern.test(title))?.[1] ?? 0;
 }
 
 function ListToolbar({
