@@ -93,7 +93,7 @@ import { ProfilePicture } from '@/components/profile-picture';
 import { PeopleOperators } from '@/components/people-operators';
 import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
 import {diveTeamCandidates,normaliseDiveTeamIdentity} from '@/lib/people/dive-team-identity';
-import {certificationAwardPriority} from '@/lib/people/certification-evidence';
+import {resolvePersonDisplayAwards} from '@/lib/people/certification-evidence';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
@@ -791,17 +791,10 @@ function Overview({
       .catch(() => setAwardSettings(null));
   }, []);
   useRecordRefresh(refreshOverview);
-  const certificationByTrack = (track: 'rec' | 'tec' | 'pro') => certifications
-    .filter((certification) => {
-      const title = `${certification.certification} ${certification.level}`.toLowerCase();
-      if (track === 'pro') return /divemaster|dive master|instructor|course director/.test(title);
-      if (track === 'tec') return /tec|technical|trimix|decompression|extended range|ccr|rebreather/.test(title);
-      return !/divemaster|dive master|instructor|course director|tec|technical|trimix|decompression|extended range|ccr|rebreather/.test(title);
-    })
-    .sort((a, b) => certificationAwardPriority(b) - certificationAwardPriority(a))[0];
   const buddyCounts = new Map<string, number>();
   dives.forEach((dive) => (dive.buddyIds ?? []).forEach((id) => buddyCounts.set(id, (buddyCounts.get(id) ?? 0) + 1)));
   const ownerProfile = findOwnerProfile(people);
+  const displayAwards = ownerProfile ? resolvePersonDisplayAwards(ownerProfile, certifications) : null;
   const derivedTopBuddy = [...people]
     .filter((person) => hasPersonRole(person, 'buddy') && buddyCounts.has(person.entityId))
     .sort((a, b) => (buddyCounts.get(b.entityId) ?? 0) - (buddyCounts.get(a.entityId) ?? 0) || a.name.localeCompare(b.name))[0] ?? null;
@@ -902,7 +895,7 @@ function Overview({
             Open dive plans <ChevronRight size={15} />
           </button>
         </div>
-        <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>{ownerProfile ? personDisplayName(ownerProfile) : 'Set up My Profile'}</h2>{ownerProfile ? <dl><div><dt>Highest recreational</dt><dd>{ownerProfile.highestRecreationalCertification || certificationByTrack('rec')?.certification || certificationByTrack('rec')?.level || 'Unknown'}</dd></div><div><dt>Highest technical</dt><dd>{ownerProfile.highestTechnicalCertification || certificationByTrack('tec')?.certification || certificationByTrack('tec')?.level || 'Unknown'}</dd></div><div><dt>Highest professional</dt><dd>{ownerProfile.highestProfessionalCertification || certificationByTrack('pro')?.certification || certificationByTrack('pro')?.level || 'Unknown'}</dd></div><div><dt>Profile source</dt><dd>{sourceLabel(ownerProfile.profileValueSources?.highestRecreationalCertification, ownerProfile.manualOverrideFields?.includes('highestRecreationalCertification'))}</dd></div></dl> : <p className="focus-copy">Create one owner Person profile to power Overview, planning and summaries. Nothing is created automatically.</p>}<button className="focus-link" onClick={() => go('People')}>{ownerProfile ? 'Open My Profile' : 'Create My Profile'}</button></Card>
+        <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>{ownerProfile ? personDisplayName(ownerProfile) : 'Set up My Profile'}</h2>{ownerProfile ? <dl><div><dt>Highest recreational award</dt><dd>{displayAwards?.rec.title || 'Unknown'}</dd></div><div><dt>Highest technical</dt><dd>{displayAwards?.tec.title || 'Unknown'}</dd></div><div><dt>Highest professional</dt><dd>{displayAwards?.pro.title || 'Unknown'}</dd></div><div><dt>Profile source</dt><dd>{sourceLabel(displayAwards?.rec.source)}</dd></div></dl> : <p className="focus-copy">Create one owner Person profile to power Overview, planning and summaries. Nothing is created automatically.</p>}<button className="focus-link" onClick={() => go('People')}>{ownerProfile ? 'Open My Profile' : 'Create My Profile'}</button></Card>
         <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy ? personDisplayName(topBuddy) : 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? topBuddy.totalLinkedDives ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestRecreationalCertification || topBuddy.highestTechnicalCertification || topBuddy.highestProfessionalCertification || topBuddy.highestQualification || 'Unknown'}</dd></div><div><dt>Last dived together</dt><dd>{topBuddy.lastDivedTogether || 'Unknown'}</dd></div>{Boolean(topBuddy.contactVisibility && topBuddy.contactVisibility !== 'private') && <div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div>}</dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links, unless My Profile chooses a preferred buddy.</p>}<button className="focus-link" onClick={() => go('People')}>Open people</button></Card>
       </div>
       <div className="focus-grid">

@@ -20,6 +20,7 @@ import {
 import {projectPersonEntityLinks,relationshipStatus} from '@/lib/operators/entity-relationships';
 import {reviewPersonDuplicates} from '@/lib/operators/duplicate-review';
 import { listDives, type DiveRecord } from '@/lib/offline/dives';
+import {resolvePersonDisplayAwards} from '@/lib/people/certification-evidence';
 import {
   assertSingleOwnerProfile,
   derivePersonProfileStats,
@@ -313,7 +314,9 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
         className={styles.grid}
         aria-label="People profiles"
       >
-        {visible.map((person) => (
+        {visible.map((person) => {
+          const awards=resolvePersonDisplayAwards(person,certifications);
+          return (
           <article key={person.entityId} className={styles.personCard}>
             <button
               className={styles.cardHit}
@@ -333,7 +336,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               </span>
               <h2>{personDisplayName(person)}</h2>
               <p>
-                {person.highestKnownQualification ||
+                {(awards.pro.record && awards.pro.title) || (awards.tec.record && awards.tec.title) || (awards.rec.record && awards.rec.title) || person.highestKnownQualification ||
                   person.highestQualification ||
                   'Profile details not yet recorded'}
               </p>
@@ -353,7 +356,8 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               </button>
             </div>
           </article>
-        ))}
+          );
+        })}
         {!visible.length && (
           <div className={styles.empty}>
             <Users />
@@ -365,6 +369,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
       {viewing && (
         <ProfileDetail
           person={refreshPersonDerivedStats(viewing,derivePersonProfileStats(viewing,dives,certifications))}
+          awards={resolvePersonDisplayAwards(viewing,certifications)}
           affiliations={projectPersonEntityLinks([viewing],personLinks)} operators={operators} go={go??(()=>undefined)}
           showDives={()=>{setBuddyView(viewing);setViewing(null);}}
           manage={()=>{setManaging(viewing);setViewing(null);}}
@@ -381,6 +386,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
 
 function ProfileDetail({
   person,
+  awards,
   affiliations,
   operators,
   go,
@@ -390,6 +396,7 @@ function ProfileDetail({
   manage,
 }: {
   person: StoredPerson;
+  awards:ReturnType<typeof resolvePersonDisplayAwards>;
   affiliations:ReturnType<typeof projectPersonEntityLinks>;
   operators:Awaited<ReturnType<typeof listOperators>>;
   go:(route:string)=>void;
@@ -447,15 +454,15 @@ function ProfileDetail({
         <section>
           <h3>Certifications &amp; limits</h3>
           <p>
-            Recreational:{' '}
-            {valueOrUnknown(person.highestRecreationalCertification)}
+            Recreational award:{' '}
+            {valueOrUnknown(awards.rec.title)}
           </p>
           <p>
-            Technical: {valueOrUnknown(person.highestTechnicalCertification)}
+            Technical award: {valueOrUnknown(awards.tec.title)}
           </p>
           <p>
-            Professional:{' '}
-            {valueOrUnknown(person.highestProfessionalCertification)}
+            Professional award:{' '}
+            {valueOrUnknown(awards.pro.title)}
           </p>
           <p>
             Depth limit: {valueOrUnknown(person.maxAllowedDepthM, ' m')} ·{' '}
