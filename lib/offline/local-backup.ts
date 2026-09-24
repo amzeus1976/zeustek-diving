@@ -1,6 +1,7 @@
 import { zeustekDb, type AttachmentRow, type DiveImageRow } from './db';
 import { currentDiveAccount, flushDiveChanges } from './dive-store';
-import { DIVE_RECORD_KINDS } from '../record-identity';
+import { DIVE_RECORD_KINDS,recordIdentity } from '../record-identity';
+import {normaliseEntityRelation} from '../operators/entity-relationships';
 import { recordHash, sha256Hex } from './canonical';
 import type { JsonValue } from './types';
 
@@ -44,6 +45,36 @@ export async function restoreLocalPayload(value: unknown) {
     if (!row || row.module !== accountModule || typeof row.entityId !== 'string' || !row.entityId.startsWith(`${accountModule}:`) || ids.has(row.entityId) || !(DIVE_RECORD_KINDS as readonly string[]).includes(row.entityType) || ![0,1].includes(row.deleted) || (row.record === null ? row.deleted !== 1 : typeof row.record !== 'object' || Array.isArray(row.record))) throw invalid();
     if (row.record && (row.record as Record<string,JsonValue>).entityId !== row.entityId.slice(accountModule.length + 1)) throw invalid();
     ids.add(row.entityId);
+  }
+  const byId=new Map(data.entities.map(row=>[row.entityId,row]));
+  const primaryPeople=new Set<string>();
+  for(const row of data.entities){
+    if(row.deleted||!row.record||(row.entityType!=='person-operator-link'&&row.entityType!=='operator-operator-link'))continue;
+    const record=row.record as Record<string,unknown>;
+    let identity:string;
+    try{identity=recordIdentity(row.entityType,record);}catch{throw invalid();}
+    if(identity!==row.entityId.slice(accountModule.length+1))throw invalid();
+    if(typeof record.active!=='boolean'||(record.startDate&&typeof record.startDate!=='string')||(record.endDate&&typeof record.endDate!=='string')||(typeof record.startDate==='string'&&typeof record.endDate==='string'&&record.endDate<record.startDate))throw invalid();
+    if(row.entityType==='operator-operator-link'){
+      try{const canonical=normaliseEntityRelation(record as unknown as Parameters<typeof normaliseEntityRelation>[0]);if(canonical.fromOperatorId!==record.fromOperatorId||canonical.toOperatorId!==record.toOperatorId||canonical.relationType!==record.relationType)throw invalid();}
+      catch{throw invalid();}
+    }
+    if(row.entityType==='person-operator-link'&&record.active===true&&record.primary===true){
+      const personId=String(record.personId);
+      if(primaryPeople.has(personId))throw invalid();
+      primaryPeople.add(personId);
+      const current=await zeustekDb.entities.where('[module+entityType]').equals([accountModule,'person-operator-link']).toArray();
+      if(current.some(other=>!other.deleted&&other.entityId!==row.entityId&&(other.record as {personId?:string;active?:boolean;primary?:boolean})?.personId===personId&&(other.record as {active?:boolean})?.active===true&&(other.record as {primary?:boolean})?.primary===true))throw invalid();
+    }
+    const references=row.entityType==='person-operator-link'?
+      [[record.personId,'person'],[record.operatorId,'operator']]:
+      [[record.fromOperatorId,'operator'],[record.toOperatorId,'operator']];
+    for(const [reference,kind] of references){
+      if(typeof reference!=='string'||!reference)throw invalid();
+      const localId=`${accountModule}:${reference}`;
+      const parent=byId.get(localId)??await zeustekDb.entities.get(localId);
+      if(!parent||parent.deleted||parent.entityType!==kind)throw invalid();
+    }
   }
   const eventIds = new Set<string>();
   for (const event of data.events) {

@@ -1,4 +1,5 @@
-export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-event','equipment-set','cylinder','cylinder-fill','gas-analysis','gas-plan','site','site-overhead-profile','trip','dive-trip','certification','training-progress','person','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','question-review-state','learning-ai-checkpoint','learning-ai-advice','skill','skill_evidence','currency-policy','reference-requirement-set','professional-pathway','professional-evidence','computer-import','computer-profile','import-resolution','conservation_activity','conservation-programme'] as const;
+import {entityRelationIdentity,personEntityLinkIdentity} from './operators/entity-relationships';
+export const DIVE_RECORD_KINDS = ['dive','equipment','equipment-event','equipment-set','cylinder','cylinder-fill','gas-analysis','gas-plan','site','site-overhead-profile','trip','dive-trip','certification','training-progress','person','person-operator-link','operator-operator-link','album','catalog-option','dashboard-settings','bucket-list','gear-wishlist','gear-wishlist-group','price-store','price-store-settings','news-source','news-article','news-preferences','gmail-news','dive-media','operator','question-set','test-attempt','question-review-state','learning-ai-checkpoint','learning-ai-advice','skill','skill_evidence','currency-policy','reference-requirement-set','professional-pathway','professional-evidence','computer-import','computer-profile','import-resolution','conservation_activity','conservation-programme'] as const;
 export function normaliseText(value: unknown) { return typeof value === 'string' ? value.normalize('NFKC').trim().toLocaleLowerCase('en-GB').replace(/\s+/g, ' ') : ''; }
 export function canonicalUrl(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) return '';
@@ -27,7 +28,9 @@ export function recordIdentity(kind: string, input: object) {
   if (kind === 'equipment') return t('serialNumber') ? `${t('manufacturer')}|${t('serialNumber')}` : '';
   if (kind === 'person') return t('email') || (t('agency') && t('membershipNumber') ? `${t('agency')}|${t('membershipNumber')}` : '');
   if (kind === 'site') return t('name') && record.latitude != null && record.longitude != null ? `${t('name')}|${scalar('latitude')}|${scalar('longitude')}` : '';
-  if (kind === 'operator') return canonicalUrl(record.website) || (t('name') && t('location') ? `${t('name')}|${t('location')}` : '');
+  if (kind === 'operator') return t('name') && t('location') ? `${t('name')}|${t('location')}` : '';
+  if (kind === 'person-operator-link') return personEntityLinkIdentity({personId:scalar('personId'),operatorId:scalar('operatorId'),role:scalar('role')});
+  if (kind === 'operator-operator-link') return entityRelationIdentity({fromOperatorId:scalar('fromOperatorId'),toOperatorId:scalar('toOperatorId'),relationType:scalar('relationType')});
   return '';
 }
 export type NewsSource = { source: string; link: string; title?: string; summary?: string; publishedAt?: string };

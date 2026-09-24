@@ -1,8 +1,11 @@
 'use client';
 import {useCallback,useState} from 'react';
 import {Building2,ExternalLink,MapPin,Pencil,Plus,Search,Star,Trash2,Users} from 'lucide-react';
-import {listOperators,saveOperator,deleteOperator,listPeople,type OperatorRecord,type PersonRecord,type Stored} from '../../lib/offline/dive-planning';
+import {listOperators,saveOperator,deleteOperator,listPeople,listPersonEntityLinks,listEntityRelations,type OperatorRecord,type PersonRecord,type Stored} from '../../lib/offline/dive-planning';
 import {filterDiveCentres,linkedOperatorPeople,normaliseOperatorDraft,OPERATOR_SERVICES,OPERATOR_TYPES,safeOperatorUrl,type OperatorDraft} from '../../lib/operators/dive-centres';
+import {entityRelationLabel,projectPersonEntityLinks,relationshipStatus} from '../../lib/operators/entity-relationships';
+import {reviewEntityDuplicates} from '../../lib/operators/duplicate-review';
+import {EntityRelationships} from './entity-relationships';
 import {personDisplayName} from '../../lib/offline/people-profiles';
 import {useRecordRefresh} from '../record-status';
 import {RecordEditorWorkspace} from '../shared/record-editor-workspace';
@@ -13,28 +16,32 @@ import {CardImageView} from '../certification-images';
 import styles from './dive-centres.module.css';
 
 const emptyCentre=():OperatorDraft=>({name:'',location:'',website:'',notes:'',operatorType:'dive-centre',active:true,agencies:[],services:{}});
-const typeLabel=(row:OperatorRecord)=>OPERATOR_TYPES.find(([key])=>key===row.operatorType)?.[1]??'Organisation';
+const typeLabel=(row:OperatorRecord)=>row.operatorType==='other'&&row.otherSubtype?row.otherSubtype:OPERATOR_TYPES.find(([key])=>key===row.operatorType)?.[1]??'Unclassified';
 export function DiveCentres({go}:{go:(route:string)=>void}){
   const [centres,setCentres]=useState<Stored<OperatorRecord>[]>([]);
   const [people,setPeople]=useState<Stored<PersonRecord>[]>([]);
+  const [personLinks,setPersonLinks]=useState<Awaited<ReturnType<typeof listPersonEntityLinks>>>([]);
+  const [entityLinks,setEntityLinks]=useState<Awaited<ReturnType<typeof listEntityRelations>>>([]);
   const [selectedId,setSelectedId]=useState('');
   const [query,setQuery]=useState(''),[type,setType]=useState('all'),[status,setStatus]=useState('all'),[service,setService]=useState('all');
   const [favourites,setFavourites]=useState(false);
   const [editing,setEditing]=useState<OperatorDraft|null>(null);
   const [removing,setRemoving]=useState<Stored<OperatorRecord>|null>(null);
+  const [managing,setManaging]=useState<Stored<OperatorRecord>|null>(null);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const refresh=useCallback(async()=>{
     try{
-      const [operators,persons]=await Promise.all([listOperators(),listPeople()]);
-      setCentres(operators);setPeople(persons);
+      const [operators,persons,links,relations]=await Promise.all([listOperators(),listPeople(),listPersonEntityLinks(),listEntityRelations()]);
+      setCentres(operators);setPeople(persons);setPersonLinks(links);setEntityLinks(relations);
       const query=new URLSearchParams(window.location.search),requested=query.get('operatorId')??query.get('recordId');
-      setSelectedId(current=>current||requested||'');
+      setSelectedId(current=>requested||current||'');
     }catch(reason){setError(reason instanceof Error?reason.message:'Could not load Dive Centres.');}
   },[]);
   useRecordRefresh(refresh);
   const visible=filterDiveCentres(centres,{query,type,status,service,favourites});
   const selected=centres.find(row=>row.entityId===selectedId)??null;
-  const linked=selected?linkedOperatorPeople(selected.entityId,people):[];
+  const linked=selected?linkedOperatorPeople(selected.entityId,people,personLinks):[];
+  const selectedRelationships=selected?entityLinks.filter(link=>link.fromOperatorId===selected.entityId||link.toOperatorId===selected.entityId):[];
   async function remove(){
     if(!removing||busy)return;setBusy(true);setError('');
     try{await deleteOperator(removing.entityId);setRemoving(null);setSelectedId('');await refresh();}
@@ -42,23 +49,25 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
     finally{setBusy(false);}
   }
   if(editing)return <CentreEditor initial={editing} close={()=>setEditing(null)} save={async draft=>{
+    if(!draft.entityId){const matches=reviewEntityDuplicates(draft,centres);if(matches.length&&!window.confirm(`Review existing Dive Entity: ${matches.map(row=>row.name).join(', ')}. Create a separate entity anyway?`))return;}
     const result=await saveOperator(normaliseOperatorDraft(draft));setSelectedId(result.id);setEditing(null);await refresh();
   }}/>;
+  if(managing)return <EntityRelationships entity={managing} operators={centres} links={entityLinks} close={()=>setManaging(null)} onSaved={refresh} go={route=>{const requested=new URLSearchParams(route.split('&').slice(1).join('&')).get('operatorId');if(requested)setSelectedId(requested);setManaging(null);go(route);}}/>;
   return <main className={styles.page}>
     <header className={styles.hero}><ZeusTekAssetIcon name="dive-centres" label="Dive Centres" size={64} fallback={<Building2/>}/>
-      <div><span className="focus-eyebrow">DIVE DATA</span><h1>Dive Centres</h1><p>Your centres, clubs, charters and gas providers — with their linked people.</p></div>
-      <button className="focus-primary" onClick={()=>setEditing(emptyCentre())}><Plus size={18}/>Add Dive Centre</button></header>
+      <div><span className="focus-eyebrow">DIVE DATA</span><h1>Dive Centres</h1><p>Non-human dive organisations, operations and vessels, with their linked People and entities.</p></div>
+      <button className="focus-primary" onClick={()=>setEditing(emptyCentre())}><Plus size={18}/>Add Dive Entity</button></header>
     {error&&<p role="alert" className="focus-notice danger">{error}</p>}
     <div className={styles.workspace}>
       <aside className={styles.filters} aria-label="Dive Centre filters">
         <h2><Search size={18}/>Find a centre</h2>
         <label>Search<input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="Name, location, agency or contact"/></label>
-        <label>Organisation type<select value={type} onChange={event=>setType(event.target.value)}><option value="all">All types</option>{OPERATOR_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
+        <label>Entity type<select value={type} onChange={event=>setType(event.target.value)}><option value="all">All types</option><option value="unclassified">Unclassified</option>{OPERATOR_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
         <label>Service<select value={service} onChange={event=>setService(event.target.value)}><option value="all">All services</option>{OPERATOR_SERVICES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
         <label>Status<select value={status} onChange={event=>setStatus(event.target.value)}><option value="all">All centres</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
         <label className={styles.check}><input type="checkbox" checked={favourites} onChange={event=>setFavourites(event.target.checked)}/>Favourites only</label>
         <button className="focus-secondary" onClick={()=>{setQuery('');setType('all');setStatus('all');setService('all');setFavourites(false);}}>Clear filters</button>
-        <small>{visible.length} of {centres.length} centres</small>
+        <small>{visible.length} of {centres.length} entities</small>
       </aside>
       <section className={styles.list} aria-label="Dive Centres list">
         {!visible.length&&<div className={styles.empty}><Building2/><h2>{centres.length?'No matching centres':'Build your diving network'}</h2><p>{centres.length?'Clear a filter or try a different search.':'Add your first Dive Centre, then link instructors and contacts from People.'}</p></div>}
@@ -70,7 +79,7 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
       </section>
       <section className={styles.detail} aria-label="Selected Dive Centre">
         {selected?<><header>{selected.profileImage&&<CardImageView image={selected.profileImage} label={selected.name}/>}<span className="focus-eyebrow">{typeLabel(selected)}</span><h2>{selected.name}</h2>{selected.tradingName&&<p>Trading as {selected.tradingName}</p>}
-          <div className={styles.actions}><button className="focus-secondary" onClick={()=>setEditing({...selected})}><Pencil size={16}/>Edit centre</button>
+          <div className={styles.actions}><button className="focus-secondary" onClick={()=>setEditing({...selected})}><Pencil size={16}/>Edit entity</button>
             <button className="focus-secondary" onClick={()=>{setError('');setRemoving(selected);}}><Trash2 size={16}/>Delete</button></div></header>
           <div className={styles.detailSection}><h3><MapPin size={18}/>Location & contact</h3>
             <p>{[selected.streetAddress,selected.town,selected.region,selected.country,selected.postcode].filter(Boolean).join(', ')||selected.location||'Location not recorded'}</p>
@@ -86,17 +95,20 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
             <ul>{OPERATOR_SERVICES.filter(([key])=>selected.services?.[key]).map(([key,label])=><li key={key}>{label}</li>)}</ul>
             {!OPERATOR_SERVICES.some(([key])=>selected.services?.[key])&&<p>No services recorded.</p>}</div>
           <div className={styles.detailSection}><h3><Users size={18}/>People & instructors</h3>
-            {linked.length?<ul className={styles.people}>{linked.map(person=><li key={person.entityId}><button className="focus-secondary" onClick={()=>go('People&personId='+encodeURIComponent(person.entityId))}>{personDisplayName(person)}{person.roles?.instructor||person.role==='instructor'||person.role==='both'?' · Instructor':''}</button></li>)}</ul>:<p>No linked people yet.</p>}
-            <p>Choose the current or associated Dive Centre in a Person’s profile.</p><button className="focus-secondary" onClick={()=>go('People')}>Open People</button></div>
+            {linked.length?<ul className={styles.people}>{linked.map(person=><li key={person.entityId}><button className="focus-secondary" onClick={()=>go('People&personId='+encodeURIComponent(person.entityId))}>{personDisplayName(person)}</button> · {projectPersonEntityLinks([person],personLinks).filter(link=>link.operatorId===selected.entityId).map(link=>`${link.role} (${relationshipStatus(link)})`).join(', ')}</li>)}</ul>:<p>No linked People yet.</p>}
+            <p>Create and edit People in People. Manage affiliations from each Person profile.</p><button className="focus-secondary" onClick={()=>go('People')}>Open People</button></div>
+          <div className={styles.detailSection}><h3>Related Dive Entities</h3>
+            {selectedRelationships.length?<ul>{selectedRelationships.map(link=>{const otherId=link.fromOperatorId===selected.entityId?link.toOperatorId:link.fromOperatorId;return <li key={link.entityId}><button className="focus-secondary" onClick={()=>{setSelectedId(otherId);go('Dive Centres&operatorId='+encodeURIComponent(otherId));}}>{centres.find(row=>row.entityId===otherId)?.name??'Unavailable entity'}</button> · {entityRelationLabel(link,selected.entityId)} · {relationshipStatus(link)}</li>;})}</ul>:<p>No entity relationships recorded.</p>}
+            <button className="focus-secondary" onClick={()=>setManaging(selected)}>Manage entity relationships</button></div>
           <div className={styles.detailSection}><h3>Notes</h3><p className={styles.notes}>{selected.notes||'No notes recorded.'}</p></div>
         </>:<div className={styles.empty}><Building2/><h2>{selectedId?'Centre unavailable':'Select a Dive Centre'}</h2><p>{selectedId?'The linked record may be unavailable on this device. Choose a centre from the list.':'Choose a centre to view services, contact details and people.'}</p></div>}
       </section>
     </div>
-    {removing&&<AccessibleDialog label="Delete Dive Centre" className="focus-modal" close={()=>{if(!busy)setRemoving(null);}} editable>
+    {removing&&<AccessibleDialog label="Delete Dive Entity" className="focus-modal" close={()=>{if(!busy)setRemoving(null);}} editable>
       <h2>Delete {removing.name}?</h2>
-      {linkedOperatorPeople(removing.entityId,people).length?<><p>Reassign or unlink these People before deleting:</p><ul>{linkedOperatorPeople(removing.entityId,people).map(person=><li key={person.entityId}>{personDisplayName(person)}</li>)}</ul></>:<p>This removes the centre record. People and Dive records are preserved.</p>}
+      {linkedOperatorPeople(removing.entityId,people,personLinks).length||entityLinks.some(link=>link.fromOperatorId===removing.entityId||link.toOperatorId===removing.entityId)?<p>Unlink all People and Dive Entity relationships before deleting this entity.</p>:<p>This removes the entity record. People and Dive records are preserved.</p>}
       {error&&<p role="alert">{error}</p>}
-      <footer><button className="focus-secondary" onClick={()=>setRemoving(null)} disabled={busy}>Cancel</button><button className="focus-primary" disabled={busy||linkedOperatorPeople(removing.entityId,people).length>0} onClick={()=>void remove()}>{busy?'Deleting…':'Delete centre'}</button></footer>
+      <footer><button className="focus-secondary" onClick={()=>setRemoving(null)} disabled={busy}>Cancel</button><button className="focus-primary" disabled={busy||linkedOperatorPeople(removing.entityId,people,personLinks).length>0||entityLinks.some(link=>link.fromOperatorId===removing.entityId||link.toOperatorId===removing.entityId)} onClick={()=>void remove()}>{busy?'Deleting…':'Delete entity'}</button></footer>
     </AccessibleDialog>}
   </main>;
 }
@@ -104,13 +116,14 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
 function CentreEditor({initial,close,save}:{initial:OperatorDraft;close:()=>void;save:(draft:OperatorDraft)=>Promise<void>}){
   const [draft,setDraft]=useState(initial);
   const update=(patch:Partial<OperatorDraft>)=>setDraft(current=>({...current,...patch}));
-  return <RecordEditorWorkspace label={draft.entityId?'Edit Dive Centre':'New Dive Centre'} close={close} value={draft} save={()=>save(draft)} saveLabel="Save centre">
+  return <RecordEditorWorkspace label={draft.entityId?'Edit Dive Entity':'New Dive Entity'} close={close} value={draft} save={()=>save(draft)} saveLabel="Save entity">
     <div className={styles.form}>
       <fieldset><legend>Organisation</legend>
         <ProfilePicture value={draft.profileImage??null} legacyId="" removeLegacy={()=>{}} recordLabel="centre" change={profileImage=>update({profileImage})}/>
         <label>Name<input value={draft.name} onChange={event=>update({name:event.target.value})} required/></label>
         <label>Trading name<input value={draft.tradingName??''} onChange={event=>update({tradingName:event.target.value})}/></label>
-        <label>Organisation type<select value={draft.operatorType??'other'} onChange={event=>update({operatorType:event.target.value as NonNullable<OperatorRecord['operatorType']>})}>{OPERATOR_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
+        <label>Entity type<select value={draft.operatorType??'unclassified'} onChange={event=>{if(event.target.value==='unclassified')setDraft(current=>{const {operatorType: _operatorType,...rest}=current;return rest;});else update({operatorType:event.target.value as NonNullable<OperatorRecord['operatorType']>});}}><option value="unclassified">Unclassified (legacy)</option>{OPERATOR_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
+        {draft.operatorType==='other'&&<label>Other subtype<input required value={draft.otherSubtype??''} onChange={event=>update({otherSubtype:event.target.value})}/></label>}
         <label className={styles.check}><input type="checkbox" checked={draft.active!==false} onChange={event=>update({active:event.target.checked})}/>Active</label>
         <label className={styles.check}><input type="checkbox" checked={Boolean(draft.favourite)} onChange={event=>update({favourite:event.target.checked})}/>Favourite</label>
       </fieldset>

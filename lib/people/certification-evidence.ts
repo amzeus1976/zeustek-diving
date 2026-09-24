@@ -1,4 +1,22 @@
 import type {CertificationRecord,PersonRecord} from '../offline/dive-planning';
+export function qualificationDisplayPriority(title:string,awardPriority?:number|null){
+  if(awardPriority!=null&&Number.isFinite(awardPriority))return awardPriority;
+  const value=title.toLowerCase();
+  const explicit:Array<[RegExp,number]>=[
+    [/course director|instructor trainer/,1000],[/master instructor/,950],[/staff instructor/,900],
+    [/master scuba diver trainer|specialty instructor/,850],[/open water scuba instructor|\binstructor\b/,800],
+    [/assistant instructor/,750],[/divemaster|dive master/,700],[/advanced trimix|tec 60|mixed gas ccr/,650],
+    [/trimix|tec 50|extended range/,620],[/tec 45|decompression procedures|advanced nitrox/,590],
+    [/tec 40|intro to tech/,560],[/master scuba diver/,520],[/rescue diver/,480],
+    [/advanced open water|advanced diver/,400],[/open water|ocean diver|sports diver/,300],
+    [/specialty|deep diver|night diver|wreck diver|nitrox|enriched air/,220],
+    [/emergency first response|\befr\b|first aid/,100],
+  ];
+  return explicit.find(([pattern])=>pattern.test(value))?.[1]??0;
+}
+export function certificationAwardPriority(certification:CertificationRecord){
+  return qualificationDisplayPriority(certification.certification||certification.level,certification.awardPriority);
+}
 export function personCertificationEvidence(person:Partial<PersonRecord>&{entityId?:string},certifications:CertificationRecord[]){
   return certifications.filter(cert=>cert.personId?cert.personId===person.entityId:Boolean(person.roles?.ownerProfile));
 }

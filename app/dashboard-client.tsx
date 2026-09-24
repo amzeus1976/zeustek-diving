@@ -92,6 +92,8 @@ import { SiteOverheadSection } from '@/components/site-overhead-profile';
 import { ProfilePicture } from '@/components/profile-picture';
 import { PeopleOperators } from '@/components/people-operators';
 import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
+import {diveTeamCandidates,normaliseDiveTeamIdentity} from '@/lib/people/dive-team-identity';
+import {certificationAwardPriority} from '@/lib/people/certification-evidence';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
@@ -288,7 +290,7 @@ function WorkflowNavigation({ active, go }: { active: string; go: (route: string
       const routes = workflowRoutesForSection(section.key);
       return <details className="workflow-nav-group" key={section.key} open={openSections.has(section.key)} onToggle={(event) => { const isOpen = event.currentTarget.open; setNavigationState((current) => { const next = new Set(current.openSections); if (isOpen) next.add(section.key); else next.delete(section.key); return { ...current, openSections: next }; }); }}>
         <summary>{section.label}<ChevronDown size={15}/></summary>
-        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><ZeusTekAssetIcon name={domainIconNames[route.route] ?? null} decorative size={26} fallback={<Icon size={18}/>}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
+        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><ZeusTekAssetIcon route={route.route} name={domainIconNames[route.route] ?? null} decorative size={30} fallback={<Icon size={18}/>}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
       </details>;
     })}
   </nav>;
@@ -362,21 +364,6 @@ async function mediaPreviewImage(url: string) {
   } catch {
     return '';
   }
-}
-
-function certificationAwardPriority(certification: CertificationRecord) {
-  if (certification.awardPriority != null && Number.isFinite(certification.awardPriority)) return certification.awardPriority;
-  const title = (certification.certification || certification.level).toLowerCase();
-  const explicit: Array<[RegExp, number]> = [
-    [/course director|instructor trainer/, 1000], [/master instructor/, 950], [/staff instructor/, 900],
-    [/master scuba diver trainer|specialty instructor/, 850], [/open water scuba instructor|\binstructor\b/, 800],
-    [/assistant instructor/, 750], [/divemaster|dive master/, 700], [/advanced trimix|tec 60|mixed gas ccr/, 650],
-    [/trimix|tec 50|extended range/, 620], [/tec 45|decompression procedures|advanced nitrox/, 590],
-    [/tec 40|intro to tech/, 560], [/master scuba diver/, 520], [/rescue diver/, 480],
-    [/advanced open water|advanced diver/, 400], [/open water|ocean diver|sports diver/, 300],
-    [/specialty|deep diver|night diver|wreck diver|nitrox|enriched air/, 220], [/emergency first response|\befr\b|first aid/, 100],
-  ];
-  return explicit.find(([pattern]) => pattern.test(title))?.[1] ?? 0;
 }
 
 function ListToolbar({
@@ -591,7 +578,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
           {active === 'Diving Calendar & Bookings' && <DivingCalendarBookings go={go} />}{' '}
-          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
+          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
           {active === 'Gas Planning' && <GasPlanning go={go} />}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
@@ -1009,6 +996,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
   );
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
+  const ownerPersonId=findOwnerProfile(people)?.entityId;
   const [weatherBackfillStatus, setWeatherBackfillStatus] = useState('');
   const [search, setSearch] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('zeustek-logbook-site-filter') ?? '');
   const [modeFilter, setModeFilter] = useState('all');
@@ -1170,7 +1158,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                   <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
                   <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
                   <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
-                  {(dive.buddyIds??[]).map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
+                  {normaliseDiveTeamIdentity(dive,ownerPersonId).buddyIds.map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
                   <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
                   <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
                 </div>
@@ -1250,9 +1238,9 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                       .join(', ')
                   : 'Automatic fallback: all equipment owned on this dive date',
             ],
-            ['Dive team', (viewing.diveTeamIds ?? viewing.buddyIds)?.map((id) => id === 'self' ? 'Me' : people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
-            ['Buddies', viewing.buddyIds?.map((id) => people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
-            ['Dive leader', viewing.diveLeaderId === 'self' ? 'Me' : people.find((person) => person.entityId === viewing.diveLeaderId)?.name || 'Not recorded'],
+            ['Dive team', normaliseDiveTeamIdentity(viewing,ownerPersonId).diveTeamIds.map((id) => id === 'self' ? 'Me' : people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
+            ['Buddies', normaliseDiveTeamIdentity(viewing,ownerPersonId).buddyIds.map((id) => people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
+            ['Dive leader', normaliseDiveTeamIdentity(viewing,ownerPersonId).diveLeaderId === 'self' ? 'Me' : people.find((person) => person.entityId === normaliseDiveTeamIdentity(viewing,ownerPersonId).diveLeaderId)?.name || 'Not recorded'],
             ['Cumulative time', viewing.currentTotalTimeMin != null ? `${viewing.preDiveTotalTimeMin ?? 0} min before · ${viewing.currentTotalTimeMin} min after` : 'Not recorded'],
             ['Equipment notes', viewing.equipmentNotes || 'Not recorded'],
             ['Weighting', viewing.ballastKg != null ? `${viewing.ballastKg} kg total${viewing.weightDistribution ? ` · ${viewing.weightDistribution}` : ''}${viewing.trimAssessment ? ` · ${viewing.trimAssessment}` : ''}` : 'Not recorded'],
@@ -3978,327 +3966,6 @@ function Training() {
   );
 }
 
-function Operators() {
-  const [items, setItems] = useState<Array<Stored<OperatorRecord>>>([]);
-  const [draft, setDraft] = useState({name:'', location:'', website:'', notes:'', entityId:''});
-  const refresh = useCallback(() => { void listOperators().then(setItems); }, []); useRecordRefresh(refresh);
-  return <details className="focus-card"><summary>Dive operators and centres ({items.length})</summary><div className="record-fields">{(['name','location','website','notes'] as const).map(field => <label key={field}>{field}<input value={draft[field]} onChange={event => setDraft({...draft,[field]:event.target.value})}/></label>)}</div><button className="focus-primary" disabled={!draft.name.trim()} onClick={async () => {await saveOperator({...draft, website:externalUrl(draft.website)});setDraft({name:'', location:'', website:'', notes:'', entityId:''});refresh();}}>Save operator</button>{items.map(item => <div className="focus-card-head" key={item.entityId}><span>{item.name} · {item.location}</span><div className="record-actions"><button onClick={() => setDraft(item)}>Edit operator</button><button onClick={async () => {const people=await listPeople();if(people.some(person => person.operatorId===item.entityId)){alert('Reassign people linked to this operator before deleting it.');return;}if(confirm(`Delete ${item.name}?`)){await deleteOperator(item.entityId);refresh();}}}>Delete operator</button></div></div>)}</details>;
-}
-
-function People() {
-  const [items, setItems] = useState<Array<Stored<PersonRecord>>>([]);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [operators, setOperators] = useState<Array<Stored<OperatorRecord>>>([]);
-  const [operatorFilter, setOperatorFilter] = useState('all');
-  useRecordRefresh(useCallback(() => {void listOperators().then(setOperators);}, []));
-  const [sort, setSort] = useState('name');
-  const [editing, setEditing] = useState<Stored<PersonRecord> | null>(null);
-  const [viewing, setViewing] = useState<Stored<PersonRecord> | null>(null);
-  const [adding, setAdding] = useState(false);
-  const refresh = useCallback(() => {
-    void listPeople().then(setItems);
-  }, []);
-  useRecordRefresh(refresh);
-  const linkedPersonOpened=useRef(false);
-  useEffect(()=>{if(linkedPersonOpened.current)return;const id=new URLSearchParams(window.location.search).get('personId');const target=items.find(person=>person.entityId===id);if(target){setViewing(target);linkedPersonOpened.current=true;}},[items]);
-  async function remove(item: Stored<PersonRecord>) {
-    if (!confirm(`Delete ${item.name}?`)) return;
-    await deletePerson(item.entityId);
-    refresh();
-  }
-  const roles = [...new Set(items.map((item) => item.role).filter(Boolean))].sort();
-  const visibleItems = items
-    .filter((item) => {
-      const term = search.trim().toLowerCase();
-      const textMatch = !term || [item.name, item.role, item.highestQualification, item.agency, item.membershipNumber].join(' ').toLowerCase().includes(term);
-      return textMatch && (roleFilter === 'all' || item.role === roleFilter) && (operatorFilter === 'all' || item.operatorId === operatorFilter);
-    })
-    .sort((a, b) => sort === 'qualification'
-      ? (a.highestQualification || 'zzz').localeCompare(b.highestQualification || 'zzz')
-      : sort === 'agency'
-        ? (a.agency || 'zzz').localeCompare(b.agency || 'zzz')
-        : a.name.localeCompare(b.name));
-  return (
-    <>
-      <Heading
-        eyebrow="BUDDIES · INSTRUCTORS · CONTACTS"
-        title="Dive people"
-        copy="Keep each person once, then select them in logs, training records and dive plans."
-        action={
-          <button
-            className="focus-primary"
-            onClick={() => {
-              setEditing(null);
-              setAdding(true);
-            }}
-          >
-            <Plus size={16} /> Add person
-          </button>
-        }
-      />
-      <Operators /><label className="operator-filter">Dive operator<select value={operatorFilter} onChange={event => setOperatorFilter(event.target.value)}><option value="all">All operators</option>{operators.map(operator => <option key={operator.entityId} value={operator.entityId}>{operator.name}</option>)}</select></label>
-      <ListToolbar search={search} setSearch={setSearch} filter={roleFilter} setFilter={setRoleFilter} filterLabel="Role" filterOptions={[[ 'all', 'All people' ], ...roles.map((role) => [role, role] as [string, string])]} sort={sort} setSort={setSort} sortOptions={[[ 'name', 'Name' ], [ 'qualification', 'Qualification' ], [ 'agency', 'Agency' ]]} />
-      {adding && (
-        <RevealOnMount>
-          <PersonForm
-            item={editing}
-            close={() => {
-              setAdding(false);
-              setEditing(null);
-            }}
-            saved={refresh}
-          />
-        </RevealOnMount>
-      )}
-      <div className="focus-grid">
-        {visibleItems.map((item) => (
-          <Card key={item.entityId} className="clickable-card">
-            <button
-              className="card-hit"
-              onClick={() => setViewing(item)}
-              aria-label={`View ${item.name}`}
-            />
-            <div className="focus-card-head">
-              {item.profileImage ? <div className="person-image"><CardImageView image={item.profileImage} label={`${item.name} profile`}/></div> : item.profileImageId ? <img className="person-avatar" loading="lazy" src={`/api/media?id=${encodeURIComponent(item.profileImageId)}`} alt={`${item.name} profile`} /> : <Users className="focus-accent" />}
-              <div className="record-actions">
-                <button
-                  onClick={() => {
-                    setEditing(item);
-                    setAdding(true);
-                  }}
-                >
-                  <Pencil size={15} />
-                </button>
-                <button onClick={() => void remove(item)}>
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            </div>
-            <span className="focus-eyebrow">{item.role.toUpperCase()}</span>{item.operatorId && <p>{operators.find(operator => operator.entityId === item.operatorId)?.name ?? 'Operator unavailable'}</p>}
-            <h3>{item.name}</h3>
-            <p className="focus-copy">
-              {[item.highestQualification, item.agency, item.membershipNumber]
-                .filter(Boolean)
-                .join(' · ') || 'Personal dive contact'}
-            </p>
-          </Card>
-        ))}
-        {items.length > 0 && !visibleItems.length && <Card className="focus-empty"><Users size={28} /><h2>No matching people</h2><p>Try a different search or role.</p></Card>}
-      </div>
-      {!items.length && (
-        <Card className="focus-empty">
-          <Users />
-          <h2>No dive people yet</h2>
-          <p>
-            Add buddies and instructors once, then reuse their details
-            everywhere.
-          </p>
-        </Card>
-      )}
-      {viewing && (
-        <RecordDetail
-          title={viewing.name}
-          eyebrow={viewing.role}
-          ownerKind="person"
-          ownerId={viewing.entityId}
-          close={() => setViewing(null)}
-          edit={() => {
-            setEditing(viewing);
-            setViewing(null);
-            setAdding(true);
-          }}
-          rows={[
-            ['Agency', viewing.agency],
-            ['Highest known qualification', viewing.highestQualification],
-            ['Membership / professional number', viewing.membershipNumber],
-            ['Email', viewing.email],
-            ['Phone', viewing.phone],
-            ['Emergency contact', viewing.emergencyContact],
-            ['Notes', viewing.notes],
-          ]}
-          links={[["Open buddy profile", viewing.profileUrl]]}
-        />
-      )}
-    </>
-  );
-}
-function PersonForm({
-  item,
-  close,
-  saved,
-}: {
-  item: Stored<PersonRecord> | null;
-  close: () => void;
-  saved: () => void;
-}) {
-  const [v, setV] = useState(() => ({
-    name: item?.name ?? '',
-    role: item?.role ?? 'buddy',
-    agency: item?.agency ?? '',
-    highestQualification: item?.highestQualification ?? '',
-    membershipNumber: item?.membershipNumber ?? '',
-    email: item?.email ?? '',
-    phone: item?.phone ?? '',
-    emergencyContact: item?.emergencyContact ?? '',
-    profileUrl: item?.profileUrl ?? '',
-    operatorId: item?.operatorId ?? '',
-    profileImageId: item?.profileImageId ?? '',
-    profileImage: item?.profileImage ?? null,
-    notes: item?.notes ?? '',
-  }));
-  const [operators, setOperators] = useState<Array<Stored<OperatorRecord>>>([]);
-  useRecordRefresh(useCallback(() => { void listOperators().then(setOperators); }, []));
-  const [customAgencies, setCustomAgencies] = useState<string[]>([]);
-  const [customQualifications, setCustomQualifications] = useState<string[]>(
-    [],
-  );
-  useEffect(() => {
-    void listCatalogOptions().then((options) => {
-      setCustomAgencies(
-        options
-          .filter((option) => option.group === 'agency')
-          .map((option) => option.value),
-      );
-      setCustomQualifications(
-        options
-          .filter((option) => option.group === 'qualification')
-          .map((option) => option.value),
-      );
-    });
-  }, []);
-  const personAgencies = [
-    ...new Set([
-      ...DEFAULT_TRAINING_AGENCIES,
-      ...customAgencies,
-      ...(v.agency ? [v.agency] : []),
-    ]),
-  ].sort();
-  const personQualifications = [
-    ...new Set([
-      ...DEFAULT_DIVE_QUALIFICATIONS,
-      ...customQualifications,
-      ...(v.highestQualification ? [v.highestQualification] : []),
-    ]),
-  ].sort();
-  const field = <K extends keyof typeof v>(name: K, value: typeof v[K]) =>
-    setV((c) => ({ ...c, [name]: value }));
-  async function submit() {
-    if (!v.name.trim()) return;
-    await savePerson({
-      ...v,
-      ...(item ? { entityId: item.entityId } : {}),
-      name: v.name.trim(),
-      role: v.role as PersonRecord['role'],
-    });
-    saved();
-    close();
-  }
-  return (
-    <Card className="record-form">
-      <div className="record-form-head">
-        <h3>{item ? 'Edit person' : 'Add buddy or instructor'}</h3>
-        <button className="focus-icon" aria-label="Close editor" onClick={close}>
-          <X />
-        </button>
-      </div>
-      <div className="record-fields"><label>Current dive operator<select value={v.operatorId} onChange={event => field('operatorId',event.target.value)}><option value="">No operator assigned</option>{operators.map(operator => <option key={operator.entityId} value={operator.entityId}>{operator.name}</option>)}</select></label><ProfilePicture value={v.profileImage} legacyId={v.profileImageId} change={value => field('profileImage',value)} removeLegacy={() => field('profileImageId','')} />
-
-        <label>
-          Name
-          <input
-            value={v.name}
-            onChange={(e) => field('name', e.target.value)}
-          />
-        </label>
-        <label>
-          Role
-          <select
-            value={v.role}
-            onChange={(e) => field('role', e.target.value as PersonRecord['role'])}
-          >
-            <option value="buddy">Buddy</option>
-            <option value="instructor">Instructor</option>
-            <option value="both">Buddy & instructor</option>
-          </select>
-        </label>
-        <label>
-          Agency
-          <select
-            value={v.agency}
-            onChange={(e) => field('agency', e.target.value)}
-          >
-            <option value="">Unknown / not recorded</option>
-            {personAgencies.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Highest known qualification
-          <select
-            value={v.highestQualification}
-            onChange={(e) => field('highestQualification', e.target.value)}
-          >
-            <option value="">Unknown / not recorded</option>
-            {personQualifications.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Membership / professional no.
-          <input
-            value={v.membershipNumber}
-            onChange={(e) => field('membershipNumber', e.target.value)}
-          />
-        </label>
-        <label>
-          Email
-          <input
-            type="email"
-            value={v.email}
-            onChange={(e) => field('email', e.target.value)}
-          />
-        </label>
-        <label>
-          Phone
-          <input
-            value={v.phone}
-            onChange={(e) => field('phone', e.target.value)}
-          />
-        </label>
-        <label>
-          Emergency contact
-          <input
-            value={v.emergencyContact}
-            onChange={(e) => field('emergencyContact', e.target.value)}
-          />
-        </label>
-        <label>
-          Profile or membership URL
-          <input type="url" value={v.profileUrl} onChange={(e) => field('profileUrl', e.target.value)} placeholder="https://" />
-        </label>
-        <label className="record-wide">
-          Notes
-          <textarea
-            value={v.notes}
-            onChange={(e) => field('notes', e.target.value)}
-          />
-        </label>
-      </div>
-      <footer>
-        <button className="focus-secondary" onClick={close}>
-          Cancel
-        </button>
-        <button className="focus-primary" onClick={() => void submit()}>
-          Save person
-        </button>
-      </footer>
-    </Card>
-  );
-}
-
 function SiteAlbums({site}:{site:Stored<DiveSiteRecord>}) {
  const [albums,setAlbums]=useState<Array<Stored<AlbumRecord>>>([]); const [opened,setOpened]=useState<Stored<AlbumRecord>|null>(null);
  const refresh=useCallback(()=>{void listAlbums().then(setAlbums);},[]);useRecordRefresh(refresh);
@@ -5095,6 +4762,7 @@ function DiveModal({
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>([]);
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
+  const [certifications,setCertifications]=useState<Array<Stored<CertificationRecord>>>([]);
   const [diveNumber, setDiveNumber] = useState(item?.diveNumber?.toString() ?? '');
   const [diveNumberStart, setDiveNumberStart] = useState(1);
   const [date, setDate] = useState(
@@ -5204,6 +4872,9 @@ function DiveModal({
   const [diveTeamIds, setDiveTeamIds] = useState<string[]>(item?.diveTeamIds ?? item?.buddyIds ?? []);
   const [buddyIds, setBuddyIds] = useState<string[]>(item?.buddyIds ?? []);
   const [diveLeaderId, setDiveLeaderId] = useState(item?.diveLeaderId ?? '');
+  const ownerPersonId=findOwnerProfile(people)?.entityId;
+  const teamIdentity=normaliseDiveTeamIdentity({diveTeamIds,buddyIds,diveLeaderId},ownerPersonId);
+  const teamCandidates=diveTeamCandidates(people,certifications);
   const [supportCrew, setSupportCrew] = useState(item?.supportCrew ?? '');
   const [isVerified, setIsVerified] = useState(item?.isVerified ?? false);
   const [verifierAgency, setVerifierAgency] = useState(item?.verifierAgency ?? '');
@@ -5227,6 +4898,7 @@ function DiveModal({
     void listEquipmentSets().then(setSets);
     void listDiveSites().then(setSites);
     void listPeople().then(setPeople);
+    void listCertifications().then(setCertifications);
     void listDives().then(setDives);
     void listDashboardSettings().then((records) =>
       setDiveNumberStart(Math.max(1, records[0]?.diveNumberStart || 1)),
@@ -5270,10 +4942,10 @@ function DiveModal({
   }
 
   function toggleTeamMember(value: string, checked: boolean) {
-    toggleValue(setDiveTeamIds, value, checked);
+    setDiveTeamIds(checked ? Array.from(new Set([...teamIdentity.diveTeamIds,value])) : teamIdentity.diveTeamIds.filter(id=>id!==value));
     if (!checked) {
-      setBuddyIds((current) => current.filter((id) => id !== value));
-      if (diveLeaderId === value) setDiveLeaderId('');
+      setBuddyIds(teamIdentity.buddyIds.filter(id=>id!==value));
+      if (teamIdentity.diveLeaderId === value) setDiveLeaderId('');
     }
   }
 
@@ -5544,9 +5216,9 @@ function DiveModal({
       aquaticLife: aquaticLife.split('\n').flatMap((value) => value.split(',')).map((value) => value.trim()).filter(Boolean),
       aquaticLifeNotes,
       notes,
-      diveTeamIds,
-      buddyIds,
-      diveLeaderId,
+      diveTeamIds:teamIdentity.diveTeamIds,
+      buddyIds:teamIdentity.buddyIds,
+      diveLeaderId:teamIdentity.diveLeaderId,
       supportCrew,
       isVerified,
       verifierAgency,
@@ -5824,20 +5496,19 @@ function DiveModal({
           <summary>Team & verification</summary>
           <span className="field-subheading">DIVE TEAM · SELECT ONE OR MORE</span>
           <div className="choice-grid">
-            <label><input type="checkbox" checked={diveTeamIds.includes('self')} onChange={(event) => toggleTeamMember('self', event.target.checked)} />Me</label>
-            {people.map((person) => <label key={person.entityId}><input type="checkbox" checked={diveTeamIds.includes(person.entityId)} onChange={(event) => toggleTeamMember(person.entityId, event.target.checked)} />{person.name} · {person.highestQualification || person.role}</label>)}
+            {teamCandidates.map(candidate=><label key={candidate.id}><input type="checkbox" checked={teamIdentity.diveTeamIds.includes(candidate.id)} onChange={(event)=>toggleTeamMember(candidate.id,event.target.checked)}/>{candidate.label}</label>)}
           </div>
           <span className="field-subheading">BUDDIES · SELECT FROM THE DIVE TEAM</span>
           <div className="choice-grid">
-            {diveTeamIds.filter((id) => id !== 'self').map((id) => {
+            {teamIdentity.diveTeamIds.filter((id) => id !== 'self').map((id) => {
               const person = people.find((candidate) => candidate.entityId === id);
               if (!person) return null;
-              return <label key={id}><input type="checkbox" checked={buddyIds.includes(id)} onChange={(event) => toggleValue(setBuddyIds, id, event.target.checked)} />{person.name}</label>;
+              return <label key={id}><input type="checkbox" checked={teamIdentity.buddyIds.includes(id)} onChange={(event) => toggleValue(setBuddyIds, id, event.target.checked)} />{personDisplayName(person)}</label>;
             })}
-            {!diveTeamIds.some((id) => id !== 'self') && <p className="section-help">Add people to the dive team first, then mark only the people who were your buddies.</p>}
+            {!teamIdentity.diveTeamIds.some((id) => id !== 'self') && <p className="section-help">Add people to the dive team first, then mark only the people who were your buddies.</p>}
           </div>
           <div className="field-grid field-grid-four">
-            <label>Dive leader<select value={diveLeaderId} onChange={(event) => setDiveLeaderId(event.target.value)}><option value="">Not recorded</option><option value="self">Me</option>{diveTeamIds.filter((id) => id !== 'self').map((id) => { const person = people.find((candidate) => candidate.entityId === id); return person ? <option key={id} value={id}>{person.name}</option> : null; })}</select></label>
+            <label>Dive leader<select value={teamIdentity.diveLeaderId} onChange={(event) => setDiveLeaderId(event.target.value)}><option value="">Not recorded</option><option value="self">Me</option>{teamIdentity.diveTeamIds.filter((id) => id !== 'self').map((id) => { const person = people.find((candidate) => candidate.entityId === id); return person ? <option key={id} value={id}>{personDisplayName(person)}</option> : null; })}</select></label>
             <label>Support crew<input value={supportCrew} onChange={(event) => setSupportCrew(event.target.value)} /></label>
             <label className="record-check"><input type="checkbox" checked={isVerified} onChange={(event) => setIsVerified(event.target.checked)} />Digitally verified</label>
             <label>Professional agency<input value={verifierAgency} onChange={(event) => setVerifierAgency(event.target.value)} /></label>

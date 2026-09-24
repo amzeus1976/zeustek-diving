@@ -209,7 +209,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
         <p>Keep your travel, plans, team and packing together.</p></div></div>
       <button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
     </header>
-    <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People & Operators',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
+    <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
 
     <Card className={styles.toolbar}>
       <label>Search<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Trip or destination"/></label>

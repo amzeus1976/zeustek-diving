@@ -538,4 +538,5 @@ body,.focus-app{font-size:1rem}
 }
 
 .zeustek-asset-icon{display:block;width:var(--zt-asset-icon-size,40px);height:var(--zt-asset-icon-size,40px);object-fit:contain;flex:none;filter:drop-shadow(0 0 10px rgba(0,216,255,.18))}
+.workflow-nav-group .zeustek-asset-icon{transform:scale(var(--zt-nav-icon-scale,1));transform-origin:center}
 @media(max-width:700px){.media-lightbox{grid-template-columns:minmax(0,1fr);padding:12px}.media-lightbox>div{grid-column:1}.media-lightbox img{max-width:calc(100vw - 24px);max-height:calc(100dvh - 100px)}.media-lightbox-prev,.media-lightbox-next{position:absolute!important;top:50%;transform:translateY(-50%)}.media-lightbox-prev{left:12px}.media-lightbox-next{right:12px}.media-lightbox-close{right:12px!important;top:12px!important}}
