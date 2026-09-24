@@ -1,5 +1,15 @@
 # T14 resumable handover
 
+## Latest checkpoint — People / Dive Entity correction (2026-09-24)
+
+Branch `t14/master-forward-build`; local application and evidence commit `c2c9aad0d4e26c447aa81c412676640f8fc7ed41`. The owner-approved model correction is locally implemented; ENTITY-01 through ENTITY-06 are `LOCAL PASS` in `issue-matrix.csv`. See `people-dive-entity-separation-plan.md` and `people-dive-entity-implementation-evidence.md`. The earlier Stage8 release-continuation notes below are historical and **do not describe current production**.
+
+Current production verified read-only via @Sites: app1.0.54 / Sites126, successful deployment `appgdep_6ab4624dfb28819193f77caf20388762`, published source `14a5fe8540bf6e6acc664a3ccf71df4982ae2b04`. Current GitHub main from origin: `3e78c8baf7aefe914592cce72f990bb3941bff27`; remote T14 branch still points to the prior accepted source. This model correction was **not** deployed, pushed or applied to owner records. Historical rollback evidence points to healthy Sites124 / app1.0.52, but reverify the actual target before any future release.
+
+Exact local candidate checks: 129 files/742 tests PASS; typecheck PASS; production build/PWA PASS (398 precache entries, complete icon library excluded); focused new/relevant-module lint PASS; 390/820/1024/1440 browser checks with zero page overflow or application console errors; client bundle/staged diff zero matches against six private credential fingerprints; all nine protected calculation SHA-256s unchanged. Isolated local Dive/Gas fixture and plan fingerprints unchanged. The broad linter still reports pre-existing issues in older dashboard/trip/store modules; see the evidence file. No Gmail live sync was invoked.
+
+Next steps for a release: review the committed diff against current remote main; capture fresh production owner IDs/content fingerprints and verify the current Sites126 and fallback deployment; advance app/service-worker version/cache identifiers; run exact release-candidate regression, typecheck, build/PWA, focused lint, privacy and protected-calculation checks plus production-built/browser smoke. After an explicit release decision and passing gates, deploy once, verify live owner-data preservation and routes, then reconcile the exact accepted source to GitHub. Do not repeat the consumed Gmail sync. No automatic owner-record migration is part of this correction.
+
 Branch: `t14/master-forward-build`.
 Prior Stage 8 candidate: `18aa824`; rollback documentation checkpoint: `54ffc6c`. The owner-approved Gmail isolation and app1.0.54 release candidate are the current working changes. Check `git rev-parse HEAD` and `git status --short` before resuming; do not reset them.
 Implementation checkout: `zeustek-t14-master` in the Zeus Dive project workspace. Reference material remains outside this checkout and synced `sources/` is read-only.
