@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Current checkpoint — owner Dive identity and 31 navigation icons (2026-09-24)
+
+Preserve branch `t14/master-forward-build` and application commit `a38d6a29a7bf7ad6771fe349771a907fb7160b53`, built on the completed People / Dive Entity correction. The current evidence and exact next steps are in `owner-identity-navigation-release-evidence.md`; `IDENTITY-01` and `ICON-02` are `LOCAL PASS` in `issue-matrix.csv`. App version is 1.0.55. Full exact-code regression is 131 files/751 tests PASS; typecheck, build/PWA, targeted lint, privacy, nine protected hashes, local owner fixture and four-width browser checks pass. Production is still Sites126/app1.0.54; no new deployment, Gmail sync or GitHub accepted-source push has occurred. Fresh Sites read found 6,610 total/6,400 active rows, including 66 Dives, one Gas Plan, 11 People and four Operators; compare per-ID fingerprints after deployment. Sites126 is the current rollback target, subject to immediate pre-deployment reconfirmation. Do not infer current production from the historical notes below.
+
 ## Latest checkpoint — People / Dive Entity correction (2026-09-24)
 
 Branch `t14/master-forward-build`; local application and evidence commit `c2c9aad0d4e26c447aa81c412676640f8fc7ed41`. The owner-approved model correction is locally implemented; ENTITY-01 through ENTITY-06 are `LOCAL PASS` in `issue-matrix.csv`. See `people-dive-entity-separation-plan.md` and `people-dive-entity-implementation-evidence.md`. The earlier Stage8 release-continuation notes below are historical and **do not describe current production**.
