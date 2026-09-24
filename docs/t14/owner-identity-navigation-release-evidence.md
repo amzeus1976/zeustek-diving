@@ -8,6 +8,8 @@ Read-only award inspection established the root cause: the actual Master Scuba D
 
 App/cache identifiers are advanced to 1.0.56, navigation-v6 and static-v5 for the corrected retry. Before another Sites save/deploy, commit this evidence, rebuild/package exact HEAD, recheck Sites126 rollback and capture a fresh per-ID production snapshot. Retain the failed Sites127 result in the release ledger rather than reclassifying it as passing.
 
+The corrected PWA service worker references all 31 runtime navigation derivatives, zero master paths and 17 selectively used complete-library icons; it does not precache all 748 complete-library images.
+
 The corrected local browser fixture now shows one `Me · Master Scuba Diver` and no duplicate owner at **390, 820, 1024 and 1440**; all four Dive editor widths have zero page-level overflow and zero application console errors. A fresh authenticated, read-only Sites126 backup after restoration contains **6,399 exportable active canonical records**, including 66 Dives, one Gas Plan, 11 People and four Operators. It excludes the Gmail connection secret (zero matching rows). Sorted per-ID content fingerprints produced aggregate `e6cfc662b8ed1103` using FNV-1a 64 over `[id,kind,dataJson,createdAt,updatedAt]`; this is the immediate pre-retry canonical-data comparison point. The server table also contains the separately protected encrypted connection row, which must remain preserved but never exported.
 
 ## Preserved source and correction
@@ -19,7 +21,7 @@ The authoritative archive `navigation_icons_all_batches.zip` has SHA-256 `ed344f
 ## Exact local release gate
 
 - Focused owner/navigation tests: 9/9; full regression: **131 files / 751 tests PASS**; typecheck PASS; production build PASS.
-- PWA build: 429 precache entries, including 31 runtime route derivatives and zero master/complete-library entries; navigation-v5 and static-v4 cache identifiers. App version `1.0.55`.
+- PWA build for the first candidate: 429 precache entries, including 31 runtime route derivatives and zero master paths; navigation-v5 and static-v4 cache identifiers. The complete 748-icon library was not eagerly cached. App version `1.0.55`.
 - Focused new/changed-module lint PASS. The older dashboard monolith retains pre-existing broad-lint findings, already documented in prior T14 evidence. No new finding was introduced in the isolated new files.
 - Client-bundle/staged-diff privacy scan: six private credential fingerprints, zero matches. Nine approved protected calculation files: zero hash mismatches. Local 75-Dive/one-Gas-Plan fixture hash remains `221e9ff72ab5deb482b5ef0029e556c8ee7a3e667e54ff52e0671ca646411a10`; Plan hash remains `edeffbe5e65a30ac2eaa54f36562ee50e754ea53f90c9ef00d468cff2f39bebe`.
 - Browser at 390/820/1024/1440: all 31 route images loaded at natural width 128, no broken image, zero page-level horizontal overflow and zero application console errors. People, Dive Centres, Insights and Logbook routes rendered. Mobile/tablet menu, active route, Team-only buddy choices and leader choices were exercised. Existing local Dive edit/create drafts were cancelled. The circular photo editor used a disposable local image: 1:1 circle, zoom, drag/recentre and Reset worked; crop and Person drafts were cancelled. The local fixture has no owner Person, so owner-specific enrichment is covered by focused tests and remains a live read-only acceptance check after deployment.
