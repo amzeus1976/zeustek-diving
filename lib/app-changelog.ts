@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.57',
+    date: '2026-09-24',
+    title: 'Highest award summaries use canonical evidence',
+    changes: [
+      'Overview and Insights now show the highest ranked recreational display award from current Certification records, including recognised Master Scuba Diver ratings stored as Other or Experience.',
+      'The older owner-entered Person summary remains unchanged; display rank does not grant depth permissions or professional capability.',
+    ],
+  },
+  {
     version: '1.0.56',
     date: '2026-09-24',
     title: 'Owner qualification display corrected',

@@ -1,3 +1,15 @@
+import type {CertificationRecord,PersonRecord} from '../offline/dive-planning';
+import {resolvePersonDisplayAwards} from '../people/certification-evidence';
+
+export function insightAwardDisplayValues(owner:(Partial<PersonRecord>&{entityId?:string})|null,certifications:CertificationRecord[]){
+  const awards=owner?resolvePersonDisplayAwards(owner,certifications):null;
+  return {
+    highestRecCert:awards?.rec.title||'Not recorded',
+    highestTecCert:awards?.tec.title||'Not recorded',
+    highestProCert:awards?.pro.title||'Not recorded',
+  };
+}
+
 export const INSIGHT_AWARD_COUNTS = [4, 8, 12, 16, 20] as const;
 export type InsightAwardCount = (typeof INSIGHT_AWARD_COUNTS)[number];
 
@@ -14,7 +26,7 @@ export const INSIGHT_AWARD_DEFINITIONS = [
   ['averageSac', 'Average SAC rate', 'breathing'],
   ['bestRmv', 'Best RMV', 'breathing'],
   ['averageRmv', 'Average RMV', 'breathing'],
-  ['highestRecCert', 'Highest recreational certification', 'certification'],
+  ['highestRecCert', 'Highest recreational award', 'certification'],
   ['highestTecCert', 'Highest technical certification', 'certification'],
   ['highestProCert', 'Highest professional certification', 'certification'],
   ['saltwaterDives', 'Saltwater dives', 'water'],

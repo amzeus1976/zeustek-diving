@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Current checkpoint — post-Sites128 award display bugfix (2026-09-24)
+
+Current accepted production is app1.0.56 / Sites128, deployment `appgdep_6ab537321c7c819187aeec7abf0c69bb`, source `095026d926e1cf8e1f97c1cc79314b94885e7a2a`. Work on branch `t14/master-forward-build` corrects a read-only display derivation; it does not edit production owner records or protected calculations. See `award-display-bugfix-evidence.md` for root cause, local tests, live baseline fingerprint and exact release steps. Historical sections below describe earlier checkpoints and must not be used as the current deployment state.
+
 ## Current checkpoint — corrected owner Dive qualification and 31 navigation icons (2026-09-24)
 
 Preserve branch `t14/master-forward-build` and corrected application commit `408df5a9c75b9e555945a22c51fde30e993f4208`, built on the completed People / Dive Entity correction. The current evidence and exact next steps are in `owner-identity-navigation-release-evidence.md`; `IDENTITY-01` and `ICON-02` remain `LOCAL PASS` in `issue-matrix.csv`. App version is 1.0.56. Full corrected-code regression is 131 files/753 tests PASS; typecheck, build/PWA, targeted lint, privacy, nine protected hashes and local owner-candidate browser check pass. Sites127/app1.0.55 was deployed once, failed the live owner-qualification display check, and was restored to Sites126/app1.0.54 through successful recovery deployment `appgdep_6ab5315a23f48191813715f6a6a02a59`. Production now visibly serves v1.0.54; no Gmail sync or GitHub accepted-source push occurred. Fresh pre-attempt Sites read found 6,610 total/6,400 active rows, including 66 Dives, one Gas Plan, 11 People and four Operators; recheck per-ID fingerprints before a corrected deployment and after smoke. Sites126 remains the verified rollback target, subject to immediate pre-deployment reconfirmation. Do not infer current production from the historical notes below.

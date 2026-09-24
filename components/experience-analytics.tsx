@@ -82,12 +82,13 @@ import {
   type ExperienceAnalyticsProjection,
 } from '../lib/offline/experience-analytics';
 import styles from './experience-analytics.module.css';
-import { INSIGHT_AWARD_DEFINITIONS, normaliseInsightAwardCount, type InsightAwardCount } from '../lib/insights/insight-awards';
+import { INSIGHT_AWARD_DEFINITIONS, insightAwardDisplayValues, normaliseInsightAwardCount, type InsightAwardCount } from '../lib/insights/insight-awards';
 import {AnalysisScopePanel,AnalysisScopeChips} from './insights/analysis-scope-panel';
 import {AnalysisWorkbench} from './insights/analysis-workbench';
 import {AnalysisSourceRecords} from './insights/analysis-source-records';
 import {normaliseAnalysisCards,DEFAULT_ANALYSIS_CARDS,type AnalysisCardConfig} from '../lib/insights/analysis-card-registry';
 import {saveWorkbenchSettings} from '../lib/insights/workbench-settings';
+import {findOwnerProfile} from '../lib/offline/people-profiles';
 
 type DetailKind =
   | 'total-dives'
@@ -501,13 +502,13 @@ export function ExperienceAnalytics({ go }: Props) {
   const diveTypeCount = (pattern: RegExp) => scopedDives.filter((dive) => (dive.diveTypes ?? []).some((value) => pattern.test(value.toLowerCase()))).length;
   const depths = scopedDives.map((dive) => dive.maxDepthM).filter((value): value is number => value != null);
   const durations = scopedDives.map((dive) => dive.totalElapsedMin ?? dive.bottomTimeMin).filter((value): value is number => value != null);
-  const certificationFor = (pattern: RegExp) => certifications.find((item) => pattern.test(`${item.certification} ${item.level}`.toLowerCase()));
-  const labelCertification = (item: Stored<CertificationRecord> | undefined) => item ? item.certification || item.level : 'Not recorded';
+  const ownerProfile=findOwnerProfile(people);
+  const displayAwards=insightAwardDisplayValues(ownerProfile,certifications);
   const awardValues: Record<string, string> = {
     divesLogged: String(scopedDives.length), recreationalDives: String(scopedDives.filter((dive)=>!dive.diveMode?.startsWith('technical')).length), technicalDives: String(scopedDives.filter((dive)=>dive.diveMode?.startsWith('technical')).length),
     maxDepth: depths.length ? `${round(Math.max(...depths))} m` : '—', averageDepth: h.averageDepthM.value == null ? '—' : `${round(h.averageDepthM.value)} m`, totalTime: formatMinutes(h.totalDiveTimeMin.value), longestDive: durations.length ? `${Math.max(...durations)} min` : '—', averageTime: durations.length ? `${round(durations.reduce((sum,value)=>sum+value,0)/durations.length)} min` : '—',
     bestSac: h.bestSacBarMin.value == null ? '—' : `${round(h.bestSacBarMin.value)} bar/min`, averageSac: h.averageSacBarMin.value == null ? '—' : `${round(h.averageSacBarMin.value)} bar/min`, bestRmv: h.bestRmvLMin.value == null ? '—' : `${round(h.bestRmvLMin.value)} L/min`, averageRmv: h.averageRmvLMin.value == null ? '—' : `${round(h.averageRmvLMin.value)} L/min`,
-    highestRecCert: labelCertification(certificationFor(/open water|advanced|rescue|master scuba/)), highestTecCert: labelCertification(certificationFor(/tec|technical|trimix|decompression|extended range|ccr/)), highestProCert: labelCertification(certificationFor(/divemaster|dive master|instructor|course director/)),
+    ...displayAwards,
     saltwaterDives: String(scopedDives.filter((dive)=>dive.waterType==='Saltwater').length), freshwaterDives: String(scopedDives.filter((dive)=>dive.waterType==='Freshwater').length), otherWaterDives: String(scopedDives.filter((dive)=>!['Saltwater','Freshwater'].includes(dive.waterType ?? '')).length),
     deep20: String(depths.filter((value)=>value>=20).length), deep25: String(depths.filter((value)=>value>=25).length), deep30: String(depths.filter((value)=>value>=30).length), deep35: String(depths.filter((value)=>value>=35).length), deep40: String(depths.filter((value)=>value>=40).length), poolDives: String(diveTypeCount(/pool/)), shoreDives: String(diveTypeCount(/shore/)), boatDives: String(diveTypeCount(/boat/)), nightDives: String(diveTypeCount(/night/)), wreckDives: String(diveTypeCount(/^wreck$/)), wreckPenetrationDives: String(diveTypeCount(/wreck penetration/)), cavernDives: String(diveTypeCount(/cavern/)), caveDives: String(diveTypeCount(/^cave$/)), unknownOtherDives: String(scopedDives.filter((dive)=>!(dive.diveTypes?.length)).length),
   };
