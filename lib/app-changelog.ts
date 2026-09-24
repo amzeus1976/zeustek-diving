@@ -1,6 +1,16 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.55',
+    date: '2026-09-24',
+    title: 'People and Dive Entities; one owner Dive identity; complete navigation artwork',
+    changes: [
+      'Separated human People from non-human Dive Entities while preserving canonical records and historical links; added explicit many-to-many relationships and circular profile-photo cropping.',
+      'Displayed the owner once as Me in Dive Teams, using the canonical Person and certification evidence without rewriting old Dive records.',
+      'Added all 31 supplied ZeusTek navigation artworks as optimized transparent icons while retaining unchanged masters outside the PWA asset directory.',
+    ],
+  },
+  {
     version: '1.0.54',
     date: '2026-09-24',
     title: 'T14 scoped release through Stage 8; Gmail sync deferred',

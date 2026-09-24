@@ -92,6 +92,7 @@ import { SiteOverheadSection } from '@/components/site-overhead-profile';
 import { ProfilePicture } from '@/components/profile-picture';
 import { PeopleOperators } from '@/components/people-operators';
 import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
+import {diveTeamCandidates,normaliseDiveTeamIdentity} from '@/lib/people/dive-team-identity';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
@@ -288,7 +289,7 @@ function WorkflowNavigation({ active, go }: { active: string; go: (route: string
       const routes = workflowRoutesForSection(section.key);
       return <details className="workflow-nav-group" key={section.key} open={openSections.has(section.key)} onToggle={(event) => { const isOpen = event.currentTarget.open; setNavigationState((current) => { const next = new Set(current.openSections); if (isOpen) next.add(section.key); else next.delete(section.key); return { ...current, openSections: next }; }); }}>
         <summary>{section.label}<ChevronDown size={15}/></summary>
-        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><ZeusTekAssetIcon name={domainIconNames[route.route] ?? null} decorative size={26} fallback={<Icon size={18}/>}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
+        <div>{routes.map((route) => { const Icon = workflowIcons[route.route] ?? ChevronRight; return <button type="button" key={route.route} className={active === route.route ? 'active' : ''} onClick={() => go(route.route)} aria-current={active === route.route ? 'page' : undefined}><ZeusTekAssetIcon route={route.route} name={domainIconNames[route.route] ?? null} decorative size={30} fallback={<Icon size={18}/>}/><span>{route.label}</span>{!route.implemented && <small>{route.futureTask}</small>}</button>; })}</div>
       </details>;
     })}
   </nav>;
@@ -1009,6 +1010,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
   );
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
+  const ownerPersonId=findOwnerProfile(people)?.entityId;
   const [weatherBackfillStatus, setWeatherBackfillStatus] = useState('');
   const [search, setSearch] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('zeustek-logbook-site-filter') ?? '');
   const [modeFilter, setModeFilter] = useState('all');
@@ -1170,7 +1172,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                   <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
                   <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
                   <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
-                  {(dive.buddyIds??[]).map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
+                  {normaliseDiveTeamIdentity(dive,ownerPersonId).buddyIds.map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
                   <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
                   <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
                 </div>
@@ -1250,9 +1252,9 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                       .join(', ')
                   : 'Automatic fallback: all equipment owned on this dive date',
             ],
-            ['Dive team', (viewing.diveTeamIds ?? viewing.buddyIds)?.map((id) => id === 'self' ? 'Me' : people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
-            ['Buddies', viewing.buddyIds?.map((id) => people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
-            ['Dive leader', viewing.diveLeaderId === 'self' ? 'Me' : people.find((person) => person.entityId === viewing.diveLeaderId)?.name || 'Not recorded'],
+            ['Dive team', normaliseDiveTeamIdentity(viewing,ownerPersonId).diveTeamIds.map((id) => id === 'self' ? 'Me' : people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
+            ['Buddies', normaliseDiveTeamIdentity(viewing,ownerPersonId).buddyIds.map((id) => people.find((person) => person.entityId === id)?.name).filter(Boolean).join(', ') || 'Not recorded'],
+            ['Dive leader', normaliseDiveTeamIdentity(viewing,ownerPersonId).diveLeaderId === 'self' ? 'Me' : people.find((person) => person.entityId === normaliseDiveTeamIdentity(viewing,ownerPersonId).diveLeaderId)?.name || 'Not recorded'],
             ['Cumulative time', viewing.currentTotalTimeMin != null ? `${viewing.preDiveTotalTimeMin ?? 0} min before · ${viewing.currentTotalTimeMin} min after` : 'Not recorded'],
             ['Equipment notes', viewing.equipmentNotes || 'Not recorded'],
             ['Weighting', viewing.ballastKg != null ? `${viewing.ballastKg} kg total${viewing.weightDistribution ? ` · ${viewing.weightDistribution}` : ''}${viewing.trimAssessment ? ` · ${viewing.trimAssessment}` : ''}` : 'Not recorded'],
@@ -4774,6 +4776,7 @@ function DiveModal({
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>([]);
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
+  const [certifications,setCertifications]=useState<Array<Stored<CertificationRecord>>>([]);
   const [diveNumber, setDiveNumber] = useState(item?.diveNumber?.toString() ?? '');
   const [diveNumberStart, setDiveNumberStart] = useState(1);
   const [date, setDate] = useState(
@@ -4883,6 +4886,9 @@ function DiveModal({
   const [diveTeamIds, setDiveTeamIds] = useState<string[]>(item?.diveTeamIds ?? item?.buddyIds ?? []);
   const [buddyIds, setBuddyIds] = useState<string[]>(item?.buddyIds ?? []);
   const [diveLeaderId, setDiveLeaderId] = useState(item?.diveLeaderId ?? '');
+  const ownerPersonId=findOwnerProfile(people)?.entityId;
+  const teamIdentity=normaliseDiveTeamIdentity({diveTeamIds,buddyIds,diveLeaderId},ownerPersonId);
+  const teamCandidates=diveTeamCandidates(people,certifications);
   const [supportCrew, setSupportCrew] = useState(item?.supportCrew ?? '');
   const [isVerified, setIsVerified] = useState(item?.isVerified ?? false);
   const [verifierAgency, setVerifierAgency] = useState(item?.verifierAgency ?? '');
@@ -4906,6 +4912,7 @@ function DiveModal({
     void listEquipmentSets().then(setSets);
     void listDiveSites().then(setSites);
     void listPeople().then(setPeople);
+    void listCertifications().then(setCertifications);
     void listDives().then(setDives);
     void listDashboardSettings().then((records) =>
       setDiveNumberStart(Math.max(1, records[0]?.diveNumberStart || 1)),
@@ -4949,10 +4956,10 @@ function DiveModal({
   }
 
   function toggleTeamMember(value: string, checked: boolean) {
-    toggleValue(setDiveTeamIds, value, checked);
+    setDiveTeamIds(checked ? Array.from(new Set([...teamIdentity.diveTeamIds,value])) : teamIdentity.diveTeamIds.filter(id=>id!==value));
     if (!checked) {
-      setBuddyIds((current) => current.filter((id) => id !== value));
-      if (diveLeaderId === value) setDiveLeaderId('');
+      setBuddyIds(teamIdentity.buddyIds.filter(id=>id!==value));
+      if (teamIdentity.diveLeaderId === value) setDiveLeaderId('');
     }
   }
 
@@ -5223,9 +5230,9 @@ function DiveModal({
       aquaticLife: aquaticLife.split('\n').flatMap((value) => value.split(',')).map((value) => value.trim()).filter(Boolean),
       aquaticLifeNotes,
       notes,
-      diveTeamIds,
-      buddyIds,
-      diveLeaderId,
+      diveTeamIds:teamIdentity.diveTeamIds,
+      buddyIds:teamIdentity.buddyIds,
+      diveLeaderId:teamIdentity.diveLeaderId,
       supportCrew,
       isVerified,
       verifierAgency,
@@ -5503,20 +5510,19 @@ function DiveModal({
           <summary>Team & verification</summary>
           <span className="field-subheading">DIVE TEAM · SELECT ONE OR MORE</span>
           <div className="choice-grid">
-            <label><input type="checkbox" checked={diveTeamIds.includes('self')} onChange={(event) => toggleTeamMember('self', event.target.checked)} />Me</label>
-            {people.map((person) => <label key={person.entityId}><input type="checkbox" checked={diveTeamIds.includes(person.entityId)} onChange={(event) => toggleTeamMember(person.entityId, event.target.checked)} />{person.name} · {person.highestQualification || person.role}</label>)}
+            {teamCandidates.map(candidate=><label key={candidate.id}><input type="checkbox" checked={teamIdentity.diveTeamIds.includes(candidate.id)} onChange={(event)=>toggleTeamMember(candidate.id,event.target.checked)}/>{candidate.label}</label>)}
           </div>
           <span className="field-subheading">BUDDIES · SELECT FROM THE DIVE TEAM</span>
           <div className="choice-grid">
-            {diveTeamIds.filter((id) => id !== 'self').map((id) => {
+            {teamIdentity.diveTeamIds.filter((id) => id !== 'self').map((id) => {
               const person = people.find((candidate) => candidate.entityId === id);
               if (!person) return null;
-              return <label key={id}><input type="checkbox" checked={buddyIds.includes(id)} onChange={(event) => toggleValue(setBuddyIds, id, event.target.checked)} />{person.name}</label>;
+              return <label key={id}><input type="checkbox" checked={teamIdentity.buddyIds.includes(id)} onChange={(event) => toggleValue(setBuddyIds, id, event.target.checked)} />{personDisplayName(person)}</label>;
             })}
-            {!diveTeamIds.some((id) => id !== 'self') && <p className="section-help">Add people to the dive team first, then mark only the people who were your buddies.</p>}
+            {!teamIdentity.diveTeamIds.some((id) => id !== 'self') && <p className="section-help">Add people to the dive team first, then mark only the people who were your buddies.</p>}
           </div>
           <div className="field-grid field-grid-four">
-            <label>Dive leader<select value={diveLeaderId} onChange={(event) => setDiveLeaderId(event.target.value)}><option value="">Not recorded</option><option value="self">Me</option>{diveTeamIds.filter((id) => id !== 'self').map((id) => { const person = people.find((candidate) => candidate.entityId === id); return person ? <option key={id} value={id}>{person.name}</option> : null; })}</select></label>
+            <label>Dive leader<select value={teamIdentity.diveLeaderId} onChange={(event) => setDiveLeaderId(event.target.value)}><option value="">Not recorded</option><option value="self">Me</option>{teamIdentity.diveTeamIds.filter((id) => id !== 'self').map((id) => { const person = people.find((candidate) => candidate.entityId === id); return person ? <option key={id} value={id}>{personDisplayName(person)}</option> : null; })}</select></label>
             <label>Support crew<input value={supportCrew} onChange={(event) => setSupportCrew(event.target.value)} /></label>
             <label className="record-check"><input type="checkbox" checked={isVerified} onChange={(event) => setIsVerified(event.target.checked)} />Digitally verified</label>
             <label>Professional agency<input value={verifierAgency} onChange={(event) => setVerifierAgency(event.target.value)} /></label>

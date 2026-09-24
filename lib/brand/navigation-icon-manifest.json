@@ -1,0 +1,219 @@
+[
+  {
+    "route": "Overview",
+    "scale": 1,
+    "src": "/brand/icons/navigation/overview.png",
+    "masterSha256": "a0a2beb2008fa70b62f1282bb3bdf4e2dea1b29aac5929a4b409eedb4df9e6e3",
+    "masterPath": "assets/navigation-icons/master/batch_1/overview.png"
+  },
+  {
+    "route": "Insights",
+    "scale": 1,
+    "src": "/brand/icons/navigation/insights.png",
+    "masterSha256": "6f91e1f7dd19ffd5d5562cf7cf06553c78ff09675f3590294e57ea074a6e4a98",
+    "masterPath": "assets/navigation-icons/master/insights.png"
+  },
+  {
+    "route": "Equipment",
+    "scale": 1,
+    "src": "/brand/icons/navigation/equipment.png",
+    "masterSha256": "f908c2015573b2332d6849840a2372070b9b997718b3bfdc4f38b7e3f8e84b61",
+    "masterPath": "assets/navigation-icons/master/batch_1/equipment.png"
+  },
+  {
+    "route": "Loadouts & Gas",
+    "scale": 1,
+    "src": "/brand/icons/navigation/loadouts.png",
+    "masterSha256": "0c5eaefbb39a4a9ffb14c1b20e0edd05125ca05a5c29009e4871f7231e716c74",
+    "masterPath": "assets/navigation-icons/master/batch_1/loadouts.png"
+  },
+  {
+    "route": "Cylinders & Gas",
+    "scale": 1,
+    "src": "/brand/icons/navigation/cylinders_and_gas.png",
+    "masterSha256": "820b0e7e0efb0e587429e991c968aa25cc5c6a41e2d815098ad3a450e1a5d507",
+    "masterPath": "assets/navigation-icons/master/batch_1/cylinders_and_gas.png"
+  },
+  {
+    "route": "Gear Wishlist",
+    "scale": 1,
+    "src": "/brand/icons/navigation/gear_wishlist.png",
+    "masterSha256": "08c8b85e4b28b329d67734c165def19a07aa1c60b11095b53a3f9b49298c1290",
+    "masterPath": "assets/navigation-icons/master/batch_1/gear_wishlist.png"
+  },
+  {
+    "route": "Logbook",
+    "scale": 1,
+    "src": "/brand/icons/navigation/logbook.png",
+    "masterSha256": "c51c91b6a8f71e0994bf613957bb7c0f46f1d2e3df43acdaa24c18e3240a44fb",
+    "masterPath": "assets/navigation-icons/master/batch_1/logbook.png"
+  },
+  {
+    "route": "Dive Computer Imports",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_computer_imports.png",
+    "masterSha256": "8aa710695e24ae2328b62f2c7f71b022d704effd00bbf0a6e28fe21267b82b2b",
+    "masterPath": "assets/navigation-icons/master/batch_1/dive_computer_imports.png"
+  },
+  {
+    "route": "Sites",
+    "scale": 1,
+    "src": "/brand/icons/navigation/sites.png",
+    "masterSha256": "bda76b4947064217246391792e138e341f1df69227008db4b1cc497aa262d22a",
+    "masterPath": "assets/navigation-icons/master/batch_1/sites.png"
+  },
+  {
+    "route": "Dive Site Map",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_location_map.png",
+    "masterSha256": "9256ce08e13b9c04796ae7759106b239f2d069f375040bac569bcb53139419d9",
+    "masterPath": "assets/navigation-icons/master/batch_1/dive_location_map.png"
+  },
+  {
+    "route": "People",
+    "scale": 1,
+    "src": "/brand/icons/navigation/people.png",
+    "masterSha256": "0c5eaefbb39a4a9ffb14c1b20e0edd05125ca05a5c29009e4871f7231e716c74",
+    "masterPath": "assets/navigation-icons/master/batch_1/people.png"
+  },
+  {
+    "route": "Dive Centres",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_centres.png",
+    "masterSha256": "204a5a55a1a814331bd1a0fdab95c51ed60ebbf9ad38efb3a1e40a200efeec9b",
+    "masterPath": "assets/navigation-icons/master/batch_2/dive_centres.png"
+  },
+  {
+    "route": "Albums",
+    "scale": 1,
+    "src": "/brand/icons/navigation/albums.png",
+    "masterSha256": "515ccaf8bb450d85e1ba6170a8d264331bddd0138fc491d95b8fab24cd38899b",
+    "masterPath": "assets/navigation-icons/master/batch_2/albums.png"
+  },
+  {
+    "route": "Diving Calendar & Bookings",
+    "scale": 1,
+    "src": "/brand/icons/navigation/diving_calendar_and_bookings.png",
+    "masterSha256": "e687ecb1a41a7957dd6230759f0f92e7be622dd56e9f7647ecc97e2d8473f193",
+    "masterPath": "assets/navigation-icons/master/batch_2/diving_calendar_and_bookings.png"
+  },
+  {
+    "route": "Trips",
+    "scale": 1,
+    "src": "/brand/icons/navigation/trips_and_expeditions.png",
+    "masterSha256": "a1f3771be398b55f78e60bb554ac5cd58d227bc6ca20449ea59a3232146d5a64",
+    "masterPath": "assets/navigation-icons/master/batch_2/trips_and_expeditions.png"
+  },
+  {
+    "route": "Dive Bucket List",
+    "scale": 1,
+    "src": "/brand/icons/navigation/bucket_list.png",
+    "masterSha256": "dfb08d8293364fd6b206d90225a220d3b1f496fd904cd376d2a7e581ca1b2dd9",
+    "masterPath": "assets/navigation-icons/master/batch_2/bucket_list.png"
+  },
+  {
+    "route": "Dive Plans",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_planning_centre.png",
+    "masterSha256": "44cd76cded109fec1c2ad5862da2c8d576efc3c6c926bb83880f057005f4a465",
+    "masterPath": "assets/navigation-icons/master/batch_2/dive_planning_centre.png"
+  },
+  {
+    "route": "Gas Planning",
+    "scale": 1,
+    "src": "/brand/icons/navigation/gas_planning.png",
+    "masterSha256": "04a302deef9e4fd0e8bbd13cf553cb10723fd6b940d4469d807eff25fcb8d818",
+    "masterPath": "assets/navigation-icons/master/batch_2/gas_planning.png"
+  },
+  {
+    "route": "Training",
+    "scale": 1,
+    "src": "/brand/icons/navigation/certifications.png",
+    "masterSha256": "33cff673aa01f9bc17e64e872e5e00383e61af06fe899be09fdbfaa23d24973d",
+    "masterPath": "assets/navigation-icons/master/batch_2/certifications.png"
+  },
+  {
+    "route": "Course Map",
+    "scale": 1,
+    "src": "/brand/icons/navigation/planned_training.png",
+    "masterSha256": "9f948cca8938fd44260bab834cda606f088bf182ff1745c3f06d0367ede7450a",
+    "masterPath": "assets/navigation-icons/master/batch_2/planned_training.png"
+  },
+  {
+    "route": "Skills & Currency",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_skills.png",
+    "masterSha256": "06037d0ee01815ed6a36c3d8abd0688eebe493f46eb1eb402549b065c7f9704b",
+    "masterPath": "assets/navigation-icons/master/batch_2/dive_skills.png"
+  },
+  {
+    "route": "Technical Diving",
+    "scale": 1,
+    "src": "/brand/icons/navigation/technical_diving.png",
+    "masterSha256": "1c7d34ca859dbb53f8bca0ce323600162b22bab2cf5486677c0ac36b27ed1f96",
+    "masterPath": "assets/navigation-icons/master/batch_3/technical_diving.png"
+  },
+  {
+    "route": "Conservation & AWARE",
+    "scale": 1,
+    "src": "/brand/icons/navigation/conservation_and_aware.png",
+    "masterSha256": "d5cbb4d06005964c54f30e8c31d64c2b9a7b12cd11e130075ce327a692024d91",
+    "masterPath": "assets/navigation-icons/master/batch_3/conservation_and_aware.png"
+  },
+  {
+    "route": "Dive Knowledge",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_knowledge.png",
+    "masterSha256": "e5b339fd4b9dfdfdff3cb9c41cac5aba949867cb7f2791576502725e1e07bb15",
+    "masterPath": "assets/navigation-icons/master/batch_3/dive_knowledge.png"
+  },
+  {
+    "route": "Dive Media",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_bibliography.png",
+    "masterSha256": "4780196404302c4770b0e62e4f8f29b0fea3bcf7645820a2695dbd7b7cf13530",
+    "masterPath": "assets/navigation-icons/master/batch_3/dive_bibliography.png"
+  },
+  {
+    "route": "Dive News",
+    "scale": 1,
+    "src": "/brand/icons/navigation/dive_news.png",
+    "masterSha256": "8057efda4351c97e04b03b2a22b470cf2028f8527e3eff652607df380afb1ec9",
+    "masterPath": "assets/navigation-icons/master/batch_3/dive_news.png"
+  },
+  {
+    "route": "Professional Development",
+    "scale": 1,
+    "src": "/brand/icons/navigation/professional_development.png",
+    "masterSha256": "d18f3c71c68d2cf4f50ce0d1ebf08c10bd6fd3d739b473171bdefd35e7009168",
+    "masterPath": "assets/navigation-icons/master/batch_3/professional_development.png"
+  },
+  {
+    "route": "Admin",
+    "scale": 1,
+    "src": "/brand/icons/navigation/site_logs.png",
+    "masterSha256": "199c9c540f9dd4492f5f604d53fbc2fb31aca7379150348e3e90a7995638a1c3",
+    "masterPath": "assets/navigation-icons/master/batch_3/site_logs.png"
+  },
+  {
+    "route": "Settings",
+    "scale": 1,
+    "src": "/brand/icons/navigation/site_configuration.png",
+    "masterSha256": "27d1d3f6bbdaadf2304f165aa4f8cc871750952efc9c42f43241b332efbfcbb6",
+    "masterPath": "assets/navigation-icons/master/batch_3/site_configuration.png"
+  },
+  {
+    "route": "Data & Backups",
+    "scale": 1,
+    "src": "/brand/icons/navigation/data_and_backups.png",
+    "masterSha256": "06f31102957861974b482b4272fcb31124b7a5bd709b03dfc667dee96e116ab9",
+    "masterPath": "assets/navigation-icons/master/batch_3/data_and_backups.png"
+  },
+  {
+    "route": "Diver Summary Export",
+    "scale": 1,
+    "src": "/brand/icons/navigation/diver_summary_export.png",
+    "masterSha256": "9f14ee9ebc2585c359b00c81eee165543038801d6d3299319cea75be85fce6b3",
+    "masterPath": "assets/navigation-icons/master/batch_3/diver_summary_export.png"
+  }
+]
