@@ -4,18 +4,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
 import { BuddyDiveWorkspace } from './people/buddy-dive-workspace';
+import {PersonEntityRelationships} from './people/person-entity-relationships';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
-import { CardImageView } from './certification-images';
-import { ProfilePicture } from './profile-picture';
+import { PersonAvatar, ProfilePicture } from './profile-picture';
 import { useRecordRefresh } from './record-status';
 import {
   deletePerson,
   listCertifications,
   listPeople,
   listOperators,
+  listPersonEntityLinks,
   savePerson,
   type PersonRecord,
 } from '@/lib/offline/dive-planning';
+import {projectPersonEntityLinks,relationshipStatus} from '@/lib/operators/entity-relationships';
+import {reviewPersonDuplicates} from '@/lib/operators/duplicate-review';
 import { listDives, type DiveRecord } from '@/lib/offline/dives';
 import {
   assertSingleOwnerProfile,
@@ -70,9 +73,6 @@ const ROLE_OPTIONS: Array<[keyof NonNullable<PersonRecord['roles']>, string]> =
     ['buddy', 'Buddy'],
     ['instructor', 'Instructor'],
     ['guide', 'Dive guide'],
-    ['diveOperator', 'Dive operator'],
-    ['diveCentre', 'Dive centre'],
-    ['boatCharter', 'Boat / charter'],
     ['emergencyContact', 'Emergency contact'],
     ['other', 'Other'],
   ];
@@ -122,14 +122,17 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   const [buddyView,setBuddyView]=useState<StoredPerson|null>(null);
   const [error, setError] = useState('');
   const [operators,setOperators]=useState<Awaited<ReturnType<typeof listOperators>>>([]);
+  const [personLinks,setPersonLinks]=useState<Awaited<ReturnType<typeof listPersonEntityLinks>>>([]);
+  const [managing,setManaging]=useState<StoredPerson|null>(null);
   const openedPersonLink=useRef(false);
   const refresh = useCallback(() => {
-    void Promise.all([listPeople(), listDives(), listCertifications(),listOperators()]).then(
-      ([nextPeople, nextDives, nextCertifications,nextOperators]) => {
+    void Promise.all([listPeople(), listDives(), listCertifications(),listOperators(),listPersonEntityLinks()]).then(
+      ([nextPeople, nextDives, nextCertifications,nextOperators,nextLinks]) => {
         setPeople(nextPeople);
         setDives(nextDives);
         setCertifications(nextCertifications);
         setOperators(nextOperators);
+        setPersonLinks(nextLinks);
       },
     );
   }, []);
@@ -149,8 +152,6 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
             personDisplayName(person),
             person.name,
             person.agency,
-            person.operatorName,
-            person.operatorLocation,
             person.highestKnownQualification,
             Object.keys(person.roles ?? {})
               .filter(
@@ -200,9 +201,8 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
       )
     )
       return;
-    await deletePerson(person.entityId);
-    setViewing(null);
-    refresh();
+    try {await deletePerson(person.entityId);setViewing(null);refresh();}
+    catch(reason){setError(reason instanceof Error?reason.message:'Unlink dependent records before deleting this Person.');}
   }
 
   async function save(draft: DraftPerson) {
@@ -215,6 +215,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
         draft.name.trim();
       if (!displayName)
         throw new Error('Add a display name, forename or surname.');
+      if(!draft.entityId){const matches=reviewPersonDuplicates({...draft,name:displayName},people);if(matches.length&&!window.confirm(`Review existing Person: ${matches.map(row=>personDisplayName(row)).join(', ')}. Create a separate Person anyway?`))return;}
       const legacyRole: PersonRecord['role'] =
         draft.roles?.instructor && draft.roles?.buddy
           ? 'both'
@@ -239,16 +240,17 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   }
 
   if (editing) return <ProfileEditor person={editing} people={people} dives={dives}
-    certifications={certifications} error={error} operators={operators}
+    certifications={certifications} error={error}
     close={() => { setEditing(null); setError(''); }} save={save}/>;
   if (buddyView) return <BuddyDiveWorkspace person={buddyView} dives={dives} close={()=>setBuddyView(null)} saved={refresh} go={go}/>;
+  if (managing) return <PersonEntityRelationships person={managing} operators={operators} links={personLinks} close={()=>setManaging(null)} onSaved={refresh} go={go??(()=>undefined)}/>;
 
   return (
     <>
       <header className={styles.hero}>
         <div>
-          <span>PEOPLE · OPERATORS · OWNER PROFILE</span>
-          <h1>People &amp; Operators</h1>
+          <span>PEOPLE · OWNER PROFILE</span>
+          <h1>People</h1>
           <p>
             People profiles for My Profile, buddies, instructors, guides and contacts.
             Organisations and services live in Dive Centres.
@@ -262,6 +264,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
         </button>
         {go&&<button className="focus-secondary" onClick={()=>go('Dive Centres')}>Open Dive Centres</button>}
       </header>
+      {error&&<p role="alert" className={styles.error}>{error}</p>}
       <section className={`${styles.ownerCard} ${owner ? '' : styles.setup}`}>
         <div>
           <span className="focus-eyebrow">MY PROFILE</span>
@@ -288,7 +291,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Name, role, agency or operator"
+            placeholder="Name, role or agency"
           />
         </label>
         <label>
@@ -308,7 +311,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
       </section>
       <section
         className={styles.grid}
-        aria-label="People and operator profiles"
+        aria-label="People profiles"
       >
         {visible.map((person) => (
           <article key={person.entityId} className={styles.personCard}>
@@ -318,14 +321,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               onClick={() => setViewing(person)}
             />
             <div className={styles.avatar}>
-              {person.profileImage ? (
-                <CardImageView
-                  image={person.profileImage}
-                  label={`${personDisplayName(person)} profile`}
-                />
-              ) : (
-                <Users />
-              )}
+              <PersonAvatar image={person.profileImage} legacyId={person.profileImageId} label={`${personDisplayName(person)} profile`} size={48}/>
             </div>
             <div>
               <span className="focus-eyebrow">
@@ -339,7 +335,6 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               <p>
                 {person.highestKnownQualification ||
                   person.highestQualification ||
-                  person.operatorName ||
                   'Profile details not yet recorded'}
               </p>
             </div>
@@ -370,7 +365,9 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
       {viewing && (
         <ProfileDetail
           person={refreshPersonDerivedStats(viewing,derivePersonProfileStats(viewing,dives,certifications))}
+          affiliations={projectPersonEntityLinks([viewing],personLinks)} operators={operators} go={go??(()=>undefined)}
           showDives={()=>{setBuddyView(viewing);setViewing(null);}}
+          manage={()=>{setManaging(viewing);setViewing(null);}}
           close={() => setViewing(null)}
           edit={() => {
             setEditing({ ...viewing });
@@ -384,14 +381,22 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
 
 function ProfileDetail({
   person,
+  affiliations,
+  operators,
+  go,
   close,
   edit,
   showDives,
+  manage,
 }: {
   person: StoredPerson;
+  affiliations:ReturnType<typeof projectPersonEntityLinks>;
+  operators:Awaited<ReturnType<typeof listOperators>>;
+  go:(route:string)=>void;
   close: () => void;
   edit: () => void;
   showDives: () => void;
+  manage: () => void;
 }) {
   const stats = [
     ['Linked dives', valueOrUnknown(person.totalLinkedDives)],
@@ -410,6 +415,7 @@ function ProfileDetail({
       className={`focus-modal ${styles.dialog}`}
     >
       <header>
+        <PersonAvatar image={person.profileImage} legacyId={person.profileImageId} label={`${personDisplayName(person)} profile`} size={72}/>
         <div>
           <span className="focus-eyebrow">
             {person.roles?.ownerProfile ? 'MY PROFILE' : 'PERSON PROFILE'}
@@ -496,20 +502,11 @@ function ProfileDetail({
             </p>
           </section>
         )}
-        {(hasPersonRole(person, 'diveOperator') ||
-          hasPersonRole(person, 'diveCentre') ||
-          hasPersonRole(person, 'boatCharter')) && (
-          <section>
-            <h3>Dive operator profile</h3>
-            <p>
-              {person.operatorName || personDisplayName(person)} ·{' '}
-              {person.operatorType || 'Type unknown'}
-            </p>
-            <p>
-              {person.operatorLocation || person.location || 'Location unknown'}
-            </p>
-          </section>
-        )}
+        <section><h3>Dive Entity affiliations</h3>
+          {affiliations.length?<ul>{affiliations.map((link,index)=><li key={link.entityId??`${link.operatorId}-${index}`}>
+            <button type="button" className="focus-secondary" onClick={()=>go('Dive Centres&operatorId='+encodeURIComponent(link.operatorId))}>{operators.find(row=>row.entityId===link.operatorId)?.name??'Unavailable entity'}</button> · {link.role} · {relationshipStatus(link)}
+          </li>)}</ul>:<p>No Dive Entity affiliations recorded.</p>}
+        </section>
         <section>
           <h3>Notes &amp; evidence</h3>
           <p>
@@ -521,6 +518,7 @@ function ProfileDetail({
       </div>
       <footer>
         <button className="focus-secondary" onClick={showDives}>Dives together / link history</button>
+        <button className="focus-secondary" onClick={manage}>Manage Dive Entity links</button>
         <button className="focus-secondary" onClick={edit}>
           Edit profile
         </button>
@@ -537,7 +535,6 @@ function ProfileEditor({
   people,
   dives,
   certifications,
-  operators,
   error,
   close,
   save,
@@ -546,7 +543,6 @@ function ProfileEditor({
   people: StoredPerson[];
   dives: Array<DiveRecord & { entityId: string }>;
   certifications: Awaited<ReturnType<typeof listCertifications>>;
-  operators: Awaited<ReturnType<typeof listOperators>>;
   error: string;
   close: () => void;
   save: (person: DraftPerson) => Promise<void>;
@@ -601,11 +597,6 @@ function ProfileEditor({
     };
     setDraft(refreshPersonDerivedStats(withoutOverride, derived, false));
   }
-  const operatorEnabled = Boolean(
-    draft.roles?.diveOperator ||
-    draft.roles?.diveCentre ||
-    draft.roles?.boatCharter,
-  );
   return (
     <RecordEditorWorkspace
       label={
@@ -1037,139 +1028,6 @@ function ProfileEditor({
                   value={draft.instructorNotes ?? ''}
                   onChange={(event) =>
                     update({ instructorNotes: event.target.value })
-                  }
-                />
-              </label>
-            </div>
-          </fieldset>
-        )}
-        <fieldset><legend>Dive Centre relationships</legend>
-          <p>Link this person to an existing organisation. Their identity and qualifications remain in this Person record.</p>
-          <div className={styles.fields}>
-            {([['currentDiveOperatorId','Current Dive Centre'],['operatorId','Associated Dive Centre']] as const).map(([field,label])=><label key={field}>{label}
-              <select value={draft[field]??''} onChange={event=>update({[field]:event.target.value})}>
-                <option value="">Not linked</option>
-                {draft[field]&&!operators.some(row=>row.entityId===draft[field])&&<option value={draft[field]}>Unavailable linked centre · {draft[field]?.slice(-8)}</option>}
-                {operators.map(row=><option key={row.entityId} value={row.entityId}>{row.name}{row.active===false?' · inactive':''}</option>)}
-              </select></label>)}
-          </div>
-        </fieldset>
-        {operatorEnabled && (
-          <fieldset>
-            <legend>Dive operator profile</legend>
-            <div className={styles.fields}>
-              <label>
-                Operator name
-                <input
-                  value={draft.operatorName ?? ''}
-                  onChange={(event) =>
-                    update({ operatorName: event.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Operator type
-                <select
-                  value={draft.operatorType ?? 'other'}
-                  onChange={(event) =>
-                    update({
-                      operatorType: event.target.value as NonNullable<
-                        DraftPerson['operatorType']
-                      >,
-                    })
-                  }
-                >
-                  <option value="dive-centre">Dive centre</option>
-                  <option value="liveaboard">Liveaboard</option>
-                  <option value="charter-boat">Charter boat</option>
-                  <option value="club">Club</option>
-                  <option value="independent-instructor">
-                    Independent instructor
-                  </option>
-                  <option value="resort">Resort</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
-              <label>
-                Website
-                <input
-                  type="url"
-                  value={draft.website ?? ''}
-                  onChange={(event) => update({ website: event.target.value })}
-                />
-              </label>
-              <label>
-                Booking URL
-                <input
-                  type="url"
-                  value={draft.bookingUrl ?? ''}
-                  onChange={(event) =>
-                    update({ bookingUrl: event.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Phone
-                <input
-                  type="tel"
-                  value={draft.operatorPhone ?? ''}
-                  onChange={(event) =>
-                    update({ operatorPhone: event.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={draft.operatorEmail ?? ''}
-                  onChange={(event) =>
-                    update({ operatorEmail: event.target.value })
-                  }
-                />
-              </label>
-              <label className={styles.wide}>
-                Address
-                <input
-                  value={draft.operatorAddress ?? ''}
-                  onChange={(event) =>
-                    update({ operatorAddress: event.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Postcode
-                <input
-                  value={draft.operatorPostcode ?? ''}
-                  onChange={(event) =>
-                    update({ operatorPostcode: event.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Location
-                <input
-                  value={draft.operatorLocation ?? ''}
-                  onChange={(event) =>
-                    update({ operatorLocation: event.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Emergency contact
-                <input
-                  value={draft.operatorEmergencyContact ?? ''}
-                  onChange={(event) =>
-                    update({ operatorEmergencyContact: event.target.value })
-                  }
-                />
-              </label>
-              <label className={styles.wide}>
-                Operator notes
-                <textarea
-                  value={draft.operatorNotes ?? ''}
-                  onChange={(event) =>
-                    update({ operatorNotes: event.target.value })
                   }
                 />
               </label>

@@ -32,7 +32,7 @@ export const WORKFLOW_ROUTES: WorkflowRoute[] = [
   { route: 'Dive Computer Imports', label: 'Dive Computer Imports', legacyLabels: ['Dive Computer Data'], section: 'dive-data', implemented: true, description: 'Staged computer source evidence and profile import.' },
   { route: 'Sites', label: 'Sites', legacyLabels: [], section: 'dive-data', implemented: true, description: 'Detailed dive site records.' },
   { route: 'Dive Site Map', label: 'Dive Location Map', legacyLabels: ['Dive Site Map'], section: 'dive-data', implemented: true, description: 'Map of sites and where the diver has dived.' },
-  { route: 'People', label: 'People & Operators', legacyLabels: ['People'], section: 'dive-data', implemented: true, description: 'Buddies, guides, instructors, centres and operators.' },
+  { route: 'People', label: 'People', legacyLabels: ['People & Operators'], section: 'dive-data', implemented: true, description: 'Human buddies, guides, instructors and contacts.' },
   { route:'Dive Centres',label:'Dive Centres',legacyLabels:['Operators','Dive Shops','Dive Centres & Operators'],section:'dive-data',implemented:true,description:'Canonical centres, operators, services and linked people.' },
   { route: 'Albums', label: 'Albums', legacyLabels: [], section: 'dive-data', implemented: true, description: 'Images and albums linkable to records.' },
   { route: 'Diving Calendar & Bookings', label: 'Diving Calendar & Bookings', legacyLabels: ['Bookings', 'Schedule'], section: 'trip-event-planning', implemented: true, description: 'Booked diving, courses, club events and service dates.' },

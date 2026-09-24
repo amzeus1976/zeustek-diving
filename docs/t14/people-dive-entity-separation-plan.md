@@ -27,11 +27,11 @@ Before any deployment capture current owner IDs/content fingerprints and verify 
 
 ## Implementation checkpoints
 
-- [ ] Model, relation projection and local/server integrity, with focused tests.
-- [ ] People and Dive Centres separation, navigation and duplicate review, with focused tests.
-- [ ] Circular avatar editor and legacy compatibility, with focused tests.
-- [ ] Backup/household boundaries and deletion protections, with focused tests.
-- [ ] Full regression, security/data/protected-calculation and responsive gates.
-- [ ] Release decision and, if authorised and safe, accepted source reconciliation.
+- [x] Model, relation projection and local/server integrity, with focused tests.
+- [x] People and Dive Centres separation, navigation and duplicate review, with focused tests.
+- [x] Circular avatar editor and legacy compatibility, with focused tests.
+- [x] Backup/household boundaries and deletion protections, with focused tests.
+- [x] Local full regression, privacy, protected-calculation and responsive gates. See `people-dive-entity-implementation-evidence.md` for the exact candidate and test results.
+- [ ] Production release gate and accepted source reconciliation. This model correction has not been deployed or synced to GitHub main; recheck live rollback and owner fingerprints against the then-current production state before any release.
 
 Ruling: This plan uses the existing T14 planning/evidence ledger instead of creating a separate execution workspace, preserving the project's established handover convention.

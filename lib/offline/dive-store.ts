@@ -6,6 +6,7 @@ import { recordIdentity } from '../record-identity';
 import { prepareCardImages } from './dive-images';
 import { flushComputerEvidenceAttachments } from './evidence-attachments';
 import { personReferencesOperator } from '../operators/operator-dependencies';
+import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
@@ -76,6 +77,19 @@ export async function cacheDeletedRecord(id: string) {
 }
 
 type Pending = { id: string; kind: string; record: Record<string, JsonValue> | null; baseModifiedAt: string | null; token: string; state: string };
+export function sortPendingDiveChanges<T extends {kind:string;record:Record<string,unknown>|null}>(rows:ReadonlyArray<T>):T[]{
+  const priority=(row:T)=>{
+    const link=row.kind==='person-operator-link'||row.kind==='operator-operator-link';
+    const parent=row.kind==='person'||row.kind==='operator';
+    if(parent&&row.record)return 0;
+    if(link&&row.record?.primary===false)return 1;
+    if(link&&!row.record)return 2;
+    if(link)return 3;
+    if(parent&&!row.record)return 4;
+    return 0;
+  };
+  return [...rows].sort((a,b)=>priority(a)-priority(b));
+}
 let flushing: Promise<void> | null = null;
 const localWrites=new Map<string,Promise<unknown>>();
 async function sequentialWrite<T>(key:string,action:()=>Promise<T>):Promise<T>{
@@ -89,11 +103,31 @@ export async function saveLocalRecord(kind: string, input: Record<string, unknow
 async function saveLocalRecordInternal(kind: string, input: Record<string, unknown> & {entityId?: string}) {
   const module = moduleName();
   const {entityId, ...data} = input;
+  if(kind==='person-operator-link'||kind==='operator-operator-link'){
+    const refs=kind==='person-operator-link'
+      ? [['personId','person'],['operatorId','operator']] as const
+      : [['fromOperatorId','operator'],['toOperatorId','operator']] as const;
+    for(const [field,expectedKind] of refs){
+      const reference=data[field];
+      if(typeof reference!=='string'||!reference)throw new Error(`Select a valid ${expectedKind} for this relationship.`);
+      const parent=await zeustekDb.entities.get(`${module}:${reference}`);
+      if(!parent||parent.deleted||parent.entityType!==expectedKind)throw new Error(`The linked ${expectedKind} is unavailable. Save it before adding this relationship.`);
+    }
+    if(kind==='person-operator-link'){
+      personEntityLinkIdentity(data as {personId:string;operatorId:string;role:string});
+      if(typeof data.active!=='boolean')throw new Error('Select a relationship status.');
+    }else{
+      const normalised=normaliseEntityRelation(data as {fromOperatorId:string;toOperatorId:string;relationType:string;active:boolean});
+      if(normalised.fromOperatorId!==data.fromOperatorId||normalised.toOperatorId!==data.toOperatorId||normalised.relationType!==data.relationType)throw new Error('Save the canonical relationship direction.');
+    }
+  }
   const existing = await listLocalDiveRecords<Record<string, unknown>>(kind, { includeSuppressed: true });
+  if(kind==='person-operator-link'&&data.active===true&&data.primary===true&&existing.some(row=>row.entityId!==entityId&&row.personId===data.personId&&row.active===true&&row.primary===true))
+    throw new Error('Unmark the existing primary affiliation before selecting another.');
   const identity = recordIdentity(kind, data);
   const duplicate = !entityId && identity ? existing.find(row => recordIdentity(kind, row) === identity) : null;
   if (duplicate) throw new Error('A matching record already exists. Open it to review or edit instead of creating a duplicate.');
-  const id = entityId || crypto.randomUUID();
+  const id = entityId || ((kind==='person-operator-link'||kind==='operator-operator-link') ? identity : '') || crypto.randomUUID();
   const localId = `${module}:${id}`;
   const old = await zeustekDb.entities.get(localId);
   const prior = old?.record as Record<string, JsonValue> | undefined;
@@ -114,6 +148,20 @@ async function deleteLocalRecordInternal(id:string){
     const people=await zeustekDb.entities.where('[module+entityType]').equals([module,'person']).toArray();
     if(people.some(row=>!row.deleted&&personReferencesOperator(row.record,id)))
       throw new Error('This Dive Centre has linked Person records. Reassign or unlink them before deleting.');
+    const personLinks=await zeustekDb.entities.where('[module+entityType]').equals([module,'person-operator-link']).toArray();
+    const entityLinks=await zeustekDb.entities.where('[module+entityType]').equals([module,'operator-operator-link']).toArray();
+    if(personLinks.some(row=>!row.deleted&&(row.record as {operatorId?:string})?.operatorId===id)||entityLinks.some(row=>!row.deleted&&((row.record as {fromOperatorId?:string})?.fromOperatorId===id||(row.record as {toOperatorId?:string})?.toOperatorId===id)))
+      throw new Error('This Dive Entity has linked relationships. Unlink them before deleting it.');
+  }
+  if(old.entityType==='person'){
+    const links=await zeustekDb.entities.where('[module+entityType]').equals([module,'person-operator-link']).toArray();
+    if(links.some(row=>!row.deleted&&(row.record as {personId?:string})?.personId===id))throw new Error('This Person has linked Dive Entity relationships. Unlink them before deleting.');
+    const dives=await zeustekDb.entities.where('[module+entityType]').equals([module,'dive']).toArray();
+    if(dives.some(row=>{const record=row.record as {buddyIds?:string[];diveTeamIds?:string[];diveLeaderId?:string}|null;return !row.deleted&&record&&(record.diveLeaderId===id||record.buddyIds?.includes(id)||record.diveTeamIds?.includes(id));}))throw new Error('This Person is linked to Dive records. Unlink them before deleting.');
+    const trips=await zeustekDb.entities.where('[module+entityType]').equals([module,'trip']).toArray();
+    if(trips.some(row=>{const record=row.record as {personIds?:string[];planTeam?:Array<{personId?:string}>;emergency?:{oxygenTrainedPersonIds?:string[]}}|null;return !row.deleted&&record&&(record.personIds?.includes(id)||record.planTeam?.some(member=>member.personId===id)||record.emergency?.oxygenTrainedPersonIds?.includes(id));}))throw new Error('This Person is linked to a Dive Plan. Unlink them before deleting.');
+    const certifications=await zeustekDb.entities.where('[module+entityType]').equals([module,'certification']).toArray();
+    if(certifications.some(row=>{const record=row.record as {personId?:string;instructorId?:string}|null;return !row.deleted&&record&&(record.personId===id||record.instructorId===id);}))throw new Error('This Person is linked to certification evidence. Unlink the reference before deleting.');
   }
   const prior=old.record as Record<string,JsonValue>;
   const queued=(await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending|undefined;
@@ -152,7 +200,7 @@ export async function flushDiveChanges() {
   if (flushing || !navigator.onLine) return flushing;
   const module = moduleName();
   flushing=(async () => {
-    const changes=await pendingDiveChanges();
+    const changes=sortPendingDiveChanges((await pendingDiveChanges()).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
     for (const change of changes) {
       if (moduleName() !== module) break;
       const pending=change.value as unknown as Pending;

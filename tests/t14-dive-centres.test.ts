@@ -4,8 +4,9 @@ import {DatabaseSync} from 'node:sqlite';
 import {zeustekDb} from '../lib/offline/db';
 import {configureDiveStore} from '../lib/offline/dive-store';
 import {deleteOperator,listOperators,saveOperator,savePerson,listPeople,type PersonRecord} from '../lib/offline/dive-planning';
-import {filterDiveCentres,linkedOperatorPeople,safeOperatorUrl,normaliseOperatorDraft} from '../lib/operators/dive-centres';
+import {filterDiveCentres,linkedOperatorPeople,safeOperatorUrl,normaliseOperatorDraft,OPERATOR_TYPES} from '../lib/operators/dive-centres';
 import {OPERATOR_DELETE_CONSTRAINT} from '../lib/operators/operator-dependencies';
+import {recordIdentity} from '../lib/record-identity';
 
 beforeEach(async()=>{
   vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());
@@ -26,6 +27,36 @@ describe('T14 canonical operators',()=>{
   it('finds linked people through either existing reference without duplicating a person',()=>{
     const people=[{...person({operatorId:'o',currentDiveOperatorId:'o'}),entityId:'p',createdAt:'',modifiedAt:''},{...person({operatorId:'another'}),entityId:'q',createdAt:'',modifiedAt:''}];
     expect(linkedOperatorPeople('o',people).map(p=>p.entityId)).toEqual(['p']);
+  });
+  it('shows explicit links alongside legacy links without duplicating the same Person',()=>{
+    const people=[
+      {...person({operatorId:'o'}),entityId:'legacy',createdAt:'',modifiedAt:''},
+      {...person(),entityId:'new',createdAt:'',modifiedAt:''},
+    ];
+    const links=[{entityId:'link-1',personId:'legacy',operatorId:'o',role:'Instructor',active:true},{entityId:'link-2',personId:'new',operatorId:'o',role:'Guide',active:true}];
+    expect(linkedOperatorPeople('o',people,links).map(p=>p.entityId)).toEqual(['legacy','new']);
+  });
+  it('distinguishes unclassified operators from explicitly Other records',()=>{
+    const rows=[{...legacy,entityId:'unset',createdAt:'',modifiedAt:''},{...legacy,name:'Explicit Other',operatorType:'other' as const,entityId:'other',createdAt:'',modifiedAt:''}];
+    expect(filterDiveCentres(rows,{type:'unclassified'}).map(r=>r.entityId)).toEqual(['unset']);
+    expect(filterDiveCentres(rows,{type:'other'}).map(r=>r.entityId)).toEqual(['other']);
+  });
+  it('permits distinct vessels sharing an operator website while detecting same-name same-location duplicates',()=>{
+    const first={name:'MV Alpha',location:'Port A',website:'https://fleet.example.invalid'};
+    const second={name:'MV Beta',location:'Port A',website:'https://fleet.example.invalid'};
+    expect(recordIdentity('operator',first)).not.toBe(recordIdentity('operator',second));
+    expect(recordIdentity('operator',first)).toBe(recordIdentity('operator',{...first,website:'https://other.example.invalid'}));
+  });
+  it('offers distinct non-human entity types and requires a subtype for a new Other entity',()=>{
+    const values=OPERATOR_TYPES.map(([key])=>key);
+    expect(values).toEqual(expect.arrayContaining(['dive-centre','dive-boat','dive-resort','charter-operator','dive-school','dive-club','dive-shop','dive-operator','dive-accommodation','liveaboard']));
+    expect(()=>normaliseOperatorDraft({...legacy,operatorType:'other'})).toThrow(/subtype/i);
+    expect(normaliseOperatorDraft({...legacy,operatorType:'other',otherSubtype:'Underwater photographer collective'})).toMatchObject({otherSubtype:'Underwater photographer collective'});
+  });
+  it.each(['dive-centre','dive-resort','dive-boat','liveaboard'] as const)('persists a %s in canonical operator storage',async operatorType=>{
+    const saved=await saveOperator({...legacy,name:`Fixture ${operatorType}`,operatorType});
+    expect((await listOperators()).find(row=>row.entityId===saved.id)).toMatchObject({operatorType,name:`Fixture ${operatorType}`});
+    expect((await zeustekDb.entities.get(`dive:t14-operators:${saved.id}`))?.entityType).toBe('operator');
   });
   it.each(['operatorId','currentDiveOperatorId'] as const)('blocks deletion for %s without changing either record',async key=>{
     const {id}=await saveOperator(legacy);await savePerson(person({[key]:id}));

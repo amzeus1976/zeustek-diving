@@ -1,5 +1,9 @@
 # T14 execution ledger — plan: docs/t14/implementation-plan.md
 
+## 2026-09-24 People / Dive Entity correction — local checkpoint
+
+ENTITY-01 through ENTITY-06 are locally implemented and marked LOCAL PASS. The existing Person/Operator stores remain canonical; relationship kinds are additive. Full regression 129 files/742 tests PASS, typecheck/build/PWA/focused lint PASS, four browser widths with zero overflow/application console errors, six-credential client scan zero matches, nine protected hashes unchanged. Sites126 and GitHub main remain on the previously accepted source; this correction is not published. See `people-dive-entity-implementation-evidence.md` and `HANDOVER.md` for release prerequisites.
+
 ## 2026-09-24 People / Dive Entity model correction
 
 Owner approved `people-dive-entity-separation-plan.md`; implementation begins from clean `t14/master-forward-build` at `14a5fe8540bf6e6acc664a3ccf71df4982ae2b04`. Read-only live audit found 11 People, 4 operators, 8 distinct legacy pairs, no orphan links; three operators untyped. Existing focused suite: 4 files/30 tests PASS. No owner records were changed by this audit. This correction is additive to the existing canonical person/operator architecture and does not reopen protected calculation logic. See ENTITY-01 through ENTITY-06 in `issue-matrix.csv`. Next: write and observe failing focused relationship-model tests before application changes.

@@ -1,4 +1,5 @@
 import { listLocalDiveRecords, saveLocalRecord, deleteLocalRecord, diveOperation } from './dive-store';
+import type {PersonEntityLink,EntityRelation} from '../operators/entity-relationships';
 
 
 
@@ -678,11 +679,12 @@ export const deleteDiveMedia = removeRecord;
 
 
 
-export type OperatorType = 'dive-centre'|'dive-shop'|'resort'|'liveaboard'|'charter-boat'|'club'|'independent-instructor'|'gas-fill-station'|'other';
+export type OperatorType = 'dive-centre'|'dive-resort'|'dive-boat'|'liveaboard'|'charter-operator'|'dive-school'|'dive-club'|'dive-shop'|'dive-operator'|'dive-accommodation'|'resort'|'charter-boat'|'club'|'independent-instructor'|'gas-fill-station'|'other';
 export type OperatorService = 'training'|'equipmentRental'|'equipmentService'|'cylinderTesting'|'airFills'|'nitroxFills'|'trimixFills'|'oxygenFills'|'boatDiving'|'shoreDiving'|'accommodation';
 export interface OperatorRecord extends BaseRecord {
   name:string;location:string;website:string;notes:string;
   tradingName?:string;operatorType?:OperatorType;phone?:string;email?:string;emergencyPhone?:string;bookingUrl?:string;
+  otherSubtype?:string;
   streetAddress?:string;town?:string;region?:string;country?:string;postcode?:string;latitude?:number|null;longitude?:number|null;
   agencies?:string[];services?:Partial<Record<OperatorService,boolean>>;favourite?:boolean;active?:boolean;
   profileImage?:import('./dive-images').CardImage|null;
@@ -690,6 +692,12 @@ export interface OperatorRecord extends BaseRecord {
 export const listOperators = () => listRecords<OperatorRecord>('operator');
 export const saveOperator = (input: Omit<OperatorRecord, keyof BaseRecord> & {entityId?: string}) => saveRecord('operator', input);
 export const deleteOperator = removeRecord;
+export const listPersonEntityLinks=()=>listRecords<PersonEntityLink>('person-operator-link');
+export const savePersonEntityLink=(input:PersonEntityLink)=>saveRecord('person-operator-link',input);
+export const deletePersonEntityLink=removeRecord;
+export const listEntityRelations=()=>listRecords<EntityRelation>('operator-operator-link');
+export const saveEntityRelation=(input:EntityRelation)=>saveRecord('operator-operator-link',input);
+export const deleteEntityRelation=removeRecord;
 
 export interface PersonRecord extends BaseRecord {
 

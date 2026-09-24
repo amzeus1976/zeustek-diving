@@ -192,7 +192,8 @@ describe('P01 People & Operators / owner profile foundation', () => {
     );
     expect(people).toContain('Refresh derived stats');
     expect(people).toContain('Instructor profile');
-    expect(people).toContain('Dive operator profile');
+    expect(people).toContain('PersonEntityRelationships');
+    expect(people).not.toContain('Dive operator profile');
     expect(planning).toContain('Search People');
     expect(planning).toContain('Matching People');
     expect(planning).not.toContain(

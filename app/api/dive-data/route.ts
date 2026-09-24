@@ -3,7 +3,8 @@ import { getChatGPTUser } from '../../chatgpt-auth';
 import { householdAreaAccess, householdCanEditGear, readHouseholdAreaUserIds, readHouseholdUserIds, allowedHouseholdUser, registerHouseholdUser } from '@/lib/server/household';
 
 import { DIVE_RECORD_KINDS, recordIdentity } from '@/lib/record-identity';
-import { OPERATOR_DELETE_CONSTRAINT } from '@/lib/operators/operator-dependencies';
+import { OPERATOR_DELETE_CONSTRAINT, PERSON_DELETE_CONSTRAINT, operatorDeleteBindings, personDeleteBindings } from '@/lib/operators/operator-dependencies';
+import {normaliseEntityRelation} from '@/lib/operators/entity-relationships';
 const kinds = new Set<string>(DIVE_RECORD_KINDS);
 const sortText = (value: unknown) => typeof value === 'string' ? value : '';
 async function ensureSchema() {
@@ -14,6 +15,7 @@ async function ensureSchema() {
     env.DB.prepare(
       'CREATE INDEX IF NOT EXISTS idx_dive_records_user_kind ON dive_records(user_id,kind,updated_at DESC)',
     ),
+    env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_person_entity_primary ON dive_records(user_id,json_extract(data_json,'$.personId')) WHERE kind='person-operator-link' AND deleted_at IS NULL AND json_extract(data_json,'$.active')=1 AND json_extract(data_json,'$.primary')=1"),
   ]);
 }
 
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
   const kind = body.kind ?? '';
   if (!kinds.has(kind) || (body.data === null ? !body.localMutation : !body.data || typeof body.data !== 'object' || Array.isArray(body.data)))
     return Response.json({ error: 'Invalid dive record' }, { status: 400 });
-  const id = body.id || crypto.randomUUID();
+  let id = body.id || crypto.randomUUID();
   let now = Date.now();
   const dataJson = JSON.stringify(body.data);
   if (dataJson.length > 200000)
@@ -120,6 +122,32 @@ export async function POST(request: Request) {
   if (existing && collaborativeAlbums && !(await householdAreaAccess(env,user,existing.ownerUserId,'albums',true))) return Response.json({error:'Shared album access denied'},{status:403});
   const ownerUserId = existing?.ownerUserId ?? user.userId;
   if(existing && existing.kind!==kind)return Response.json({error:'Record type cannot be changed.'},{status:400});
+  if ((kind === 'person-operator-link' || kind === 'operator-operator-link') && body.data) {
+    const relation=body.data as Record<string,unknown>;
+    let identity:string;
+    try{
+      identity=recordIdentity(kind,relation);
+      if(typeof relation.active!=='boolean'||(relation.startDate&&typeof relation.startDate!=='string')||(relation.endDate&&typeof relation.endDate!=='string')||(typeof relation.startDate==='string'&&typeof relation.endDate==='string'&&relation.endDate<relation.startDate))throw new Error('Invalid relationship status or dates.');
+      if(kind==='operator-operator-link'){
+        const canonical=normaliseEntityRelation(relation as unknown as Parameters<typeof normaliseEntityRelation>[0]);
+        if(canonical.fromOperatorId!==relation.fromOperatorId||canonical.toOperatorId!==relation.toOperatorId||canonical.relationType!==relation.relationType)throw new Error('Use the canonical relationship direction.');
+      }
+    }catch(error){return Response.json({error:error instanceof Error?error.message:'Invalid relationship.'},{status:400});}
+    if(body.id&&body.id!==identity)return Response.json({error:'Relationship identity cannot be changed. Unlink and create the new association.'},{status:409});
+    if(!body.id)id=identity;
+    const references=kind==='person-operator-link'?
+      [[relation.personId,'person'],[relation.operatorId,'operator']]:
+      [[relation.fromOperatorId,'operator'],[relation.toOperatorId,'operator']];
+    for(const [reference,expected] of references){
+      if(typeof reference!=='string'||!reference)return Response.json({error:'Select valid relationship endpoints.'},{status:400});
+      const parent=await env.DB.prepare('SELECT kind FROM dive_records WHERE id=? AND user_id=? AND deleted_at IS NULL').bind(reference,user.userId).first<{kind:string}>();
+      if(parent?.kind!==expected)return Response.json({error:'A linked Person or Dive Entity is unavailable to this owner.'},{status:409});
+    }
+    if(kind==='person-operator-link'&&relation.active===true&&relation.primary===true){
+      const primary=await env.DB.prepare("SELECT id FROM dive_records WHERE user_id=? AND kind='person-operator-link' AND deleted_at IS NULL AND id!=? AND json_extract(data_json,'$.personId')=? AND json_extract(data_json,'$.active')=1 AND json_extract(data_json,'$.primary')=1 LIMIT 1").bind(user.userId,id,relation.personId).first<{id:string}>();
+      if(primary)return Response.json({error:'Unmark the existing primary affiliation before selecting another.'},{status:409});
+    }
+  }
   if (kind === 'equipment-event' && body.data) {
     const eventData = body.data as Record<string, unknown>;
     if (typeof eventData.equipmentId !== 'string' || !eventData.equipmentId)
@@ -147,10 +175,10 @@ export async function POST(request: Request) {
     if (existing) {
       if (base === null) return Response.json({error:'This record already exists. Both versions are retained for review.'},{status:409});
       const updated = await env.DB.prepare(body.data === null
-        ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'+(kind==='operator'?OPERATOR_DELETE_CONSTRAINT:'')
+        ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'+(kind==='operator'?OPERATOR_DELETE_CONSTRAINT:kind==='person'?PERSON_DELETE_CONSTRAINT:'')
         : 'UPDATE dive_records SET data_json=?,updated_at=?,deleted_at=NULL WHERE id=? AND user_id=? AND updated_at=?')
-        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(kind==='operator'&&body.data===null?[ownerUserId,id,id]:[])).run();
-      if (!updated.meta.changes) return Response.json({error:kind==='operator'&&body.data===null?'The Dive Centre changed or has linked People. Refresh, then reassign or unlink People before deleting. Your local change is retained for review.':'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
+        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(body.data===null?(kind==='operator'?operatorDeleteBindings(ownerUserId,id):kind==='person'?personDeleteBindings(ownerUserId,id):[]):[])).run();
+      if (!updated.meta.changes) return Response.json({error:body.data===null&&(kind==='operator'||kind==='person')?'This record changed or has linked records. Refresh, then unlink its dependencies before deleting. Your local change is retained for review.':'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
     } else {
       if (base !== null) return Response.json({error:'The original cloud record is no longer accessible. Your local version is retained.'},{status:409});
       if (body.data !== null) {
@@ -189,8 +217,8 @@ export async function DELETE(request: Request) {
   const sharedGear = record?.kind === 'equipment' || record?.kind === 'equipment-set' || record?.kind === 'equipment-event';
   const collaborativeAlbums = record?.kind === 'album' || record?.kind === 'dive-media';
   if (!record || (record.ownerUserId !== user.userId && !(sharedGear && await householdCanEditGear(env,user,record.ownerUserId)) && !(collaborativeAlbums && await householdAreaAccess(env,user,record.ownerUserId,'albums',true)))) return Response.json({deleted:false},{status:404});
-  const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?'+(record.kind==='operator'?OPERATOR_DELETE_CONSTRAINT:'')).bind(Date.now(),Date.now(),id,...(record.kind==='operator'?[record.ownerUserId,id,id]:[])).run();
-  if(record.kind==='operator'&&!result.meta.changes)return Response.json({error:'Reassign or unlink the linked People before deleting this Dive Centre.'},{status:409});
+  const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?'+(record.kind==='operator'?OPERATOR_DELETE_CONSTRAINT:record.kind==='person'?PERSON_DELETE_CONSTRAINT:'')).bind(Date.now(),Date.now(),id,...(record.kind==='operator'?operatorDeleteBindings(record.ownerUserId,id):record.kind==='person'?personDeleteBindings(record.ownerUserId,id):[])).run();
+  if((record.kind==='operator'||record.kind==='person')&&!result.meta.changes)return Response.json({error:'Unlink dependent records before deleting this Person or Dive Entity.'},{status:409});
   return Response.json({ deleted: result.meta.changes > 0 });
 }
 
