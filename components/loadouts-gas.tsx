@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LoadoutDetail } from './gear/loadout-detail';
 import { loadoutSlotChoices } from '../lib/gear/loadout-slot-choices';
 import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { ZeusTekIcon } from './zeustek-icon';
 import { ZeusTekAssetIcon } from './brand/zeustek-asset-icon';
 import { MediaGallery } from './media-gallery';
@@ -187,6 +188,12 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
     await refresh();
   }
 
+  // A record editor owns the route while its draft is open. Keeping the cards
+  // interactive here would let a second record replace `item` without resetting
+  // the editor's draft, so a subsequent save could overwrite the first record.
+  if (editing !== undefined) return <LoadoutEditor key={editing?.entityId ?? 'new-loadout'} item={editing} equipment={loadoutEquipment} close={() => setEditing(undefined)} saved={refresh} />;
+  if (editingCylinder !== undefined) return <CylinderEditor key={editingCylinder?.entityId ?? 'new-cylinder'} item={editingCylinder} close={() => setEditingCylinder(undefined)} saved={refresh} />;
+
   return <>
     <header className={styles.heading}>
       <div className={styles.iconHeading}><ZeusTekAssetIcon name={tab === 'loadouts' ? 'core-logbook-icons-equipment' : 'core-logbook-icons-dive-cylinder'} size={48} fallback={<ZeusTekIcon id={tab === 'loadouts' ? 'equipment' : 'dive-cylinder'} size="heading"/>}/><div><span className="focus-eyebrow">GEAR</span><h1>{tab === 'loadouts' ? 'Reusable Loadouts' : 'Cylinders & Gas'}</h1><p>{tab === 'loadouts' ? 'Build reusable configurations from canonical Equipment references. Cylinder fills and analyses live in their own workspace.' : 'Review physical cylinders in one table, then open a row for service, fill, analysis, media and history.'}</p></div></div>
@@ -245,8 +252,6 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
     </Card>}
 
     {viewingLoadout && <LoadoutDetail item={viewingLoadout} equipment={loadoutEquipment} close={() => setViewingLoadout(null)} edit={() => { setEditing(viewingLoadout); setViewingLoadout(null); }} />}
-    {editing !== undefined && <LoadoutEditor item={editing} equipment={loadoutEquipment} close={() => setEditing(undefined)} saved={refresh} />}
-    {editingCylinder !== undefined && <CylinderEditor item={editingCylinder} close={() => setEditingCylinder(undefined)} saved={refresh} />}
     {applying && <ApplyLoadoutDialog loadout={applying} equipment={loadoutEquipment} plans={plans} dives={dives} close={() => setApplying(null)} saved={refresh} />}
     {cylinder && <CylinderDetail item={cylinder} fills={fills.filter((fill) => fill.cylinderEquipmentId === cylinder.entityId)} analyses={analyses.filter((analysis) => analysis.cylinderEquipmentId === cylinder.entityId)} people={people} close={() => setCylinder(null)} edit={() => { setEditingCylinder(cylinder); setCylinder(null); }} remove={() => void removeCylinder(cylinder)} saved={async () => { await refresh(); const latest = (await listCylinderInventory()).find((item) => item.entityId === cylinder.entityId); if (latest) setCylinder(latest); }} />}
   </>;
@@ -275,23 +280,22 @@ function LoadoutEditor({ item, equipment, close, saved }: { item: Stored<Reusabl
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   const groups = [...new Set(LOADOUT_SLOT_DEFINITIONS.map((definition) => definition.group))];
   const setSlot = (key: string, next: string | string[]) => setValue((current) => ({ ...current, slots: { ...current.slots, [key]: next } }));
-  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault(); if (!value.name.trim()) return; setBusy(true); setError('');
+  async function submit() {
+    if (!value.name.trim()) return; setBusy(true); setError('');
     try { await saveReusableLoadout(value); await saved(); close(); }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Loadout could not be saved.'); }
     finally { setBusy(false); }
   }
-  return <div className="focus-modal-bg"><AccessibleDialog editable label={item ? `Edit ${item.name}` : 'Create reusable loadout'} className={`focus-modal ${styles.editor}`} close={() => { if (!busy) close(); }}>
-    <form onSubmit={(event) => void submit(event)}><header><div><span className="focus-eyebrow">REUSABLE LOADOUT</span><h2>{item ? 'Edit loadout' : 'New loadout'}</h2><p>Equipment descriptions are not copied; slots store canonical Equipment IDs.</p></div><button type="button" className="focus-icon" data-dialog-close aria-label="Close loadout editor" disabled={busy} onClick={close}><X/></button></header>
+  return <RecordEditorWorkspace label={item ? `Edit ${item.name}` : 'Create reusable loadout'} close={close} save={submit} busy={busy} saveLabel="Save loadout" saveDisabled={!value.name.trim()} value={value} trackInteractions={false} contentClassName={styles.editor}>
+    <div><span className="focus-eyebrow">REUSABLE LOADOUT</span><h2>{item ? 'Edit loadout' : 'New loadout'}</h2><p>Equipment descriptions are not copied; slots store canonical Equipment IDs.</p></div>
       <fieldset disabled={busy}><div className={styles.editorTop}><label>Name<input required value={value.name} onChange={(event) => setValue((current) => ({ ...current, name: event.target.value }))}/></label><label>Intended use<input value={value.intendedUse ?? ''} onChange={(event) => setValue((current) => ({ ...current, intendedUse: event.target.value }))} placeholder="Cold water recreational, Tec, Travel…"/></label><label className={styles.span2}>Description<textarea value={value.description ?? ''} onChange={(event) => setValue((current) => ({ ...current, description: event.target.value }))}/></label><label className={styles.span2}>Environment tags<input value={(value.environmentTags ?? []).join(', ')} onChange={(event) => setValue((current) => ({ ...current, environmentTags: event.target.value.split(',').map((entry) => entry.trim()).filter(Boolean) }))} placeholder="Cold water, UK, Drysuit"/></label></div>
       <div className={styles.slotGroups}>{groups.map((group) => <section key={group}><h3>{group}</h3>{LOADOUT_SLOT_DEFINITIONS.filter((definition) => definition.group === group).map((definition) => {
         const selected = slotSelectedIds(value.slots[definition.key]);
         const options = withMissingEquipment(loadoutSlotChoices(definition, equipment, selected), selected);
         return <label key={definition.key}>{definition.label}{definition.multiple ? <select multiple value={selected} size={Math.min(5, Math.max(2, options.length))} onChange={(event) => setSlot(definition.key, Array.from(event.currentTarget.selectedOptions).map((option) => option.value))}>{options.map((gear) => <option key={gear.entityId} value={gear.entityId}>{itemLabel(gear)}{gear.retired ? ' — retired' : ''}</option>)}</select> : <select value={selected[0] ?? ''} onChange={(event) => setSlot(definition.key, event.target.value)}><option value="">Not assigned</option>{options.map((gear) => <option key={gear.entityId} value={gear.entityId}>{itemLabel(gear)}{gear.retired ? ' — retired' : ''}</option>)}</select>}</label>;
       })}</section>)}</div><label>Notes<textarea value={value.notes ?? ''} onChange={(event) => setValue((current) => ({ ...current, notes: event.target.value }))}/></label></fieldset>
-      {error && <p role="alert" className="dive-save-error">{error}</p>}<footer><button type="button" className="focus-secondary" data-dialog-close disabled={busy} onClick={close}>Cancel</button><button className="focus-primary" disabled={busy}>{busy ? 'Saving…' : 'Save loadout'}</button></footer>
-    </form>
-  </AccessibleDialog></div>;
+      {error && <p role="alert" className="dive-save-error">{error}</p>}
+  </RecordEditorWorkspace>;
 }
 
 function ApplyLoadoutDialog({ loadout, equipment, plans, dives, close, saved }: { loadout: Stored<ReusableLoadoutRecord>; equipment: Array<Stored<EquipmentRecord>>; plans: Array<Stored<DiveTripRecord>>; dives: Array<DiveRecord & { entityId: string }>; close: () => void; saved: () => Promise<void> | void }) {
@@ -319,8 +323,8 @@ function CylinderEditor({ item, close, saved }: { item: Stored<CylinderEquipment
   useEffect(() => { void listCatalogOptions().then(setCatalogOptions); }, []);
   const manufacturers = [...new Set([...DEFAULT_GEAR_MANUFACTURERS, ...catalogOptions.filter((option) => option.group === 'manufacturer').map((option) => option.value), ...(value.manufacturer ? [value.manufacturer] : [])])].sort();
   const field = (name: keyof typeof value, next: string | boolean) => setValue((current) => ({ ...current, [name]: next }));
-  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError('');
+  async function submit() {
+    setBusy(true); setError('');
     try {
       const priorStamps = item?.hydroTestStamps ?? [];
       const hydroChanged = value.lastTestType === 'hydro' && (value.lastTestAt !== monthOnly(lastStamp?.testedAt) || value.hydroStampFacility !== (lastStamp?.facility ?? '') || value.hydroStampMark !== (lastStamp?.stampMark ?? ''));
@@ -329,13 +333,13 @@ function CylinderEditor({ item, close, saved }: { item: Stored<CylinderEquipment
       await saved(); close();
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Cylinder could not be saved.'); } finally { setBusy(false); }
   }
-  return <div className="focus-modal-bg"><AccessibleDialog editable label={item ? `Edit ${item.name}` : 'Add cylinder'} className={`focus-modal ${styles.cylinderDetail}`} close={() => { if (!busy) close(); }}><header><div><span className="focus-eyebrow">CYLINDER DATABASE</span><h2>{item ? 'Edit cylinder' : 'Add cylinder'}</h2><p>Physical identity, stamped specifications and inspection evidence.</p></div><button className="focus-icon" data-dialog-close aria-label="Close cylinder editor" onClick={close}><X/></button></header><form onSubmit={(event) => void submit(event)}>
+  return <RecordEditorWorkspace label={item ? `Edit ${item.name}` : 'Add cylinder'} close={close} save={submit} busy={busy} saveLabel="Save cylinder" saveDisabled={!value.name.trim()} value={value} trackInteractions={false} contentClassName={styles.cylinderDetail}><div><span className="focus-eyebrow">CYLINDER DATABASE</span><h2>{item ? 'Edit cylinder' : 'Add cylinder'}</h2><p>Physical identity, stamped specifications and inspection evidence.</p></div>
     <details open><summary>Identity &amp; construction</summary><div className={styles.editorTop}><label>ID #<input value={item?.cylinderNumber ?? 'Assigned automatically on save'} disabled/></label><label>Serial number (S/N)<input value={value.serialNumber} onChange={(event) => field('serialNumber', event.target.value)}/></label><label>Name<input required value={value.name} onChange={(event) => field('name', event.target.value)} placeholder="12L steel backgas"/></label><label>Manufacturer<select value={value.manufacturer} onChange={(event) => field('manufacturer', event.target.value)}><option value="">Choose manufacturer</option>{manufacturers.map((manufacturer) => <option key={manufacturer} value={manufacturer}>{manufacturer}</option>)}</select></label><label>Model<input value={value.model} onChange={(event) => field('model', event.target.value)}/></label><label>Neck thread<input value={value.threadType} onChange={(event) => field('threadType', event.target.value)} placeholder="M25 x 2"/></label><label>Country code<input value={value.countryCode} onChange={(event) => field('countryCode', event.target.value)} placeholder="UK"/></label><label>Material / alloy<input value={value.cylinderMaterial} onChange={(event) => field('cylinderMaterial', event.target.value)} placeholder="Steel / AA6061 T6"/></label><label>Birth date (month / year)<input type="month" value={value.birthDate} onChange={(event) => field('birthDate', event.target.value)}/></label><label>Water capacity (L)<input type="number" min="0" step="0.1" value={value.waterVolumeLiters} onChange={(event) => field('waterVolumeLiters', event.target.value)}/></label><label>Empty weight (kg)<input type="number" min="0" step="0.1" value={value.emptyWeightKg} onChange={(event) => field('emptyWeightKg', event.target.value)}/></label><label>Minimum wall thickness (mm)<input type="number" min="0" step="0.1" value={value.wallThicknessMm} onChange={(event) => field('wallThicknessMm', event.target.value)}/></label><label>Valve type<select value={value.valveType} onChange={(event) => field('valveType', event.target.value)}><option value="DIN">DIN</option><option value="A-CLAMP">A-CLAMP</option></select></label></div></details>
     <details open><summary>Pressure ratings</summary><div className={styles.editorTop}><label>PW working pressure (bar)<input type="number" min="0" value={value.workingPressureBar} onChange={(event) => field('workingPressureBar', event.target.value)} placeholder="232"/></label><label>PT test pressure (bar)<input type="number" min="0" value={value.testPressureBar} onChange={(event) => field('testPressureBar', event.target.value)} placeholder="348"/></label></div></details>
     <details open><summary>Manufacturing &amp; inspection evidence</summary><div className={styles.editorTop}><label>Latest test type<select value={value.lastTestType} onChange={(event) => field('lastTestType', event.target.value)}><option value="hydro">Hydro + visual</option><option value="visual">Visual inspection</option></select></label><label>Latest test (month / year)<input type="month" value={value.lastTestAt} onChange={(event) => field('lastTestAt', event.target.value)}/></label><label>Test facility / logo<input value={value.hydroStampFacility} onChange={(event) => field('hydroStampFacility', event.target.value)}/></label><label>Hydro stamp mark<input value={value.hydroStampMark} onChange={(event) => field('hydroStampMark', event.target.value)} placeholder="Facility mark / 25-08" disabled={value.lastTestType !== 'hydro'}/></label><label>Visual sticker evidence<input value={value.visualStickerColour} onChange={(event) => field('visualStickerColour', event.target.value)} placeholder="Blue quadrant sticker"/></label><label>Next hydro (schedule)<input value={displayMonth(deriveCylinderInspectionDisplay({ ...item, lastTestType: value.lastTestType, lastTestAt: value.lastTestAt, hydroTestAt: value.lastTestType === 'hydro' ? value.lastTestAt : item?.hydroTestAt ?? null }).nextHydroAt)} disabled/></label><label>Visual due (automatic)<input value={displayMonth(deriveCylinderInspectionDisplay({ ...item, lastTestType: value.lastTestType, lastTestAt: value.lastTestAt, visualTestAt: value.lastTestAt }).visualDueAt)} disabled/></label><label><input type="checkbox" checked={value.oxygenClean} onChange={(event) => field('oxygenClean', event.target.checked)}/> O₂-clean / inspected</label><label>O₂-clean until (month / year)<input type="month" value={value.oxygenCleanUntil} onChange={(event) => field('oxygenCleanUntil', event.target.value)}/></label></div><p className="focus-copy">A hydro test includes the visual inspection. After a visual-only test, hydro + visual is next within 30 months. An earlier recorded hydro deadline is never extended. A scheduled date does not prove that a previous hydro was recorded.</p></details>
     <details><summary>Ownership &amp; notes</summary><div className={styles.editorTop}><label>Owner<input value={value.owner} onChange={(event) => field('owner', event.target.value)}/></label><label>Status<select value={value.cylinderStatus} onChange={(event) => field('cylinderStatus', event.target.value)}><option value="active">Active</option><option value="service">In service</option><option value="retired">Retired</option><option value="unknown">Unknown</option></select></label><label className={styles.span2}>Notes<textarea value={value.notes} onChange={(event) => field('notes', event.target.value)}/></label></div></details>
-    {error && <p role="alert" className="dive-save-error">{error}</p>}<footer><button type="button" className="focus-secondary" data-dialog-close onClick={close}>Cancel</button><button className="focus-primary" disabled={busy}>{busy ? 'Saving…' : 'Save cylinder'}</button></footer>
-  </form></AccessibleDialog></div>;
+    {error && <p role="alert" className="dive-save-error">{error}</p>}
+  </RecordEditorWorkspace>;
 }
 
 function CylinderDetail({ item, fills, analyses, people, close, edit, remove, saved }: { item: Stored<CylinderEquipmentRecord>; fills: Array<Stored<CylinderFillRecord>>; analyses: Array<Stored<GasAnalysisRecord>>; people: Array<Stored<PersonRecord>>; close: () => void; edit: () => void; remove: () => void; saved: () => Promise<void> | void }) {

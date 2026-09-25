@@ -16,7 +16,9 @@ describe('Dive segmented-view shell', () => {
     expect(html.match(/role="tab"/g)).toHaveLength(3);
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html).toMatch(/aria-selected="true"[^>]*>Overview<\/button>/);
-    expect(html.match(/<h2>/g)).toHaveLength(1);
+    expect(html.match(/<h1>/g)).toHaveLength(1);
+    expect(html).toContain('data-record-editor-workspace');
+    expect(html).not.toContain('data-zeustek-dialog');
     expect(html).toContain('Original factual notes');
     expect(html).toContain('Edit Dive facts');
   });
@@ -40,6 +42,8 @@ describe('Dive segmented-view shell', () => {
     expect(editor).toContain('Competence');
     expect(editor).toContain('Confidence');
     expect(editor).not.toContain('Delete evidence');
+    expect(editor).toContain('data-record-editor-workspace');
+    expect(editor).not.toContain('data-zeustek-dialog');
   });
   it('exposes the canonical Skill Catalogue and searchable Dive selector',()=>{
     const catalogue=renderToStaticMarkup(createElement(SkillCatalogue));
@@ -73,8 +77,8 @@ describe('Dive segmented-view shell', () => {
     expect(rich).toContain('aria-label="Show Skill-specific competence definitions"');
     expect(rich).toContain('aria-expanded="false"');
     expect(rich).toContain('<b>Advanced</b><span>Remains stable while communicating and monitoring gas or decompression.</span>');
-    expect(rich).toContain('data-editable="true"');
-    expect(rich).toContain('data-dialog-close="true"');
+    expect(rich).toContain('data-record-editor-workspace');
+    expect(rich).toContain('>Cancel</button>');
     for (const [level, definition] of Object.entries(skill.competenceDefinitions)) {
       const selected=renderToStaticMarkup(createElement(SkillEvidenceDialog,{dive,skills:[skill],people:[],equipmentSets:[],evidence:{entityId:`evidence-${level}`,skillKey:skill.entityId,performedAt:'2026-09-05T12:34:00.000Z',competenceLevel:level as 'foundation'},close:()=>{},saved:()=>{}}));
       expect(selected).toContain(definition);

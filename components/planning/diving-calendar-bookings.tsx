@@ -9,10 +9,9 @@ import {
   Link2,
   Pencil,
   Plus,
-  X,
   XCircle,
 } from 'lucide-react';
-import { AccessibleDialog } from '../accessible-dialog';
+import { RecordEditorWorkspace } from '../shared/record-editor-workspace';
 import { bookingRecordLinks } from '../../lib/planning/booking-record-links';
 import { useRecordRefresh } from '../record-status';
 import { CollapsibleWorkCard } from '../workflow/collapsible-work-card';
@@ -164,6 +163,12 @@ export function DivingCalendarBookings({ go }: Props) {
     setMonth(iso(date).slice(0, 7));
   }
 
+  if (editing !== undefined) return <BookingEditor
+    key={editing?.entityId ?? 'new-booking'}
+    item={editing}
+    close={() => setEditing(undefined)}
+    saved={async () => { setEditing(undefined); await refresh(); }}
+  />;
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
@@ -407,16 +412,6 @@ export function DivingCalendarBookings({ go }: Props) {
         </aside>
       </div>
 
-      {editing !== undefined ? (
-        <BookingEditor
-          item={editing}
-          close={() => setEditing(undefined)}
-          saved={async () => {
-            setEditing(undefined);
-            await refresh();
-          }}
-        />
-      ) : null}
     </main>
   );
 }
@@ -554,25 +549,22 @@ function BookingEditor({
   }
 
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        label={item ? 'Edit calendar event' : 'Add calendar event'}
-        close={close}
-        className="focus-modal"
-      >
-        <header>
+    <RecordEditorWorkspace
+      label={item ? 'Edit calendar event' : 'Add calendar event'}
+      close={close}
+      save={save}
+      busy={busy}
+      value={draft}
+      trackInteractions={false}
+      saveLabel="Save event"
+      saveDisabled={!draft.name.trim() || !draft.startDate || Boolean(draft.endDate && draft.endDate < draft.startDate)}
+    >
+        <div>
           <div>
             <span className="focus-eyebrow">BOOKING</span>
             <h2>{item ? 'Edit event' : 'Add event'}</h2>
           </div>
-          <button
-            className="focus-icon"
-            onClick={close}
-            aria-label="Close editor"
-          >
-            <X />
-          </button>
-        </header>
+        </div>
         <div className={styles.editorGrid}>
           <label>
             Name
@@ -667,19 +659,6 @@ function BookingEditor({
             {error}
           </p>
         ) : null}
-        <footer>
-          <button className="focus-secondary" onClick={close}>
-            Cancel
-          </button>
-          <button
-            className="focus-primary"
-            disabled={busy}
-            onClick={() => void save()}
-          >
-            {busy ? 'Saving…' : 'Save event'}
-          </button>
-        </footer>
-      </AccessibleDialog>
-    </div>
+    </RecordEditorWorkspace>
   );
 }

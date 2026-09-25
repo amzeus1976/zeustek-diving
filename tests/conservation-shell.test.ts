@@ -29,6 +29,8 @@ describe('Conservation integration shell', () => {
     expect(sortConservationDives(dives as never).map(dive=>dive.entityId)).toEqual(['oldest','latest']);
     expect(conservationDiveLabel(dives[0] as never)).toContain('14:00 · Dive #65 · 14 m');
     const html=renderToStaticMarkup(createElement(ActivityForm,{item:null,initialType:'marine-life',linked:{dives,sites:[{entityId:'site-1',name:'St Abbs Harbour – East',location:'St Abbs'}],people:[]},programmes:[],close:()=>{},saved:async()=>{}} as never));
+    expect(html).toContain('data-record-editor-workspace');
+    expect(html).not.toContain('<dialog');
     expect(html.match(/aria-label="Linked Dive"/g)).toHaveLength(1);
     expect(html).not.toContain('Find an existing Dive');
     expect(html).toContain('role="combobox"');

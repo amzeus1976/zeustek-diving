@@ -1,6 +1,14 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.66',
+    date: '2026-09-25',
+    title: 'Stage 9 record editor safeguards',
+    changes: [
+      'Draft record editors remain bound to their source records while preserving the accepted cylinder detail Save controls.',
+    ],
+  },
+  {
     version: '1.0.65',
     date: '2026-09-25',
     title: 'Cylinder detail save controls',
@@ -10,12 +18,50 @@ export const appChangelog = [
     ],
   },
   {
+    version: '1.0.64',
+    date: '2026-09-25',
+    title: 'Stage 9 record editor safeguards',
+    changes: [
+      'Draft record editors remain bound to their original records while preserving the accepted cylinder inspection and ID fixes.',
+    ],
+  },
+  {
     version: '1.0.63',
     date: '2026-09-25',
     title: 'Cylinder next-test schedule and ID gap repair',
     changes: [
       'A visual-only inspection now shows hydro as the next scheduled test within 30 months without treating an unrecorded prior hydro as verified evidence.',
       'A new cylinder takes the first available two-digit ID, including the unused #02 slot, while existing cylinder IDs remain unchanged.',
+    ],
+  },
+  {
+    version: '1.0.62',
+    date: '2026-09-25',
+    title: 'Safer Dive and import editing',
+    changes: [
+      'Dive Log, imported profile linking and staged computer import editors now replace their record lists while open.',
+      'Each editor is tied to its source record, preventing an open draft from being applied to a different record.',
+    ],
+  },
+  {
+    version: '1.0.61',
+    date: '2026-09-25',
+    title: 'Safer record workspaces',
+    changes: [
+      'Site, Trip, Skill, Calendar and Conservation editors now replace their record lists while a draft is open, preventing another record from being selected before the draft is saved or cancelled.',
+      'Collapsing a Settings card now checks for unsaved changes in its open editor.',
+      'Editor drafts are tied to their canonical record identity; the existing records and calculations are unchanged.',
+    ],
+  },
+  {
+    version: '1.0.60',
+    date: '2026-09-25',
+    title: 'Stage 9 finishing and record workspaces',
+    changes: [
+      'Corrected stale interface text, loading states and mobile navigation labels while retaining the current ZeusTek routes and artwork.',
+      'Moved remaining core record editors into full-page workspaces with protected draft exits; Dive Debrief and Story keep their existing auto-save behavior.',
+      'The older media, cylinder-history and loadout-assignment actions retain their specialized controls and saved records.',
+      'Loadout and cylinder editors now isolate their drafts from the record list, preventing an unsaved edit from switching to another record.',
     ],
   },
   {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import {recordNavigation} from '../../lib/editor/navigation-guard';
 import styles from './collapsible-work-card.module.css';
 
 export interface CardDensityRenderState { expanded: boolean; previewLimit: number }
@@ -57,7 +58,7 @@ export function CollapsibleWorkCard({
         <div className={styles.controls}>
           {actions}
           {canShowMore && !minimized && <button type="button" className="focus-secondary" aria-controls={regionId} aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>{expanded ? 'Show less' : `Show more${rowCount ? ` (${rowCount - previewLimit})` : ''}`}</button>}
-          <button type="button" className={`${styles.densityButton} focus-secondary`} aria-controls={regionId} aria-expanded={!minimized} aria-label={`${minimized ? 'Expand' : 'Collapse'} ${title}`} title={`${minimized ? 'Expand' : 'Collapse'} ${title}`} onClick={() => setMinimized((value) => !value)}><span aria-hidden="true">{minimized ? '+' : '−'}</span></button>
+          <button type="button" className={`${styles.densityButton} focus-secondary`} aria-controls={regionId} aria-expanded={!minimized} aria-label={`${minimized ? 'Expand' : 'Collapse'} ${title}`} title={`${minimized ? 'Expand' : 'Collapse'} ${title}`} onClick={() => recordNavigation.request(() => setMinimized((value) => !value))}><span aria-hidden="true">{minimized ? '+' : '−'}</span></button>
         </div>
       </header>
       {!minimized && <div id={regionId} className={styles.body} data-expanded={expanded || undefined}>{content}</div>}
