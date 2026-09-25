@@ -187,6 +187,12 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
     await refresh();
   }
 
+  // A record editor owns the route while its draft is open. Keeping the cards
+  // interactive here would let a second record replace `item` without resetting
+  // the editor's draft, so a subsequent save could overwrite the first record.
+  if (editing !== undefined) return <LoadoutEditor key={editing?.entityId ?? 'new-loadout'} item={editing} equipment={loadoutEquipment} close={() => setEditing(undefined)} saved={refresh} />;
+  if (editingCylinder !== undefined) return <CylinderEditor key={editingCylinder?.entityId ?? 'new-cylinder'} item={editingCylinder} close={() => setEditingCylinder(undefined)} saved={refresh} />;
+
   return <>
     <header className={styles.heading}>
       <div className={styles.iconHeading}><ZeusTekAssetIcon name={tab === 'loadouts' ? 'core-logbook-icons-equipment' : 'core-logbook-icons-dive-cylinder'} size={48} fallback={<ZeusTekIcon id={tab === 'loadouts' ? 'equipment' : 'dive-cylinder'} size="heading"/>}/><div><span className="focus-eyebrow">GEAR</span><h1>{tab === 'loadouts' ? 'Reusable Loadouts' : 'Cylinders & Gas'}</h1><p>{tab === 'loadouts' ? 'Build reusable configurations from canonical Equipment references. Cylinder fills and analyses live in their own workspace.' : 'Review physical cylinders in one table, then open a row for service, fill, analysis, media and history.'}</p></div></div>
@@ -245,8 +251,6 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
     </Card>}
 
     {viewingLoadout && <LoadoutDetail item={viewingLoadout} equipment={loadoutEquipment} close={() => setViewingLoadout(null)} edit={() => { setEditing(viewingLoadout); setViewingLoadout(null); }} />}
-    {editing !== undefined && <LoadoutEditor item={editing} equipment={loadoutEquipment} close={() => setEditing(undefined)} saved={refresh} />}
-    {editingCylinder !== undefined && <CylinderEditor item={editingCylinder} close={() => setEditingCylinder(undefined)} saved={refresh} />}
     {applying && <ApplyLoadoutDialog loadout={applying} equipment={loadoutEquipment} plans={plans} dives={dives} close={() => setApplying(null)} saved={refresh} />}
     {cylinder && <CylinderDetail item={cylinder} fills={fills.filter((fill) => fill.cylinderEquipmentId === cylinder.entityId)} analyses={analyses.filter((analysis) => analysis.cylinderEquipmentId === cylinder.entityId)} people={people} close={() => setCylinder(null)} edit={() => { setEditingCylinder(cylinder); setCylinder(null); }} remove={() => void removeCylinder(cylinder)} saved={async () => { await refresh(); const latest = (await listCylinderInventory()).find((item) => item.entityId === cylinder.entityId); if (latest) setCylinder(latest); }} />}
   </>;

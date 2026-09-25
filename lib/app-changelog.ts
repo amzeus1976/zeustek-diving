@@ -1,13 +1,14 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
-    version: '1.0.59',
+    version: '1.0.60',
     date: '2026-09-25',
     title: 'Stage 9 finishing and record workspaces',
     changes: [
       'Corrected stale interface text, loading states and mobile navigation labels while retaining the current ZeusTek routes and artwork.',
       'Moved remaining core record editors into full-page workspaces with protected draft exits; Dive Debrief and Story keep their existing auto-save behavior.',
       'The older media, cylinder-history and loadout-assignment actions retain their specialized controls and saved records.',
+      'Loadout and cylinder editors now isolate their drafts from the record list, preventing an unsaved edit from switching to another record.',
     ],
   },
   {

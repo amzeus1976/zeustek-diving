@@ -56,4 +56,16 @@ describe('T05 shell and compatibility integration', () => {
     expect(source).toContain('<RecordEditorWorkspace label={item ? `Edit ${item.name}` : \'Add cylinder\'}');
     expect(source).not.toContain('<AccessibleDialog editable label={item ? `Edit ${item.name}` : \'Add cylinder\'}');
   });
+
+  it('isolates active Loadout and Cylinder editors from record-switching controls', () => {
+    const source = read('components/loadouts-gas.tsx');
+    const routeStart = source.indexOf('return <>');
+    const loadoutEditor = source.indexOf('if (editing !== undefined) return <LoadoutEditor');
+    const cylinderEditor = source.indexOf('if (editingCylinder !== undefined) return <CylinderEditor');
+    expect(loadoutEditor).toBeGreaterThan(0);
+    expect(cylinderEditor).toBeGreaterThan(loadoutEditor);
+    expect(routeStart).toBeGreaterThan(cylinderEditor);
+    expect(source).not.toContain('{editing !== undefined && <LoadoutEditor');
+    expect(source).not.toContain('{editingCylinder !== undefined && <CylinderEditor');
+  });
 });
