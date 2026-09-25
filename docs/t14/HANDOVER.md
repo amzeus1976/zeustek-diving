@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Current checkpoint — Overview layout repair candidate (2026-09-25)
+
+Current accepted production is app1.0.57 / Sites129, deployment `appgdep_6ab574feec2c8191b6cd9045090bb1d3`, source `6e4b0677142ffb8b20f0b524f410ed5118781d29`. The `t14/master-forward-build` checkout preserves the accepted application source and merges current GitHub main's documentation and issue-form changes. The pending app1.0.58 change repairs the Overview cards at intermediate desktop widths and separates the Next Dive note from its action. See `overview-layout-bugfix-evidence.md` for the current verification and release steps. No owner records or protected calculations were edited. The older checkpoints below are historical.
+
 ## Current checkpoint — post-Sites128 award display bugfix (2026-09-24)
 
 Current accepted production is app1.0.56 / Sites128, deployment `appgdep_6ab537321c7c819187aeec7abf0c69bb`, source `095026d926e1cf8e1f97c1cc79314b94885e7a2a`. Work on branch `t14/master-forward-build` corrects a read-only display derivation; it does not edit production owner records or protected calculations. See `award-display-bugfix-evidence.md` for root cause, local tests, live baseline fingerprint and exact release steps. Historical sections below describe earlier checkpoints and must not be used as the current deployment state.

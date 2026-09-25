@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.58',
+    date: '2026-09-25',
+    title: 'Overview cards fit intermediate desktop widths',
+    changes: [
+      'My Profile and Top Dive Buddy cards stack when the Overview workspace is too narrow for readable side-by-side details.',
+      'The Next Dive weather note and action are separated for easier reading without changing saved records.',
+    ],
+  },
+  {
     version: '1.0.57',
     date: '2026-09-24',
     title: 'Highest award summaries use canonical evidence',
