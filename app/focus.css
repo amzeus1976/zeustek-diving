@@ -331,6 +331,8 @@ body,.focus-app{font-size:1rem}
 @media(max-width:700px){.dive-site-map-page .selected-site-panel{grid-template-columns:1fr}.dive-site-map-page .google-map-card iframe,.dive-site-map-page .interactive-google-map{height:52vh;min-height:380px}.dive-site-map-page .weather-week{grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible}.dive-site-map-page .weather-week>div:nth-child(n+5){display:none}.google-map-card .site-map-head{align-items:flex-start}.map-view-actions{justify-items:start}.map-view-actions small{text-align:left}.map-site-overlay{padding:8px}.map-site-overlay-dialog{max-height:96dvh;padding:4px}}
 
 /* Dive News utilities belong after the feed, never in a narrow desktop rail. */
+.focus-version{margin-top:auto;padding:12px 8px 4px;border-top:1px solid #2b2b2b}
+[data-record-editor-workspace] .site-form{max-height:none;overflow:visible}
 .app-version-link{display:block;color:#aaa;font-size:.75rem;line-height:1.5;margin-top:.4rem;text-decoration:underline;text-underline-offset:3px}.app-version-link:focus-visible{outline:2px solid var(--orange);outline-offset:3px}.app-changelog{max-width:56rem}.app-changelog article{margin-top:1.25rem;padding:1.25rem}.app-changelog h2{font-size:1.125rem;line-height:1.5}.app-changelog time{color:#aaa;font-size:.875rem}.app-changelog ul{padding-left:1.25rem;line-height:1.6;margin-top:1rem}.app-changelog li+li{margin-top:.5rem}
 .news-layout{grid-template-columns:minmax(0,1fr)}
 .news-sidebar{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}

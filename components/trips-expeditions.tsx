@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { TripResources, TripLinksEditor } from './trip-resources';
@@ -327,7 +328,7 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
     finally { setBusy(false); }
   }
 
-  return <div className="focus-modal-bg"><AccessibleDialog editable dirty={dirty} className={`focus-modal record-form ${styles.editor}`} label={item?'Edit trip':'New trip'} close={close}>
+  return <RecordEditorWorkspace label={item?'Edit trip':'New trip'} close={close} value={value} dirty={dirty} trackInteractions={false} busy={busy} save={submit} saveLabel="Save trip" saveDisabled={!value.name.trim()} contentClassName={`record-form ${styles.editor}`}>
     <div className="record-form-head"><div><span className="focus-eyebrow">{item?'EDIT TRIP':'NEW TRIP'}</span><h3>{item?'Update trip logistics':'Create trip or expedition'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X/></button></div>
     <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input value={value.destination??''} onChange={(e)=>set('destination',e.target.value)}/></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={organiserValue} onChange={(e)=>{const next=e.target.value;const selection=next==='__current_user__'?{kind:'account' as const,id:currentUserId}:next?{kind:'person' as const,id:next}:{kind:'none' as const};setValue((current)=>({...current,...tripOrganiserReferences(selection)}));}}><option value="">Not recorded</option>{currentUserId&&<option value="__current_user__">Me (this account)</option>}{people.map((person)=><option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
 
@@ -362,8 +363,7 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
     <TripSection title="Emergency, insurance & notes" className={`focus-card ${styles.safetyNotes}`}><div className="record-fields"><label className="record-wide">Emergency notes<textarea value={value.emergencyNotes??''} onChange={(e)=>set('emergencyNotes',e.target.value)} placeholder="Emergency numbers, chamber, muster, contingency…"/></label><label className="record-wide">Insurance notes<textarea value={value.insuranceNotes??''} onChange={(e)=>set('insuranceNotes',e.target.value)} placeholder="Provider, policy/reference, assistance number…"/></label><label className="record-wide">Medical / travel-document notes<textarea value={value.medicalNotes??''} onChange={(e)=>set('medicalNotes',e.target.value)}/></label><label className="record-wide">General trip notes<textarea value={value.notes??''} onChange={(e)=>set('notes',e.target.value)}/></label></div><p className="focus-copy"><FileText size={14}/> Save the Trip first, then attach PDFs and other documents from its detail view.</p></TripSection>
 
     {message&&<p role="status" className="focus-notice">{message}</p>}
-    <footer><button className="focus-secondary" data-dialog-close onClick={close}>Cancel</button><button className="focus-primary" disabled={busy||!value.name.trim()} onClick={()=>void submit()}>{busy?'Saving…':'Save trip'}</button></footer>
-  </AccessibleDialog></div>;
+  </RecordEditorWorkspace>;
 }
 
 function EditorChoices({ title, icon, empty, children }: { title:string; icon:React.ReactNode; empty:string; children:React.ReactNode }) {
