@@ -9,6 +9,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
+import { recordNavigation } from '../lib/editor/navigation-guard';
 import { ZeusTekIcon } from './zeustek-icon';
 import { ImportedComputerProfiles } from './imported-computer-profiles';
 import { useRecordRefresh } from './record-status';
@@ -98,8 +99,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
     ? dives.find((dive) => dive.entityId === profile.targetDiveId)
     : undefined;
 
-  async function pick(files: FileList | null) {
-    const file = files?.[0];
+  async function pick(file: File | null) {
     if (!file) return;
     setBusy(true);
     setMessage('Parsing locally…');
@@ -172,7 +172,8 @@ export function DiveComputerData({ evidenceStore }: Props) {
             accept=".uddf,.udf,application/xml,text/xml"
             disabled={busy}
             onChange={(event) => {
-              void pick(event.target.files);
+              const file = event.target.files?.[0] ?? null;
+              recordNavigation.request(() => void pick(file));
               event.target.value = '';
             }}
           />
@@ -199,7 +200,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
             <span className="focus-eyebrow">IMPORTS / STAGING</span>
           </header>
           {stages.map((stage) => (
-            <button key={stage.sessionId} onClick={() => setReviewing(stage)}>
+            <button key={stage.sessionId} onClick={() => recordNavigation.request(() => setReviewing(stage))}>
               <FileUp />
               <span>
                 <b>{stage.fileName}</b>
@@ -210,13 +211,12 @@ export function DiveComputerData({ evidenceStore }: Props) {
           {imports.map((item) => (
             <button
               key={item.entityId}
-              onClick={() =>
+              onClick={() => recordNavigation.request(() =>
                 setSelectedProfile(
                   profiles.find(
                     (profileRow) => profileRow.importId === item.entityId,
                   )?.entityId ?? '',
-                )
-              }
+                ))}
             >
               <HardDriveDownload />
               <span>

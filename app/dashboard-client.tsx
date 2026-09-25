@@ -115,6 +115,7 @@ import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
 import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
 import { useWorkflowNavigation } from '@/components/shared/use-workflow-navigation';
+import { recordNavigation } from '@/lib/editor/navigation-guard';
 import { DiveCentres } from '@/components/dive-centres/dive-centres';
 import { workflowDestinationUrl } from '@/lib/workflow/workflow-destination';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
@@ -491,6 +492,7 @@ export default function DiveApp({ userId }: { userId: string }) {
     setDestinationKey(workflowDestinationUrl(destination));
     setMenuOpen(false);
   });
+  const openNewDive = () => recordNavigation.request(() => { setDraftDive(null); setShowAdd(true); });
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[active]);
   useEffect(()=>{
     const clientError=()=>appendApplicationDiagnostic('client-error');
@@ -512,6 +514,7 @@ export default function DiveApp({ userId }: { userId: string }) {
     observer.observe(root, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
+  if (showAdd) return <main className="focus-app"><section className="focus-shell"><div className="focus-content"><DiveModal key={draftDive?.entityId ?? draftDive?.originatingPlanId ?? 'new-dive'} item={draftDive} close={() => { setShowAdd(false); setDraftDive(null); }} /></div></section></main>;
   return (
     <main className={`focus-app ${['Logbook','Overview'].includes(active)?'page-has-primary':''}`}>
       {menuOpen && (
@@ -553,18 +556,18 @@ export default function DiveApp({ userId }: { userId: string }) {
           </div>
           <PlatformHeaderStatus />
           <DiveSyncStatus />
-          <button className="focus-primary" onClick={() => { setDraftDive(null); setShowAdd(true); }}>
+          <button className="focus-primary" onClick={openNewDive}>
             <Plus size={16} /> Log dive
           </button>
         </header>
         <RecordOperationStatus />
         <div className="focus-content"><ScreenTiming key={destinationKey} screen={active}>
           {active === 'Overview' && (
-            <Overview openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />
+              <Overview openLog={openNewDive} go={go} />
           )}
           <Suspense fallback={<output className="focus-copy">Loading workspace…</output>}>
           {active === 'Changelog' && <AppChangelog />}
-          {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />}
+            {active === 'Logbook' && <Logbook openLog={openNewDive} go={go} />}
           {active === 'Equipment' && <Equipment />}{' '}
           {active === 'Loadouts & Gas' && <Loadouts />}{' '}
           {active === 'Cylinders & Gas' && <CylindersGas />}{' '}
@@ -572,7 +575,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
           {active === 'Diving Calendar & Bookings' && <DivingCalendarBookings go={go} />}{' '}
-          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
+            {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => recordNavigation.request(() => { setDraftDive(draft); setShowAdd(true); })} /></>}{' '}
           {active === 'Gas Planning' && <GasPlanning go={go} />}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
@@ -612,7 +615,6 @@ export default function DiveApp({ userId }: { userId: string }) {
           </button>
         );})}
       </nav>
-      {showAdd && <DiveModal item={draftDive} close={() => { setShowAdd(false); setDraftDive(null); }} />}
     </main>
   );
 }
@@ -1103,70 +1105,8 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
       return `${b.date}T${b.timeIn || ''}`.localeCompare(`${a.date}T${a.timeIn || ''}`);
     });
   if (editing) return <DiveModal key={editing.entityId} item={editing} close={() => setEditing(null)} saved={refresh} />;
-  return (
-    <>
-      <Heading
-        eyebrow="PRIVATE CLOUD · ALL DEVICES"
-        title="Dive logbook"
-        copy="Every dive saves to your private account with its source preserved."
-        action={<div className="record-actions logbook-actions"><button className="focus-secondary" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(!toolsOpen)}><Settings2 size={16}/>Tools</button><button className="focus-primary" onClick={openLog}><Plus size={16}/>Log dive</button></div>}
-      />
-      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Dive Computer Imports',route:'Dive Computer Imports'}]} current="Logbook" next={[{label:'Dive Skills',route:'Skills & Currency'},{label:'Albums',route:'Albums'},{label:'Insights',route:'Insights'}]} go={go}/>
-      <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Calculate missing SAC / RMV'}</button>
-          <button className="focus-secondary" onClick={() => void fillMissingTemperatures()}>
-            <CloudRain size={16} /> Fill missing temperatures
-          </button>
-      </div>
-      {gasStatus && <p role="status" className="focus-notice">{gasStatus}</p>}
-      {weatherBackfillStatus && <div className="focus-notice"><CloudRain size={15} /> {weatherBackfillStatus}</div>}
-      <ListToolbar search={search} setSearch={setSearch} filter={modeFilter} setFilter={setModeFilter} filterLabel="Dive mode" filterOptions={[[ 'all', 'All dives' ], [ 'recreational', 'Recreational' ], [ 'recreational-training', 'Recreational training' ], [ 'technical', 'Technical' ], [ 'technical-training', 'Technical training' ]]} sort={sort} setSort={setSort} sortOptions={[[ 'newest', 'Newest first' ], [ 'oldest', 'Oldest first' ], [ 'number', 'Dive number' ], [ 'deepest', 'Deepest first' ]]} />
-      {dives.length ? (
-        <div className="log-list">
-          {visibleDives.map((dive) => (
-            <Card key={dive.entityId} className="log-card clickable-card">
-              <button
-                className="card-hit"
-                onClick={() => { setInitialDiveView('overview'); setViewing(dive); }}
-                aria-label={`View dive at ${dive.site}`}
-              />
-              <div className="log-date">
-                <strong>{new Date(`${dive.date}T12:00:00`).getDate()}</strong>
-                <span>
-                  {new Date(`${dive.date}T12:00:00`)
-                    .toLocaleDateString(undefined, { month: 'short' })
-                    .toUpperCase()}
-                </span>
-                <small className="log-time" aria-label={`Time in ${dive.timeIn || 'not recorded'}, time out ${dive.timeOut || 'not recorded'}`}>{logTimeRange(dive.timeIn,dive.timeOut)}</small>
-              </div>
-              <div>
-                <h3 className="icon-title"><ZeusTekIcon id={resolveDiveIconId(dive)} size={28}/><span>{dive.site}</span></h3>
-                <p>{dive.notes || 'Manual dive log'}</p>
-                <div className="log-metrics">
-                  <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
-                  <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
-                  <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
-                  <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
-                  {normaliseDiveTeamIdentity(dive,ownerPersonId).buddyIds.map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
-                  <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
-                  <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
-                </div>
-              </div>
-            </Card>
-          ))}
-          {!visibleDives.length && <Card className="focus-empty"><Anchor size={28} /><h2>No matching dives</h2><p>Try a different search or filter.</p></Card>}
-        </div>
-      ) : (
-        <Card className="focus-empty">
-          <Anchor size={32} />
-          <h2>No dives logged yet</h2>
-          <p>Start manually or import Oceanic+, PADI files and screenshots.</p>
-          <button className="focus-primary" onClick={openLog}>
-            Log first dive
-          </button>
-        </Card>
-      )}
-      {viewing && (
-        <DiveRecordDetail
+  if (viewing) return (
+    <DiveRecordDetail
           key={viewing.entityId}
           dive={viewing}
           initialView={initialDiveView}
@@ -1238,7 +1178,69 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
             ['Notes', viewing.notes],
           ]}
         />
-      )}{' '}
+  );
+  return (
+    <>
+      <Heading
+        eyebrow="PRIVATE CLOUD · ALL DEVICES"
+        title="Dive logbook"
+        copy="Every dive saves to your private account with its source preserved."
+        action={<div className="record-actions logbook-actions"><button className="focus-secondary" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(!toolsOpen)}><Settings2 size={16}/>Tools</button><button className="focus-primary" onClick={openLog}><Plus size={16}/>Log dive</button></div>}
+      />
+      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Dive Computer Imports',route:'Dive Computer Imports'}]} current="Logbook" next={[{label:'Dive Skills',route:'Skills & Currency'},{label:'Albums',route:'Albums'},{label:'Insights',route:'Insights'}]} go={go}/>
+      <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Calculate missing SAC / RMV'}</button>
+          <button className="focus-secondary" onClick={() => void fillMissingTemperatures()}>
+            <CloudRain size={16} /> Fill missing temperatures
+          </button>
+      </div>
+      {gasStatus && <p role="status" className="focus-notice">{gasStatus}</p>}
+      {weatherBackfillStatus && <div className="focus-notice"><CloudRain size={15} /> {weatherBackfillStatus}</div>}
+      <ListToolbar search={search} setSearch={setSearch} filter={modeFilter} setFilter={setModeFilter} filterLabel="Dive mode" filterOptions={[[ 'all', 'All dives' ], [ 'recreational', 'Recreational' ], [ 'recreational-training', 'Recreational training' ], [ 'technical', 'Technical' ], [ 'technical-training', 'Technical training' ]]} sort={sort} setSort={setSort} sortOptions={[[ 'newest', 'Newest first' ], [ 'oldest', 'Oldest first' ], [ 'number', 'Dive number' ], [ 'deepest', 'Deepest first' ]]} />
+      {dives.length ? (
+        <div className="log-list">
+          {visibleDives.map((dive) => (
+            <Card key={dive.entityId} className="log-card clickable-card">
+              <button
+                className="card-hit"
+                onClick={() => { setInitialDiveView('overview'); setViewing(dive); }}
+                aria-label={`View dive at ${dive.site}`}
+              />
+              <div className="log-date">
+                <strong>{new Date(`${dive.date}T12:00:00`).getDate()}</strong>
+                <span>
+                  {new Date(`${dive.date}T12:00:00`)
+                    .toLocaleDateString(undefined, { month: 'short' })
+                    .toUpperCase()}
+                </span>
+                <small className="log-time" aria-label={`Time in ${dive.timeIn || 'not recorded'}, time out ${dive.timeOut || 'not recorded'}`}>{logTimeRange(dive.timeIn,dive.timeOut)}</small>
+              </div>
+              <div>
+                <h3 className="icon-title"><ZeusTekIcon id={resolveDiveIconId(dive)} size={28}/><span>{dive.site}</span></h3>
+                <p>{dive.notes || 'Manual dive log'}</p>
+                <div className="log-metrics">
+                  <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
+                  <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
+                  <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
+                  <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
+                  {normaliseDiveTeamIdentity(dive,ownerPersonId).buddyIds.map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
+                  <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
+                  <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {!visibleDives.length && <Card className="focus-empty"><Anchor size={28} /><h2>No matching dives</h2><p>Try a different search or filter.</p></Card>}
+        </div>
+      ) : (
+        <Card className="focus-empty">
+          <Anchor size={32} />
+          <h2>No dives logged yet</h2>
+          <p>Start manually or import Oceanic+, PADI files and screenshots.</p>
+          <button className="focus-primary" onClick={openLog}>
+            Log first dive
+          </button>
+        </Card>
+      )}
     </>
   );
 }

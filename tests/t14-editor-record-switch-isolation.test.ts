@@ -11,6 +11,7 @@ describe('Stage 9 record editor isolation', () => {
     ['Calendar', 'components/planning/diving-calendar-bookings.tsx', 'if (editing !== undefined) return <BookingEditor', '<div className={styles.shell}>'],
     ['Conservation', 'components/conservation-page.tsx', 'if (adding) return <section className="conservation-page"><ActivityForm', '<div className="conservation-grid">'],
     ['Logbook Dive', 'app/dashboard-client.tsx', 'if (editing) return <DiveModal', '<div className="log-list">'],
+    ['Logbook Dive detail', 'app/dashboard-client.tsx', 'if (viewing) return (\n    <DiveRecordDetail', '<div className="log-list">'],
     ['Imported profile link', 'components/imported-computer-profiles.tsx', 'if (linking) return (', '<div className={styles.profileRows}>'],
     ['Staged import', 'components/dive-computer-data.tsx', 'if (reviewing) return (', 'className={styles.importSources}'],
   ])('%s editor replaces its record-switching list', (_, path, editorBranch, listMarker) => {
@@ -36,5 +37,23 @@ describe('Stage 9 record editor isolation', () => {
     const card = source('components/workflow/collapsible-work-card.tsx');
     expect(card).toContain("import {recordNavigation} from '../../lib/editor/navigation-guard'");
     expect(card).toContain('recordNavigation.request(() => setMinimized((value) => !value))');
+  });
+
+  it('guards parent import actions while a profile-link draft is open', () => {
+    const code = source('components/dive-computer-data.tsx');
+    expect(code).toContain("import { recordNavigation } from '../lib/editor/navigation-guard'");
+    expect(code).toContain('recordNavigation.request(() => void pick(file))');
+    expect(code).toContain('recordNavigation.request(() => setReviewing(stage))');
+    expect(code).toContain('recordNavigation.request(() =>');
+    expect(code).toContain('setSelectedProfile(');
+  });
+
+  it('guards the global Log dive action while another editor owns the route', () => {
+    const code = source('app/dashboard-client.tsx');
+    expect(code).toContain("import { recordNavigation } from '@/lib/editor/navigation-guard'");
+    expect(code).toContain('const openNewDive = () => recordNavigation.request(() => { setDraftDive(null); setShowAdd(true); });');
+    expect(code).toContain('onClick={openNewDive}');
+    expect(code).toContain('<Logbook openLog={openNewDive} go={go} />');
+    expect(code).toContain('if (showAdd) return <main className="focus-app"><section className="focus-shell"><div className="focus-content"><DiveModal');
   });
 });
