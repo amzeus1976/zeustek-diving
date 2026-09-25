@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.63',
+    date: '2026-09-25',
+    title: 'Cylinder next-test schedule and ID gap repair',
+    changes: [
+      'A visual-only inspection now shows hydro as the next scheduled test within 30 months without treating an unrecorded prior hydro as verified evidence.',
+      'A new cylinder takes the first available two-digit ID, including the unused #02 slot, while existing cylinder IDs remain unchanged.',
+    ],
+  },
+  {
     version: '1.0.58',
     date: '2026-09-25',
     title: 'Overview cards fit intermediate desktop widths',

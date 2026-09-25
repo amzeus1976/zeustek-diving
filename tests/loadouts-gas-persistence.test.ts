@@ -6,6 +6,8 @@ import {localBackupPayload,restoreLocalPayload} from '../lib/offline/local-backu
 import {createDiveDraftFromPlan,loadOriginatingPlan} from '../lib/offline/dive-context';
 import {deleteEquipmentSet,saveEquipment} from '../lib/offline/dive-planning';
 import {applyReusableLoadout,cloneReusableLoadout,deriveCylinderCurrentState,deriveCylinderInspectionSchedule,listCylinderFills,listCylinderInventory,listGasAnalyses,listReusableLoadouts,recordCylinderGasUsage,saveCylinderFill,saveCylinderProfile,saveGasAnalysis,saveReusableLoadout} from '../lib/offline/loadouts-gas';
+import {deriveCylinderInspectionDisplay} from '../lib/cylinders/inspection-display';
+import {cylinderReadinessWarnings} from '../lib/offline/planning-pages';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore('t05-test');await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
 afterEach(()=>vi.unstubAllGlobals());
 describe('T05 canonical offline records and historical assignments',()=>{
@@ -77,6 +79,24 @@ describe('T05 canonical offline records and historical assignments',()=>{
     expect(inventory[0]).toMatchObject({lastTestType:'hydro',lastTestAt:'2026-02',hydroDueAt:'2031-02',visualDueAt:'2028-08'});
     expect(inventory[1]).toMatchObject({lastTestType:'visual',lastTestAt:'2028-08',hydroDueAt:null,visualDueAt:'2031-02'});
     expect(deriveCylinderInspectionSchedule({hydroTestAt:'2026-02',visualTestAt:'2028-08'})).toEqual({latestHydro:'2026-02',latestVisualQualifyingTest:'2028-08',hydroDueAt:'2031-02',visualDueAt:'2031-02'});
+  });
+  it('makes hydro the next test 30 months after a visual without inventing a previous hydro',async()=>{
+    const saved=await saveCylinderProfile({name:'Visual-only cylinder',lastTestType:'visual',lastTestAt:'2024-10'});
+    const cylinder=(await listCylinderInventory()).find((item)=>item.entityId===saved.id)!;
+    expect(cylinder).toMatchObject({lastTestType:'visual',lastTestAt:'2024-10',hydroTestAt:null,hydroDueAt:null,visualDueAt:'2027-04'});
+    expect(deriveCylinderInspectionDisplay(cylinder)).toMatchObject({nextHydroAt:'2027-04',nextTestType:'hydro',hydroEvidenceKnown:false});
+    expect(cylinderReadinessWarnings(cylinder,null,'2026-09-25T00:00:00Z')).toContain('Cylinder hydro test date/due date is missing.');
+    expect(deriveCylinderInspectionDisplay({hydroTestAt:'2024-01',visualTestAt:'2028-01',lastTestType:'visual',lastTestAt:'2028-01'})).toMatchObject({latestHydro:'2024-01',nextHydroAt:'2029-01',visualDueAt:'2030-07',hydroEvidenceKnown:true});
+  });
+  it('uses the unoccupied ID 02 for a new cylinder without changing existing IDs',async()=>{
+    await saveLocalRecord('equipment',{entityId:'first-cylinder',name:'First',category:'Cylinder',cylinderNumber:'01'});
+    await saveLocalRecord('cylinder',{entityId:'third-cylinder',name:'Third',category:'Cylinder',cylinderNumber:'03'});
+    const created=await saveCylinderProfile({name:'New second cylinder',serialNumber:'NEW-SECOND'});
+    const inventory=await listCylinderInventory();
+    expect(inventory.find((item)=>item.entityId===created.id)?.cylinderNumber).toBe('02');
+    expect(inventory.map((item)=>[item.entityId,item.cylinderNumber])).toEqual(expect.arrayContaining([
+      ['first-cylinder','01'],['third-cylinder','03'],[created.id,'02'],
+    ]));
   });
   it('keeps a two-digit cylinder ID stable on edit and never reuses a retired cylinder ID',async()=>{
     const first=await saveCylinderProfile({name:'First cylinder',serialNumber:'SERIAL-A'});
