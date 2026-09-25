@@ -2807,6 +2807,13 @@ function SitesV2({ go }: { go: (next: string) => void }) {
     setMapCoordinates({ latitude, longitude });
     setAdding(true);
   }, []);
+  if (adding) return <div className="t14-record-domain t14-sites"><SiteV2Form
+    key={editing?.entityId ?? 'new-site'}
+    item={editing}
+    initialCoordinates={mapCoordinates}
+    close={() => { setAdding(false); setEditing(null); setMapCoordinates(null); }}
+    saved={refresh}
+  /></div>;
   return (
     <div className="t14-record-domain t14-sites">
       <Heading
@@ -2880,20 +2887,6 @@ function SitesV2({ go }: { go: (next: string) => void }) {
           keeps its source link
         </span>
       </Card>
-      {adding && (
-        <RevealOnMount>
-          <SiteV2Form
-            item={editing}
-            initialCoordinates={mapCoordinates}
-            close={() => {
-              setAdding(false);
-              setEditing(null);
-              setMapCoordinates(null);
-            }}
-            saved={refresh}
-          />
-        </RevealOnMount>
-      )}
       <div className="site-list">
         {matchingSites.slice(0, siteLimit).map((item) => (
           <Card key={item.entityId} className="site-card clickable-card">

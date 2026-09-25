@@ -204,6 +204,12 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     refresh();
   }
 
+  if (adding) return <TripEditor
+    key={editing?.entityId ?? 'new-trip'}
+    item={editing} items={items} plans={plans} sites={sites} people={people}
+    equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
+    close={() => { setAdding(false); setEditing(null); }} saved={refresh}
+  />;
   return <>
     <header className="focus-heading">
       <div className="focus-heading-title"><ZeusTekIcon id="liveaboard" size="heading"/><div><span>TRAVEL · DIVING · LOGISTICS</span><h1>Trips &amp; expeditions</h1>
@@ -217,12 +223,6 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">All trips</option>{statuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       <label>Sort<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="soonest">Soonest first</option><option value="latest">Latest first</option><option value="name">Name</option></select></label>
     </Card>
-
-    {adding && <TripEditor
-      item={editing} items={items} plans={plans} sites={sites} people={people}
-      equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
-      close={() => { setAdding(false); setEditing(null); }} saved={refresh}
-    />}
 
     <div className={styles.grid}>
       {visible.map((item) => {

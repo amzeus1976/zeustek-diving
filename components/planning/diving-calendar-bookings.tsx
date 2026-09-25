@@ -163,6 +163,12 @@ export function DivingCalendarBookings({ go }: Props) {
     setMonth(iso(date).slice(0, 7));
   }
 
+  if (editing !== undefined) return <BookingEditor
+    key={editing?.entityId ?? 'new-booking'}
+    item={editing}
+    close={() => setEditing(undefined)}
+    saved={async () => { setEditing(undefined); await refresh(); }}
+  />;
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
@@ -406,16 +412,6 @@ export function DivingCalendarBookings({ go }: Props) {
         </aside>
       </div>
 
-      {editing !== undefined ? (
-        <BookingEditor
-          item={editing}
-          close={() => setEditing(undefined)}
-          saved={async () => {
-            setEditing(undefined);
-            await refresh();
-          }}
-        />
-      ) : null}
     </main>
   );
 }

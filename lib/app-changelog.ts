@@ -1,6 +1,16 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.61',
+    date: '2026-09-25',
+    title: 'Safer record workspaces',
+    changes: [
+      'Site, Trip, Skill, Calendar and Conservation editors now replace their record lists while a draft is open, preventing another record from being selected before the draft is saved or cancelled.',
+      'Collapsing a Settings card now checks for unsaved changes in its open editor.',
+      'Editor drafts are tied to their canonical record identity; the existing records and calculations are unchanged.',
+    ],
+  },
+  {
     version: '1.0.60',
     date: '2026-09-25',
     title: 'Stage 9 finishing and record workspaces',

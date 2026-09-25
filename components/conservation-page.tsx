@@ -96,6 +96,12 @@ export function ConservationPage({go}:{go:(section:string)=>void}) {
     catch(e){setError(e instanceof Error?e.message:'Activity could not be deleted.');}
     finally{setActionBusy(false);}
   }
+  if (adding) return <section className="conservation-page"><ActivityForm
+    key={editing?.entityId ?? 'new-activity'} item={editing} initialType={adding}
+    linked={linked} programmes={programmes}
+    close={()=>{setAdding(null);setEditing(null);}} saved={async()=>{await refresh();}}
+  /></section>;
+  if (referenceForm) return <section className="conservation-page"><ProgrammeForm close={()=>setReferenceForm(false)} saved={refresh}/></section>;
   return <section className="conservation-page">
     <header className="focus-heading"><div className="focus-heading-title"><ZeusTekIcon id="project-aware-specialist" size="heading"/><div><span>OCEAN STEWARDSHIP</span><h1>Conservation & AWARE</h1><p>Record observations, debris actions and conservation learning linked to your dives and sites.</p></div></div><button className="focus-primary" onClick={()=>openAdd('marine-life')}><Plus size={16}/> Log activity</button></header>
     {error&&<p role="alert">{error} <button className="focus-secondary" onClick={()=>void refresh()}>Retry activities</button></p>}
@@ -124,8 +130,6 @@ export function ConservationPage({go}:{go:(section:string)=>void}) {
       <section className="focus-card"><h2>Linked sites</h2>{!sites.length&&<p>No sites linked yet.</p>}{sites.map(s=><p key={s.entityId}><RecordLink section="Sites" id={s.entityId} name={s.name}/> · {items.filter(a=>a.siteId===s.entityId).length} activities</p>)}</section>
       <section className="focus-card"><h2>Media & evidence</h2><p>Attachment references stay linked to their original records.</p><button className="focus-secondary" onClick={()=>setFilter('media')}>View activities with media</button>{items.filter(a=>a.attachmentIds?.length).slice(0,3).map(a=><p key={a.entityId}><button className="focus-secondary" onClick={()=>setViewing(a)}>{a.speciesOrSubject||labelOf(a.activityType)} · {a.attachmentIds?.length} linked</button></p>)}</section>
     </div>
-    {adding&&<ActivityForm item={editing} initialType={adding} linked={linked} programmes={programmes} close={()=>{setAdding(null);setEditing(null);}} saved={async()=>{await refresh();}}/>}
-    {referenceForm&&<ProgrammeForm close={()=>setReferenceForm(false)} saved={refresh}/>}
     {viewing&&<div className="focus-modal-bg"><AccessibleDialog label="Conservation activity detail" className="focus-modal record-detail conservation-detail" close={()=>setViewing(null)}>
       <header><div><span className="focus-eyebrow">RECORDED · {viewing.verificationState||'recorded'}</span><h2>{viewing.speciesOrSubject||labelOf(viewing.activityType)}</h2></div><button className="focus-icon" aria-label="Close activity detail" onClick={()=>setViewing(null)}><X/></button></header>
       <p>{labelOf(viewing.activityType)} · {dateText(viewing.occurredAt)}</p><p>{viewing.notes||'No notes recorded.'}</p><p>{viewing.tags?.join(' · ')}</p>
