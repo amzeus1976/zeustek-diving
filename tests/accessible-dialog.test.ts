@@ -32,7 +32,7 @@ describe('editable AccessibleDialog dismissal contract', () => {
       readFileSync(new URL('../app/dashboard-client.tsx', import.meta.url), 'utf8'),
     ].join('\n');
     expect(sources).toContain('<AccessibleDialog editable label={evidence');
-    expect(sources).toContain('<AccessibleDialog editable label={skill');
+    expect(sources).toContain('<RecordEditorWorkspace label={skill');
     expect(sources).toContain('<RecordEditorWorkspace label={item?\'Edit conservation activity\'');
     expect(sources).toContain('<AccessibleDialog editable label="Colour correct photo"');
     expect(sources).toContain('<RecordEditorWorkspace label={item ? \'Edit site\' : \'New site\'}');

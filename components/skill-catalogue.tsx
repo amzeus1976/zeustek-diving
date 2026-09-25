@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Archive, Download, FileUp, Pencil, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import {
   CANONICAL_SKILL_GROUPS, CANONICAL_SKILLS_CHANGED_EVENT, canonicalSkillGroups, createCanonicalSkill, createCanonicalSkills,
   deleteUnusedArchivedSkills, listCanonicalSkills, listSkillEvidence, previewCanonicalSkillBatch,
@@ -33,8 +34,8 @@ function SkillEditor({ skill, close, saved }: { skill: CanonicalSkillRecord | nu
   const [description, setDescription] = useState(skill?.description || '');
   const [definitions, setDefinitions] = useState(() => Object.fromEntries(levels.map(level => [level, skill?.competenceDefinitions?.[level] || ''])) as Record<typeof levels[number], string>);
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  async function submit(event: React.FormEvent) {
-    event.preventDefault(); setBusy(true); setError('');
+  async function submit() {
+    setBusy(true); setError('');
     try {
       const input = { name, group, description, competenceDefinitions: definitions };
       if (skill) await updateCanonicalSkill(skill.entityId, input); else await createCanonicalSkill(input);
@@ -42,18 +43,16 @@ function SkillEditor({ skill, close, saved }: { skill: CanonicalSkillRecord | nu
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'The Skill could not be saved.'); }
     finally { setBusy(false); }
   }
-  return <div className="focus-modal-bg"><AccessibleDialog editable label={skill ? 'Edit canonical Skill' : 'Add canonical Skill'} className="focus-modal skill-catalogue-dialog" close={() => { if (!busy) close(); }}>
-    <form onSubmit={event => void submit(event)}><header><div><span className="focus-eyebrow">SKILL CATALOGUE</span><h2>{skill ? 'Edit skill' : 'Add skill'}</h2></div><button type="button" className="focus-icon" aria-label="Close Skill editor" data-dialog-close disabled={busy} onClick={close}><X /></button></header>
+  return <RecordEditorWorkspace label={skill ? 'Edit canonical Skill' : 'Add canonical Skill'} close={close} save={submit} busy={busy} saveLabel="Save skill" saveDisabled={!name.trim()||!group.trim()} value={{name,group,description,definitions}} trackInteractions={false} contentClassName="skill-catalogue-dialog">
+    <div><span className="focus-eyebrow">SKILL CATALOGUE</span><h2>{skill ? 'Edit skill' : 'Add skill'}</h2></div>
       <fieldset disabled={busy} className="skill-rich-fields">
-        <div className="skill-editor-grid"><label>Skill group<input required value={group} list="skill-groups" onChange={event => setGroup(event.target.value)} placeholder="e.g. Buoyancy & Trim" /></label><label>Skill name<input autoFocus required value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Air-sharing stop control" /></label></div>
+        <div className="skill-editor-grid"><label>Skill group<input required value={group} list="skill-groups" onChange={event => setGroup(event.target.value)} placeholder="e.g. Buoyancy & Trim" /></label><label>Skill name<input required value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Air-sharing stop control" /></label></div>
         <datalist id="skill-groups">{CANONICAL_SKILL_GROUPS.map(value => <option key={value} value={value} />)}</datalist>
         <label>Description<textarea value={description} onChange={event => setDescription(event.target.value)} placeholder="What the diver should be able to do" /></label>
         <fieldset className="skill-competence-fields"><legend>Competence definitions</legend>{levels.map(level => <label key={level}>{levelLabel(level)}<textarea value={definitions[level]} onChange={event => setDefinitions(current => ({ ...current, [level]: event.target.value }))} placeholder={`${levelLabel(level)} performance for this Skill`} /></label>)}</fieldset>
       </fieldset>
       {error && <p role="alert" className="dive-save-error">{error}</p>}
-      <footer><button type="button" className="focus-secondary" data-dialog-close disabled={busy} onClick={close}>Cancel</button><button className="focus-primary" disabled={busy}>{busy ? 'Saving…' : 'Save skill'}</button></footer>
-    </form>
-  </AccessibleDialog></div>;
+  </RecordEditorWorkspace>;
 }
 
 function BulkSkillEditor({ existing, close, saved }: { existing: CanonicalSkillRecord[]; close: () => void; saved: (count: number) => void }) {
@@ -61,13 +60,13 @@ function BulkSkillEditor({ existing, close, saved }: { existing: CanonicalSkillR
   const [accepted, setAccepted] = useState<string[]>([]); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   useEffect(() => setAccepted(preview.newSkills), [preview]);
   async function commit() { setBusy(true); setError(''); try { const created = await createCanonicalSkills(accepted); window.dispatchEvent(new Event(CANONICAL_SKILLS_CHANGED_EVENT)); saved(created.length); } catch (reason) { setError(reason instanceof Error ? reason.message : 'The Skills could not be added.'); } finally { setBusy(false); } }
-  return <div className="focus-modal-bg"><AccessibleDialog editable label="Add multiple canonical Skills" className="focus-modal skill-bulk-dialog" close={() => { if (!busy) close(); }}>
-    <header><div><span className="focus-eyebrow">SKILL CATALOGUE</span><h2>Add multiple skills</h2><p>Enter one Skill per line. New entries use the Other group and can be enriched later.</p></div><button className="focus-icon" aria-label="Close bulk Skill editor" data-dialog-close disabled={busy} onClick={close}><X /></button></header>
-    <label>Skill names<textarea autoFocus value={value} disabled={busy} onChange={event => setValue(event.target.value)} placeholder={'Trim\nHover\nFrog kick\nBack kick'} /></label>
+  return <RecordEditorWorkspace label="Add multiple canonical Skills" close={close} save={commit} busy={busy} saveLabel={`Add ${accepted.length} skill${accepted.length===1?'':'s'}`} saveDisabled={!accepted.length} value={{value,accepted}} trackInteractions={false} contentClassName="skill-bulk-dialog">
+    <div><span className="focus-eyebrow">SKILL CATALOGUE</span><h2>Add multiple skills</h2><p>Enter one Skill per line. New entries use the Other group and can be enriched later.</p></div>
+    <label>Skill names<textarea value={value} disabled={busy} onChange={event => setValue(event.target.value)} placeholder={'Trim\nHover\nFrog kick\nBack kick'} /></label>
     <section className="skill-bulk-preview" aria-live="polite"><div><b>{preview.submittedCount}</b><span>submitted</span></div><div><b>{preview.newSkills.length}</b><span>new</span></div><div><b>{preview.existingSkills.length}</b><span>already exist</span></div><div><b>{preview.duplicateSkills.length}</b><span>repeated</span></div><div><b>{preview.blankCount}</b><span>blank ignored</span></div></section>
     {preview.newSkills.length > 0 && <fieldset className="skill-import-choices" disabled={busy}><legend>Skills to create</legend>{preview.newSkills.map(name => <label key={name}><input type="checkbox" checked={accepted.includes(name)} onChange={event => setAccepted(current => event.target.checked ? [...current, name] : current.filter(item => item !== name))} /><span>{name}</span></label>)}</fieldset>}
-    {error && <p role="alert" className="dive-save-error">{error}</p>}<footer><button className="focus-secondary" data-dialog-close disabled={busy} onClick={close}>Cancel</button><button className="focus-primary" disabled={busy || accepted.length === 0} onClick={() => void commit()}>{busy ? 'Adding…' : `Add ${accepted.length} skill${accepted.length === 1 ? '' : 's'}`}</button></footer>
-  </AccessibleDialog></div>;
+    {error && <p role="alert" className="dive-save-error">{error}</p>}
+  </RecordEditorWorkspace>;
 }
 
 function CsvImportDialog({ skills, close, saved }: { skills: CanonicalSkillRecord[]; close: () => void; saved: (count: number) => void }) {
@@ -86,15 +85,15 @@ function CsvImportDialog({ skills, close, saved }: { skills: CanonicalSkillRecor
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'The selected CSV rows could not be applied.'); }
     finally { setBusy(false); }
   }
-  return <div className="focus-modal-bg"><AccessibleDialog editable label="Import Skills CSV" className="focus-modal skill-csv-dialog" close={() => { if (!busy) close(); }}>
-    <header><div><span className="focus-eyebrow">SKILL CATALOGUE</span><h2>Import Skills CSV</h2><p>Parsing and preview happen on this device. Nothing is changed until you apply selected rows.</p></div><button className="focus-icon" aria-label="Close CSV importer" data-dialog-close disabled={busy} onClick={close}><X /></button></header>
+  return <RecordEditorWorkspace label="Import Skills CSV" close={close} save={apply} busy={busy} saveLabel={`Apply ${selected.size} selected row${selected.size===1?'':'s'}`} saveDisabled={!preview||Boolean(preview.fatalError)||selected.size===0} value={{fileName,selected:[...selected].sort((a,b)=>a-b)}} trackInteractions={false} contentClassName="skill-csv-dialog">
+    <div><span className="focus-eyebrow">SKILL CATALOGUE</span><h2>Import Skills CSV</h2><p>Parsing and preview happen on this device. Nothing is changed until you apply selected rows.</p></div>
     <label className="skill-file-picker"><FileUp size={18}/><span>{fileName || 'Choose UTF-8 CSV file'}</span><input type="file" accept=".csv,text/csv" aria-label="Choose Skills CSV file" disabled={busy} onChange={event => void choose(event.target.files?.[0])} /></label>
     {preview?.fatalError && <p role="alert" className="dive-save-error">{preview.fatalError}</p>}
     {preview && !preview.fatalError && <><section className="skill-csv-counts" aria-label="CSV preview counts"><b>{preview.totalRows} rows</b>{Object.entries(preview.counts).filter(([, count]) => count).map(([status, count]) => <span key={status}>{count} {status.replace('_', ' ')}</span>)}</section>
       <div className="skill-csv-table-wrap"><table className="skill-csv-table"><thead><tr><th>Include</th><th>Row</th><th>Result</th><th>Skill</th><th>Matched canonical Skill</th><th>Changes / validation</th></tr></thead><tbody>{preview.rows.map(row => { const canInclude = ['NEW','UPDATE','ARCHIVE','RESTORE'].includes(row.status); return <tr key={row.rowNumber}><td><input type="checkbox" aria-label={`Include CSV row ${row.rowNumber}`} disabled={!canInclude || busy} checked={selected.has(row.rowNumber)} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(row.rowNumber); else next.delete(row.rowNumber); return next; })} /></td><td>{row.rowNumber}</td><td><span className={`skill-csv-status status-${row.status.toLowerCase()}`}>{row.status.replace('_', ' ')}</span></td><td><b>{row.group || '—'} — {row.name || '—'}</b><small>{row.action}</small></td><td><SkillCsvMatchedSkill row={row} /></td><td>{row.problem || (row.changes.length ? row.changes.map(change => <div key={change.field}><b>{change.field}:</b> {change.from || '(blank)'} → {change.to || '(blank)'}</div>) : 'No field changes')}</td></tr>; })}</tbody></table></div>
     </>}
-    {error && <p role="alert" className="dive-save-error">{error}</p>}<footer><button className="focus-secondary" data-dialog-close disabled={busy} onClick={close}>Cancel</button><button className="focus-primary" disabled={busy || !preview || Boolean(preview.fatalError) || selected.size === 0} onClick={() => void apply()}>{busy ? 'Applying…' : `Apply ${selected.size} selected row${selected.size === 1 ? '' : 's'}`}</button></footer>
-  </AccessibleDialog></div>;
+    {error && <p role="alert" className="dive-save-error">{error}</p>}
+  </RecordEditorWorkspace>;
 }
 
 function CleanupDialog({ close, saved }: { close: () => void; saved: (count: number) => void }) {

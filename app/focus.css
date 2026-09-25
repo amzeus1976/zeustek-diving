@@ -335,6 +335,7 @@ body,.focus-app{font-size:1rem}
 [data-record-editor-workspace] .site-form{max-height:none;overflow:visible}
 [data-record-editor-workspace] .dive-log-modal{width:100%;max-height:none;overflow:visible;padding:0}
 [data-record-editor-workspace] .conservation-form{width:100%;max-width:none;max-height:none;overflow:visible;padding:0}
+[data-record-editor-workspace] .skill-catalogue-dialog,[data-record-editor-workspace] .skill-bulk-dialog,[data-record-editor-workspace] .skill-csv-dialog{width:100%;max-width:none;max-height:none;overflow:visible;padding:0}
 .app-version-link{display:block;color:#aaa;font-size:.75rem;line-height:1.5;margin-top:.4rem;text-decoration:underline;text-underline-offset:3px}.app-version-link:focus-visible{outline:2px solid var(--orange);outline-offset:3px}.app-changelog{max-width:56rem}.app-changelog article{margin-top:1.25rem;padding:1.25rem}.app-changelog h2{font-size:1.125rem;line-height:1.5}.app-changelog time{color:#aaa;font-size:.875rem}.app-changelog ul{padding-left:1.25rem;line-height:1.6;margin-top:1rem}.app-changelog li+li{margin-top:.5rem}
 .news-layout{grid-template-columns:minmax(0,1fr)}
 .news-sidebar{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
