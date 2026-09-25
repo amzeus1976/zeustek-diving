@@ -1,5 +1,11 @@
 # T14 resumable handover
 
+## Accepted urgent cylinder hotfix and Stage 9 continuation (2026-09-25)
+
+The cylinder visual-to-hydro and ID #02 hotfix is accepted live as app1.0.63 / Sites135, deployment `appgdep_6ab68c1bafe48191ae5e5fb7596e8949`, published source `ba27db6502a1169a3cc3a30a4b67949cdcbeed68`. Its source tree `4c9b70a1ed5b47a297aa58c70ca5ef6336cdcf51` matches GitHub main `f0b1998c9b04a0dc27f8e8685c45583695af7f5f` after PR #66. Owner data matched across all 6,403 pre/post records (66 Dives, one Gas Plan), including ID and content fingerprints. The accepted rollback remains app1.0.58 / Sites130. The bounded ID-allocation-only protected-file change was explicitly approved by the owner. See `cylinder-inspection-id-hotfix-evidence.md` for details.
+
+Stage 9 issue #53 / PR #65 remains unpublished. Its preserved work from `aa92636` is being merged with accepted main; app1.0.64 is the next candidate version. A new owner report identifies missing Save controls on cylinder detail fill actions with an unsaved-data warning; reproduce and fix this before considering Stage 9 release. Do not release saved Sites134, run a Gmail sync or alter production owner records.
+
 ## Current checkpoint — #53 app1.0.61 review correction (2026-09-25)
 
 Preserve branch `t14/issue-53-stage9`; the tested application commit is `4d88ba25905b3c064dc649b7d0b318f8e6d59aed`, built on the earlier `873061b` candidate. PR #65 and issue #53 remain open. The second Codex review found five P1 wrong-record draft-switch risks in Site, Trip, Skill, Calendar and Conservation editors. Each editor now replaces its route/record list while open and is keyed by the canonical record ID. A Settings card collapse now passes through the editor discard guard. Focused tests failed before these fixes and passed after. The release version is app1.0.61 with navigation cache v11 and static cache v10. Sites132/app1.0.60 was packaged but **never deployed** and must not be released.
