@@ -2,6 +2,12 @@
 
 Read the newest dated checkpoint first. All lower release checkpoints are retained as history and must not be treated as current production or next-step instructions.
 
+## Current issue #57 additive candidate (2026-09-25)
+
+Accepted production is **app1.0.69 / Sites140**, deployment `appgdep_6ab6bd476a648191a37a2978970db305`, published application commit `32ceca4c073e3d0ab259d16790ebd294a5a95627`. PR [#70](https://github.com/amzeus1976/zeustek-diving/pull/70) merged to GitHub main `c063306f5396077aabe15d2fa6a0b72b5db96707`, whose tree `e1cfb6feaeca21cd9ede870edf5de65431ef78b7` exactly matches the published application. Sites140 is the current rollback target. Issue #63 is closed. Its live release had no new console errors or page overflow, and all 6,435 owner IDs/content/timestamps matched the pre-release fingerprint (`994c86268971903af6d59fe4b43e337f1f68e3244744063e34f5ee4d0a2e6bca`), including 66 Dives and one Gas Plan. Gmail sync remains disabled and was not repeated.
+
+The owner approved the additive #57 design on the [issue review comment](https://github.com/amzeus1976/zeustek-diving/issues/57#issuecomment-5837591734). The current branch is `t14/issue-57-multi-cylinder-rmv`, app1.0.70 candidate **local/unreleased**. The new whole-Dive OC estimate requires explicit cylinder use, leaves single-cylinder and frozen calculation files unchanged, protects manual values, records versioned source inputs and preserves recorded actual runtime in the Dive editor. Read [issue-57-progress.md](issue-57-progress.md) for the contract, current checks and exact release sequence. Recheck branch HEAD/worktree and all release gates before any publish; do not use this historical checkpoint as a substitute for fresh evidence.
+
 ## Issue #63 completion candidate (2026-09-25)
 
 Accepted production is **app1.0.68 / Sites139**, deployment `appgdep_6ab6b749823481919a6bd727ff37a7cb`, published source `7d06414ba986fa86f1dabef242b1d71c0c3dd3e9`; PR #69 merged to GitHub main `11f09df0cee011afbf59194bca877e141d7ac070`, with matching tree `c3f2c4928eeda059674caef04450ac82458013a5`. App1.0.67 / Sites138 remains a saved earlier version, but the current accepted Sites139 is the rollback target for the next release. Issue #63 was reopened after the initial release because its full review workspace requirements were incomplete; the correction comment is on the issue. Do not call the first release full issue completion.

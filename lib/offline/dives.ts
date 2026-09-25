@@ -34,6 +34,9 @@ export interface DiveCylinder {
 
   wasSwitchedTo?: boolean;
 
+  /** Explicit inclusion in a whole-dive OC consumption estimate; absent legacy values remain unreviewed. */
+  wholeDiveRmvParticipation?: 'used' | 'excluded';
+
   sacPressureBarMin?: number | null;
   sacRate?: number | null;
 
@@ -128,6 +131,16 @@ export interface DiveRecord {
   cnsPercent?: number | null; otu?: number | null; plannedRuntimeMin?: number | null; deepStopsExecuted?: boolean; decoStops?: DecoStop[];
 
   cylinders?: DiveCylinder[]; sacRate?: number | null; rmvRate?: number | null;
+  /** Present only when the owner explicitly applied a whole-dive estimate. */
+  rmvEstimate?: {
+    version: 'whole-dive-oc-rmv/1';
+    includedCylinders: Array<{ id: string; internalVolumeLiters: number; startPressureBar: number; endPressureBar: number }>;
+    averageDepthM: number;
+    elapsedMinutes: number;
+    usedLitres: number;
+    rmvLitresPerMinute: number;
+    pressureModel: 'seawater-10m-per-atm';
+  } | null;
 
   exposureSuit?: string; wetsuitThicknessMm?: number | null; undergarment?: string; ballastKg?: number | null;
 
