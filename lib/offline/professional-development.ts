@@ -19,6 +19,7 @@ import {
   listCanonicalSkills,
   resolveCanonicalSkillReference,
   skillRecordKey,
+  skillRecordName,
   type CanonicalSkillRecord,
   type SkillCompetenceLevel,
   type SkillEvidenceRecord,
@@ -154,13 +155,17 @@ export const PROFESSIONAL_ASSESSMENT_ACTIVITIES: Array<{ code: string; label: st
   { code: 'professionalism-review', label: 'Professionalism mentor review', evidenceType: 'mentor-feedback' },
 ];
 
-export function professionalAssessmentFields(evidenceType: string, exerciseKey?: string, structuredStamina = false): ProfessionalEvidenceFieldDefinition[] {
+export function professionalAssessmentFields(evidenceType: string, exerciseKey?: string, structuredStamina = false,
+  circuitRubric?: SkillCircuitRubric | null): ProfessionalEvidenceFieldDefinition[] {
   if (evidenceType === 'skills-circuit' && structuredStamina) return [
-    { key: 'itemKey', label: 'Circuit skill', kind: 'select', options: PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026.items.map(item => ({ value: item.key, label: item.label })) },
+    { key: 'itemKey', label: 'Circuit skill', kind: 'select', options: (circuitRubric && isSkillCircuitRubric(circuitRubric)
+      ? circuitRubric : PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026).items.map(item => ({ value: item.key, label: item.label })) },
     { key: 'attemptMode', label: 'Attempt', kind: 'select', options: [{ value: 'practice', label: 'Practice' }, { value: 'formal', label: 'Formal evaluator assessment' }] },
     { key: 'evaluatorScore', label: 'Evaluator-entered score (1–5)', kind: 'number', min: 1, step: 1 },
     { key: 'observedPerformance', label: 'Evaluator observation', kind: 'textarea' },
-    ...(exerciseKey === 'skill-07' || exerciseKey === 'skill-08'
+    ...((circuitRubric && isSkillCircuitRubric(circuitRubric) ? circuitRubric : PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026)
+      .items.some(item => item.key === exerciseKey && (item.neutralBuoyancyForFive ??
+        (item.key === 'skill-07' || item.key === 'skill-08')))
       ? [{ key: 'neutralBuoyancyObserved', label: 'Neutral buoyancy observed for a score of 5', kind: 'boolean' as const }] : []),
     { key: 'conditions', label: 'Pool / water conditions', kind: 'text' },
   ];
@@ -467,6 +472,18 @@ export function professionalSkillCircuitProgress(
       evaluatorPersonId: item.evaluatorPersonId && context.people.some(person => person.entityId === item.evaluatorPersonId) ? item.evaluatorPersonId : null,
       evaluatorScore: item.payload.evaluatorScore as number,
       neutralBuoyancyObserved: item.payload.neutralBuoyancyObserved as boolean | undefined,
+      evaluatorName: context.people.find(person => person.entityId === item.evaluatorPersonId)?.name ?? null,
+      siteName: context.sites.find(site => site.entityId === item.relatedSiteId)?.name ?? null,
+      conditions: typeof item.payload.conditions === 'string' ? item.payload.conditions : null,
+      observedPerformance: typeof item.payload.observedPerformance === 'string' ? item.payload.observedPerformance : null,
+      notes: item.notes,
+      relatedSkillEvidence: [...new Set([...(item.relatedSkillEvidenceIds ?? []),
+        ...(item.relatedSkillEvidenceId ? [item.relatedSkillEvidenceId] : [])])]
+        .map(id => {
+          const evidence = context.skillEvidence.find(candidate => candidate.entityId === id);
+          const skill = evidence && resolveCanonicalSkillReference(evidence.skillKey, context.skills);
+          return evidence ? { id, label: skill ? skillRecordName(skill) : 'Saved Skill Evidence' } : null;
+        }).filter((entry): entry is { id: string; label: string } => Boolean(entry)),
       referenceIssues: [
         ...(item.relatedDiveId && !context.dives.some(dive => dive.entityId === item.relatedDiveId) ? ['Linked Dive is unavailable.'] : []),
         ...(item.relatedSiteId && !context.sites.some(site => site.entityId === item.relatedSiteId) ? ['Linked Site is unavailable.'] : []),

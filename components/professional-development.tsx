@@ -644,6 +644,7 @@ export function ProfessionalDevelopment({ go }: Props) {
       {editingEvidence !== undefined && pathway && (
         <EvidenceEditor
           pathway={pathway}
+          requirementSets={requirementSets}
           existing={editingEvidence?.entityId ? editingEvidence : null}
           seed={editingEvidence?.entityId === '' ? editingEvidence : null}
           dives={dives}
@@ -1141,6 +1142,7 @@ function ReferenceEditor({
 
 function EvidenceEditor({
   pathway,
+  requirementSets,
   existing,
   seed,
   dives,
@@ -1153,6 +1155,7 @@ function EvidenceEditor({
   saved,
 }: {
   pathway: Stored<ProfessionalPathwayRecord>;
+  requirementSets: Array<Stored<ProfessionalReferenceRequirementSetRecord>>;
   existing: Stored<ProfessionalEvidenceRecord> | null;
   seed: Stored<ProfessionalEvidenceRecord> | null;
   dives: Array<DiveRecord & { entityId: string }>;
@@ -1209,7 +1212,11 @@ function EvidenceEditor({
   const [error, setError] = useState('');
   const structuredItemKey = typeof payloadValues.exerciseKey === 'string' ? payloadValues.exerciseKey :
     typeof payloadValues.itemKey === 'string' ? payloadValues.itemKey : undefined;
-  const categoryFields = professionalAssessmentFields(evidenceType, structuredItemKey, Boolean(base.payload.rubricId));
+  const capturedRule = requirementSets.find(set => set.entityId === base.requirementSetId)
+    ?.requirements.find(item => item.key === base.requirementKey)?.rule;
+  const capturedCircuit = isSkillCircuitRubric(capturedRule?.rubric) ? capturedRule.rubric : null;
+  const categoryFields = professionalAssessmentFields(evidenceType, structuredItemKey,
+    Boolean(base.payload.rubricId), capturedCircuit);
   async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);

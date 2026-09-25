@@ -477,3 +477,20 @@
 .waterRows summary { display: grid; gap: 4px; cursor: pointer; }
 .waterRows summary span { font-size: .88rem; opacity: .8; }
 .waterRows details > button { display: block; width: 100%; margin-top: 7px; text-align: left; white-space: normal; }
+.circuitMetrics, .circuitFacts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); gap: 8px; margin: 0; }
+.circuitStatus { display: block; }
+.circuitMetrics > div, .circuitFacts > div { min-width: 0; padding: 9px; border: 1px solid rgba(255,255,255,.13); border-radius: 8px; }
+.circuitMetrics dt, .circuitFacts dt { color: #b3c4ce; font-size: .79rem; }
+.circuitMetrics dd, .circuitFacts dd { margin: 4px 0 0; font-weight: 700; overflow-wrap: anywhere; }
+.circuitViews { display: flex; flex-wrap: wrap; gap: 7px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.circuitViews legend { font-weight: 700; margin-bottom: 6px; }
+.circuitViews button[aria-pressed="true"] { border-color: #ff9a19; box-shadow: inset 3px 0 #ff9a19; }
+.circuitScale { min-width: 0; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 10px; }
+.circuitScale summary { cursor: pointer; font-weight: 700; }
+.circuitScale li { margin-block: 6px; }
+.circuitScore { display: inline-block; width: fit-content; padding: 3px 8px; border: 1px solid #a86b20; border-radius: 999px; color: #ffe2a8; }
+.circuitAttempts { display: grid; gap: 8px; margin-top: 10px; }
+.circuitAttempts article { min-width: 0; border-top: 1px solid rgba(255,255,255,.15); padding-top: 9px; overflow-wrap: anywhere; }
+.circuitAttempts article p { margin: 4px 0; }
+.circuitAttempts article a { display: block; margin-block: 5px; }
+.circuitAttempts article button { display: block; margin-top: 6px; }
