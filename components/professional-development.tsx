@@ -52,6 +52,7 @@ import {
   professionalEvidenceReferenceIssueSummary,
   professionalEvidenceSummary,
   professionalWaterSkillsProgress,
+  professionalSkillCircuitProgress,
   requirementSetForPathway,
   saveProfessionalEvidence,
   saveProfessionalPathway,
@@ -63,6 +64,8 @@ import {
   type ProfessionalRequirementDefinition,
 } from '../lib/offline/professional-development';
 import { isWaterSkillsRubric } from '../lib/professional-development/water-skills';
+import { isSkillCircuitRubric } from '../lib/professional-development/skill-circuit';
+import { SkillCircuitTracker } from './skill-circuit-tracker';
 import styles from './professional-development.module.css';
 
 const evidenceText=(value:unknown):string=>{if(value==null)return '';if(typeof value==='string')return value;if(typeof value==='number'||typeof value==='boolean')return String(value);return JSON.stringify(value)??'';};
@@ -189,6 +192,12 @@ export function ProfessionalDevelopment({ go }: Props) {
   const waterRubric = waterRequirement && isWaterSkillsRubric(waterRequirement.rule.rubric) ? waterRequirement.rule.rubric : null;
   const waterProgress = waterRubric && waterRequirement && requirementSet ? professionalWaterSkillsProgress(
     waterRubric, requirementSet.entityId, waterRequirement.key,
+    { pathwayId: pathway?.entityId, dives, certifications, skills, skillEvidence, professionalEvidence: pathwayEvidence, sites, people },
+  ) : null;
+  const circuitRequirement = requirementSet?.requirements.find(item => item.kind === 'assessment' && item.rule.source === 'skill-circuit');
+  const circuitRubric = circuitRequirement && isSkillCircuitRubric(circuitRequirement.rule.rubric) ? circuitRequirement.rule.rubric : null;
+  const circuitProgress = circuitRubric && circuitRequirement && requirementSet ? professionalSkillCircuitProgress(
+    circuitRubric, requirementSet.entityId, circuitRequirement.key,
     { pathwayId: pathway?.entityId, dives, certifications, skills, skillEvidence, professionalEvidence: pathwayEvidence, sites, people },
   ) : null;
   const readiness = useMemo(
@@ -434,6 +443,17 @@ export function ProfessionalDevelopment({ go }: Props) {
               </div>
               <small>Instructor sign-off and current PADI standards are separate from this 15-point progress target. A formal Equipment Exchange assessment may have additional minimum criteria.</small>
             </section>
+          )}
+
+          {circuitProgress && circuitRequirement && circuitRubric && requirementSet && pathway && (
+            <SkillCircuitTracker rubric={circuitRubric} progress={circuitProgress}
+              openAttempt={id => { const item = pathwayEvidence.find(evidence => evidence.entityId === id); if (item) setDetailEvidence(item); }}
+              addAttempt={key => setEditingEvidence({
+                ...emptyEvidence(pathway.entityId, 'skills-circuit'), entityId: '',
+                requirementSetId: requirementSet.entityId, requirementKey: circuitRequirement.key,
+                payload: { rubricId: circuitRubric.id, itemKey: key, attemptMode: 'practice',
+                  title: circuitRubric.items.find(item => item.key === key)?.label ?? '' },
+              } as Stored<ProfessionalEvidenceRecord>)} />
           )}
 
           <section className={styles.workspace}>
@@ -1187,7 +1207,9 @@ function EvidenceEditor({
   const [notes, setNotes] = useState(base.notes ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const categoryFields = professionalAssessmentFields(evidenceType, typeof payloadValues.exerciseKey === 'string' ? payloadValues.exerciseKey : undefined, Boolean(base.payload.rubricId));
+  const structuredItemKey = typeof payloadValues.exerciseKey === 'string' ? payloadValues.exerciseKey :
+    typeof payloadValues.itemKey === 'string' ? payloadValues.itemKey : undefined;
+  const categoryFields = professionalAssessmentFields(evidenceType, structuredItemKey, Boolean(base.payload.rubricId));
   async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);

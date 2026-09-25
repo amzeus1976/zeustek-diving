@@ -12,6 +12,8 @@ import {
 import type { DiveRecord } from './dives';
 import { saveReferenceRequirementSet } from './technical-workspace';
 import { isWaterSkillsRubric, projectWaterSkills, WATER_EXERCISES, type WaterSkillsAttempt, type WaterSkillsRubric } from '../professional-development/water-skills';
+import { isSkillCircuitRubric, projectSkillCircuit, PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026,
+  type SkillCircuitAttempt, type SkillCircuitRubric } from '../professional-development/skill-circuit';
 import {
   SKILL_COMPETENCE_LEVELS,
   listCanonicalSkills,
@@ -153,6 +155,15 @@ export const PROFESSIONAL_ASSESSMENT_ACTIVITIES: Array<{ code: string; label: st
 ];
 
 export function professionalAssessmentFields(evidenceType: string, exerciseKey?: string, structuredStamina = false): ProfessionalEvidenceFieldDefinition[] {
+  if (evidenceType === 'skills-circuit' && structuredStamina) return [
+    { key: 'itemKey', label: 'Circuit skill', kind: 'select', options: PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026.items.map(item => ({ value: item.key, label: item.label })) },
+    { key: 'attemptMode', label: 'Attempt', kind: 'select', options: [{ value: 'practice', label: 'Practice' }, { value: 'formal', label: 'Formal evaluator assessment' }] },
+    { key: 'evaluatorScore', label: 'Evaluator-entered score (1–5)', kind: 'number', min: 1, step: 1 },
+    { key: 'observedPerformance', label: 'Evaluator observation', kind: 'textarea' },
+    ...(exerciseKey === 'skill-07' || exerciseKey === 'skill-08'
+      ? [{ key: 'neutralBuoyancyObserved', label: 'Neutral buoyancy observed for a score of 5', kind: 'boolean' as const }] : []),
+    { key: 'conditions', label: 'Pool / water conditions', kind: 'text' },
+  ];
   if (evidenceType === 'stamina' && structuredStamina) {
     const common: ProfessionalEvidenceFieldDefinition[] = [
       { key: 'exerciseKey', label: 'Exercise', kind: 'select', options: WATER_EXERCISES.map(item => ({ value: item.key, label: item.label })) },
@@ -435,6 +446,39 @@ export function professionalWaterSkillsProgress(
   return projectWaterSkills(rubric, attempts);
 }
 
+export function professionalSkillCircuitProgress(
+  rubric: SkillCircuitRubric,
+  requirementSetId: string,
+  requirementKey: string,
+  context: ProfessionalEvaluationContext,
+) {
+  const asOf = context.asOf ?? new Date();
+  const attempts: SkillCircuitAttempt[] = context.professionalEvidence
+    .filter(item => (!context.pathwayId || item.pathwayId === context.pathwayId) &&
+      item.evidenceType === 'skills-circuit' && item.requirementSetId === requirementSetId &&
+      item.requirementKey === requirementKey && item.payload.rubricId === rubric.id &&
+      Date.parse(item.occurredAt) <= asOf.getTime())
+    .map(item => ({
+      id: item.entityId,
+      itemKey: item.payload.itemKey as string,
+      rubricId: item.payload.rubricId as string,
+      occurredAt: item.occurredAt,
+      mode: item.payload.attemptMode as SkillCircuitAttempt['mode'],
+      evaluatorPersonId: item.evaluatorPersonId && context.people.some(person => person.entityId === item.evaluatorPersonId) ? item.evaluatorPersonId : null,
+      evaluatorScore: item.payload.evaluatorScore as number,
+      neutralBuoyancyObserved: item.payload.neutralBuoyancyObserved as boolean | undefined,
+      referenceIssues: [
+        ...(item.relatedDiveId && !context.dives.some(dive => dive.entityId === item.relatedDiveId) ? ['Linked Dive is unavailable.'] : []),
+        ...(item.relatedSiteId && !context.sites.some(site => site.entityId === item.relatedSiteId) ? ['Linked Site is unavailable.'] : []),
+        ...([...new Set([...(item.relatedSkillEvidenceIds ?? []), ...(item.relatedSkillEvidenceId ? [item.relatedSkillEvidenceId] : [])])]
+          .some(id => !context.skillEvidence.some(skill => skill.entityId === id)) ? ['Linked Skill Evidence is unavailable.'] : []),
+        ...(rubric.items.some(rubricItem => rubricItem.key === item.payload.itemKey && rubricItem.canonicalSkillId &&
+          !context.skills.some(skill => skill.entityId === rubricItem.canonicalSkillId)) ? ['Mapped canonical Skill is unavailable.'] : []),
+      ],
+    }));
+  return projectSkillCircuit(rubric, attempts);
+}
+
 export interface ProfessionalEvidenceLink {
   kind:
     | 'dive'
@@ -614,6 +658,18 @@ export async function saveProfessionalEvidence(
       !WATER_EXERCISES.some(item => item.key === input.payload.exerciseKey) ||
       (input.payload.attemptMode !== 'practice' && input.payload.attemptMode !== 'formal'))
       throw new Error('Select a valid exercise and attempt mode from the captured water-skills version.');
+  }
+  if (input.evidenceType === 'skills-circuit' && input.payload.rubricId) {
+    const set = (await listProfessionalRequirementSets()).find(item => item.entityId === input.requirementSetId);
+    const pathway = (await listProfessionalPathways()).find(item => item.entityId === input.pathwayId);
+    const requirement = set?.requirements.find(item => item.key === input.requirementKey);
+    if (!pathway || !set || set.agency !== pathway.agency || set.pathwayKey !== pathway.pathwayKey ||
+      requirement?.rule.source !== 'skill-circuit' || !isSkillCircuitRubric(requirement.rule.rubric) ||
+      requirement.rule.rubric.id !== input.payload.rubricId ||
+      !requirement.rule.rubric.items.some(item => item.key === input.payload.itemKey) ||
+      (input.payload.attemptMode !== 'practice' && input.payload.attemptMode !== 'formal') ||
+      !Number.isInteger(input.payload.evaluatorScore) || Number(input.payload.evaluatorScore) < 1 || Number(input.payload.evaluatorScore) > 5)
+      throw new Error('Select a valid skill, score and attempt mode from the captured circuit version.');
   }
   return saveRecord('professional-evidence', {
     ...input,
@@ -846,6 +902,12 @@ export async function captureProfessionalRequirementSet(
       if (rule.source === 'water-skills') {
         if (!isWaterSkillsRubric(rule.rubric))
           throw new Error(`Assessment ${requirement.label} needs a complete, versioned water-skills progress rubric.`);
+      } else if (rule.source === 'skill-circuit') {
+        if (!isSkillCircuitRubric(rule.rubric))
+          throw new Error(`Assessment ${requirement.label} needs a complete, versioned 24-skill circuit progress rubric.`);
+        canonicalSkills ??= await listCanonicalSkills();
+        if (rule.rubric.items.some(item => item.canonicalSkillId && !canonicalSkills!.some(skill => skill.entityId === item.canonicalSkillId)))
+          throw new Error(`Assessment ${requirement.label} links to a missing canonical Skill.`);
       } else if (rule.source === 'professional-evidence') {
         const evidenceType = stringRule(rule, 'evidenceType');
         const activityCode = stringRule(rule, 'activityCode');
@@ -1107,6 +1169,15 @@ export function evaluateProfessionalRequirement(
   }
 
   if (requirement.kind === 'assessment') {
+    if (rule.source === 'skill-circuit') {
+      if (!isSkillCircuitRubric(rule.rubric))
+        return { requirement, state: 'unknown', detail: 'No valid captured 24-skill circuit rubric exists.', evidence: explicitLinks };
+      const progress = professionalSkillCircuitProgress(rule.rubric, requirementSetId, requirement.key, context);
+      return { requirement, state: 'manual_review',
+        detail: `${progress.total}/120 recorded formal points; ${progress.complete ? 'all 24 scored' : `${24 - progress.contributingIds.length} need evaluator-backed evidence`}; ` +
+          `${progress.progressTargetMet ? '82-point progress conditions met' : 'progress conditions not yet met'}; instructor confirmation pending. This is not a PADI pass claim.`,
+        evidence: progress.contributingIds.map(id => ({ kind: 'professional-evidence' as const, id, label: 'Contributing circuit attempt' })) };
+    }
     if (rule.source === 'water-skills') {
       if (!isWaterSkillsRubric(rule.rubric))
         return { requirement, state: 'unknown', detail: 'No valid captured water-skills rubric exists.', evidence: explicitLinks };
