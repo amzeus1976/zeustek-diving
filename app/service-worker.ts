@@ -15,17 +15,17 @@ clientsClaim();
 // The root is dynamically authenticated HTML, not an entry in the build precache.
 // Cache only a successfully loaded dashboard; sign-in/out always clears that shell.
 registerRoute(({request,url})=>request.mode==='navigate'&&/^\/(?:signin-with-chatgpt|signout-with-chatgpt|callback)(?:\/|$)/.test(url.pathname),async({request})=>{
-  await Promise.all(['zeustek-navigation-v1','zeustek-navigation-v2','zeustek-navigation-v3','zeustek-navigation-v4','zeustek-navigation-v5','zeustek-navigation-v6','zeustek-navigation-v7','zeustek-navigation-v8','zeustek-navigation-v9'].map(name=>caches.delete(name)));
+  await Promise.all(['zeustek-navigation-v1','zeustek-navigation-v2','zeustek-navigation-v3','zeustek-navigation-v4','zeustek-navigation-v5','zeustek-navigation-v6','zeustek-navigation-v7','zeustek-navigation-v8','zeustek-navigation-v9','zeustek-navigation-v10'].map(name=>caches.delete(name)));
   return fetch(request);
 });
 registerRoute(new NavigationRoute(new NetworkFirst({
-  cacheName:'zeustek-navigation-v9',networkTimeoutSeconds:1,
+  cacheName:'zeustek-navigation-v10',networkTimeoutSeconds:1,
   plugins:[{
     cacheKeyWillBeUsed:async({request})=>new URL('/',request.url).href,
     cacheWillUpdate:async({response})=>response.status===200&&!response.redirected&&response.headers.get('content-type')?.includes('text/html')?response:null,
   }],
 }),{allowlist:[/^\/(?:\?.*)?$/]}));
-registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v8' }));
+registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v9' }));
 registerRoute(({ url }) => url.pathname.startsWith('/api/'), new NetworkOnly());
 registerRoute(({url})=>url.origin===self.location.origin&&isCompleteIconPath(url.pathname),new CacheFirst({
   cacheName:'zeustek-complete-icons-v1',
