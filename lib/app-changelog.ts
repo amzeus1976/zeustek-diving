@@ -1,6 +1,23 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.66',
+    date: '2026-09-25',
+    title: 'Stage 9 record editor safeguards',
+    changes: [
+      'Draft record editors remain bound to their source records while preserving the accepted cylinder detail Save controls.',
+    ],
+  },
+  {
+    version: '1.0.65',
+    date: '2026-09-25',
+    title: 'Cylinder detail save controls',
+    changes: [
+      'Fill, gas-use and analysis sections have explicit Save actions.',
+      'Closing cylinder details warns only when a section still has unsaved edits.',
+    ],
+  },
+  {
     version: '1.0.64',
     date: '2026-09-25',
     title: 'Stage 9 record editor safeguards',

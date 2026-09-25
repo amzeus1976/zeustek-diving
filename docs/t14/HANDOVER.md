@@ -1,5 +1,11 @@
 # T14 resumable handover
 
+## Accepted cylinder detail Save hotfix and Stage 9 continuation (2026-09-25)
+
+The cylinder detail Save controls are accepted live as app1.0.65 / Sites136, deployment `appgdep_6ab690cd6164819193c50655e47edc09`, source `67eb82cfcf57cebb70cfab3a23dd3430261146a9`. Its source tree `82fc8791c5fafc3bc74f5c03bc5115daa7660db9` matches GitHub main `7473a41c95c816e8532dc16e4532eed8423f8e3e` after PR #67. All 6,411 pre/post owner-record IDs and content fingerprints matched (66 Dives, one Gas Plan). Protected calculations matched all nine approved hashes. Accepted rollback is app1.0.63 / Sites135. See `cylinder-detail-save-hotfix-evidence.md`.
+
+Stage 9 issue #53 / PR #65 remains unpublished; preserve branch `t14/issue-53-stage9`. Its next candidate is app1.0.66 after merging accepted main. Do not deploy saved Sites134, run Gmail sync or treat Stage 9 as accepted until its own review and release gate pass.
+
 ## Accepted urgent cylinder hotfix and Stage 9 continuation (2026-09-25)
 
 The cylinder visual-to-hydro and ID #02 hotfix is accepted live as app1.0.63 / Sites135, deployment `appgdep_6ab68c1bafe48191ae5e5fb7596e8949`, published source `ba27db6502a1169a3cc3a30a4b67949cdcbeed68`. Its source tree `4c9b70a1ed5b47a297aa58c70ca5ef6336cdcf51` matches GitHub main `f0b1998c9b04a0dc27f8e8685c45583695af7f5f` after PR #66. Owner data matched across all 6,403 pre/post records (66 Dives, one Gas Plan), including ID and content fingerprints. The accepted rollback remains app1.0.58 / Sites130. The bounded ID-allocation-only protected-file change was explicitly approved by the owner. See `cylinder-inspection-id-hotfix-evidence.md` for details.

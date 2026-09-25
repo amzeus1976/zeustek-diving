@@ -5,8 +5,9 @@ import { resolveDiscardEscapeAction } from '../lib/dialog/discard-confirmation-s
 export const dialogAllowsImplicitDismiss = (editable: boolean) => !editable;
 export const dialogNeedsDiscardConfirmation = (editable: boolean, dirty: boolean) => editable && dirty;
 
-export function AccessibleDialog({ label, className, close, editable = false, dirty = false, containDismiss = false, onEscape, children }: {
+export function AccessibleDialog({ label, className, close, editable = false, dirty = false, trackInteractions = true, containDismiss = false, onEscape, children }: {
   label: string; className: string; close: () => void; editable?: boolean; dirty?: boolean;
+  trackInteractions?: boolean;
   containDismiss?: boolean; onEscape?: () => void; children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -74,12 +75,12 @@ export function AccessibleDialog({ label, className, close, editable = false, di
       event.stopPropagation();
       handleEscape();
     }}
-    onInputCapture={() => { if (editable) setInteractionDirty(true); }}
-    onChangeCapture={() => { if (editable) setInteractionDirty(true); }}
+    onInputCapture={() => { if (editable && trackInteractions) setInteractionDirty(true); }}
+    onChangeCapture={() => { if (editable && trackInteractions) setInteractionDirty(true); }}
     onClickCapture={(event) => {
       if (!editable) return;
       const target = event.target instanceof Element ? event.target : null;
-      if (target?.closest('[data-dialog-dirty]')) setInteractionDirty(true);
+      if (trackInteractions && target?.closest('[data-dialog-dirty]')) setInteractionDirty(true);
       if (!dialogNeedsDiscardConfirmation(editable, hasUnsavedChanges) || !target?.closest('[data-dialog-close]')) return;
       event.preventDefault(); event.stopPropagation();
       requestConfirmation(target.closest<HTMLElement>('[data-dialog-close]'));
