@@ -72,6 +72,9 @@ import {GMAIL_SYNC_DISABLED_MESSAGE,gmailDiagnostic,type GmailDiagnosticCode,typ
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
 import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/lib/zeustek-icons';
 import {fillMissingGasRates} from '@/lib/gas-rates';
+import {initialElapsedRuntime} from '@/lib/dive-elapsed-runtime';
+import {applyMissingWholeDiveOcrmv,isWholeDiveRmvEstimateCurrent} from '@/lib/whole-dive-oc-rmv';
+import {WholeDiveRmvControls} from '@/components/logbook/whole-dive-rmv-controls';
 import { diveHeat } from '@/lib/dive-heat';
 import { logTimeRange } from '@/lib/log-time';
 import { EditorSections } from '@/components/editor-sections';
@@ -1033,6 +1036,29 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
    setGasBusy(true);let updated=0,skipped=0;
    try {for(const dive of dives){const result=fillMissingGasRates({...dive,totalElapsedMin:summedRuntime(dive.bottomTimeMin,dive.decoStops??[],dive.safetyStopExecuted?dive.safetyStopDurationMin??null:0)});if(result.changed){await saveDive({...dive,cylinders:result.cylinders});updated++;}else if(result.error)skipped++;}setGasStatus(`${updated} logs updated; ${skipped} need more data or measured gas segments. Existing values were kept.`);refresh();}catch(error){setGasStatus(`${updated} logs updated before an error: ${String(error)}`);}finally{setGasBusy(false);}
   }
+  async function fillMissingWholeDiveRmv() {
+    const candidates = dives.map(dive => applyMissingWholeDiveOcrmv(dive));
+    const ready = candidates.filter(result => result.changed);
+    if (!ready.length) {
+      setGasStatus('No Dives have complete, explicitly reviewed multi-cylinder evidence and a missing whole-dive RMV. Existing values were kept.');
+      return;
+    }
+    if (!window.confirm(`Apply whole-dive RMV estimates to ${ready.length} Dive${ready.length === 1 ? '' : 's'} with explicitly reviewed cylinder use? Existing manual values and cylinder SAC/RMV will be kept.`)) return;
+    setGasBusy(true);
+    let updated = 0;
+    try {
+      for (const result of ready) {
+        await saveDive(result.dive);
+        updated += 1;
+      }
+      setGasStatus(`${updated} whole-dive RMV estimate${updated === 1 ? '' : 's'} saved; ${dives.length - ready.length} Dives skipped because evidence is incomplete or a value already exists. Per-cylinder rates were kept.`);
+      refresh();
+    } catch (error) {
+      setGasStatus(`${updated} whole-dive estimates saved before an error: ${String(error)}. Review records before retrying.`);
+    } finally {
+      setGasBusy(false);
+    }
+  }
   async function fillMissingTemperatures() {
     const candidates = dives.filter((dive) => dive.airTemperatureC == null || dive.surfaceTemperatureC == null);
     if (!candidates.length) {
@@ -1149,7 +1175,8 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
             ['Cylinders', viewing.cylinders?.map((cylinder) => `${cylinder.name}: ${cylinder.gasType}${cylinder.oxygenPercent != null ? ` ${cylinder.oxygenPercent}% O₂` : ''}, ${cylinder.startPressureBar ?? '—'}→${cylinder.endPressureBar ?? '—'} bar`).join('\n') || 'Not recorded'],
             ['Environment', [viewing.waterType, viewing.weather, viewing.visibilityM != null ? `${viewing.visibilityM} m visibility` : '', viewing.currentStrength ? `${viewing.currentStrength} current` : ''].filter(Boolean).join(' · ') || 'Not recorded'],
             ['Weather data source', [viewing.weatherProvider,viewing.weatherResolution,viewing.weatherAttribution].filter(Boolean).join(' · ')],
-            ['SAC / RMV',viewing.cylinders?.map(c=>`${c.name || 'Cylinder'}: ${c.sacPressureBarMin ?? '—'} bar/min SAC · ${c.rmvRate ?? '—'} L/min RMV`).join('; ')],
+            ['Per-cylinder SAC / RMV',viewing.cylinders?.map(c=>`${c.name || 'Cylinder'}: ${c.sacPressureBarMin ?? '—'} bar/min SAC · ${c.rmvRate ?? '—'} L/min RMV`).join('; ')],
+            ['Whole-dive RMV', viewing.rmvRate == null ? 'Not recorded' : `${viewing.rmvRate.toFixed(2)} L/min · ${viewing.rmvEstimate ? `estimate ${viewing.rmvEstimate.version}, ${viewing.rmvEstimate.usedLitres.toLocaleString('en-GB')} L from ${viewing.rmvEstimate.includedCylinders.length} cylinders at ${viewing.rmvEstimate.averageDepthM} m average over ${viewing.rmvEstimate.elapsedMinutes} min` : 'recorded / legacy value'}`],
             ['Temperatures', [viewing.airTemperatureC != null ? `${viewing.airTemperatureC}°C air` : '', viewing.surfaceTemperatureC != null ? `${viewing.surfaceTemperatureC}°C surface` : '', viewing.minimumTemperatureC != null ? `${viewing.minimumTemperatureC}°C minimum` : ''].filter(Boolean).join(' · ') || 'Not recorded'],
             ['Decompression', viewing.isTechnicalDive || viewing.diveMode === 'technical' || viewing.diveMode === 'technical-training' ? [viewing.decoAlgorithm, viewing.gradientFactorLow != null && viewing.gradientFactorHigh != null ? `GF ${viewing.gradientFactorLow}/${viewing.gradientFactorHigh}` : '', `${viewing.decoStops?.length ?? 0} staged stops`].filter(Boolean).join(' · ') : viewing.safetyStopExecuted ? `${viewing.safetyStopDurationMin ?? '—'} min at ${viewing.safetyStopDepthM ?? '—'} m safety stop` : 'No technical decompression recorded'],
             [
@@ -1188,7 +1215,8 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
         action={<div className="record-actions logbook-actions"><button className="focus-secondary" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(!toolsOpen)}><Settings2 size={16}/>Tools</button><button className="focus-primary" onClick={openLog}><Plus size={16}/>Log dive</button></div>}
       />
       <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Dive Computer Imports',route:'Dive Computer Imports'}]} current="Logbook" next={[{label:'Dive Skills',route:'Skills & Currency'},{label:'Albums',route:'Albums'},{label:'Insights',route:'Insights'}]} go={go}/>
-      <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Calculate missing SAC / RMV'}</button>
+      <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Fill missing single-tank SAC / RMV'}</button>
+          <button className="focus-secondary" disabled={gasBusy} onClick={() => void fillMissingWholeDiveRmv()}><Gauge size={16}/>Apply reviewed whole-dive RMV estimates</button>
           <button className="focus-secondary" onClick={() => void fillMissingTemperatures()}>
             <CloudRain size={16} /> Fill missing temperatures
           </button>
@@ -4807,6 +4835,8 @@ function DiveModal({
   const [cylinders, setCylinders] = useState<DiveCylinder[]>(
     item?.cylinders?.length ? item.cylinders : [emptyCylinder(initialGas)],
   );
+  const [wholeDiveRmv, setWholeDiveRmv] = useState<number | null>(item?.rmvRate ?? null);
+  const [rmvEstimate, setRmvEstimate] = useState<NonNullable<DiveRecord['rmvEstimate']> | null>(item?.rmvEstimate ?? null);
   const [decoAlgorithm, setDecoAlgorithm] = useState(item?.decoAlgorithm ?? 'Bühlmann ZHL-16C');
   const [gfLow, setGfLow] = useState(item?.gradientFactorLow?.toString() ?? '');
   const [gfHigh, setGfHigh] = useState(item?.gradientFactorHigh?.toString() ?? '');
@@ -4815,7 +4845,9 @@ function DiveModal({
   const [otu, setOtu] = useState(item?.otu?.toString() ?? '');
   const [deepStops, setDeepStops] = useState(item?.deepStopsExecuted ?? false);
   const [decoStops, setDecoStops] = useState<DecoStop[]>(item?.decoStops ?? []);
-  const elapsedTime = summedRuntime(optionalNumber(time), technicalMode ? decoStops : [], safetyStop ? optionalNumber(safetyDuration) : 0)?.toString() ?? '';
+  const suggestedElapsedMinutes = summedRuntime(optionalNumber(time), technicalMode ? decoStops : [], safetyStop ? optionalNumber(safetyDuration) : 0);
+  const [elapsedOverride, setElapsedOverride] = useState<string | null>(() => item?.totalElapsedMin != null ? initialElapsedRuntime(item.totalElapsedMin, null) : null);
+  const elapsedTime = elapsedOverride ?? initialElapsedRuntime(null, suggestedElapsedMinutes);
   const [exposureSuit, setExposureSuit] = useState(item?.exposureSuit ?? '');
   const [suitThickness, setSuitThickness] = useState(item?.wetsuitThicknessMm?.toString() ?? '');
   const [undergarment, setUndergarment] = useState(item?.undergarment ?? '');
@@ -4949,6 +4981,14 @@ function DiveModal({
       ),
     );
   }
+  function setCylinderRmvParticipation(index: number, value: 'used' | 'excluded' | null) {
+    setCylinders(current => current.map((cylinder, position) => {
+      if (position !== index) return cylinder;
+      if (value) return {...cylinder, wholeDiveRmvParticipation: value};
+      const {wholeDiveRmvParticipation: _prior, ...unreviewed} = cylinder;
+      return unreviewed;
+    }));
+  }
 
   function runPressureGroupCheck(verifyManual = false) {
     if (previousDive && !previousPostGroup && pressureGroupMode === 'AUTO') {
@@ -5037,6 +5077,14 @@ function DiveModal({
 
   async function submit() {
     if (!site.trim() || !diveNumber || !timeIn || !timeOut) return;
+    if (wholeDiveRmv != null && (!Number.isFinite(wholeDiveRmv) || wholeDiveRmv <= 0)) {
+      setGasRateStatus('Whole-dive RMV must be a positive number.');
+      return;
+    }
+    if (rmvEstimate && !isWholeDiveRmvEstimateCurrent({cylinders, averageDepthM: optionalNumber(averageDepth), totalElapsedMin: optionalNumber(elapsedTime), rmvRate: wholeDiveRmv, rmvEstimate})) {
+      setGasRateStatus('The applied whole-dive estimate no longer matches the recorded inputs. Reapply it or enter a manual value before saving.');
+      return;
+    }
     setSaving(true);
     try {
     let resolvedSiteId = siteId;
@@ -5145,6 +5193,8 @@ function DiveModal({
       currentDirectionDegrees: optionalNumber(currentDirection),
       thermoclines: thermoclines.split('\n').map((value) => value.trim()).filter(Boolean),
       cylinders: calculatedCylinders,
+      rmvRate: wholeDiveRmv,
+      rmvEstimate,
       gas: calculatedCylinders[0]?.gasType ?? 'Air',
       decoDive: technicalMode,
       decoAlgorithm: technicalMode ? decoAlgorithm : '',
@@ -5279,8 +5329,9 @@ function DiveModal({
           </label>
           <label>
             Total elapsed runtime (min)
-            <input type="number" min="0" value={elapsedTime} readOnly aria-label="Elapsed runtime: bottom time plus decompression and safety stop" />
+            <input type="number" min="0" step="0.1" value={elapsedTime} onChange={event => setElapsedOverride(event.target.value)} aria-label="Actual elapsed runtime in minutes" />
           </label>
+          <p className="focus-copy">Recorded actual runtime is preserved. Bottom time plus recorded stops suggests {suggestedElapsedMinutes ?? '—'} min. <button type="button" className="focus-secondary compact-button" onClick={() => setElapsedOverride(null)}>Use suggested runtime</button></p>
           <label>Surface interval (min)<input type="number" min="0" value={surfaceInterval} onChange={(event) => setSurfaceInterval(event.target.value)} /></label>
           <label>Pressure-group mode<select value={pressureGroupMode} onChange={(event) => setPressureGroupMode(event.target.value as 'AUTO' | 'MANUAL')}><option value="AUTO">Automatic table lookup</option><option value="MANUAL">Manual entry / audit</option></select></label>
           <label>Pre-dive pressure group<input maxLength={1} value={preGroup} readOnly={pressureGroupMode === 'AUTO'} onChange={(event) => setPreGroup(event.target.value.toUpperCase())} placeholder={previousDive ? 'Calculated from interval' : 'First dive starts at A'} /></label>
@@ -5330,7 +5381,17 @@ function DiveModal({
         </details>
 
         <details className="dive-form-section">
-          <summary>Gas & cylinders ({cylinders.length})</summary><button className="focus-secondary" type="button" onClick={calculateFormGasRates}><Gauge size={16}/>Calculate SAC / RMV</button><p className="focus-copy">Estimated from recorded gas use, average depth and elapsed runtime. SAC is bar/min; RMV is L/min. Single-tank open-circuit dives only.</p>{gasRateStatus&&<p role="status">{gasRateStatus}</p>}
+          <summary>Gas & cylinders ({cylinders.length})</summary><button className="focus-secondary" type="button" onClick={calculateFormGasRates}><Gauge size={16}/>Calculate single-tank SAC / RMV</button><p className="focus-copy">Per-cylinder SAC (bar/min) and RMV (L/min) use the established single-tank open-circuit calculation. Multi-cylinder whole-dive RMV is separate below.</p>{gasRateStatus&&<output>{gasRateStatus}</output>}
+          <WholeDiveRmvControls
+            cylinders={cylinders}
+            averageDepthM={optionalNumber(averageDepth)}
+            elapsedMinutes={optionalNumber(elapsedTime)}
+            rmvRate={wholeDiveRmv}
+            rmvEstimate={rmvEstimate}
+            onParticipationChange={setCylinderRmvParticipation}
+            onApply={estimate => {setWholeDiveRmv(estimate.rmvLitresPerMinute); setRmvEstimate(estimate); setGasRateStatus('Whole-dive estimate applied to this draft. Save the Dive to keep it.');}}
+            onManualChange={value => {setWholeDiveRmv(value); setRmvEstimate(null); setGasRateStatus('Manual whole-dive value changed in this draft. Save the Dive to keep it.');}}
+          />
           <p className="section-help">Record one to four independent cylinders, including switch events and consumption.</p>
           {cylinders.map((cylinder, index) => (
             <div className="cylinder-row" key={cylinder.id}>

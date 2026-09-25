@@ -55,6 +55,9 @@ body,.focus-app{font-size:1rem}
 .dive-total-strip span{padding:10px;border:1px solid #3a2a20;background:#1c1009;border-radius:8px;color:#aaa;font-size:.875rem}
 .dive-total-strip strong{display:block;color:#fff;font-size:1rem;margin-top:3px}
 .cylinder-row{border-top:1px solid #333;padding:14px 0;margin-top:12px}
+.whole-dive-rmv-controls{border:1px solid #315164;border-radius:10px;background:#0e1a20;padding:14px;margin:14px 0}
+.whole-dive-rmv-controls h4{margin:0 0 8px;color:#ff9d30}
+.whole-dive-rmv-controls output{display:block;margin:12px 0;line-height:1.5}
 .compact-button{margin-top:9px;min-height:34px}
 .technical-section{border-color:#7d3e16;background:linear-gradient(145deg,#160d08,#0b0b0b)}
 .deco-stop{display:grid;grid-template-columns:repeat(3,1fr) 1.4fr auto;gap:8px;align-items:end;border-top:1px solid #343434;padding:12px 0}

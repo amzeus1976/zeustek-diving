@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.70',
+    date: '2026-09-25',
+    title: 'Reviewed whole-dive gas-use estimate',
+    changes: [
+      'Multi-cylinder open-circuit Dives can show a whole-dive RMV estimate only after each cylinder is explicitly marked used or excluded.',
+      'The recorded actual runtime is preserved in the Dive editor; manual RMV and per-cylinder SAC/RMV remain unchanged unless deliberately edited.',
+    ],
+  },
+  {
     version: '1.0.69',
     date: '2026-09-25',
     title: 'Complete 24-skill circuit review',

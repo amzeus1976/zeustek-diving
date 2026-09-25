@@ -17,13 +17,13 @@ it('renders the exact accessible current-version link and preserves the canonica
   expect(hosting.project_id).toBe('appgprj_6a91926878b48191a80d70f1681ef135');
 });
 
-it('advances the circuit release and isolates its navigation and static caches', () => {
-  expect(version).toBe('1.0.69');
+it('advances the whole-dive RMV release and isolates its navigation and static caches', () => {
+  expect(version).toBe('1.0.70');
   expect(appChangelog[0]?.version).toBe(version);
   const worker = readFileSync(new URL('../app/service-worker.ts', import.meta.url), 'utf8');
-  expect(worker).toContain("cacheName:'zeustek-navigation-v17'");
-  expect(worker).toContain("cacheName: 'zeustek-static-v16'");
-  expect(worker).toContain("'zeustek-navigation-v17'].map(name=>caches.delete(name))");
+  expect(worker).toContain("cacheName:'zeustek-navigation-v18'");
+  expect(worker).toContain("cacheName: 'zeustek-static-v17'");
+  expect(worker).toContain("'zeustek-navigation-v18'].map(name=>caches.delete(name))");
 });
 
 it('reproduces the existing PWA timeout returning stale HTML despite a healthy newer network response', async () => {
