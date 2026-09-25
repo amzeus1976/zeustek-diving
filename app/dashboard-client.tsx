@@ -5048,6 +5048,7 @@ function DiveModal({
   async function submit() {
     if (!site.trim() || !diveNumber || !timeIn || !timeOut) return;
     setSaving(true);
+    try {
     let resolvedSiteId = siteId;
     let siteSource: DiveRecord['siteSource'] = 'manual';
     const selectedSite = sites.find((candidate) => candidate.entityId === siteId);
@@ -5217,22 +5218,12 @@ function DiveModal({
       hireGear,
     });
     await renumberDivesByChronology(diveNumberStart);
-    setSaving(false);
     saved?.();
     close();
+    } finally { setSaving(false); }
   }
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog editable label={item ? "Edit dive" : "Log a dive"} close={close} className="focus-modal dive-log-modal">
-        <header>
-          <div>
-            <span className="focus-eyebrow">PRIVATE CLOUD ENTRY</span>
-            <h2 id="dive-title">Log a dive</h2>
-          </div>
-          <button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}>
-            <X size={18} />
-          </button>
-        </header>
+    <RecordEditorWorkspace label={item ? 'Edit dive' : 'Log a dive'} close={close} save={submit} busy={saving} saveLabel="Save dive" saveDisabled={!site.trim() || !diveNumber || !timeIn || !timeOut} value={{cylinders,decoStops,diveTeamIds,buddyIds,diveLeaderId,hiredEquipment,equipmentIds,equipmentSetIds,weather,airTemp,surfaceTemp,minimumTemp,windSpeed,waveHeight,visibility}} contentClassName="dive-log-modal">
         <EditorSections selector=".dive-form-section"/>
         <section className="dive-form-section">
           <span className="focus-eyebrow">DIVE IDENTITY & SITE</span>
@@ -5500,17 +5491,6 @@ function DiveModal({
             <label className="record-wide">Verification link / hash<input value={verificationLink} onChange={(event) => setVerificationLink(event.target.value)} /></label>
           </div>
         </details>
-        <footer>
-          <button className="focus-secondary" data-dialog-close onClick={close}>Cancel</button>
-          <button
-            className="focus-primary"
-            disabled={!site.trim() || !diveNumber || !timeIn || !timeOut || saving}
-            onClick={() => void submit()}
-          >
-            {saving ? 'Saving…' : 'Save dive'}
-          </button>
-        </footer>
-      </AccessibleDialog>
-    </div>
+    </RecordEditorWorkspace>
   );
 }

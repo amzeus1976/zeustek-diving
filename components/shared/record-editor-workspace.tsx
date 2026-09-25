@@ -63,7 +63,8 @@ export function RecordEditorWorkspace({label,close,save,children,value,dirty=fal
     finally{setSaving(false);}
   }
   return <section ref={root} tabIndex={-1} aria-label={label} data-record-editor-workspace className={styles.workspace}
-    onInputCapture={()=>{if(trackInteractions)setInteractionDirty(true);}} onChangeCapture={()=>{if(trackInteractions)setInteractionDirty(true);}}
+    onInputCapture={event=>{if(trackInteractions&&!(event.target instanceof Element&&event.target.closest('.editor-section-nav')))setInteractionDirty(true);}}
+    onChangeCapture={event=>{if(trackInteractions&&!(event.target instanceof Element&&event.target.closest('.editor-section-nav')))setInteractionDirty(true);}}
     onClickCapture={event=>{
       const target=event.target instanceof Element?event.target:null;
       if(target?.closest('dialog'))return;

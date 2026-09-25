@@ -37,6 +37,7 @@ describe('editable AccessibleDialog dismissal contract', () => {
     expect(sources).toContain('<AccessibleDialog editable label="Colour correct photo"');
     expect(sources).toContain('<RecordEditorWorkspace label={item ? \'Edit site\' : \'New site\'}');
     expect(sources).not.toContain('<AccessibleDialog editable label={item ? "Edit site"');
-    expect(sources).toContain('<AccessibleDialog editable label={item ? "Edit dive"');
+    expect(sources).toContain('<RecordEditorWorkspace label={item ? \'Edit dive\' : \'Log a dive\'}');
+    expect(sources).not.toContain('<AccessibleDialog editable label={item ? "Edit dive"');
   });
 });
