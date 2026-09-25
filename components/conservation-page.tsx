@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Leaf, Plus, Recycle, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { useRecordRefresh } from './record-status';
@@ -95,6 +96,12 @@ export function ConservationPage({go}:{go:(section:string)=>void}) {
     catch(e){setError(e instanceof Error?e.message:'Activity could not be deleted.');}
     finally{setActionBusy(false);}
   }
+  if (adding) return <section className="conservation-page"><ActivityForm
+    key={editing?.entityId ?? 'new-activity'} item={editing} initialType={adding}
+    linked={linked} programmes={programmes}
+    close={()=>{setAdding(null);setEditing(null);}} saved={async()=>{await refresh();}}
+  /></section>;
+  if (referenceForm) return <section className="conservation-page"><ProgrammeForm close={()=>setReferenceForm(false)} saved={refresh}/></section>;
   return <section className="conservation-page">
     <header className="focus-heading"><div className="focus-heading-title"><ZeusTekIcon id="project-aware-specialist" size="heading"/><div><span>OCEAN STEWARDSHIP</span><h1>Conservation & AWARE</h1><p>Record observations, debris actions and conservation learning linked to your dives and sites.</p></div></div><button className="focus-primary" onClick={()=>openAdd('marine-life')}><Plus size={16}/> Log activity</button></header>
     {error&&<p role="alert">{error} <button className="focus-secondary" onClick={()=>void refresh()}>Retry activities</button></p>}
@@ -123,8 +130,6 @@ export function ConservationPage({go}:{go:(section:string)=>void}) {
       <section className="focus-card"><h2>Linked sites</h2>{!sites.length&&<p>No sites linked yet.</p>}{sites.map(s=><p key={s.entityId}><RecordLink section="Sites" id={s.entityId} name={s.name}/> · {items.filter(a=>a.siteId===s.entityId).length} activities</p>)}</section>
       <section className="focus-card"><h2>Media & evidence</h2><p>Attachment references stay linked to their original records.</p><button className="focus-secondary" onClick={()=>setFilter('media')}>View activities with media</button>{items.filter(a=>a.attachmentIds?.length).slice(0,3).map(a=><p key={a.entityId}><button className="focus-secondary" onClick={()=>setViewing(a)}>{a.speciesOrSubject||labelOf(a.activityType)} · {a.attachmentIds?.length} linked</button></p>)}</section>
     </div>
-    {adding&&<ActivityForm item={editing} initialType={adding} linked={linked} programmes={programmes} close={()=>{setAdding(null);setEditing(null);}} saved={async()=>{await refresh();}}/>}
-    {referenceForm&&<ProgrammeForm close={()=>setReferenceForm(false)} saved={refresh}/>}
     {viewing&&<div className="focus-modal-bg"><AccessibleDialog label="Conservation activity detail" className="focus-modal record-detail conservation-detail" close={()=>setViewing(null)}>
       <header><div><span className="focus-eyebrow">RECORDED · {viewing.verificationState||'recorded'}</span><h2>{viewing.speciesOrSubject||labelOf(viewing.activityType)}</h2></div><button className="focus-icon" aria-label="Close activity detail" onClick={()=>setViewing(null)}><X/></button></header>
       <p>{labelOf(viewing.activityType)} · {dateText(viewing.occurredAt)}</p><p>{viewing.notes||'No notes recorded.'}</p><p>{viewing.tags?.join(' · ')}</p>
@@ -168,8 +173,8 @@ export function ActivityForm({item,initialType,linked,programmes,close,saved}:{i
   const number=(value:string)=>value===''?null:Number(value);
   const debris=draft.debris??{operation:'survey' as const,count:null,massKg:null,categories:[]};
   const updateDebris=(patch:Partial<NonNullable<ConservationActivity['debris']>>)=>field('debris',{...debris,...patch});
-  async function submit(e:React.FormEvent) {
-    e.preventDefault();setBusy(true);setError('');
+  async function submit() {
+    setBusy(true);setError('');
     try {
       const occurredAt=new Date(localDate).toISOString();
       await saveConservation({...draft,tags:split(tagsText),attachmentIds:split(attachmentText),debris:draft.debris?{...draft.debris,categories:split(categoriesText)}:draft.debris??null,activityType:draft.activityType!,occurredAt});
@@ -178,8 +183,7 @@ export function ActivityForm({item,initialType,linked,programmes,close,saved}:{i
     finally{setBusy(false);}
   }
   const orderedDives=sortConservationDives(linked.dives);
-  return <div className="focus-modal-bg"><AccessibleDialog editable label={item?'Edit conservation activity':'Log conservation activity'} className="focus-modal conservation-form" close={()=>{if(!busy)close();}}>
-    <form onSubmit={e=>void submit(e)}><header><h2>{item?'Edit conservation activity':'Log conservation activity'}</h2><button type="button" className="focus-icon" disabled={busy} aria-label="Close activity editor" data-dialog-close onClick={close}><X/></button></header>
+  return <RecordEditorWorkspace label={item?'Edit conservation activity':'Log conservation activity'} close={close} save={submit} busy={busy} saveLabel="Save activity" saveDisabled={!draft.activityType||!localDate} value={{draft,localDate,tagsText,categoriesText,attachmentText}} trackInteractions={false} contentClassName="conservation-form">
       <fieldset disabled={busy} className="record-fields conservation-fields"><label className="conservation-half"><FieldLabel label="Activity type" help="Choose what is being recorded. Example: Marine-life observation for a grey seal sighting, or Debris survey / removal for recovered fishing line."/><select value={draft.activityType} onChange={e=>field('activityType',e.target.value as ActivityType)}>{ACTIVITY_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
       <label className="conservation-half">Date and time<input type="datetime-local" required value={localDate} onChange={e=>setLocalDate(e.target.value)}/></label>
       <div className="conservation-reference"><SiteReferenceSearch sites={linked.sites} value={draft.siteId} onChange={value=>field('siteId',value)}/></div>
@@ -191,12 +195,13 @@ export function ActivityForm({item,initialType,linked,programmes,close,saved}:{i
       <label className="conservation-half"><FieldLabel label="Captured programme version" help="Links this record to the conservation/AWARE programme and captured version being followed, when applicable."/><select value={draft.programmeVersionId??''} onChange={e=>field('programmeVersionId',e.target.value||null)}><option value="">Not assigned</option>{draft.programmeVersionId&&!programmes.some(p=>p.entityId===draft.programmeVersionId)&&<option value={draft.programmeVersionId}>Unavailable reference retained</option>}{programmes.map(p=><option key={p.entityId} value={p.entityId}>{p.pathwayKey} · {p.versionLabel}</option>)}</select></label>
       <div className="conservation-half conservation-related"><FieldLabel label="Participants / external reference / media" help="Add existing people involved, a reference supplied by an external programme, or IDs of already stored private media. Example external reference: AWARE-2026-184."/><details><summary>Participants, external reference and media links</summary>{linked.people.map(p=><label key={p.entityId}><input type="checkbox" checked={draft.participantPersonIds?.includes(p.entityId)??false} onChange={e=>field('participantPersonIds',e.target.checked?[...new Set([...(draft.participantPersonIds??[]),p.entityId])]:(draft.participantPersonIds??[]).filter(id=>id!==p.entityId))}/>{p.name}</label>)}{draft.participantPersonIds?.filter(id=>!linked.people.some(p=>p.entityId===id)).map(id=><p key={id}>Unavailable participant reference retained: {id}</p>)}<label>External submission reference<input value={draft.externalReference??''} onChange={e=>field('externalReference',e.target.value)}/><small>Metadata only. This does not submit anything remotely.</small></label><label>Existing attachment IDs (comma separated)<input value={attachmentText} onChange={e=>setAttachmentText(e.target.value)}/><small>References only; originals are not copied. New media can be added after saving.</small></label></details></div>
       <label className="conservation-full"><FieldLabel label="Notes" help="Record useful observational context, conditions, behaviour, actions taken, or uncertainty. Do not use notes as a substitute for selecting an existing Site or Dive."/><textarea value={draft.notes??''} onChange={e=>field('notes',e.target.value)}/></label></fieldset>
-      {error&&<p role="alert">{error}</p>}<footer><button type="button" disabled={busy} className="focus-secondary" data-dialog-close onClick={close}>Cancel</button><button type="submit" disabled={busy} className="focus-primary">{busy?'Saving locally…':'Save activity'}</button></footer>
-    </form></AccessibleDialog></div>;
+      {error&&<p role="alert">{error}</p>}
+    </RecordEditorWorkspace>;
 }
 function ProgrammeForm({close,saved}:{close:()=>void;saved:()=>Promise<void>}) {
   const [draft,setDraft]=useState({agency:'',pathwayKey:'',versionLabel:'',sourceCitation:'',label:'',type:'all',target:'1'});
   const [error,setError]=useState('');const [busy,setBusy]=useState(false);
-  async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);try{await captureProgramme({...draft,effectiveFrom:null,requirements:[{key:'recorded-activity-count',label:draft.label,kind:'count',rule:{activityType:draft.type as ActivityType|'all',target:Number(draft.target)}}]});await saved();close();}catch(e){setError(e instanceof Error?e.message:'Reference capture failed.');}finally{setBusy(false);}}
-  return <div className="focus-modal-bg"><AccessibleDialog editable label="Capture programme reference version" className="focus-modal conservation-form" close={()=>{if(!busy)close();}}><form onSubmit={e=>void submit(e)}><header><h2>Capture programme reference version</h2></header><p>Capture a sourced activity-count requirement. Every save creates a new version; existing activity references remain unchanged. Agency completion still requires independent review.</p><fieldset disabled={busy} className="record-fields">{(['agency','pathwayKey','versionLabel','sourceCitation','label'] as const).map((key,i)=><label key={key}>{['Agency / organisation','Programme name','Version label','Source citation','Requirement label'][i]}<input required value={draft[key]} onChange={e=>setDraft({...draft,[key]:e.target.value})}/></label>)}<label>Activity requirement<select value={draft.type} onChange={e=>setDraft({...draft,type:e.target.value})}><option value="all">All activities</option><option value="observations">All observations</option>{ACTIVITY_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><label>Required recorded activities<input type="number" min="1" step="1" required value={draft.target} onChange={e=>setDraft({...draft,target:e.target.value})}/></label></fieldset>{error&&<p role="alert">{error}</p>}<footer><button type="button" disabled={busy} className="focus-secondary" data-dialog-close onClick={close}>Cancel</button><button disabled={busy} className="focus-primary">Capture new version</button></footer></form></AccessibleDialog></div>;
+  async function submit(){setBusy(true);setError('');try{await captureProgramme({...draft,effectiveFrom:null,requirements:[{key:'recorded-activity-count',label:draft.label,kind:'count',rule:{activityType:draft.type as ActivityType|'all',target:Number(draft.target)}}]});await saved();close();}catch(e){setError(e instanceof Error?e.message:'Reference capture failed.');}finally{setBusy(false);}}
+  const invalid=Boolean((['agency','pathwayKey','versionLabel','sourceCitation','label'] as const).some(key=>!draft[key].trim()))||!Number.isInteger(Number(draft.target))||Number(draft.target)<1;
+  return <RecordEditorWorkspace label="Capture programme reference version" close={close} save={submit} busy={busy} saveLabel="Capture new version" saveDisabled={invalid} value={draft} trackInteractions={false} contentClassName="conservation-form"><h2>Capture programme reference version</h2><p>Capture a sourced activity-count requirement. Every save creates a new version; existing activity references remain unchanged. Agency completion still requires independent review.</p><fieldset disabled={busy} className="record-fields">{(['agency','pathwayKey','versionLabel','sourceCitation','label'] as const).map((key,i)=><label key={key}>{['Agency / organisation','Programme name','Version label','Source citation','Requirement label'][i]}<input required value={draft[key]} onChange={e=>setDraft({...draft,[key]:e.target.value})}/></label>)}<label>Activity requirement<select value={draft.type} onChange={e=>setDraft({...draft,type:e.target.value})}><option value="all">All activities</option><option value="observations">All observations</option>{ACTIVITY_TYPES.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><label>Required recorded activities<input type="number" min="1" step="1" required value={draft.target} onChange={e=>setDraft({...draft,target:e.target.value})}/></label></fieldset>{error&&<p role="alert">{error}</p>}</RecordEditorWorkspace>;
 }

@@ -115,6 +115,7 @@ import { SyntheticFixtureReview } from '@/components/workflow/synthetic-fixture-
 import { WorkflowContextStrip } from '@/components/workflow/workflow-context-strip';
 import { WORKFLOW_ROUTES, WORKFLOW_SECTIONS, workflowRoutesForSection } from '@/lib/workflow/workflow-model';
 import { useWorkflowNavigation } from '@/components/shared/use-workflow-navigation';
+import { recordNavigation } from '@/lib/editor/navigation-guard';
 import { DiveCentres } from '@/components/dive-centres/dive-centres';
 import { workflowDestinationUrl } from '@/lib/workflow/workflow-destination';
 import { TechnicalPlanFields } from '@/components/technical-plan-fields';
@@ -491,6 +492,7 @@ export default function DiveApp({ userId }: { userId: string }) {
     setDestinationKey(workflowDestinationUrl(destination));
     setMenuOpen(false);
   });
+  const openNewDive = () => recordNavigation.request(() => { setDraftDive(null); setShowAdd(true); });
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant'});},[active]);
   useEffect(()=>{
     const clientError=()=>appendApplicationDiagnostic('client-error');
@@ -512,6 +514,7 @@ export default function DiveApp({ userId }: { userId: string }) {
     observer.observe(root, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
+  if (showAdd) return <main className="focus-app"><section className="focus-shell"><div className="focus-content"><DiveModal key={draftDive?.entityId ?? draftDive?.originatingPlanId ?? 'new-dive'} item={draftDive} close={() => { setShowAdd(false); setDraftDive(null); }} /></div></section></main>;
   return (
     <main className={`focus-app ${['Logbook','Overview'].includes(active)?'page-has-primary':''}`}>
       {menuOpen && (
@@ -526,20 +529,14 @@ export default function DiveApp({ userId }: { userId: string }) {
           <img src="/zeustek-wordmark.png" alt="ZeusTek Diving" />
           <button
             className="focus-icon menu-close"
+            aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           >
             <X size={17} />
           </button>
         </div>
         <WorkflowNavigation active={active} go={go}/>
-        <div className="focus-private">
-          <ShieldCheck size={16} />
-          <div>
-            <strong>Household cloud</strong>
-            <small>Private profiles · shared gear</small>
-            <AppVersionLink open={() => go('Changelog')} />
-          </div>
-        </div>
+        <div className="focus-version"><AppVersionLink open={() => go('Changelog')} /></div>
       </aside>
       <section className="focus-shell">
         <header className="focus-topbar">
@@ -559,18 +556,18 @@ export default function DiveApp({ userId }: { userId: string }) {
           </div>
           <PlatformHeaderStatus />
           <DiveSyncStatus />
-          <button className="focus-primary" onClick={() => { setDraftDive(null); setShowAdd(true); }}>
+          <button className="focus-primary" onClick={openNewDive}>
             <Plus size={16} /> Log dive
           </button>
         </header>
         <RecordOperationStatus />
         <div className="focus-content"><ScreenTiming key={destinationKey} screen={active}>
           {active === 'Overview' && (
-            <Overview openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />
+              <Overview openLog={openNewDive} go={go} />
           )}
           <Suspense fallback={<output className="focus-copy">Loading workspace…</output>}>
           {active === 'Changelog' && <AppChangelog />}
-          {active === 'Logbook' && <Logbook openLog={() => { setDraftDive(null); setShowAdd(true); }} go={go} />}
+            {active === 'Logbook' && <Logbook openLog={openNewDive} go={go} />}
           {active === 'Equipment' && <Equipment />}{' '}
           {active === 'Loadouts & Gas' && <Loadouts />}{' '}
           {active === 'Cylinders & Gas' && <CylindersGas />}{' '}
@@ -578,7 +575,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Sites' && <SitesV2 go={go} />}{' '}
           {active === 'Dive Site Map' && <SiteMapPage go={go} />}{' '}
           {active === 'Diving Calendar & Bookings' && <DivingCalendarBookings go={go} />}{' '}
-          {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => { setDraftDive(draft); setShowAdd(true); }} /></>}{' '}
+            {active === 'Dive Plans' && <><WorkflowContextStrip from={[{label:'Trips & Expeditions',route:'Trips'},{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Dive Planning Centre" next={[{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts',route:'Loadouts & Gas'},{label:'Cylinders & Gas',route:'Cylinders & Gas'},{label:'Dive Skills',route:'Skills & Currency'},{label:'Technical Diving',route:'Technical Diving'},{label:'Gas Planning',route:'Gas Planning'}]} go={go}/><DivePlanningCentre go={go} convertToDive={(draft) => recordNavigation.request(() => { setDraftDive(draft); setShowAdd(true); })} /></>}{' '}
           {active === 'Gas Planning' && <GasPlanning go={go} />}{' '}
           {active === 'Insights' && <ExperienceAnalytics go={go} />}{' '}
           {active === 'Trips' && <TripsExpeditions go={go} />}{' '}
@@ -618,7 +615,6 @@ export default function DiveApp({ userId }: { userId: string }) {
           </button>
         );})}
       </nav>
-      {showAdd && <DiveModal item={draftDive} close={() => { setShowAdd(false); setDraftDive(null); }} />}
     </main>
   );
 }
@@ -896,7 +892,7 @@ function Overview({
           </button>
         </div>
         <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>{ownerProfile ? personDisplayName(ownerProfile) : 'Set up My Profile'}</h2>{ownerProfile ? <dl><div><dt>Highest recreational award</dt><dd>{displayAwards?.rec.title || 'Unknown'}</dd></div><div><dt>Highest technical</dt><dd>{displayAwards?.tec.title || 'Unknown'}</dd></div><div><dt>Highest professional</dt><dd>{displayAwards?.pro.title || 'Unknown'}</dd></div><div><dt>Profile source</dt><dd>{sourceLabel(displayAwards?.rec.source)}</dd></div></dl> : <p className="focus-copy">Create one owner Person profile to power Overview, planning and summaries. Nothing is created automatically.</p>}<button className="focus-link" onClick={() => go('People')}>{ownerProfile ? 'Open My Profile' : 'Create My Profile'}</button></Card>
-        <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy ? personDisplayName(topBuddy) : 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? topBuddy.totalLinkedDives ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestRecreationalCertification || topBuddy.highestTechnicalCertification || topBuddy.highestProfessionalCertification || topBuddy.highestQualification || 'Unknown'}</dd></div><div><dt>Last dived together</dt><dd>{topBuddy.lastDivedTogether || 'Unknown'}</dd></div>{Boolean(topBuddy.contactVisibility && topBuddy.contactVisibility !== 'private') && <div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div>}</dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links, unless My Profile chooses a preferred buddy.</p>}<button className="focus-link" onClick={() => go('People')}>Open people</button></Card>
+        <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy ? personDisplayName(topBuddy) : 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? topBuddy.totalLinkedDives ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestRecreationalCertification || topBuddy.highestTechnicalCertification || topBuddy.highestProfessionalCertification || topBuddy.highestQualification || 'Unknown'}</dd></div><div><dt>Last dived together</dt><dd>{topBuddy.lastDivedTogether || 'Unknown'}</dd></div>{Boolean(topBuddy.contactVisibility && topBuddy.contactVisibility !== 'private') && <div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div>}</dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links, unless My Profile chooses a preferred buddy.</p>}<button className="focus-link" onClick={() => go('People')}>Open People</button></Card>
       </div>
       <div className="focus-grid">
         <CollapsibleWorkCard id="overview-equipment-status" title="Equipment status" eyebrow="KIT STATUS" status={`${serviceWarningCount} item${serviceWarningCount===1?'':'s'} need attention`} alert={serviceWarningCount?'Service review required':undefined} rowCount={serviceOverviewItems.length} previewLimit={5} onOpenDetail={()=>go('Equipment')}>
@@ -1108,70 +1104,9 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
       if (sort === 'number') return (a.diveNumber ?? Number.MAX_SAFE_INTEGER) - (b.diveNumber ?? Number.MAX_SAFE_INTEGER);
       return `${b.date}T${b.timeIn || ''}`.localeCompare(`${a.date}T${a.timeIn || ''}`);
     });
-  return (
-    <>
-      <Heading
-        eyebrow="PRIVATE CLOUD · ALL DEVICES"
-        title="Dive logbook"
-        copy="Every dive saves to your private account with its source preserved."
-        action={<div className="record-actions logbook-actions"><button className="focus-secondary" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(!toolsOpen)}><Settings2 size={16}/>Tools</button><button className="focus-primary" onClick={openLog}><Plus size={16}/>Log dive</button></div>}
-      />
-      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Dive Computer Imports',route:'Dive Computer Imports'}]} current="Logbook" next={[{label:'Dive Skills',route:'Skills & Currency'},{label:'Albums',route:'Albums'},{label:'Insights',route:'Insights'}]} go={go}/>
-      <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Calculate missing SAC / RMV'}</button>
-          <button className="focus-secondary" onClick={() => void fillMissingTemperatures()}>
-            <CloudRain size={16} /> Fill missing temperatures
-          </button>
-      </div>
-      {gasStatus && <p role="status" className="focus-notice">{gasStatus}</p>}
-      {weatherBackfillStatus && <div className="focus-notice"><CloudRain size={15} /> {weatherBackfillStatus}</div>}
-      <ListToolbar search={search} setSearch={setSearch} filter={modeFilter} setFilter={setModeFilter} filterLabel="Dive mode" filterOptions={[[ 'all', 'All dives' ], [ 'recreational', 'Recreational' ], [ 'recreational-training', 'Recreational training' ], [ 'technical', 'Technical' ], [ 'technical-training', 'Technical training' ]]} sort={sort} setSort={setSort} sortOptions={[[ 'newest', 'Newest first' ], [ 'oldest', 'Oldest first' ], [ 'number', 'Dive number' ], [ 'deepest', 'Deepest first' ]]} />
-      {dives.length ? (
-        <div className="log-list">
-          {visibleDives.map((dive) => (
-            <Card key={dive.entityId} className="log-card clickable-card">
-              <button
-                className="card-hit"
-                onClick={() => { setInitialDiveView('overview'); setViewing(dive); }}
-                aria-label={`View dive at ${dive.site}`}
-              />
-              <div className="log-date">
-                <strong>{new Date(`${dive.date}T12:00:00`).getDate()}</strong>
-                <span>
-                  {new Date(`${dive.date}T12:00:00`)
-                    .toLocaleDateString(undefined, { month: 'short' })
-                    .toUpperCase()}
-                </span>
-                <small className="log-time" aria-label={`Time in ${dive.timeIn || 'not recorded'}, time out ${dive.timeOut || 'not recorded'}`}>{logTimeRange(dive.timeIn,dive.timeOut)}</small>
-              </div>
-              <div>
-                <h3 className="icon-title"><ZeusTekIcon id={resolveDiveIconId(dive)} size={28}/><span>{dive.site}</span></h3>
-                <p>{dive.notes || 'Manual dive log'}</p>
-                <div className="log-metrics">
-                  <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
-                  <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
-                  <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
-                  <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
-                  {normaliseDiveTeamIdentity(dive,ownerPersonId).buddyIds.map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
-                  <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
-                  <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
-                </div>
-              </div>
-            </Card>
-          ))}
-          {!visibleDives.length && <Card className="focus-empty"><Anchor size={28} /><h2>No matching dives</h2><p>Try a different search or filter.</p></Card>}
-        </div>
-      ) : (
-        <Card className="focus-empty">
-          <Anchor size={32} />
-          <h2>No dives logged yet</h2>
-          <p>Start manually or import Oceanic+, PADI files and screenshots.</p>
-          <button className="focus-primary" onClick={openLog}>
-            Log first dive
-          </button>
-        </Card>
-      )}
-      {viewing && (
-        <DiveRecordDetail
+  if (editing) return <DiveModal key={editing.entityId} item={editing} close={() => setEditing(null)} saved={refresh} />;
+  if (viewing) return (
+    <DiveRecordDetail
           key={viewing.entityId}
           dive={viewing}
           initialView={initialDiveView}
@@ -1243,13 +1178,68 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
             ['Notes', viewing.notes],
           ]}
         />
-      )}{' '}
-      {editing && (
-        <DiveModal
-          item={editing}
-          close={() => setEditing(null)}
-          saved={refresh}
-        />
+  );
+  return (
+    <>
+      <Heading
+        eyebrow="PRIVATE CLOUD · ALL DEVICES"
+        title="Dive logbook"
+        copy="Every dive saves to your private account with its source preserved."
+        action={<div className="record-actions logbook-actions"><button className="focus-secondary" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(!toolsOpen)}><Settings2 size={16}/>Tools</button><button className="focus-primary" onClick={openLog}><Plus size={16}/>Log dive</button></div>}
+      />
+      <WorkflowContextStrip from={[{label:'Dive Planning Centre',route:'Dive Plans'},{label:'Dive Computer Imports',route:'Dive Computer Imports'}]} current="Logbook" next={[{label:'Dive Skills',route:'Skills & Currency'},{label:'Albums',route:'Albums'},{label:'Insights',route:'Insights'}]} go={go}/>
+      <div className="logbook-tools" hidden={!toolsOpen}><button className="focus-secondary" disabled={gasBusy} onClick={()=>void fillMissingGas()}><Gauge size={16}/>{gasBusy?'Calculating…':'Calculate missing SAC / RMV'}</button>
+          <button className="focus-secondary" onClick={() => void fillMissingTemperatures()}>
+            <CloudRain size={16} /> Fill missing temperatures
+          </button>
+      </div>
+      {gasStatus && <p role="status" className="focus-notice">{gasStatus}</p>}
+      {weatherBackfillStatus && <div className="focus-notice"><CloudRain size={15} /> {weatherBackfillStatus}</div>}
+      <ListToolbar search={search} setSearch={setSearch} filter={modeFilter} setFilter={setModeFilter} filterLabel="Dive mode" filterOptions={[[ 'all', 'All dives' ], [ 'recreational', 'Recreational' ], [ 'recreational-training', 'Recreational training' ], [ 'technical', 'Technical' ], [ 'technical-training', 'Technical training' ]]} sort={sort} setSort={setSort} sortOptions={[[ 'newest', 'Newest first' ], [ 'oldest', 'Oldest first' ], [ 'number', 'Dive number' ], [ 'deepest', 'Deepest first' ]]} />
+      {dives.length ? (
+        <div className="log-list">
+          {visibleDives.map((dive) => (
+            <Card key={dive.entityId} className="log-card clickable-card">
+              <button
+                className="card-hit"
+                onClick={() => { setInitialDiveView('overview'); setViewing(dive); }}
+                aria-label={`View dive at ${dive.site}`}
+              />
+              <div className="log-date">
+                <strong>{new Date(`${dive.date}T12:00:00`).getDate()}</strong>
+                <span>
+                  {new Date(`${dive.date}T12:00:00`)
+                    .toLocaleDateString(undefined, { month: 'short' })
+                    .toUpperCase()}
+                </span>
+                <small className="log-time" aria-label={`Time in ${dive.timeIn || 'not recorded'}, time out ${dive.timeOut || 'not recorded'}`}>{logTimeRange(dive.timeIn,dive.timeOut)}</small>
+              </div>
+              <div>
+                <h3 className="icon-title"><ZeusTekIcon id={resolveDiveIconId(dive)} size={28}/><span>{dive.site}</span></h3>
+                <p>{dive.notes || 'Manual dive log'}</p>
+                <div className="log-metrics">
+                  <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
+                  <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
+                  <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
+                  <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
+                  {normaliseDiveTeamIdentity(dive,ownerPersonId).buddyIds.map(id=>{const buddy=people.find(person=>person.entityId===id);return <span className="log-metric buddy-initials" key={id} title={buddy?.name??'Unavailable linked buddy'}><ZeusTekIcon id="buddy-team" size={22}/>{buddy?buddyInitials(buddy.displayName||buddy.name):'?'}</span>;})}
+                  <span className="log-metric"><ZeusTekIcon id={resolveDiveIconId(dive)} size="chip"/>{dive.diveMode === 'technical-training' ? 'TEC TRAINING' : dive.diveMode === 'recreational-training' ? 'REC TRAINING' : dive.isTechnicalDive || dive.diveMode === 'technical' ? 'TEC' : 'REC'}</span>
+                  <div className="completeness">{Object.entries(diveCompleteness(dive)).map(([label, status]) => {const Icon = label === 'Weather' ? CloudSun : label === 'Gear' ? Wrench : Cylinder; const text = `${label}: ${status === 'missing' ? 'not recorded' : status === 'partial' ? 'partial data' : 'recorded'}`;return <span key={label} className={`data-status ${status}`} title={text} aria-label={text} role="img"><Icon size={19} aria-hidden="true"/></span>;})}</div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {!visibleDives.length && <Card className="focus-empty"><Anchor size={28} /><h2>No matching dives</h2><p>Try a different search or filter.</p></Card>}
+        </div>
+      ) : (
+        <Card className="focus-empty">
+          <Anchor size={32} />
+          <h2>No dives logged yet</h2>
+          <p>Start manually or import Oceanic+, PADI files and screenshots.</p>
+          <button className="focus-primary" onClick={openLog}>
+            Log first dive
+          </button>
+        </Card>
       )}
     </>
   );
@@ -2813,6 +2803,13 @@ function SitesV2({ go }: { go: (next: string) => void }) {
     setMapCoordinates({ latitude, longitude });
     setAdding(true);
   }, []);
+  if (adding) return <div className="t14-record-domain t14-sites"><SiteV2Form
+    key={editing?.entityId ?? 'new-site'}
+    item={editing}
+    initialCoordinates={mapCoordinates}
+    close={() => { setAdding(false); setEditing(null); setMapCoordinates(null); }}
+    saved={refresh}
+  /></div>;
   return (
     <div className="t14-record-domain t14-sites">
       <Heading
@@ -2886,20 +2883,6 @@ function SitesV2({ go }: { go: (next: string) => void }) {
           keeps its source link
         </span>
       </Card>
-      {adding && (
-        <RevealOnMount>
-          <SiteV2Form
-            item={editing}
-            initialCoordinates={mapCoordinates}
-            close={() => {
-              setAdding(false);
-              setEditing(null);
-              setMapCoordinates(null);
-            }}
-            saved={refresh}
-          />
-        </RevealOnMount>
-      )}
       <div className="site-list">
         {matchingSites.slice(0, siteLimit).map((item) => (
           <Card key={item.entityId} className="site-card clickable-card">
@@ -3205,7 +3188,7 @@ function SiteV2Form({
     close();
   }
   return (
-    <div className="focus-modal-bg"><AccessibleDialog editable label={item ? "Edit site" : "New site"} close={close} className="focus-modal record-form site-form">
+    <RecordEditorWorkspace label={item ? 'Edit site' : 'New site'} close={close} value={{value,siteActivities,diveMapImage,mapUrl}} trackInteractions={false} busy={mapBusy} save={submit} saveLabel="Save site" saveDisabled={!value.name.trim()} contentClassName="record-form site-form">
       <div className="record-form-head">
         <div>
           <span className="focus-eyebrow">
@@ -3246,19 +3229,7 @@ function SiteV2Form({
             <option value="technical">Technical</option>
           </select>
         </label><label className="">Maximum depth (m)<input type="number" value={value.maxDepth} onChange={e=>field('maxDepth',e.target.value)}/></label><fieldset className="record-wide"><legend>DIVE SETTING & ACTIVITY</legend><DiveSettingActivity values={siteActivities} onChange={setSiteActivities}/></fieldset></div></section><section className="site-entry-section"><h3>3 · Access and facilities</h3><div className="site-entry-grid"><label className="">Access and directions<textarea value={value.access} onChange={e=>field('access',e.target.value)}/></label><label className="">Entry and exit<textarea value={value.entryExit} onChange={e=>field('entryExit',e.target.value)}/></label><label className="">Parking<input type="text" value={value.parking} onChange={e=>field('parking',e.target.value)}/></label><label className="">Amenities<input type="text" value={value.amenities} onChange={e=>field('amenities',e.target.value)}/></label><label className="">Air / Nitrox<input type="text" value={value.airFill} onChange={e=>field('airFill',e.target.value)}/></label><label className="">Mobile signal<input type="text" value={value.mobileSignal} onChange={e=>field('mobileSignal',e.target.value)}/></label><label className="">Accommodation<input type="text" value={value.accommodation} onChange={e=>field('accommodation',e.target.value)}/></label><label className="">Nearby food / cafe / pub<input type="text" value={value.nearbyFood} onChange={e=>field('nearbyFood',e.target.value)}/></label><label className="site-field-wide">Hazards<textarea value={value.hazards} onChange={e=>field('hazards',e.target.value)}/></label></div></section><section className="site-entry-section"><h3>4 · Contact and opening times</h3><div className="site-entry-grid"><label className="">Website<input type="url" value={value.website} onChange={e=>field('website',e.target.value)}/></label><label className="">Telephone<input type="tel" value={value.telephone} onChange={e=>field('telephone',e.target.value)}/></label><label className="">Email<input type="email" value={value.email} onChange={e=>field('email',e.target.value)}/></label><label className="site-field-wide">Opening times<textarea value={value.openingTimes} onChange={e=>field('openingTimes',e.target.value)}/></label></div></section><section className="site-entry-section"><h3>5 · Site knowledge and notes</h3><div className="site-entry-grid"><label className="site-field-wide">Description<textarea value={value.description} onChange={e=>field('description',e.target.value)}/></label><label className="">Diving notes / profile<textarea value={value.diving} onChange={e=>field('diving',e.target.value)}/></label><label className="">Biodiversity<textarea value={value.biodiversity} onChange={e=>field('biodiversity',e.target.value)}/></label><label className="">Tides and currents<textarea value={value.tides} onChange={e=>field('tides',e.target.value)}/></label><label className="">History<textarea value={value.history} onChange={e=>field('history',e.target.value)}/></label><label className="site-field-wide">Personal notes<textarea value={value.notes} onChange={e=>field('notes',e.target.value)}/></label></div></section><section className="site-entry-section"><h3>6 · Dive map</h3><div className="site-entry-grid"><section className="record-wide site-map-image"><h3>Dive map image</h3>{diveMapImage && <><CardImageView image={diveMapImage} label="Dive site map"/><button className="focus-secondary" onClick={()=>setDiveMapImage(null)}>Remove map</button></>}<label>Upload map<input type="file" accept="image/jpeg,image/png,image/webp" disabled={mapBusy} onChange={e=>{const file=e.target.files?.[0];if(file)void importMap(file);}}/></label><label>Map image URL<input type="url" value={mapUrl} onChange={e=>setMapUrl(e.target.value)}/></label><button className="focus-secondary" disabled={mapBusy || !mapUrl} onClick={async()=>{setMapBusy(true);try{const url=new URL(mapUrl);if(url.protocol!=='https:')throw new Error('Use an HTTPS image URL.');const response=await fetch(`/api/image-proxy?url=${encodeURIComponent(url.href)}`);if(!response.ok)throw new Error('Image import failed. Upload the image file instead.');const blob=await response.blob();await importMap(new File([blob],'dive-map',{type:blob.type}));}catch(error){setMapMessage(String(error));}finally{setMapBusy(false);}}}>Import map URL</button>{mapMessage&&<p role="status">{mapMessage}</p>}</section></div></section><section className="site-entry-section"><h3>7 · Preferences</h3><div className="site-entry-grid"><label className="record-check"><input type="checkbox" checked={value.showWeather} onChange={e=>field('showWeather',e.target.checked)}/>Show a weather card for this site</label><label className="record-check"><input type="checkbox" checked={value.favourite} onChange={e=>field('favourite',e.target.checked)}/>Favourite site</label></div></section></div>
-      <footer>
-        <button className="focus-secondary" data-dialog-close onClick={close}>
-          Cancel
-        </button>
-        <button
-          className="focus-primary"
-          disabled={!value.name.trim() || mapBusy}
-          onClick={() => void submit()}
-        >
-          Save site
-        </button>
-      </footer>
-    </AccessibleDialog></div>
+    </RecordEditorWorkspace>
   );
 }
 
@@ -4479,7 +4450,16 @@ function DiveMediaLibrary({ go }: { go: (next: string) => void }) {
   const [viewing, setViewing] = useState<Stored<DiveMediaRecord> | null>(null);
   const [author, setAuthor] = useState(''); const [topic, setTopic] = useState('');
   const [items, setItems] = useState<Array<Stored<DiveMediaRecord>>>([]); const [editing, setEditing] = useState<Stored<DiveMediaRecord> | null>(null); const [adding, setAdding] = useState(false); const [status, setStatus] = useState('all'); const [message, setMessage] = useState('');
-  const refresh = useCallback(() => { void listDiveMedia().then(setItems); }, []); useRecordRefresh(refresh);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const refresh = useCallback(() => {
+    void (async () => {
+      try { setItems(await listDiveMedia()); setLoadError(''); }
+      catch { setLoadError('Dive Bibliography could not be loaded. Try again.'); }
+      finally { setLoaded(true); }
+    })();
+  }, []);
+  useRecordRefresh(refresh);
   async function exportAiContext() {
     const [certifications, equipment, dives, trips, training, media] = await Promise.all([listCertifications(), listEquipment(), listDives(), listDiveTrips(), listTrainingProgress(), listDiveMedia()]);
     const context = {
@@ -4519,8 +4499,9 @@ function DiveMediaLibrary({ go }: { go: (next: string) => void }) {
       });
     }catch(error){setMessage(error instanceof Error?error.message:'Media import failed.');}
   }
+  if (adding) return <DiveMediaForm key={editing?.entityId ?? 'new-media'} item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/>;
   const visible = items.filter((item) => (status === 'all' || item.status === status) && (!author || item.creator === author) && (!topic || item.topics.includes(topic)));
-  return <><Heading eyebrow="READ · WATCH · LISTEN · LEARN" title="Dive Bibliography" copy="Track diving books, videos, podcasts, articles, courses and documentaries you have consumed or want to explore." action={<div className="record-actions"><button className="focus-secondary" onClick={() => go('Dive Knowledge')}>Dive Knowledge</button><button className="focus-secondary" onClick={() => void diveOperation('export-media','Exporting media context…',exportAiContext)}><Download size={15}/> Export for AI</button><label className="focus-secondary file-action"><Upload size={15}/> Import recommendations<input type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importRecommendations(file); event.target.value = ''; }}/></label><button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add media</button></div>}/>{message && <div className="focus-notice"><BookMarked size={15}/>{message}</div>}<Card className="media-status-filter"><button className={status === 'all' ? 'active' : ''} onClick={() => setStatus('all')}>All <b>{items.length}</b></button><button className={status === 'planned' ? 'active' : ''} onClick={() => setStatus('planned')}>Want to consume <b>{items.filter((item) => item.status === 'planned').length}</b></button><button className={status === 'in-progress' ? 'active' : ''} onClick={() => setStatus('in-progress')}>In progress <b>{items.filter((item) => item.status === 'in-progress').length}</b></button><button className={status === 'consumed' ? 'active' : ''} onClick={() => setStatus('consumed')}>Consumed <b>{items.filter((item) => item.status === 'consumed').length}</b></button></Card>{adding && <RevealOnMount><DiveMediaForm item={editing} close={() => { setAdding(false); setEditing(null); }} saved={refresh}/></RevealOnMount>}{(author || topic) && <div className="focus-notice">{author && `Author: ${author}`} {topic && `Topic: ${topic}`}<button className="focus-secondary" onClick={() => {setAuthor('');setTopic('');}}>Clear filters</button></div>}{viewing && <RecordDetail title={viewing.title} eyebrow={`${viewing.format} · ${viewing.status}`} ownerKind="dive-media" ownerId={viewing.entityId} close={() => setViewing(null)} edit={() => {setEditing(viewing);setViewing(null);setAdding(true);}} rows={[["Author",viewing.creator],["Status",viewing.status],["Priority",viewing.priority ?? 'normal'],["Knowledge growth / 10",viewing.knowledgeGrowth ?? 'Not rated'],["Interest / 10",viewing.interestScore ?? 'Not rated'],["Topics",viewing.topics.join(', ')],["Notes",viewing.notes],["Recommended for",viewing.recommendedFor]]} links={[["Open media",viewing.url],...(viewing.sources ?? []).map(source => [source.source,source.link] as [string,string])]} />}<div className="media-library-grid">{visible.map((item) => <MediaLibraryCard key={item.entityId} item={item} setViewing={setViewing} setEditing={setEditing} setAdding={setAdding} setAuthor={setAuthor} setTopic={setTopic} refresh={refresh}/>)}</div>{!visible.length && <Card className="focus-empty"><BookMarked size={32}/><h2>No media in this list</h2><p>Add something you want to read, watch or listen to—or import AI recommendations.</p></Card>}</>;
+  return <><Heading eyebrow="READ · WATCH · LISTEN · LEARN" title="Dive Bibliography" copy="Track diving books, videos, podcasts, articles, courses and documentaries you have consumed or want to explore." action={<div className="record-actions"><button className="focus-secondary" onClick={() => go('Dive Knowledge')}>Dive Knowledge</button><button className="focus-secondary" onClick={() => void diveOperation('export-media','Exporting media context…',exportAiContext)}><Download size={15}/> Export for AI</button><label className="focus-secondary file-action"><Upload size={15}/> Import recommendations<input type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importRecommendations(file); event.target.value = ''; }}/></label><button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> Add media</button></div>}/>{message && <div className="focus-notice"><BookMarked size={15}/>{message}</div>}<Card className="media-status-filter"><button className={status === 'all' ? 'active' : ''} onClick={() => setStatus('all')}>All <b>{items.length}</b></button><button className={status === 'planned' ? 'active' : ''} onClick={() => setStatus('planned')}>Want to consume <b>{items.filter((item) => item.status === 'planned').length}</b></button><button className={status === 'in-progress' ? 'active' : ''} onClick={() => setStatus('in-progress')}>In progress <b>{items.filter((item) => item.status === 'in-progress').length}</b></button><button className={status === 'consumed' ? 'active' : ''} onClick={() => setStatus('consumed')}>Consumed <b>{items.filter((item) => item.status === 'consumed').length}</b></button></Card>{(author || topic) && <div className="focus-notice">{author && `Author: ${author}`} {topic && `Topic: ${topic}`}<button className="focus-secondary" onClick={() => {setAuthor('');setTopic('');}}>Clear filters</button></div>}{viewing && <RecordDetail title={viewing.title} eyebrow={`${viewing.format} · ${viewing.status}`} ownerKind="dive-media" ownerId={viewing.entityId} close={() => setViewing(null)} edit={() => {setEditing(viewing);setViewing(null);setAdding(true);}} rows={[["Author",viewing.creator],["Status",viewing.status],["Priority",viewing.priority ?? 'normal'],["Knowledge growth / 10",viewing.knowledgeGrowth ?? 'Not rated'],["Interest / 10",viewing.interestScore ?? 'Not rated'],["Topics",viewing.topics.join(', ')],["Notes",viewing.notes],["Recommended for",viewing.recommendedFor]]} links={[["Open media",viewing.url],...(viewing.sources ?? []).map(source => [source.source,source.link] as [string,string])]} />}<div className="media-library-grid">{visible.map((item) => <MediaLibraryCard key={item.entityId} item={item} setViewing={setViewing} setEditing={setEditing} setAdding={setAdding} setAuthor={setAuthor} setTopic={setTopic} refresh={refresh}/>)}</div>{!loaded ? <output aria-live="polite"><Card className="focus-empty"><BookMarked size={32}/><h2>Loading Dive Bibliography…</h2></Card></output> : loadError ? <div role="alert"><Card className="focus-empty"><BookMarked size={32}/><h2>Unable to load Dive Bibliography</h2><p>{loadError}</p><button className="focus-secondary" onClick={refresh}>Try again</button></Card></div> : !visible.length && <Card className="focus-empty"><BookMarked size={32}/><h2>No media in this list</h2><p>Add something you want to read, watch or listen to—or import AI recommendations.</p></Card>}</>;
 }
 
 function MediaLibraryCard({item,setViewing,setEditing,setAdding,setAuthor,setTopic,refresh}:{item:Stored<DiveMediaRecord>;setViewing:(item:Stored<DiveMediaRecord>)=>void;setEditing:(item:Stored<DiveMediaRecord>)=>void;setAdding:(value:boolean)=>void;setAuthor:(value:string)=>void;setTopic:(value:string)=>void;refresh:()=>void}) {
@@ -4536,7 +4517,7 @@ function DiveMediaForm({ item, close, saved }: { item: Stored<DiveMediaRecord> |
   const [interestScore,setInterestScore]=useState(item?.interestScore?.toString() ?? '');
   const [title, setTitle] = useState(item?.title ?? ''); const [format, setFormat] = useState<DiveMediaRecord['format']>(item?.format ?? 'book'); const [creator, setCreator] = useState(item?.creator ?? ''); const [url, setUrl] = useState(item?.url ?? ''); const [status, setStatus] = useState<DiveMediaRecord['status']>(item?.status ?? 'planned'); const [rating, setRating] = useState(item?.rating?.toString() ?? ''); const [topics, setTopics] = useState(item?.topics.join(', ') ?? ''); const [notes, setNotes] = useState(item?.notes ?? ''); const [recommendedFor, setRecommendedFor] = useState(item?.recommendedFor ?? '');
   async function submit() { if (!title.trim()) return; const cleanUrl=externalUrl(url); const thumbnailUrl=item?.url===cleanUrl ? item?.thumbnailUrl ?? '' : await mediaPreviewImage(cleanUrl); await saveDiveMedia({ ...(item ? { entityId: item.entityId } : {}), ...item, title: title.trim(), thumbnailUrl, format, priority, knowledgeGrowth: knowledgeGrowth === '' ? null : Number(knowledgeGrowth), interestScore: interestScore === '' ? null : Number(interestScore), creator: creator.trim(), url: cleanUrl, status, rating: rating ? Math.min(5, Math.max(1, Number(rating))) : null, topics: topics.split(',').map((topic) => topic.trim()).filter(Boolean), notes: notes.trim(), recommendedFor: recommendedFor.trim() }); saved(); close(); }
-  return <RecordEditorWorkspace label={item?'Edit bibliography item':'New bibliography item'} close={close} save={submit} saveDisabled={!title.trim()} contentClassName="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT DIVE MEDIA' : 'NEW DIVE MEDIA'}</span><h3>{item ? 'Update media item' : 'Add something to consume'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Title<input value={title} onChange={(event) => setTitle(event.target.value)}/></label><label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DiveMediaRecord['format'])}><option value="book">Book</option><option value="video">Video</option><option value="podcast">Podcast</option><option value="article">Article</option><option value="documentary">Documentary</option><option value="course">Online course</option><option value="other">Other</option></select></label><label>Reading priority<select value={priority} onChange={event => setPriority(event.target.value as NonNullable<DiveMediaRecord['priority']>)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Knowledge growth / 10<select value={knowledgeGrowth} onChange={event => setKnowledgeGrowth(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Interest / 10<select value={interestScore} onChange={event => setInterestScore(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Creator / publisher<input value={creator} onChange={(event) => setCreator(event.target.value)}/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as DiveMediaRecord['status'])}><option value="planned">Want to consume</option><option value="in-progress">In progress</option><option value="consumed">Consumed</option></select></label><label>Rating<select value={rating} onChange={(event) => setRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className="record-wide">URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)}/></label><label className="record-wide">Topics (comma separated)<input value={topics} onChange={(event) => setTopics(event.target.value)} placeholder="decompression, wrecks, buoyancy"/></label><label className="record-wide">Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)}/></label><label className="record-wide">Recommended for / knowledge gap<textarea value={recommendedFor} onChange={(event) => setRecommendedFor(event.target.value)}/></label></div></RecordEditorWorkspace>;
+  return <RecordEditorWorkspace label={item?'Edit bibliography item':'New bibliography item'} close={close} save={submit} saveDisabled={!title.trim()} contentClassName="record-form"><div className="record-form-head"><div><span className="focus-eyebrow">{item ? 'EDIT BIBLIOGRAPHY ITEM' : 'NEW BIBLIOGRAPHY ITEM'}</span><h3>{item ? 'Update bibliography item' : 'Add bibliography item'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X size={17}/></button></div><div className="record-fields"><label>Title<input value={title} onChange={(event) => setTitle(event.target.value)}/></label><label>Format<select value={format} onChange={(event) => setFormat(event.target.value as DiveMediaRecord['format'])}><option value="book">Book</option><option value="video">Video</option><option value="podcast">Podcast</option><option value="article">Article</option><option value="documentary">Documentary</option><option value="course">Online course</option><option value="other">Other</option></select></label><label>Reading priority<select value={priority} onChange={event => setPriority(event.target.value as NonNullable<DiveMediaRecord['priority']>)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Knowledge growth / 10<select value={knowledgeGrowth} onChange={event => setKnowledgeGrowth(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Interest / 10<select value={interestScore} onChange={event => setInterestScore(event.target.value)}><option value="">Not rated</option>{Array.from({length:11},(_,i)=><option key={i} value={i}>{i} / 10</option>)}</select></label><label>Creator / publisher<input value={creator} onChange={(event) => setCreator(event.target.value)}/></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value as DiveMediaRecord['status'])}><option value="planned">Want to consume</option><option value="in-progress">In progress</option><option value="consumed">Consumed</option></select></label><label>Rating<select value={rating} onChange={(event) => setRating(event.target.value)}><option value="">Not rated</option>{[1,2,3,4,5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className="record-wide">URL<input type="url" value={url} onChange={(event) => setUrl(event.target.value)}/></label><label className="record-wide">Topics (comma separated)<input value={topics} onChange={(event) => setTopics(event.target.value)} placeholder="decompression, wrecks, buoyancy"/></label><label className="record-wide">Notes<textarea value={notes} onChange={(event) => setNotes(event.target.value)}/></label><label className="record-wide">Recommended for / knowledge gap<textarea value={recommendedFor} onChange={(event) => setRecommendedFor(event.target.value)}/></label></div></RecordEditorWorkspace>;
 }
 
 function DiverSummaryExport(){
@@ -5057,6 +5038,7 @@ function DiveModal({
   async function submit() {
     if (!site.trim() || !diveNumber || !timeIn || !timeOut) return;
     setSaving(true);
+    try {
     let resolvedSiteId = siteId;
     let siteSource: DiveRecord['siteSource'] = 'manual';
     const selectedSite = sites.find((candidate) => candidate.entityId === siteId);
@@ -5226,22 +5208,12 @@ function DiveModal({
       hireGear,
     });
     await renumberDivesByChronology(diveNumberStart);
-    setSaving(false);
     saved?.();
     close();
+    } finally { setSaving(false); }
   }
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog editable label={item ? "Edit dive" : "Log a dive"} close={close} className="focus-modal dive-log-modal">
-        <header>
-          <div>
-            <span className="focus-eyebrow">PRIVATE CLOUD ENTRY</span>
-            <h2 id="dive-title">Log a dive</h2>
-          </div>
-          <button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}>
-            <X size={18} />
-          </button>
-        </header>
+    <RecordEditorWorkspace label={item ? 'Edit dive' : 'Log a dive'} close={close} save={submit} busy={saving} saveLabel="Save dive" saveDisabled={!site.trim() || !diveNumber || !timeIn || !timeOut} value={{cylinders,decoStops,diveTeamIds,buddyIds,diveLeaderId,hiredEquipment,equipmentIds,equipmentSetIds,weather,airTemp,surfaceTemp,minimumTemp,windSpeed,waveHeight,visibility}} contentClassName="dive-log-modal">
         <EditorSections selector=".dive-form-section"/>
         <section className="dive-form-section">
           <span className="focus-eyebrow">DIVE IDENTITY & SITE</span>
@@ -5509,17 +5481,6 @@ function DiveModal({
             <label className="record-wide">Verification link / hash<input value={verificationLink} onChange={(event) => setVerificationLink(event.target.value)} /></label>
           </div>
         </details>
-        <footer>
-          <button className="focus-secondary" data-dialog-close onClick={close}>Cancel</button>
-          <button
-            className="focus-primary"
-            disabled={!site.trim() || !diveNumber || !timeIn || !timeOut || saving}
-            onClick={() => void submit()}
-          >
-            {saving ? 'Saving…' : 'Save dive'}
-          </button>
-        </footer>
-      </AccessibleDialog>
-    </div>
+    </RecordEditorWorkspace>
   );
 }
