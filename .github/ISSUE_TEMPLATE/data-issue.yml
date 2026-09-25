@@ -1,0 +1,71 @@
+name: Import, export or data issue
+description: Report problems importing, exporting, backing up, restoring, syncing, or validating ZeusTek data.
+title: "[DATA] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for data-flow problems. Do not upload secrets or unredacted sensitive files to a public issue.
+  - type: dropdown
+    id: operation
+    attributes:
+      label: Operation
+      options:
+        - Import
+        - Export
+        - Backup
+        - Restore
+        - Sync
+        - Dive computer import
+        - JSON / schema validation
+        - Data migration / compatibility
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App / Sites version
+      placeholder: app 1.0.57 / Sites129
+  - type: dropdown
+    id: integrity
+    attributes:
+      label: Existing data impact
+      options:
+        - No saved data changed
+        - Data may be missing from the operation
+        - Existing records appear modified
+        - Duplicate records were created
+        - Unable to determine
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: safe_sample
+    attributes:
+      label: Redacted sample / schema details
+      description: Include only a minimal safe sample or error. Do not include secrets or sensitive personal data.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I removed passwords, tokens, API keys, medical data, and other secrets.
+          required: true

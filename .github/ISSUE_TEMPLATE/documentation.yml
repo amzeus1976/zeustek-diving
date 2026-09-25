@@ -1,0 +1,43 @@
+name: Documentation or content correction
+description: Report incorrect, outdated, confusing, or missing wording/help content.
+title: "[DOCS] "
+body:
+  - type: textarea
+    id: location
+    attributes:
+      label: Where is the content?
+      placeholder: Page, card, tooltip, help text, documentation file...
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current wording / problem
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction
+      description: Include the preferred wording or factual correction if known.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type
+      options:
+        - Incorrect fact
+        - Outdated information
+        - Typo / grammar
+        - Ambiguous wording
+        - Missing help / explanation
+        - Terminology inconsistency
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source / evidence
+      description: If this is factual, link or describe the authoritative source where possible.
