@@ -49,4 +49,11 @@ describe('T05 shell and compatibility integration', () => {
     expect(dashboard).toContain('items.filter((item) => !isCylinderEquipment(item))');
     expect(dashboard).not.toContain('placeholder="12L steel cylinder"');
   });
+  it('edits reusable Loadouts in the route workspace without changing the canonical store', () => {
+    const source = read('components/loadouts-gas.tsx');
+    expect(source).toContain('<RecordEditorWorkspace label={item ? `Edit ${item.name}` : \'Create reusable loadout\'}');
+    expect(source).not.toContain('<AccessibleDialog editable label={item ? `Edit ${item.name}` : \'Create reusable loadout\'}');
+    expect(source).toContain('<RecordEditorWorkspace label={item ? `Edit ${item.name}` : \'Add cylinder\'}');
+    expect(source).not.toContain('<AccessibleDialog editable label={item ? `Edit ${item.name}` : \'Add cylinder\'}');
+  });
 });
