@@ -1,0 +1,55 @@
+name: UX, accessibility or design feedback
+description: Suggest a usability, accessibility, navigation, layout, or visual improvement.
+title: "[UX] "
+body:
+  - type: textarea
+    id: area
+    attributes:
+      label: Where is the issue?
+      placeholder: People editor, mobile navigation, Gas Planning card...
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What is awkward, unclear, or difficult?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: What would be better?
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Accessibility
+        - Navigation / information architecture
+        - Mobile / responsive layout
+        - Desktop layout
+        - Wording / terminology
+        - Visual consistency
+        - Form usability
+        - Empty / loading / error states
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshot, mock-up, or example
+  - type: input
+    id: viewport
+    attributes:
+      label: Device / viewport
+      placeholder: 390 px iPhone, 1440 px desktop, etc.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Scope
+      options:
+        - label: This is primarily UX/design/accessibility feedback rather than a new feature.
+          required: true
