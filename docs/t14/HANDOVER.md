@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Current urgent hotfix — cylinder visual-to-hydro display and ID #02 (2026-09-25)
+
+The accepted live baseline is app1.0.58 / Sites130 at source `d581ebfd9e6ca475c8256f7e0dd84952de2727fc`. The isolated `hotfix/cylinder-inspection-schedule` candidate is app1.0.63; see `cylinder-inspection-id-hotfix-evidence.md` for the exact checks, owner-data baseline, bounded owner-approved protected-file touchpoint and release/rollback steps. The owner chose to keep #03 and assign unused #02 to the next new cylinder; #04 was added by the owner during investigation and must remain untouched. No production release has yet occurred. Preserve Stage 9 work at local commit `aa92636` on `t14/issue-53-stage9`, plus saved but undeployed Sites134 and PR #65. Resume Stage 9 after this hotfix is published and accepted.
+
 ## Current checkpoint — Overview layout repair candidate (2026-09-25)
 
 Current accepted production is app1.0.57 / Sites129, deployment `appgdep_6ab574feec2c8191b6cd9045090bb1d3`, source `6e4b0677142ffb8b20f0b524f410ed5118781d29`. The `t14/master-forward-build` checkout preserves the accepted application source and merges current GitHub main's documentation and issue-form changes. The pending app1.0.58 change repairs the Overview cards at intermediate desktop widths and separates the Next Dive note from its action. See `overview-layout-bugfix-evidence.md` for the current verification and release steps. No owner records or protected calculations were edited. The older checkpoints below are historical.
