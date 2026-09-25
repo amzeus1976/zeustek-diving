@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.67',
+    date: '2026-09-25',
+    title: 'Professional evidence and water-skills progress',
+    changes: [
+      'Versioned professional requirements can evaluate exact linked evidence while unsupported checks remain for review.',
+      'Water Skills & Stamina records every attempt and tracks five exercise scores toward 15 of 25 points without declaring a PADI course pass.',
+    ],
+  },
+  {
     version: '1.0.66',
     date: '2026-09-25',
     title: 'Stage 9 record editor safeguards',

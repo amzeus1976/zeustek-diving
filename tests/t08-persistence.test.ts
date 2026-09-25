@@ -60,6 +60,13 @@ const pathwayInput = {
   notes: null,
 };
 describe('T08 canonical offline history and reference safety', () => {
+  it('rejects unsupported new assessment rules without altering old snapshots', async () => {
+    for (const rule of [{}, { source: 'professional-evidence', evidenceType: 'workshop' }, { source: 'canonical-skill', skillKey: 'missing', minCompetence: 'competent' }]) {
+      await expect(captureProfessionalRequirementSet({ ...snapshot, versionLabel: `invalid-${JSON.stringify(rule)}`,
+        requirements: [{ key: 'assessment', label: 'Synthetic assessment', kind: 'assessment', rule }] })).rejects.toThrow();
+    }
+    expect(await listProfessionalRequirementSets()).toHaveLength(0);
+  });
   it('warns about a duplicate pathway rather than replacing existing history',async()=>{
     const original=await saveProfessionalPathway(pathwayInput);
     await expect(saveProfessionalPathway({...pathwayInput,displayName:'Changed'})).rejects.toThrow('already exists');
@@ -74,6 +81,9 @@ describe('T08 canonical offline history and reference safety', () => {
     expect(repeated.id).toBe(newLink.id);expect(await listProfessionalEvidence()).toHaveLength(2);
     expect((await listProfessionalEvidence()).find(item=>item.entityId===original.id)).toMatchObject({requirementSetId:'v1',requirementKey:'old'});
     expect((await listProfessionalEvidence()).find(item=>item.entityId===newLink.id)).toMatchObject({requirementSetId:'v2',requirementKey:'new',payload:{sourceKind:'professional-evidence',sourceId:original.id}});
+    await expect(deleteProfessionalEvidence(original.id)).rejects.toThrow('linked');
+    await deleteProfessionalEvidence(newLink.id);
+    await deleteProfessionalEvidence(original.id);
   });
   it('uses the shared immutable capture guard and appends standards versions without overwriting history', async () => {
     const first = await captureProfessionalRequirementSet(snapshot);

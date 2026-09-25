@@ -5,6 +5,7 @@ import { householdAreaAccess, householdCanEditGear, readHouseholdAreaUserIds, re
 import { DIVE_RECORD_KINDS, recordIdentity } from '@/lib/record-identity';
 import { OPERATOR_DELETE_CONSTRAINT, PERSON_DELETE_CONSTRAINT, operatorDeleteBindings, personDeleteBindings } from '@/lib/operators/operator-dependencies';
 import {normaliseEntityRelation} from '@/lib/operators/entity-relationships';
+import { PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT, professionalEvidenceDeleteBindings, professionalEvidenceRevisionAllowed } from '@/lib/professional-development/evidence-dependencies';
 const kinds = new Set<string>(DIVE_RECORD_KINDS);
 const sortText = (value: unknown) => typeof value === 'string' ? value : '';
 async function ensureSchema() {
@@ -122,6 +123,9 @@ export async function POST(request: Request) {
   if (existing && collaborativeAlbums && !(await householdAreaAccess(env,user,existing.ownerUserId,'albums',true))) return Response.json({error:'Shared album access denied'},{status:403});
   const ownerUserId = existing?.ownerUserId ?? user.userId;
   if(existing && existing.kind!==kind)return Response.json({error:'Record type cannot be changed.'},{status:400});
+  if (kind === 'professional-evidence' && existing && body.data &&
+      !professionalEvidenceRevisionAllowed(JSON.parse(existing.dataJson), body.data as Record<string, unknown>))
+    return Response.json({error:'A recorded water-skills attempt is historical evidence. Add a new attempt; only its attachments may be updated.'},{status:409});
   if ((kind === 'person-operator-link' || kind === 'operator-operator-link') && body.data) {
     const relation=body.data as Record<string,unknown>;
     let identity:string;
@@ -175,10 +179,10 @@ export async function POST(request: Request) {
     if (existing) {
       if (base === null) return Response.json({error:'This record already exists. Both versions are retained for review.'},{status:409});
       const updated = await env.DB.prepare(body.data === null
-        ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'+(kind==='operator'?OPERATOR_DELETE_CONSTRAINT:kind==='person'?PERSON_DELETE_CONSTRAINT:'')
+        ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'+(kind==='operator'?OPERATOR_DELETE_CONSTRAINT:kind==='person'?PERSON_DELETE_CONSTRAINT:kind==='professional-evidence'?PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT:'')
         : 'UPDATE dive_records SET data_json=?,updated_at=?,deleted_at=NULL WHERE id=? AND user_id=? AND updated_at=?')
-        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(body.data===null?(kind==='operator'?operatorDeleteBindings(ownerUserId,id):kind==='person'?personDeleteBindings(ownerUserId,id):[]):[])).run();
-      if (!updated.meta.changes) return Response.json({error:body.data===null&&(kind==='operator'||kind==='person')?'This record changed or has linked records. Refresh, then unlink its dependencies before deleting. Your local change is retained for review.':'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
+        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(body.data===null?(kind==='operator'?operatorDeleteBindings(ownerUserId,id):kind==='person'?personDeleteBindings(ownerUserId,id):kind==='professional-evidence'?professionalEvidenceDeleteBindings(ownerUserId,id):[]):[])).run();
+      if (!updated.meta.changes) return Response.json({error:body.data===null&&(kind==='operator'||kind==='person'||kind==='professional-evidence')?'This record changed or has linked records. Refresh, then unlink its dependencies before deleting. Your local change is retained for review.':'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
     } else {
       if (base !== null) return Response.json({error:'The original cloud record is no longer accessible. Your local version is retained.'},{status:409});
       if (body.data !== null) {
@@ -217,8 +221,8 @@ export async function DELETE(request: Request) {
   const sharedGear = record?.kind === 'equipment' || record?.kind === 'equipment-set' || record?.kind === 'equipment-event';
   const collaborativeAlbums = record?.kind === 'album' || record?.kind === 'dive-media';
   if (!record || (record.ownerUserId !== user.userId && !(sharedGear && await householdCanEditGear(env,user,record.ownerUserId)) && !(collaborativeAlbums && await householdAreaAccess(env,user,record.ownerUserId,'albums',true)))) return Response.json({deleted:false},{status:404});
-  const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?'+(record.kind==='operator'?OPERATOR_DELETE_CONSTRAINT:record.kind==='person'?PERSON_DELETE_CONSTRAINT:'')).bind(Date.now(),Date.now(),id,...(record.kind==='operator'?operatorDeleteBindings(record.ownerUserId,id):record.kind==='person'?personDeleteBindings(record.ownerUserId,id):[])).run();
-  if((record.kind==='operator'||record.kind==='person')&&!result.meta.changes)return Response.json({error:'Unlink dependent records before deleting this Person or Dive Entity.'},{status:409});
+  const result = await env.DB.prepare('UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=?'+(record.kind==='operator'?OPERATOR_DELETE_CONSTRAINT:record.kind==='person'?PERSON_DELETE_CONSTRAINT:record.kind==='professional-evidence'?PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT:'')).bind(Date.now(),Date.now(),id,...(record.kind==='operator'?operatorDeleteBindings(record.ownerUserId,id):record.kind==='person'?personDeleteBindings(record.ownerUserId,id):record.kind==='professional-evidence'?professionalEvidenceDeleteBindings(record.ownerUserId,id):[])).run();
+  if((record.kind==='operator'||record.kind==='person'||record.kind==='professional-evidence')&&!result.meta.changes)return Response.json({error:'Unlink dependent records before deleting this record.'},{status:409});
   return Response.json({ deleted: result.meta.changes > 0 });
 }
 

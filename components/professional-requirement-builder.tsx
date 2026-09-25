@@ -1,21 +1,32 @@
 'use client';
 import { useState } from 'react';
-import type { ProfessionalRequirementDefinition } from '../lib/offline/professional-development';
+import { PROFESSIONAL_ASSESSMENT_ACTIVITIES, PROFESSIONAL_EVIDENCE_CATEGORIES, type ProfessionalRequirementDefinition } from '../lib/offline/professional-development';
+import { SKILL_COMPETENCE_LEVELS, skillRecordName, type CanonicalSkillRecord } from '../lib/offline/dive-context';
+import { METRIC_WATER_SKILLS_RUBRIC_2021 } from '../lib/professional-development/water-skills';
 export function ProfessionalRequirementBuilder({
   value,
   change,
+  skills,
 }: {
   value: string;
   change: (next: string) => void;
+  skills: CanonicalSkillRecord[];
 }) {
   const [label, setLabel] = useState('');
   const [kind, setKind] = useState<
     'manual' | 'document' | 'assessment' | 'count'
   >('manual');
   const [metric, setMetric] = useState('logged-dives');
+  const [countEvidenceType, setCountEvidenceType] = useState('assisting');
   const [minimum, setMinimum] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
+  const [assessmentSource, setAssessmentSource] = useState<'professional-evidence' | 'canonical-skill' | 'water-skills'>('professional-evidence');
+  const [activityCode, setActivityCode] = useState('');
+  const [skillSearch, setSkillSearch] = useState('');
+  const [skillKey, setSkillKey] = useState('');
+  const [minCompetence, setMinCompetence] = useState('competent');
+  const [documentType, setDocumentType] = useState('eap');
   let rows: ProfessionalRequirementDefinition[] = [];
   try {
     const parsed = JSON.parse(value);
@@ -38,11 +49,24 @@ export function ProfessionalRequirementBuilder({
           Number(minimum) < 0)
       )
         throw new Error('Enter the minimum stated by your source.');
+      if (kind === 'assessment' && assessmentSource === 'professional-evidence' && !activityCode)
+        throw new Error('Choose the exact assessed activity.');
+      if (kind === 'assessment' && assessmentSource === 'canonical-skill' && !skills.some(skill => skill.entityId === skillKey))
+        throw new Error('Choose a saved canonical Skill.');
+      const activity = PROFESSIONAL_ASSESSMENT_ACTIVITIES.find(item => item.code === activityCode);
       const row: ProfessionalRequirementDefinition = {
         key: crypto.randomUUID(),
         label: label.trim(),
         kind,
-        rule: kind === 'count' ? { metric, min: Number(minimum) } : {},
+        rule: kind === 'count' ? { metric, min: Number(minimum), ...(metric === 'professional-evidence' ? { evidenceType: countEvidenceType, scope: 'requirement' } : {}) }
+          : kind === 'document' ? { evidenceType: documentType, scope: 'requirement' }
+          : kind === 'assessment' && assessmentSource === 'professional-evidence' && activity
+            ? { source: 'professional-evidence', evidenceType: activity.evidenceType, activityCode: activity.code, evaluatorRequired: true, result: 'passed' }
+            : kind === 'assessment' && assessmentSource === 'water-skills'
+              ? { source: 'water-skills', rubric: structuredClone(METRIC_WATER_SKILLS_RUBRIC_2021) }
+            : kind === 'assessment' ? { source: 'canonical-skill', skillKey, minCompetence, evaluatorRequired: true }
+            : kind === 'manual' ? { scope: 'requirement', evidenceType: 'mentor-feedback', evaluatorRequired: true, result: 'passed' }
+            : {},
         notes: notes.trim(),
       };
       change(JSON.stringify([...rows, row], null, 2));
@@ -113,8 +137,50 @@ export function ProfessionalRequirementBuilder({
                 onChange={(e) => setMinimum(e.target.value)}
               />
             </label>
+            {metric === 'professional-evidence' && <label>Exact evidence type
+              <select value={countEvidenceType} onChange={event => setCountEvidenceType(event.target.value)}>
+                {PROFESSIONAL_EVIDENCE_CATEGORIES.filter(item => item.type !== 'requirement-link').map(item => <option key={item.type} value={item.type}>{item.label}</option>)}
+              </select>
+            </label>}
           </>
         )}
+        {kind === 'document' && <label>Document evidence type
+          <select value={documentType} onChange={event => setDocumentType(event.target.value)}>
+            <option value="eap">Emergency Assistance Plan</option>
+            <option value="site-map">Site map</option>
+            <option value="other">Other linked document</option>
+          </select>
+        </label>}
+        {kind === 'assessment' && <>
+          <label>Assessment evidence source
+            <select value={assessmentSource} onChange={event => setAssessmentSource(event.target.value as typeof assessmentSource)}>
+              <option value="professional-evidence">Evaluator-backed professional result</option>
+              <option value="canonical-skill">Canonical Skill Evidence</option>
+              <option value="water-skills">Five-exercise water-skills progress</option>
+            </select>
+          </label>
+          {assessmentSource === 'professional-evidence' ? <label>Exact activity
+            <select value={activityCode} onChange={event => setActivityCode(event.target.value)}>
+              <option value="">Choose the activity captured by the source</option>
+              {PROFESSIONAL_ASSESSMENT_ACTIVITIES.map(item => <option key={item.code} value={item.code}>{item.label}</option>)}
+            </select>
+          </label> : assessmentSource === 'water-skills' ? <p className="focus-muted">Adds a versioned five-exercise metric progress rubric to this draft. It tracks 15/25 points but does not decide PADI course completion. Review and cite the source before saving the new requirement version.</p> : <>
+            <label>Find canonical Skill
+              <input value={skillSearch} onChange={event => setSkillSearch(event.target.value)} placeholder="Search saved Skills" />
+            </label>
+            <label>Exact saved Skill
+              <select value={skillKey} onChange={event => setSkillKey(event.target.value)}>
+                <option value="">Choose a Skill</option>
+                {skills.filter(skill => skill.entityId === skillKey || (skillSearch.trim().length >= 2 && skillRecordName(skill).toLocaleLowerCase('en-GB').includes(skillSearch.trim().toLocaleLowerCase('en-GB')))).slice(0, 60).map(skill => <option key={skill.entityId} value={skill.entityId}>{skillRecordName(skill)}</option>)}
+              </select>
+            </label>
+            <label>Minimum observed competence
+              <select value={minCompetence} onChange={event => setMinCompetence(event.target.value)}>
+                {SKILL_COMPETENCE_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
+              </select>
+            </label>
+          </>}
+        </>}
         <label>
           Source notes
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />

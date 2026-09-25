@@ -468,3 +468,12 @@
 }
 
 :global([data-record-editor-workspace]) .editor,:global([data-record-editor-workspace]) .referenceEditor{width:100%;max-width:100%;max-height:none;overflow:visible}
+
+.waterWorkspace { display: grid; gap: 14px; min-width: 0; }
+.waterWorkspace progress { width: 100%; height: 12px; accent-color: #f99b22; }
+.waterWorkspace > small { opacity: .75; }
+.waterRows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 10px; }
+.waterRows details { min-width: 0; padding: 12px; border: 1px solid rgba(255,255,255,.13); border-radius: 10px; }
+.waterRows summary { display: grid; gap: 4px; cursor: pointer; }
+.waterRows summary span { font-size: .88rem; opacity: .8; }
+.waterRows details > button { display: block; width: 100%; margin-top: 7px; text-align: left; white-space: normal; }
