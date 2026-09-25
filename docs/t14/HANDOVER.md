@@ -1,5 +1,11 @@
 # T14 resumable handover
 
+## Current accepted release and next checkpoint (2026-09-25)
+
+Stage 9 issue #53 was published and verified as **app1.0.66 / Sites137**, deployment `appgdep_6ab698d436c081918cc3d343637bdad3`, published source `b6a9590c0c17e5a37866a545e54711bbf9d74cf6`. PR #65 merged to GitHub main `90f7f0ebfe64d4109502ecf47facdc0175a41be4`; its tree exactly matches the published source tree `2a0a4ed158334802de770048eafc63b693ae5dd4`. Issue #53 is closed. The verified rollback is app1.0.65 / Sites136, deployment `appgdep_6ab690cd6164819193c50655e47edc09`. Fresh post-deployment owner comparison: 6,427 records, 66 Dives, one Gas Plan, zero added/removed/changed versus the refreshed pre-deployment snapshot. No Gmail sync was invoked. The historical Stage 9 notes below were written before that release; do not use their then-current counts as a new baseline.
+
+Issue #59's concrete mapping plan was explicitly approved by the owner. The new `t14/issue-59-mappings` branch starts from accepted GitHub main and is **local/unreleased**. Its implementation and exact next checks are in [issue-59-progress.md](issue-59-progress.md). Preserve this branch and its focused tests; do not publish or merge it until the remaining candidate gate passes. Issues #58/#63 still depend on #59, and Gmail #55 remains disabled/deferred.
+
 ## Stage 9 exact-candidate release gate (2026-09-25)
 
 Preserve branch `t14/issue-53-stage9` and PR #65. The app1.0.66 candidate was checked from application tree `c7a16d329f6ee727124fbaf4f71bf2bfc63a55dd` (application commit `0c1485cf8ec9184b01b310ab06e98bc2e1112379`); this documentation update does not change application files. Full regression: 134 files / 788 tests PASS, including Stage 9 isolation and the existing T14 suites. Typecheck PASS; production build/PWA PASS with 427 precache entries; version/cache test PASS in the full suite; six-credential client-bundle scan PASS with zero matches; targeted new/shared-file lint PASS and zero diagnostics on changed lines of touched legacy files (103 pre-existing whole-file diagnostics remain). All nine protected-calculation hashes match the approved manifest, including the previously owner-approved cylinder-ID-only touchpoint. The isolated 76-row fixture fingerprint is unchanged.

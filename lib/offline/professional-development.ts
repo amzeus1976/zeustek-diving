@@ -13,6 +13,7 @@ import type { DiveRecord } from './dives';
 import { saveReferenceRequirementSet } from './technical-workspace';
 import {
   SKILL_COMPETENCE_LEVELS,
+  listCanonicalSkills,
   resolveCanonicalSkillReference,
   skillRecordKey,
   type CanonicalSkillRecord,
@@ -39,6 +40,9 @@ export type ProfessionalRequirementKind =
   | 'document'
   | 'manual';
 export type ProfessionalEvidenceType =
+  | 'assessment-result'
+  | 'exam-result'
+  | 'knowledge-review'
   | 'stamina'
   | 'skills-circuit'
   | 'workshop'
@@ -89,7 +93,7 @@ export interface ProfessionalPathwayRecord {
 
 export interface ProfessionalEvidenceRecord {
   pathwayId: string;
-  evidenceType: ProfessionalEvidenceType | string;
+  evidenceType: string;
   occurredAt: string;
   relatedDiveId: string | null;
   relatedCertificationId?: string | null;
@@ -126,6 +130,43 @@ export interface ProfessionalEvidenceFieldDefinition {
   suffix?: string;
 }
 
+/** Captured assessment identifiers, not inferred Skill keys or agency-wide completion claims. */
+export const PROFESSIONAL_ASSESSMENT_ACTIVITIES: Array<{ code: string; label: string; evidenceType: ProfessionalEvidenceType }> = [
+  { code: 'diver-rescue', label: 'Diver rescue assessment', evidenceType: 'assessment-result' },
+  { code: 'dive-site-setup', label: 'Dive-site setup / predive management', evidenceType: 'assessment-result' },
+  { code: 'dive-briefing', label: 'Dive briefing', evidenceType: 'briefing' },
+  { code: 'search-recovery', label: 'Search and Recovery scenario', evidenceType: 'assessment-result' },
+  { code: 'deep-dive', label: 'Deep Dive scenario', evidenceType: 'assessment-result' },
+  { code: 'discover-local-diving', label: 'Discover Local Diving workshop', evidenceType: 'workshop' },
+  { code: 'reactivate', label: 'ReActivate workshop', evidenceType: 'workshop' },
+  { code: 'advanced-snorkeler', label: 'Advanced Snorkeler supervision', evidenceType: 'workshop' },
+  { code: 'dsd-confined', label: 'DSD confined-water workshop', evidenceType: 'workshop' },
+  { code: 'dsd-open-water', label: 'DSD additional open-water workshop', evidenceType: 'workshop' },
+  { code: 'open-water-assist', label: 'Assist Open Water course', evidenceType: 'assisting' },
+  { code: 'continuing-education-assist', label: 'Assist continuing-education course', evidenceType: 'assisting' },
+  { code: 'supervised-guiding', label: 'Supervised guiding', evidenceType: 'guided-dive' },
+  { code: 'knowledge-review', label: 'Knowledge development / review', evidenceType: 'knowledge-review' },
+  { code: 'dive-theory-exam', label: 'Dive Theory exam', evidenceType: 'exam-result' },
+  { code: 'padi-standards-exam', label: 'PADI Standards exam', evidenceType: 'exam-result' },
+  { code: 'professionalism-review', label: 'Professionalism mentor review', evidenceType: 'mentor-feedback' },
+];
+
+export function professionalAssessmentFields(evidenceType: string): ProfessionalEvidenceFieldDefinition[] {
+  const activityOptions = PROFESSIONAL_ASSESSMENT_ACTIVITIES
+    .filter(item => item.evidenceType === evidenceType)
+    .map(item => ({ value: item.code, label: item.label }));
+  const existing = PROFESSIONAL_EVIDENCE_FIELDS[evidenceType as ProfessionalEvidenceType] ?? [];
+  if (!activityOptions.length) return existing;
+  return [
+    ...existing.filter(field => field.key !== 'activityCode' && field.key !== 'result'),
+    { key: 'activityCode', label: 'Assessed activity', kind: 'select', options: activityOptions },
+    { key: 'result', label: 'Evaluator result', kind: 'select', options: [
+      { value: 'passed', label: 'Passed' }, { value: 'not-passed', label: 'Not passed' },
+      { value: 'incomplete', label: 'Incomplete' },
+    ] },
+  ];
+}
+
 /**
  * Presentation metadata only. These fields live inside the extensible evidence payload; they are
  * not hard-coded agency requirements and do not determine readiness unless a captured requirement
@@ -134,6 +175,27 @@ export interface ProfessionalEvidenceFieldDefinition {
 export const PROFESSIONAL_EVIDENCE_FIELDS: Partial<
   Record<ProfessionalEvidenceType, ProfessionalEvidenceFieldDefinition[]>
 > = {
+  'assessment-result': [
+    { key: 'activityCode', label: 'Assessment activity code', kind: 'text' },
+    { key: 'result', label: 'Evaluator result', kind: 'select', options: [
+      { value: 'passed', label: 'Passed' }, { value: 'not-passed', label: 'Not passed' },
+      { value: 'incomplete', label: 'Incomplete' },
+    ] },
+  ],
+  'exam-result': [
+    { key: 'activityCode', label: 'Exam code', kind: 'text' },
+    { key: 'result', label: 'Recorded result', kind: 'select', options: [
+      { value: 'passed', label: 'Passed' }, { value: 'not-passed', label: 'Not passed' },
+      { value: 'incomplete', label: 'Incomplete' },
+    ] },
+  ],
+  'knowledge-review': [
+    { key: 'activityCode', label: 'Review code', kind: 'text' },
+    { key: 'result', label: 'Recorded result', kind: 'select', options: [
+      { value: 'passed', label: 'Passed' }, { value: 'not-passed', label: 'Not passed' },
+      { value: 'incomplete', label: 'Incomplete' },
+    ] },
+  ],
   stamina: [
     {
       key: 'activity',
@@ -279,11 +341,13 @@ export interface ProfessionalEvidenceReferenceIssue {
     | 'relatedSkillEvidenceIds'
     | 'relatedSiteId'
     | 'evaluatorPersonId'
-    | 'relatedPersonIds';
+    | 'relatedPersonIds'
+    | 'payload.sourceId';
   missingId: string;
 }
 
 export interface ProfessionalEvaluationContext {
+  pathwayId?: string | undefined;
   dives: Array<DiveRecord & { entityId: string }>;
   certifications: Array<Stored<CertificationRecord>>;
   skills: CanonicalSkillRecord[];
@@ -329,6 +393,9 @@ export const PROFESSIONAL_EVIDENCE_CATEGORIES: Array<{
   label: string;
   description: string;
 }> = [
+  { type: 'assessment-result', label: 'Assessed scenario', description: 'Requirement-specific, evaluator-attested scenario result.' },
+  { type: 'exam-result', label: 'Exam result', description: 'Recorded examination result tied to a captured requirement.' },
+  { type: 'knowledge-review', label: 'Knowledge review', description: 'Evaluator-backed knowledge review with its captured source.' },
   {
     type: 'stamina',
     label: 'Water skills & stamina',
@@ -400,7 +467,13 @@ export const listProfessionalRequirementSets = () =>
   listRecords<ProfessionalReferenceRequirementSetRecord>(
     'reference-requirement-set',
   );
-export const deleteProfessionalEvidence = removeRecord;
+export async function deleteProfessionalEvidence(entityId: string) {
+  const dependent = (await listProfessionalEvidence()).some(item =>
+    item.entityId !== entityId && item.evidenceType === 'requirement-link' &&
+    item.payload.sourceKind === 'professional-evidence' && item.payload.sourceId === entityId);
+  if (dependent) throw new Error('This Professional Evidence is linked to a captured requirement. Unlink that version before deleting the source.');
+  return removeRecord(entityId);
+}
 
 export async function deleteProfessionalPathway(entityId: string) {
   const linkedEvidence = (await listProfessionalEvidence()).filter(
@@ -532,6 +605,16 @@ export function professionalEvidenceReferenceIssues(
       id,
       context.people.some((candidate) => candidate.entityId === id),
     );
+  if (item.evidenceType === 'requirement-link' && typeof item.payload.sourceId === 'string') {
+    const sourceKind = item.payload.sourceKind;
+    const sourceId = item.payload.sourceId;
+    check('payload.sourceId', sourceId,
+      sourceKind === 'professional-evidence'
+        ? context.professionalEvidence.some(candidate => candidate.entityId === sourceId && candidate.pathwayId === item.pathwayId && candidate.evidenceType !== 'requirement-link')
+        : sourceKind === 'skill-evidence'
+          ? context.skillEvidence.some(candidate => candidate.entityId === sourceId)
+          : true);
+  }
   return issues;
 }
 
@@ -574,7 +657,7 @@ export async function linkProfessionalEvidenceToRequirement(
     attachmentIds: current.attachmentIds ?? [],
     requirementSetId,
     requirementKey,
-    payload: { title: String(current.payload.title || current.evidenceType), sourceKind: 'professional-evidence', sourceId: entityId },
+    payload: { title: typeof current.payload.title === 'string' && current.payload.title.trim() ? current.payload.title : current.evidenceType, sourceKind: 'professional-evidence', sourceId: entityId },
     notes: null,
   });
 }
@@ -645,6 +728,7 @@ export async function captureProfessionalRequirementSet(
   if (!Array.isArray(input.requirements))
     throw new Error('Requirements must be an array.');
   const seen = new Set<string>();
+  let canonicalSkills: CanonicalSkillRecord[] | null = null;
   for (const requirement of input.requirements) {
     if (!requirement.key?.trim() || !requirement.label?.trim())
       throw new Error('Every requirement needs a key and label.');
@@ -664,6 +748,27 @@ export async function captureProfessionalRequirementSet(
     if (seen.has(requirement.key))
       throw new Error(`Duplicate requirement key: ${requirement.key}`);
     seen.add(requirement.key);
+    if (requirement.kind === 'assessment') {
+      const rule = requirement.rule ?? {};
+      if (rule.source === 'professional-evidence') {
+        const evidenceType = stringRule(rule, 'evidenceType');
+        const activityCode = stringRule(rule, 'activityCode');
+        const knownActivity = PROFESSIONAL_ASSESSMENT_ACTIVITIES.find(item => item.code === activityCode);
+        if (!evidenceType || !activityCode || rule.result !== 'passed' || rule.evaluatorRequired !== true ||
+            !PROFESSIONAL_EVIDENCE_CATEGORIES.some(item => item.type === evidenceType && item.type !== 'requirement-link') ||
+            (knownActivity && knownActivity.evidenceType !== evidenceType))
+          throw new Error(`Assessment ${requirement.label} needs an exact evaluator-backed evidence type, activity code and passing result.`);
+      } else if (rule.source === 'canonical-skill' || (!rule.source && stringRule(rule, 'skillKey'))) {
+        const skillKey = stringRule(rule, 'skillKey');
+        const minimum = stringRule(rule, 'minCompetence');
+        canonicalSkills ??= await listCanonicalSkills();
+        if (!skillKey || !minimum || !SKILL_COMPETENCE_LEVELS.some(level => level === minimum) ||
+            !resolveCanonicalSkillReference(skillKey, canonicalSkills))
+          throw new Error(`Assessment ${requirement.label} must name a saved canonical Skill and supported competence level.`);
+      } else {
+        throw new Error(`Assessment ${requirement.label} has no supported evidence rule. Capture it as manual review until it can be mapped.`);
+      }
+    }
   }
   return saveReferenceRequirementSet({
     ...input,
@@ -732,6 +837,7 @@ function professionalEvidenceOfType(
   const normalised = evidenceType.toLocaleLowerCase('en-GB');
   return context.professionalEvidence.filter(
     (item) =>
+      (!context.pathwayId || item.pathwayId === context.pathwayId) &&
       item.evidenceType.toLocaleLowerCase('en-GB') === normalised &&
       recordedBy(item.occurredAt, context.asOf ?? new Date()),
   );
@@ -774,16 +880,28 @@ export function evaluateProfessionalRequirement(
   const asOf = context.asOf ?? new Date();
   const explicitlyLinked = context.professionalEvidence.filter(
     (item) =>
+      (!context.pathwayId || item.pathwayId === context.pathwayId) &&
       evidenceMatchesRequirement(item, requirementSetId, requirement.key) &&
       recordedBy(item.occurredAt, asOf),
   );
-  const explicitLinks: ProfessionalEvidenceLink[] = explicitlyLinked.map(
+  const explicitLinks: ProfessionalEvidenceLink[] = [...new Map(explicitlyLinked.map(
     (item) => ({
-      kind: 'professional-evidence',
+      kind: 'professional-evidence' as const,
       id: item.entityId,
       label: `${item.evidenceType} · ${new Date(item.occurredAt).toLocaleDateString('en-GB')}`,
-    }),
-  );
+    })).map(item => [item.id, item] as const)).values()];
+  const scopedSources = [...new Map(explicitlyLinked.flatMap(link => {
+    if (link.evidenceType !== 'requirement-link')
+      return [{ item: link, linkId: null as string | null }];
+    if (link.payload.sourceKind !== 'professional-evidence' || typeof link.payload.sourceId !== 'string')
+      return [];
+    const source = context.professionalEvidence.find(candidate =>
+      candidate.entityId === link.payload.sourceId &&
+      candidate.pathwayId === link.pathwayId &&
+      candidate.evidenceType !== 'requirement-link' &&
+      recordedBy(candidate.occurredAt, asOf));
+    return source ? [{ item: source, linkId: link.entityId }] : [];
+  }).map(entry => [entry.item.entityId, entry] as const)).values()];
 
   if (requirement.kind === 'certification') {
     const terms = stringArrayRule(rule, 'anyTitleIncludes').map((value) =>
@@ -863,7 +981,9 @@ export function evaluateProfessionalRequirement(
           detail: 'Professional-evidence count rule has no evidenceType.',
           evidence: explicitLinks,
         };
-      const matches = professionalEvidenceOfType(context, evidenceType);
+      const matches = rule.scope === 'requirement'
+        ? scopedSources.map(entry => entry.item).filter(item => item.evidenceType === evidenceType)
+        : professionalEvidenceOfType(context, evidenceType);
       return {
         requirement,
         state: matches.length >= min ? 'satisfied' : 'not_satisfied',
@@ -887,6 +1007,33 @@ export function evaluateProfessionalRequirement(
   }
 
   if (requirement.kind === 'assessment') {
+    if (rule.source === 'professional-evidence') {
+      const evidenceType = stringRule(rule, 'evidenceType');
+      const activityCode = stringRule(rule, 'activityCode');
+      const expectedResult = stringRule(rule, 'result');
+      if (!evidenceType || !activityCode || expectedResult !== 'passed')
+        return { requirement, state: 'unknown', detail: 'The captured assessment rule needs an exact evidence type, activity code and passing result.', evidence: explicitLinks };
+      const matches = scopedSources.filter(({ item }) =>
+        item.evidenceType === evidenceType &&
+        item.payload.activityCode === activityCode &&
+        item.payload.result === expectedResult &&
+        (!rule.evaluatorRequired || Boolean(item.evaluatorPersonId && context.people.some(person => person.entityId === item.evaluatorPersonId))) &&
+        (!item.evaluatorPersonId || context.people.some(person => person.entityId === item.evaluatorPersonId)) &&
+        (!item.relatedDiveId || context.dives.some(dive => dive.entityId === item.relatedDiveId)) &&
+        (!item.relatedSiteId || context.sites.some(site => site.entityId === item.relatedSiteId)) &&
+        (!item.relatedCertificationId || context.certifications.some(cert => cert.entityId === item.relatedCertificationId)) &&
+        [...new Set([...(item.relatedSkillEvidenceIds ?? []), ...(item.relatedSkillEvidenceId ? [item.relatedSkillEvidenceId] : [])])].every(id => context.skillEvidence.some(skill => skill.entityId === id)) &&
+        (item.relatedPersonIds ?? []).every(id => context.people.some(person => person.entityId === id))
+      );
+      return matches.length
+        ? { requirement, state: 'satisfied', detail: 'A version-linked evaluator result meets this captured assessment.', evidence: matches.flatMap(({ item, linkId }) => [
+          { kind: 'professional-evidence' as const, id: item.entityId, label: `${item.evidenceType} · ${new Date(item.occurredAt).toLocaleDateString('en-GB')}` },
+          ...(linkId ? [{ kind: 'professional-evidence' as const, id: linkId, label: 'Requirement version link' }] : []),
+        ]) }
+        : { requirement, state: 'not_satisfied', detail: 'No exact, valid, evaluator-backed result is linked to this captured requirement version.', evidence: explicitLinks };
+    }
+    if (rule.source && rule.source !== 'canonical-skill')
+      return { requirement, state: 'unknown', detail: 'Unsupported assessment evidence source.', evidence: explicitLinks };
     const skillKey = stringRule(rule, 'skillKey');
     const minimum = stringRule(
       rule,
@@ -909,10 +1056,14 @@ export function evaluateProfessionalRequirement(
         evidence: explicitLinks,
       };
     const evaluatorRequired = rule.evaluatorRequired === true;
+    const versionLinkedSkillIds = new Set(explicitlyLinked
+      .filter(item => item.evidenceType === 'requirement-link' && item.payload.sourceKind === 'skill-evidence' && typeof item.payload.sourceId === 'string' && item.relatedSkillEvidenceId === item.payload.sourceId)
+      .map(item => String(item.payload.sourceId)));
     const matches = context.skillEvidence
       .filter(
         (item) =>
           aliases.has(item.skillKey) &&
+          (rule.source !== 'canonical-skill' || versionLinkedSkillIds.has(item.entityId)) &&
           recordedBy(item.performedAt, asOf) &&
           typeof item.competenceLevel === 'string' &&
           competenceRank.has(item.competenceLevel as SkillCompetenceLevel) &&
@@ -1069,7 +1220,9 @@ export function evaluateProfessionalRequirement(
 
   if (requirement.kind === 'document') {
     const evidenceType = stringRule(rule, 'evidenceType');
-    const candidates = evidenceType
+    const candidates = rule.scope === 'requirement'
+      ? scopedSources.map(entry => entry.item).filter(item => !evidenceType || item.evidenceType === evidenceType)
+      : evidenceType
       ? professionalEvidenceOfType(context, evidenceType)
       : explicitlyLinked;
     const withAttachment = candidates.filter(
@@ -1097,7 +1250,12 @@ export function evaluateProfessionalRequirement(
 
   if (requirement.kind === 'manual') {
     const evidenceType = stringRule(rule, 'evidenceType');
-    const candidates = evidenceType
+    const candidates = rule.scope === 'requirement'
+      ? scopedSources.map(entry => entry.item).filter(item =>
+        (!evidenceType || item.evidenceType === evidenceType) &&
+        (!rule.evaluatorRequired || Boolean(item.evaluatorPersonId && context.people.some(person => person.entityId === item.evaluatorPersonId))) &&
+        (!rule.result || item.payload.result === rule.result))
+      : evidenceType
       ? professionalEvidenceOfType(context, evidenceType)
       : explicitlyLinked;
     if (candidates.length)

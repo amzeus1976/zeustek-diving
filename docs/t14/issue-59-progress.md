@@ -1,0 +1,17 @@
+# Issue #59 — Professional Development canonical mappings
+
+Status: implementation in progress on `t14/issue-59-mappings`. This is a local checkpoint, not a release. Accepted production remains app1.0.66 / Sites137; its source tree and GitHub main tree are `2a0a4ed158334802de770048eafc63b693ae5dd4`. Issue #59's mapping plan was approved by the owner on 2026-09-25. Issues #58 and #63 remain dependent and have not been implemented.
+
+The approved 23-row mapping is on [GitHub issue #59](https://github.com/amzeus1976/zeustek-diving/issues/59#issuecomment-5833409260). Rows 8–12 (Water Skills & Stamina) remain Unknown pending #58's versioned five-exercise rubric; row 13 (24-skill circuit) remains Unknown pending #63's reviewed exact Skill mapping. Rows 14–26 and 29–32 use the 17 distinct requirement-specific activity codes now offered by the shared Professional Evidence editor. Site-map and EAP documents use exact requirement scope for new versions. Source citations and requirement snapshots remain owner-captured and immutable; the historical v2 requirement set and all owner evidence remain unchanged.
+
+Implementation so far:
+
+- Exact Professional Evidence assessment rules match requirement version/key, evidence type, activity code, passing result, attributable evaluator, date and resolved canonical links. Duplicate evidence cannot inflate counts.
+- New canonical Skill rules require a version-specific link to the actual Skill Evidence. Legacy rules retain read compatibility. Empty/unsupported assessment rules remain Unknown; a new snapshot cannot capture an unsupported assessment as evaluable.
+- New document/count/manual rules can opt into exact requirement scope. A manual review needs a recorded passing evaluator outcome before it becomes satisfied.
+- Existing Professional Evidence may be linked to a new version without rewriting the source. The editor offers matching source candidates and source detail. Local and atomic cloud deletion guards protect linked source evidence.
+- No new record kind or datastore was added. The current generic `professional-evidence` and `reference-requirement-set` records remain canonical.
+
+Local checkpoint evidence: the full regression passes at 135 files / 819 tests, including 17 activity-specific evaluator cases and an SQLite cloud-deletion constraint case. Typecheck and targeted lint pass. Production build/PWA passes with 427 precache entries; the six-credential client-bundle privacy scan finds zero matches. All nine protected-calculation hashes match the approved manifest. The isolated Professional Development editor and assessment form were inspected at 390/820/1024/1440 with no page-level overflow, completed broken image, or application console error. No fixture draft was saved. These checks do not substitute for a fresh production owner-data baseline, candidate version/cache gate, and live acceptance.
+
+Next steps: preserve this code checkpoint; implement #58 against its reviewed, versioned rubric and use the same canonical evidence store. #63 still needs owner review of its exact 24-item Skill mapping before implementation. Before any release, confirm the issue's acceptance rows against the final code, advance the app/cache version, rerun the complete gate, capture a fresh production owner-data fingerprint and verified rollback, deploy once, smoke live, compare per-ID owner data, then reconcile exactly accepted source to GitHub. Preserve Gmail's disabled state and do not repeat the consumed live sync.

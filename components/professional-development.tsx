@@ -40,7 +40,7 @@ import {
 } from '../lib/offline/dive-planning';
 import {
   PROFESSIONAL_EVIDENCE_CATEGORIES,
-  PROFESSIONAL_EVIDENCE_FIELDS,
+  professionalAssessmentFields,
   captureProfessionalRequirementSet,
   createRequirementEvidenceLink,
   deleteProfessionalEvidence,
@@ -186,6 +186,7 @@ export function ProfessionalDevelopment({ go }: Props) {
   const readiness = useMemo(
     () =>
       evaluateProfessionalReadiness(requirementSet, {
+        pathwayId: pathway?.entityId,
         dives,
         certifications,
         skills,
@@ -196,6 +197,7 @@ export function ProfessionalDevelopment({ go }: Props) {
       }),
     [
       requirementSet,
+      pathway?.entityId,
       dives,
       certifications,
       skills,
@@ -557,6 +559,7 @@ export function ProfessionalDevelopment({ go }: Props) {
         <ReferenceEditor
           pathway={pathway}
           current={requirementSet}
+          skills={skills}
           close={() => setReferenceEditorOpen(false)}
           saved={async (requirementSetId) => {
             await saveProfessionalPathway({
@@ -620,15 +623,22 @@ export function ProfessionalDevelopment({ go }: Props) {
           pathway={pathway}
           target={requirementTarget}
           pathwayEvidence={pathwayEvidence}
+          openEvidence={(item) => { setRequirementTarget(null); setDetailEvidence(item); }}
           close={() => setRequirementTarget(null)}
           addEvidence={() => {
             const target = requirementTarget;
+            const rule = target.requirement.requirement.rule;
+            const evidenceType = typeof rule.evidenceType === 'string' && rule.evidenceType
+              ? rule.evidenceType
+              : rule.scope === 'requirement' && target.requirement.requirement.kind === 'manual'
+                ? 'mentor-feedback' : 'requirement-link';
             setRequirementTarget(null);
             setEditingEvidence({
-              ...emptyEvidence(pathway.entityId, 'requirement-link'),
+              ...emptyEvidence(pathway.entityId, evidenceType),
               entityId: '',
               requirementSetId: target.requirementSet.entityId,
               requirementKey: target.requirement.requirement.key,
+              payload: typeof rule.activityCode === 'string' ? { activityCode: rule.activityCode } : {},
             } as Stored<ProfessionalEvidenceRecord>);
           }}
           linkCandidate={async (candidate) => {
@@ -898,11 +908,13 @@ function PathwayEditor({
 function ReferenceEditor({
   pathway,
   current,
+  skills,
   close,
   saved,
 }: {
   pathway: Stored<ProfessionalPathwayRecord>;
   current: Stored<ProfessionalReferenceRequirementSetRecord> | null;
+  skills: CanonicalSkillRecord[];
   close: () => void;
   saved: (id: string) => Promise<void>;
 }) {
@@ -1015,7 +1027,7 @@ function ReferenceEditor({
                 placeholder="Official manual/page/version you checked"
               />
             </label>
-            <ProfessionalRequirementBuilder value={requirementsText} change={setRequirementsText}/>
+            <ProfessionalRequirementBuilder value={requirementsText} change={setRequirementsText} skills={skills}/>
             <details className={styles.span2}><summary>Advanced requirement rules</summary>
             <label className={styles.span2}>
               Requirements JSON
@@ -1126,10 +1138,7 @@ function EvidenceEditor({
   const [notes, setNotes] = useState(base.notes ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const categoryFields =
-    PROFESSIONAL_EVIDENCE_FIELDS[
-      evidenceType as keyof typeof PROFESSIONAL_EVIDENCE_FIELDS
-    ] ?? [];
+  const categoryFields = professionalAssessmentFields(evidenceType);
   async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -1506,6 +1515,7 @@ function EvidenceDetail({
   removed: () => Promise<void>;
   changed: () => Promise<void>;
 }) {
+  const [error, setError] = useState('');
   const dive = dives.find(
     (candidate) => candidate.entityId === item.relatedDiveId,
   );
@@ -1553,8 +1563,12 @@ function EvidenceDetail({
       )
     )
       return;
-    await deleteProfessionalEvidence(item.entityId);
-    await removed();
+    try {
+      await deleteProfessionalEvidence(item.entityId);
+      await removed();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Evidence could not be deleted.');
+    }
   }
   return (
     <div className="focus-modal-bg">
@@ -1663,6 +1677,7 @@ function EvidenceDetail({
           onUploaded={attach}
           onRemoved={detach}
         />
+        {error && <p role="alert" className="dive-save-error">{error}</p>}
         <footer>
           <button
             className="focus-secondary danger"
@@ -1689,6 +1704,7 @@ function RequirementDialog({
   pathway,
   target,
   pathwayEvidence,
+  openEvidence,
   close,
   addEvidence,
   linkCandidate,
@@ -1696,6 +1712,7 @@ function RequirementDialog({
   pathway: Stored<ProfessionalPathwayRecord>;
   target: NonNullable<RequirementTarget>;
   pathwayEvidence: Array<Stored<ProfessionalEvidenceRecord>>;
+  openEvidence: (item: Stored<ProfessionalEvidenceRecord>) => void;
   close: () => void;
   addEvidence: () => void;
   linkCandidate: (
@@ -1705,7 +1722,14 @@ function RequirementDialog({
   const { requirement, requirementSet } = target;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const uniqueEvidence = requirement.evidence.filter(
+  const rule = requirement.requirement.rule;
+  const olderCandidates = pathwayEvidence.filter(item =>
+    item.evidenceType !== 'requirement-link' &&
+    (!rule.evidenceType || item.evidenceType === rule.evidenceType)).map(item => ({
+      kind: 'professional-evidence' as const, id: item.entityId,
+      label: `${item.evidenceType} · ${new Date(item.occurredAt).toLocaleDateString('en-GB')}`,
+    }));
+  const uniqueEvidence = [...requirement.evidence, ...olderCandidates].filter(
     (item, index, all) =>
       all.findIndex(
         (candidate) => candidate.kind === item.kind && candidate.id === item.id,
@@ -1770,12 +1794,13 @@ function RequirementDialog({
         </section>
         <section>
           <h3>Evidence candidates / links</h3>
-          {requirement.evidence.length ? (
+          {uniqueEvidence.length ? (
             <ul className={styles.linkList}>
               {uniqueEvidence.map((item) => (
                 <li key={`${item.kind}:${item.id}`}>
                   <b>{item.kind}</b>
                   <span>{item.label}</span>
+                  {item.kind === 'professional-evidence' && pathwayEvidence.some(evidence => evidence.entityId === item.id) && <button type="button" className="focus-link" onClick={() => openEvidence(pathwayEvidence.find(evidence => evidence.entityId === item.id)!)}>Open source</button>}
                   {!pathwayEvidence.some(
                     (evidence) =>
                       evidence.requirementSetId === requirementSet.entityId &&

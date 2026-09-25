@@ -78,7 +78,8 @@ describe('T08 Professional Development shell and architecture', () => {
   it('adds richer evidence capture without creating parallel canonical Dive/Skill/Person records', () => {
     const component = read('components/professional-development.tsx');
     const domain = read('lib/offline/professional-development.ts');
-    expect(component).toContain('PROFESSIONAL_EVIDENCE_FIELDS');
+    expect(component).toContain('professionalAssessmentFields');
+    expect(domain).toContain('PROFESSIONAL_EVIDENCE_FIELDS');
     expect(component).toContain('relatedSkillEvidenceIds');
     expect(component).toContain('relatedCertificationId');
     expect(component).toContain('Link to this requirement');
