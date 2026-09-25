@@ -11,6 +11,7 @@ import {
 } from './dive-planning';
 import type { DiveRecord } from './dives';
 import { saveReferenceRequirementSet } from './technical-workspace';
+import { isWaterSkillsRubric, projectWaterSkills, WATER_EXERCISES, type WaterSkillsAttempt, type WaterSkillsRubric } from '../professional-development/water-skills';
 import {
   SKILL_COMPETENCE_LEVELS,
   listCanonicalSkills,
@@ -151,7 +152,36 @@ export const PROFESSIONAL_ASSESSMENT_ACTIVITIES: Array<{ code: string; label: st
   { code: 'professionalism-review', label: 'Professionalism mentor review', evidenceType: 'mentor-feedback' },
 ];
 
-export function professionalAssessmentFields(evidenceType: string): ProfessionalEvidenceFieldDefinition[] {
+export function professionalAssessmentFields(evidenceType: string, exerciseKey?: string, structuredStamina = false): ProfessionalEvidenceFieldDefinition[] {
+  if (evidenceType === 'stamina' && structuredStamina) {
+    const common: ProfessionalEvidenceFieldDefinition[] = [
+      { key: 'exerciseKey', label: 'Exercise', kind: 'select', options: WATER_EXERCISES.map(item => ({ value: item.key, label: item.label })) },
+      { key: 'attemptMode', label: 'Attempt', kind: 'select', options: [{ value: 'practice', label: 'Practice' }, { value: 'formal', label: 'Formal evaluator assessment' }] },
+      { key: 'conditions', label: 'Water conditions / pool', kind: 'text' },
+    ];
+    const bool = (key: string, label: string): ProfessionalEvidenceFieldDefinition => ({ key, label, kind: 'boolean' });
+    if (exerciseKey === 'tread-15') return [...common,
+      { key: 'durationSec', label: 'Duration', kind: 'number', min: 0, step: 1, suffix: 'sec' },
+      bool('completed', 'Full 15 minutes completed'), bool('aidsUsed', 'Aids used'),
+      bool('handsOutFinalTwo', 'Hands out throughout final two minutes'),
+      { key: 'supportCount', label: 'Side/bottom support count', kind: 'number', min: 0, step: 1 }];
+    if (exerciseKey === 'equipment-exchange') return [...common,
+      { key: 'evaluatorScore', label: 'Evaluator-entered score', kind: 'number', min: 1, step: 1 },
+      { key: 'observedPerformance', label: 'Evaluator observation of efficiency, anxiety and problem solving', kind: 'textarea' },
+      bool('completed', 'Exchange completed'), bool('confinedWater', 'Confined water'), bool('tooDeepToStand', 'Too deep to stand'),
+        bool('equipmentComplete', 'Required kit exchanged'), bool('sharedRegulator', 'Single second stage shared'),
+        bool('alternateAirSource', 'Buddy alternate air source used during kit switch'), bool('ownMaskRemoval', 'Own masks removed/replaced'),
+        bool('neutralBuoyancy', 'Neutral buoyancy maintained'), bool('bottomContact', 'Bottom contact'),
+      { key: 'surfaceContacts', label: 'Surface contacts', kind: 'number', min: 0, step: 1 }];
+    return [...common,
+      { key: 'distanceM', label: 'Measured distance', kind: 'number', min: 0, step: 1, suffix: 'm' },
+      { key: 'durationSec', label: 'Duration', kind: 'number', min: 0, step: 1, suffix: 'sec' },
+      bool('nonstop', 'Completed nonstop'),
+      ...(exerciseKey === 'swim-400' ? [bool('aidsUsed', 'Swimming aids used')] :
+        exerciseKey === 'snorkel-800' ? [bool('maskSnorkelFins', 'Mask, snorkel and fins used'), bool('flotationAidUsed', 'Flotation aid used'), bool('armsUsed', 'Arms used for propulsion')] :
+        exerciseKey === 'tow-100' ? [bool('bothDiversFullScuba', 'Both divers in full scuba'), bool('assistanceReceived', 'Assistance received'), { key: 'towMethod', label: 'Tow or push method', kind: 'text' as const }] : []),
+    ];
+  }
   const activityOptions = PROFESSIONAL_ASSESSMENT_ACTIVITIES
     .filter(item => item.evidenceType === evidenceType)
     .map(item => ({ value: item.code, label: item.label }));
@@ -358,6 +388,53 @@ export interface ProfessionalEvaluationContext {
   asOf?: Date;
 }
 
+export function professionalWaterSkillsProgress(
+  rubric: WaterSkillsRubric,
+  requirementSetId: string,
+  requirementKey: string,
+  context: ProfessionalEvaluationContext,
+) {
+  const asOf = context.asOf ?? new Date();
+  const attempts: WaterSkillsAttempt[] = context.professionalEvidence
+    .filter(item => (!context.pathwayId || item.pathwayId === context.pathwayId) &&
+      item.evidenceType === 'stamina' && item.requirementSetId === requirementSetId &&
+      item.requirementKey === requirementKey && Date.parse(item.occurredAt) <= asOf.getTime() &&
+      WATER_EXERCISES.some(exercise => exercise.key === item.payload.exerciseKey) &&
+      (!item.relatedDiveId || context.dives.some(dive => dive.entityId === item.relatedDiveId)) &&
+      (!item.relatedSiteId || context.sites.some(site => site.entityId === item.relatedSiteId)))
+    .map(item => ({
+      id: item.entityId,
+      exerciseKey: item.payload.exerciseKey as WaterSkillsAttempt['exerciseKey'],
+      occurredAt: item.occurredAt,
+      mode: item.payload.attemptMode as WaterSkillsAttempt['mode'],
+      evaluatorPersonId: item.evaluatorPersonId && context.people.some(person => person.entityId === item.evaluatorPersonId) ? item.evaluatorPersonId : null,
+      rubricId: item.payload.rubricId as string,
+      distanceM: item.payload.distanceM as number | undefined,
+      durationSec: item.payload.durationSec as number | undefined,
+      nonstop: item.payload.nonstop as boolean | undefined,
+      aidsUsed: item.payload.aidsUsed as boolean | undefined,
+      maskSnorkelFins: item.payload.maskSnorkelFins as boolean | undefined,
+      flotationAidUsed: item.payload.flotationAidUsed as boolean | undefined,
+      armsUsed: item.payload.armsUsed as boolean | undefined,
+      bothDiversFullScuba: item.payload.bothDiversFullScuba as boolean | undefined,
+      assistanceReceived: item.payload.assistanceReceived as boolean | undefined,
+      completed: item.payload.completed as boolean | undefined,
+      handsOutFinalTwo: item.payload.handsOutFinalTwo as boolean | undefined,
+      supportCount: item.payload.supportCount as number | undefined,
+      evaluatorScore: item.payload.evaluatorScore as number | undefined,
+      confinedWater: item.payload.confinedWater as boolean | undefined,
+      tooDeepToStand: item.payload.tooDeepToStand as boolean | undefined,
+      equipmentComplete: item.payload.equipmentComplete as boolean | undefined,
+      sharedRegulator: item.payload.sharedRegulator as boolean | undefined,
+      alternateAirSource: item.payload.alternateAirSource as boolean | undefined,
+      ownMaskRemoval: item.payload.ownMaskRemoval as boolean | undefined,
+      neutralBuoyancy: item.payload.neutralBuoyancy as boolean | undefined,
+      surfaceContacts: item.payload.surfaceContacts as number | undefined,
+      bottomContact: item.payload.bottomContact as boolean | undefined,
+    }));
+  return projectWaterSkills(rubric, attempts);
+}
+
 export interface ProfessionalEvidenceLink {
   kind:
     | 'dive'
@@ -468,7 +545,10 @@ export const listProfessionalRequirementSets = () =>
     'reference-requirement-set',
   );
 export async function deleteProfessionalEvidence(entityId: string) {
-  const dependent = (await listProfessionalEvidence()).some(item =>
+  const all = await listProfessionalEvidence();
+  if (all.some(item => item.entityId === entityId && item.payload.rubricId))
+    throw new Error('A recorded water-skills attempt is preserved as historical evidence. Record another attempt rather than deleting it.');
+  const dependent = all.some(item =>
     item.entityId !== entityId && item.evidenceType === 'requirement-link' &&
     item.payload.sourceKind === 'professional-evidence' && item.payload.sourceId === entityId);
   if (dependent) throw new Error('This Professional Evidence is linked to a captured requirement. Unlink that version before deleting the source.');
@@ -522,6 +602,19 @@ export async function saveProfessionalEvidence(
   if (!input.evidenceType.trim()) throw new Error('Choose an evidence type.');
   if (!input.occurredAt || !Number.isFinite(Date.parse(input.occurredAt)))
     throw new Error('Record a valid evidence date and time.');
+  if (input.entityId && (await listProfessionalEvidence()).some(item => item.entityId === input.entityId && item.payload.rubricId))
+    throw new Error('A saved water-skills attempt is historical evidence. Record a new attempt instead of overwriting it.');
+  if (input.evidenceType === 'stamina' && input.payload.rubricId) {
+    const set = (await listProfessionalRequirementSets()).find(item => item.entityId === input.requirementSetId);
+    const pathway = (await listProfessionalPathways()).find(item => item.entityId === input.pathwayId);
+    const requirement = set?.requirements.find(item => item.key === input.requirementKey);
+    if (!pathway || !set || set.agency !== pathway.agency || set.pathwayKey !== pathway.pathwayKey ||
+      requirement?.rule.source !== 'water-skills' || !isWaterSkillsRubric(requirement.rule.rubric) ||
+      requirement.rule.rubric.id !== input.payload.rubricId ||
+      !WATER_EXERCISES.some(item => item.key === input.payload.exerciseKey) ||
+      (input.payload.attemptMode !== 'practice' && input.payload.attemptMode !== 'formal'))
+      throw new Error('Select a valid exercise and attempt mode from the captured water-skills version.');
+  }
   return saveRecord('professional-evidence', {
     ...input,
     evidenceType: input.evidenceType.trim(),
@@ -750,7 +843,10 @@ export async function captureProfessionalRequirementSet(
     seen.add(requirement.key);
     if (requirement.kind === 'assessment') {
       const rule = requirement.rule ?? {};
-      if (rule.source === 'professional-evidence') {
+      if (rule.source === 'water-skills') {
+        if (!isWaterSkillsRubric(rule.rubric))
+          throw new Error(`Assessment ${requirement.label} needs a complete, versioned water-skills progress rubric.`);
+      } else if (rule.source === 'professional-evidence') {
         const evidenceType = stringRule(rule, 'evidenceType');
         const activityCode = stringRule(rule, 'activityCode');
         const knownActivity = PROFESSIONAL_ASSESSMENT_ACTIVITIES.find(item => item.code === activityCode);
@@ -862,7 +958,11 @@ export async function updateProfessionalEvidenceAttachments(
       'This Professional Evidence is no longer available on this device.',
     );
   const removeIds = new Set(removed);
-  return saveProfessionalEvidence({
+  return current.payload.rubricId ? saveRecord('professional-evidence', {
+    ...current,
+    entityId,
+    attachmentIds: [...new Set([...(current.attachmentIds ?? []), ...added])].filter(id => !removeIds.has(id)),
+  }) : saveProfessionalEvidence({
     ...current,
     entityId,
     attachmentIds: [
@@ -1007,6 +1107,16 @@ export function evaluateProfessionalRequirement(
   }
 
   if (requirement.kind === 'assessment') {
+    if (rule.source === 'water-skills') {
+      if (!isWaterSkillsRubric(rule.rubric))
+        return { requirement, state: 'unknown', detail: 'No valid captured water-skills rubric exists.', evidence: explicitLinks };
+      const progress = professionalWaterSkillsProgress(rule.rubric, requirementSetId, requirement.key, context);
+      return { requirement, state: 'manual_review',
+        detail: progress.complete
+          ? `${progress.total}/25 recorded formal points; ${progress.minimumProgressMet ? 'the 15-point progress target is met' : `${progress.pointsToTarget} to the 15-point progress target`}. Instructor review is still required; this is not a PADI pass claim.`
+          : `${progress.total}/25 partial formal points; ${5 - progress.contributingIds.length} exercise(s) need qualifying evidence. This is not a PADI pass claim.`,
+        evidence: progress.contributingIds.map(id => ({ kind: 'professional-evidence' as const, id, label: 'Contributing water-skills attempt' })) };
+    }
     if (rule.source === 'professional-evidence') {
       const evidenceType = stringRule(rule, 'evidenceType');
       const activityCode = stringRule(rule, 'activityCode');

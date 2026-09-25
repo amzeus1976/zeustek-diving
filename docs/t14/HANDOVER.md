@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Current local #58 checkpoint (2026-09-25)
+
+Preserve `t14/issue-58-water-skills` on top of #59 commit `3347609a`; see [issue-58-progress.md](issue-58-progress.md) for implementation, owner decision, evidence and exact remaining release steps. Accepted production is still app1.0.66 / Sites137; GitHub main remains `90f7f0e`. Neither #59 nor #58 is published. The owner chose 15-point Water Skills progress tracking without a PADI pass claim. Do not run Gmail sync. Verify actual branch HEAD and working tree before resuming.
+
 ## Current accepted release and next checkpoint (2026-09-25)
 
 Stage 9 issue #53 was published and verified as **app1.0.66 / Sites137**, deployment `appgdep_6ab698d436c081918cc3d343637bdad3`, published source `b6a9590c0c17e5a37866a545e54711bbf9d74cf6`. PR #65 merged to GitHub main `90f7f0ebfe64d4109502ecf47facdc0175a41be4`; its tree exactly matches the published source tree `2a0a4ed158334802de770048eafc63b693ae5dd4`. Issue #53 is closed. The verified rollback is app1.0.65 / Sites136, deployment `appgdep_6ab690cd6164819193c50655e47edc09`. Fresh post-deployment owner comparison: 6,427 records, 66 Dives, one Gas Plan, zero added/removed/changed versus the refreshed pre-deployment snapshot. No Gmail sync was invoked. The historical Stage 9 notes below were written before that release; do not use their then-current counts as a new baseline.

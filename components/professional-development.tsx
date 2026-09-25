@@ -51,6 +51,7 @@ import {
   listProfessionalRequirementSets,
   professionalEvidenceReferenceIssueSummary,
   professionalEvidenceSummary,
+  professionalWaterSkillsProgress,
   requirementSetForPathway,
   saveProfessionalEvidence,
   saveProfessionalPathway,
@@ -61,6 +62,7 @@ import {
   type ProfessionalReferenceRequirementSetRecord,
   type ProfessionalRequirementDefinition,
 } from '../lib/offline/professional-development';
+import { isWaterSkillsRubric } from '../lib/professional-development/water-skills';
 import styles from './professional-development.module.css';
 
 const evidenceText=(value:unknown):string=>{if(value==null)return '';if(typeof value==='string')return value;if(typeof value==='number'||typeof value==='boolean')return String(value);return JSON.stringify(value)??'';};
@@ -180,9 +182,15 @@ export function ProfessionalDevelopment({ go }: Props) {
     () => evidence.filter((item) => item.pathwayId === pathway?.entityId),
     [evidence, pathway?.entityId],
   );
-  const requirementSet = pathway
+  const requirementSet = useMemo(() => pathway
     ? requirementSetForPathway(pathway, requirementSets)
-    : null;
+    : null, [pathway, requirementSets]);
+  const waterRequirement = requirementSet?.requirements.find(item => item.kind === 'assessment' && item.rule.source === 'water-skills');
+  const waterRubric = waterRequirement && isWaterSkillsRubric(waterRequirement.rule.rubric) ? waterRequirement.rule.rubric : null;
+  const waterProgress = waterRubric && waterRequirement && requirementSet ? professionalWaterSkillsProgress(
+    waterRubric, requirementSet.entityId, waterRequirement.key,
+    { pathwayId: pathway?.entityId, dives, certifications, skills, skillEvidence, professionalEvidence: pathwayEvidence, sites, people },
+  ) : null;
   const readiness = useMemo(
     () =>
       evaluateProfessionalReadiness(requirementSet, {
@@ -389,6 +397,45 @@ export function ProfessionalDevelopment({ go }: Props) {
             </section>
           )}
 
+          {waterProgress && waterRequirement && waterRubric && requirementSet && pathway && (
+            <section className={`focus-card ${styles.waterWorkspace}`} aria-label="Water skills and stamina progress">
+              <div className={styles.sectionHead}>
+                <div><span className="focus-eyebrow">WATER SKILLS &amp; STAMINA</span><h2>Five-exercise progress</h2>
+                  <p>{waterRubric.source}. This tracks recorded points, not PADI course completion.</p></div>
+                <strong>{waterProgress.complete ? `${waterProgress.total} / 25` : `${waterProgress.total} / 25 partial`}</strong>
+              </div>
+              <p>Progress: {waterProgress.status === 'not_started' ? 'Not started' :
+                waterProgress.status === 'minimum_met' ? '15-point target met' :
+                waterProgress.status === 'above_minimum' ? 'Above 15-point target / improving' : 'In progress'}.
+                {waterProgress.incompleteAttemptCount > 0 ? ` ${waterProgress.incompleteAttemptCount} incomplete attempt(s).` : ''}
+                {waterProgress.needsEvaluatorCount > 0 ? ` ${waterProgress.needsEvaluatorCount} formal attempt(s) need an evaluator.` : ''}</p>
+              <p>{waterProgress.complete
+                ? waterProgress.minimumProgressMet ? `${waterProgress.pointsAboveTarget} point(s) above the 15-point progress target; keep improving toward 25.` : `${waterProgress.pointsToTarget} point(s) to the 15-point progress target.`
+                : `${waterProgress.exercises.filter(item => !item.formal).length} exercise(s) still need signed formal evidence. Partial points do not establish completion.`}</p>
+              <progress max={25} value={waterProgress.total} aria-label="Recorded water-skills points out of 25" />
+              <div className={styles.waterRows}>
+                {waterProgress.exercises.map(row => <details key={row.key}>
+                  <summary><b>{row.label}</b><span>{row.formal ? `${row.formal.score} / 5 formal` : 'No signed formal score'}</span></summary>
+                  <p>Latest: {row.latest?.score ?? 'Incomplete / unassessed'} · Personal best: {row.best?.score ?? '—'}</p>
+                  {row.attempts.map(attempt => <button type="button" className="focus-link" key={attempt.id}
+                    onClick={() => { const item = pathwayEvidence.find(evidence => evidence.entityId === attempt.id); if (item) setDetailEvidence(item); }}>
+                    {new Date(attempt.attempt.occurredAt).toLocaleDateString('en-GB')} · {attempt.attempt.mode} · {attempt.score ?? 'Incomplete'}
+                    {attempt.reasons.length ? ` · ${attempt.reasons.join('; ')}` : ''}
+                    {attempt.warnings.length ? ` · ${attempt.warnings.join('; ')}` : ''}
+                  </button>)}
+                  <button type="button" className="focus-secondary" onClick={() => setEditingEvidence({
+                    ...emptyEvidence(pathway.entityId, 'stamina'), entityId: '',
+                    requirementSetId: requirementSet.entityId, requirementKey: waterRequirement.key,
+                    payload: { rubricId: waterRubric.id, exerciseKey: row.key, attemptMode: 'practice',
+                      ...((row.key === 'swim-400' || row.key === 'snorkel-800' || row.key === 'tow-100')
+                        ? { distanceM: row.key === 'swim-400' ? 400 : row.key === 'snorkel-800' ? 800 : 100 } : {}) },
+                  } as Stored<ProfessionalEvidenceRecord>)}>Record {row.label} attempt</button>
+                </details>)}
+              </div>
+              <small>Instructor sign-off and current PADI standards are separate from this 15-point progress target. A formal Equipment Exchange assessment may have additional minimum criteria.</small>
+            </section>
+          )}
+
           <section className={styles.workspace}>
             <div className={styles.matrix}>
               <div className={styles.sectionHead}>
@@ -455,7 +502,9 @@ export function ProfessionalDevelopment({ go }: Props) {
                         <span className="focus-eyebrow">
                           {category.label.toUpperCase()}
                         </span>
-                        <p>{category.description}</p>
+                        <p>{category.type === 'stamina' && waterProgress
+                          ? 'General and legacy watermanship evidence. Use the five-exercise tracker above for scored attempts.'
+                          : category.description}</p>
                       </div>
                       <b>{summary[category.type] ?? 0}</b>
                     </div>
@@ -507,7 +556,7 @@ export function ProfessionalDevelopment({ go }: Props) {
                       }
                     >
                       <Plus size={14} />
-                      Add {category.label.toLocaleLowerCase('en-GB')} evidence
+                      {category.type === 'stamina' && waterProgress ? 'Add unscored watermanship evidence' : `Add ${category.label.toLocaleLowerCase('en-GB')} evidence`}
                     </button>
                   </section>
                 );
@@ -1138,7 +1187,7 @@ function EvidenceEditor({
   const [notes, setNotes] = useState(base.notes ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const categoryFields = professionalAssessmentFields(evidenceType);
+  const categoryFields = professionalAssessmentFields(evidenceType, typeof payloadValues.exerciseKey === 'string' ? payloadValues.exerciseKey : undefined, Boolean(base.payload.rubricId));
   async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -1219,6 +1268,7 @@ function EvidenceEditor({
               Evidence type
               <select
                 value={evidenceType}
+                disabled={Boolean(base.payload.rubricId)}
                 onChange={(event) => setEvidenceType(event.target.value)}
               >
                 {PROFESSIONAL_EVIDENCE_CATEGORIES.map((item) => (
@@ -1679,21 +1729,21 @@ function EvidenceDetail({
         />
         {error && <p role="alert" className="dive-save-error">{error}</p>}
         <footer>
-          <button
+          {!item.payload.rubricId && <button
             className="focus-secondary danger"
             onClick={() => void remove()}
           >
             <Trash2 size={15} />
             Delete evidence
-          </button>
+          </button>}
           <span />
           <button className="focus-secondary" onClick={close}>
             Close
           </button>
-          <button className="focus-primary" onClick={edit}>
+          {!item.payload.rubricId && <button className="focus-primary" onClick={edit}>
             <Pencil size={15} />
             Edit
-          </button>
+          </button>}
         </footer>
       </AccessibleDialog>
     </div>

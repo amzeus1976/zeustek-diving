@@ -5,7 +5,7 @@ import { householdAreaAccess, householdCanEditGear, readHouseholdAreaUserIds, re
 import { DIVE_RECORD_KINDS, recordIdentity } from '@/lib/record-identity';
 import { OPERATOR_DELETE_CONSTRAINT, PERSON_DELETE_CONSTRAINT, operatorDeleteBindings, personDeleteBindings } from '@/lib/operators/operator-dependencies';
 import {normaliseEntityRelation} from '@/lib/operators/entity-relationships';
-import { PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT, professionalEvidenceDeleteBindings } from '@/lib/professional-development/evidence-dependencies';
+import { PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT, professionalEvidenceDeleteBindings, professionalEvidenceRevisionAllowed } from '@/lib/professional-development/evidence-dependencies';
 const kinds = new Set<string>(DIVE_RECORD_KINDS);
 const sortText = (value: unknown) => typeof value === 'string' ? value : '';
 async function ensureSchema() {
@@ -123,6 +123,9 @@ export async function POST(request: Request) {
   if (existing && collaborativeAlbums && !(await householdAreaAccess(env,user,existing.ownerUserId,'albums',true))) return Response.json({error:'Shared album access denied'},{status:403});
   const ownerUserId = existing?.ownerUserId ?? user.userId;
   if(existing && existing.kind!==kind)return Response.json({error:'Record type cannot be changed.'},{status:400});
+  if (kind === 'professional-evidence' && existing && body.data &&
+      !professionalEvidenceRevisionAllowed(JSON.parse(existing.dataJson), body.data as Record<string, unknown>))
+    return Response.json({error:'A recorded water-skills attempt is historical evidence. Add a new attempt; only its attachments may be updated.'},{status:409});
   if ((kind === 'person-operator-link' || kind === 'operator-operator-link') && body.data) {
     const relation=body.data as Record<string,unknown>;
     let identity:string;

@@ -10,7 +10,7 @@ import {
   type ProfessionalRequirementDefinition,
 } from '../lib/offline/professional-development';
 import type { Stored } from '../lib/offline/dive-planning';
-import { PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT, professionalEvidenceDeleteBindings } from '../lib/professional-development/evidence-dependencies';
+import { PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT, professionalEvidenceDeleteBindings, professionalEvidenceRevisionAllowed } from '../lib/professional-development/evidence-dependencies';
 
 const asOf = new Date('2026-09-25T12:00:00Z');
 const assessment: ProfessionalRequirementDefinition = {
@@ -64,6 +64,12 @@ const evaluate = (
 ) => evaluateProfessionalRequirement(requirement, 'set-v3', context(...records));
 
 describe('T14 #59 exact Professional Evidence mapping', () => {
+  it('keeps a scored attempt append-only while allowing later attachment references', () => {
+    const previous = { pathwayId: 'path-1', evidenceType: 'stamina', payload: { rubricId: 'v1', durationSec: 500 }, attachmentIds: [], modifiedAt: 'old' };
+    expect(professionalEvidenceRevisionAllowed(previous, { attachmentIds: ['file-1'], modifiedAt: 'new', payload: { durationSec: 500, rubricId: 'v1' }, evidenceType: 'stamina', pathwayId: 'path-1' })).toBe(true);
+    expect(professionalEvidenceRevisionAllowed(previous, { ...previous, payload: { rubricId: 'v1', durationSec: 450 } })).toBe(false);
+    expect(professionalEvidenceRevisionAllowed(previous, { ...previous, evidenceType: 'other' })).toBe(false);
+  });
   it('blocks cloud source deletion while an active same-owner version link exists', () => {
     const db = new DatabaseSync(':memory:');
     try {
@@ -79,6 +85,8 @@ describe('T14 #59 exact Professional Evidence mapping', () => {
       expect(remove()).toBe(0);
       db.prepare('UPDATE dive_records SET deleted_at=2 WHERE id=?').run('owner-link');
       expect(remove()).toBe(1);
+      insert.run('historical-attempt', 'owner-a', 'professional-evidence', JSON.stringify({ evidenceType: 'stamina', payload: { rubricId: 'captured-v1' } }), 1, null);
+      expect(deleteSource.run('historical-attempt', 'owner-a', 1, ...professionalEvidenceDeleteBindings('owner-a', 'historical-attempt')).changes).toBe(0);
     } finally {
       db.close();
     }
