@@ -14,6 +14,8 @@ describe('Stage 9 record editor isolation', () => {
     ['Logbook Dive detail', 'app/dashboard-client.tsx', 'if (viewing) return (\n    <DiveRecordDetail', '<div className="log-list">'],
     ['Imported profile link', 'components/imported-computer-profiles.tsx', 'if (linking) return (', '<div className={styles.profileRows}>'],
     ['Staged import', 'components/dive-computer-data.tsx', 'if (reviewing) return (', 'className={styles.importSources}'],
+    ['Bibliography', 'app/dashboard-client.tsx', 'if (adding) return <DiveMediaForm', 'className="media-library-grid"'],
+    ['Technical reference', 'components/technical-workspace.tsx', 'if (editingReference !== undefined) return <RequirementSetEditor', '<section className={styles.pathways}>'],
   ])('%s editor replaces its record-switching list', (_, path, editorBranch, listMarker) => {
     const code = source(path);
     const editor = code.indexOf(editorBranch);
@@ -31,6 +33,18 @@ describe('Stage 9 record editor isolation', () => {
     expect(source('app/dashboard-client.tsx')).toContain('key={editing.entityId}');
     expect(source('components/imported-computer-profiles.tsx')).toContain('key={linking.entityId}');
     expect(source('components/dive-computer-data.tsx')).toContain('key={reviewing.sessionId}');
+    expect(source('app/dashboard-client.tsx')).toContain("key={editing?.entityId ?? 'new-media'}");
+    expect(source('components/technical-workspace.tsx')).toContain("key={editingReference?.entityId ?? 'new-reference'}");
+  });
+
+  it('isolates every Skill bulk, CSV and cleanup editor from catalogue edit controls', () => {
+    const code = source('components/skill-catalogue.tsx');
+    const catalogue = code.indexOf('return <section className="focus-card skill-catalogue"');
+    for (const branch of ['if (bulkOpen) return <BulkSkillEditor', 'if (csvOpen) return <CsvImportDialog', 'if (cleanupOpen) return <CleanupDialog']) {
+      const at = code.indexOf(branch);
+      expect(at).toBeGreaterThan(0);
+      expect(at).toBeLessThan(catalogue);
+    }
   });
 
   it('guards collapse of a configuration card that contains a dirty editor', () => {

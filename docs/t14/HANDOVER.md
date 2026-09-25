@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Stage 9 PR #65 review continuation (2026-09-25)
+
+The accepted live release remains app1.0.65 / Sites136 and GitHub main `7473a41`; Stage 9 is **not deployed**. The latest PR review identified remaining draft-switch paths. Bibliography editing, Skill bulk/CSV/cleanup editing and technical reference capture now replace their interactive lists while open; Bibliography and technical reference editors are keyed by canonical source ID. Focused tests were red before these changes and now pass (8 files / 59 tests); typecheck passes. The reviewed global Log dive action already uses `recordNavigation.request` and unmounts the old route before mounting its editor, while the Logbook already returns only its Dive detail, so the nested skill-evidence editor has no underlying Dive list. Broad legacy-file lint still reports pre-existing findings; new test lint passes. These corrections are a local checkpoint only. Next: commit/push PR #65, obtain another review, run the complete exact-candidate gate and fresh owner baseline, then publish only after all blockers are resolved. Do not deploy saved Sites134 or alter production owner data.
+
 ## Accepted cylinder detail Save hotfix and Stage 9 continuation (2026-09-25)
 
 The cylinder detail Save controls are accepted live as app1.0.65 / Sites136, deployment `appgdep_6ab690cd6164819193c50655e47edc09`, source `67eb82cfcf57cebb70cfab3a23dd3430261146a9`. Its source tree `82fc8791c5fafc3bc74f5c03bc5115daa7660db9` matches GitHub main `7473a41c95c816e8532dc16e4532eed8423f8e3e` after PR #67. All 6,411 pre/post owner-record IDs and content fingerprints matched (66 Dives, one Gas Plan). Protected calculations matched all nine approved hashes. Accepted rollback is app1.0.63 / Sites135. See `cylinder-detail-save-hotfix-evidence.md`.
