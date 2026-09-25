@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.69',
+    date: '2026-09-25',
+    title: 'Complete 24-skill circuit review',
+    changes: [
+      'The circuit workspace now shows formal, best and latest scores, attempt context, linked Skill Evidence and each score’s contribution.',
+      'The five-point scale and skill-specific conditions are captured in a new rubric version; saved earlier versions remain readable.',
+    ],
+  },
+  {
     version: '1.0.68',
     date: '2026-09-25',
     title: '24-skill circuit progress',
