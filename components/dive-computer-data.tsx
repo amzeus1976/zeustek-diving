@@ -119,6 +119,26 @@ export function DiveComputerData({ evidenceStore }: Props) {
     }
   }
 
+  if (reviewing) return (
+    <main className={styles.page}>
+      <ImportWizard
+        key={reviewing.sessionId}
+        stage={reviewing}
+        evidenceStore={durableEvidenceStore}
+        close={() => setReviewing(null)}
+        committed={async (result) => {
+          setReviewing(null);
+          setMessage(
+            result.reusedImport && result.profiles === 0
+              ? `Import already complete. ${result.alreadyImported} profile(s) were not duplicated.`
+              : `Import finished: ${result.newProfiles} new and ${result.updatedProfiles} reviewed updated profile(s). Link them from Imported Profiles when ready.`,
+          );
+          await refresh();
+        }}
+      />
+    </main>
+  );
+
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
@@ -290,22 +310,6 @@ export function DiveComputerData({ evidenceStore }: Props) {
           )}
         </section>
       </section>
-      {reviewing && (
-        <ImportWizard
-          stage={reviewing}
-          evidenceStore={durableEvidenceStore}
-          close={() => setReviewing(null)}
-          committed={async (result) => {
-            setReviewing(null);
-            setMessage(
-              result.reusedImport && result.profiles === 0
-                ? `Import already complete. ${result.alreadyImported} profile(s) were not duplicated.`
-                : `Import finished: ${result.newProfiles} new and ${result.updatedProfiles} reviewed updated profile(s). Link them from Imported Profiles when ready.`,
-            );
-            await refresh();
-          }}
-        />
-      )}
     </main>
   );
 }

@@ -1102,6 +1102,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
       if (sort === 'number') return (a.diveNumber ?? Number.MAX_SAFE_INTEGER) - (b.diveNumber ?? Number.MAX_SAFE_INTEGER);
       return `${b.date}T${b.timeIn || ''}`.localeCompare(`${a.date}T${a.timeIn || ''}`);
     });
+  if (editing) return <DiveModal key={editing.entityId} item={editing} close={() => setEditing(null)} saved={refresh} />;
   return (
     <>
       <Heading
@@ -1238,13 +1239,6 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
           ]}
         />
       )}{' '}
-      {editing && (
-        <DiveModal
-          item={editing}
-          close={() => setEditing(null)}
-          saved={refresh}
-        />
-      )}
     </>
   );
 }

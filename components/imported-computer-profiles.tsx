@@ -228,6 +228,21 @@ export function ImportedComputerProfiles({
     }
   }
 
+  if (linking) return (
+    <ProfileLinkDialog
+      key={linking.entityId}
+      profile={linking}
+      dives={dives}
+      sites={sites}
+      close={() => setLinking(null)}
+      saved={async (message) => {
+        setLinking(null);
+        announce(message);
+        await refresh();
+      }}
+    />
+  );
+
   return (
     <section
       className={styles.importedProfiles}
@@ -421,19 +436,6 @@ export function ImportedComputerProfiles({
             </div>
           ))}
         </details>
-      )}
-      {linking && (
-        <ProfileLinkDialog
-          profile={linking}
-          dives={dives}
-          sites={sites}
-          close={() => setLinking(null)}
-          saved={async (message) => {
-            setLinking(null);
-            announce(message);
-            await refresh();
-          }}
-        />
       )}
       {removingProfile && (
         <RemovalDialog

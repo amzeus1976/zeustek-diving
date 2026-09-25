@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.62',
+    date: '2026-09-25',
+    title: 'Safer Dive and import editing',
+    changes: [
+      'Dive Log, imported profile linking and staged computer import editors now replace their record lists while open.',
+      'Each editor is tied to its source record, preventing an open draft from being applied to a different record.',
+    ],
+  },
+  {
     version: '1.0.61',
     date: '2026-09-25',
     title: 'Safer record workspaces',
