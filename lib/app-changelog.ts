@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.65',
+    date: '2026-09-25',
+    title: 'Cylinder detail save controls',
+    changes: [
+      'Fill, gas-use and analysis sections have explicit Save actions.',
+      'Closing cylinder details warns only when a section still has unsaved edits.',
+    ],
+  },
+  {
     version: '1.0.63',
     date: '2026-09-25',
     title: 'Cylinder next-test schedule and ID gap repair',

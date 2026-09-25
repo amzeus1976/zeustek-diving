@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Cylinder detail Save controls — app1.0.65 candidate (2026-09-25)
+
+Current accepted production is app1.0.63 / Sites135, deployment `appgdep_6ab68c1bafe48191ae5e5fb7596e8949`, source `ba27db6502a1169a3cc3a30a4b67949cdcbeed68`, after PR #66 merged to GitHub main `f0b1998c9b04a0dc27f8e8685c45583695af7f5f`. An isolated hotfix branch `hotfix/cylinder-detail-save` corrects the section Save controls and false unsaved warning; see `cylinder-detail-save-hotfix-evidence.md`. Stage 9 work remains preserved on `t14/issue-53-stage9` at merge checkpoint `bcb6410`, with PR #65 open and unpublished. Do not deploy saved Sites134. Complete the app1.0.65 release gate and live owner-data comparison before GitHub reconciliation. Do not run Gmail sync.
+
 ## Current urgent hotfix — cylinder visual-to-hydro display and ID #02 (2026-09-25)
 
 The accepted live baseline is app1.0.58 / Sites130 at source `d581ebfd9e6ca475c8256f7e0dd84952de2727fc`. The isolated `hotfix/cylinder-inspection-schedule` candidate is app1.0.63; see `cylinder-inspection-id-hotfix-evidence.md` for the exact checks, owner-data baseline, bounded owner-approved protected-file touchpoint and release/rollback steps. The owner chose to keep #03 and assign unused #02 to the next new cylinder; #04 was added by the owner during investigation and must remain untouched. No production release has yet occurred. Preserve Stage 9 work at local commit `aa92636` on `t14/issue-53-stage9`, plus saved but undeployed Sites134 and PR #65. Resume Stage 9 after this hotfix is published and accepted.
