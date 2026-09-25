@@ -1,0 +1,88 @@
+name: Feature request
+description: Suggest a new ZeusTek Diving capability or substantial enhancement.
+title: "[FEATURE] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for new capabilities and substantial enhancements. A request records the idea; it does not automatically authorise implementation or deployment.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem or goal should this address?
+    validations:
+      required: true
+  - type: textarea
+    id: experience
+    attributes:
+      label: Desired user experience
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Overview / navigation
+        - Insights / analytics
+        - Logbook / dive data
+        - Sites / maps
+        - People / Dive Centres
+        - Planning / Gas Planning
+        - Equipment / cylinders
+        - Training / Certifications / Skills
+        - Professional Development / DMT
+        - Knowledge / media / news
+        - Sharing / public views
+        - Data / backups / sync
+        - PWA / offline
+        - Accessibility / UX
+        - New area
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Data / records involved
+  - type: dropdown
+    id: privacy
+    attributes:
+      label: Privacy / security impact
+      options:
+        - None expected
+        - Uses existing private owner data
+        - Exposes deliberately selected data outside the signed-in app
+        - Uses third-party APIs / providers
+        - Authentication / permissions change
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: calculations
+    attributes:
+      label: Does this affect protected calculations?
+      options:
+        - No
+        - Possibly
+        - Yes - gas / SAC / RMV
+        - Yes - decompression / planning
+        - Yes - analytics / derived values
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: What would make this complete?
+  - type: textarea
+    id: related
+    attributes:
+      label: Related issues, alternatives, or dependencies
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I checked for an existing request covering the same idea.
+          required: true
