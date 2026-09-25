@@ -1,2 +1,8 @@
-blank_issues_enabled: true
-contact_links: []
+blank_issues_enabled: false
+contact_links:
+  - name: Feature request backlog / roadmap
+    url: https://github.com/amzeus1976/zeustek-diving/issues/60
+    about: Browse the current feature-request and enhancement backlog before opening a duplicate.
+  - name: Bug triage index
+    url: https://github.com/amzeus1976/zeustek-diving/issues/61
+    about: Review current bug-reporting guidance and triage rules.
