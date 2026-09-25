@@ -31,7 +31,9 @@ describe('editable AccessibleDialog dismissal contract', () => {
       readFileSync(new URL('../components/media-gallery.tsx', import.meta.url), 'utf8'),
       readFileSync(new URL('../app/dashboard-client.tsx', import.meta.url), 'utf8'),
     ].join('\n');
-    expect(sources).toContain('<AccessibleDialog editable label={evidence');
+    expect(sources).toContain('<RecordEditorWorkspace label={evidence ? \'Edit skill evidence\' : \'Add skill evidence\'}');
+    expect(sources).toContain('<RecordEditorWorkspace label={title} close={() => void leave(close)} closeLabel="Close Dive detail"');
+    expect(sources).not.toContain('<AccessibleDialog editable label={evidence');
     expect(sources).toContain('<RecordEditorWorkspace label={skill');
     expect(sources).toContain('<RecordEditorWorkspace label={item?\'Edit conservation activity\'');
     expect(sources).toContain('<AccessibleDialog editable label="Colour correct photo"');
