@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.68',
+    date: '2026-09-25',
+    title: '24-skill circuit progress',
+    changes: [
+      'A versioned 24-skill circuit tracks evaluator scores and attempt history against the PADI-published sequence, pending instructor confirmation.',
+      'Progress requires every formal skill score, 82 total points, at least three per item and an underwater five; it does not declare a PADI pass or award.',
+    ],
+  },
+  {
     version: '1.0.67',
     date: '2026-09-25',
     title: 'Professional evidence and water-skills progress',

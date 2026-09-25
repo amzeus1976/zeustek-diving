@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { PROFESSIONAL_ASSESSMENT_ACTIVITIES, PROFESSIONAL_EVIDENCE_CATEGORIES, type ProfessionalRequirementDefinition } from '../lib/offline/professional-development';
 import { SKILL_COMPETENCE_LEVELS, skillRecordName, type CanonicalSkillRecord } from '../lib/offline/dive-context';
 import { METRIC_WATER_SKILLS_RUBRIC_2021 } from '../lib/professional-development/water-skills';
+import { PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026 } from '../lib/professional-development/skill-circuit';
 export function ProfessionalRequirementBuilder({
   value,
   change,
@@ -21,7 +22,7 @@ export function ProfessionalRequirementBuilder({
   const [minimum, setMinimum] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
-  const [assessmentSource, setAssessmentSource] = useState<'professional-evidence' | 'canonical-skill' | 'water-skills'>('professional-evidence');
+  const [assessmentSource, setAssessmentSource] = useState<'professional-evidence' | 'canonical-skill' | 'water-skills' | 'skill-circuit'>('professional-evidence');
   const [activityCode, setActivityCode] = useState('');
   const [skillSearch, setSkillSearch] = useState('');
   const [skillKey, setSkillKey] = useState('');
@@ -64,6 +65,8 @@ export function ProfessionalRequirementBuilder({
             ? { source: 'professional-evidence', evidenceType: activity.evidenceType, activityCode: activity.code, evaluatorRequired: true, result: 'passed' }
             : kind === 'assessment' && assessmentSource === 'water-skills'
               ? { source: 'water-skills', rubric: structuredClone(METRIC_WATER_SKILLS_RUBRIC_2021) }
+            : kind === 'assessment' && assessmentSource === 'skill-circuit'
+              ? { source: 'skill-circuit', rubric: structuredClone(PADI_DIVEMASTER_CIRCUIT_PROGRESS_2026) }
             : kind === 'assessment' ? { source: 'canonical-skill', skillKey, minCompetence, evaluatorRequired: true }
             : kind === 'manual' ? { scope: 'requirement', evidenceType: 'mentor-feedback', evaluatorRequired: true, result: 'passed' }
             : {},
@@ -91,7 +94,9 @@ export function ProfessionalRequirementBuilder({
       <p>
         Copy each requirement from the dated source you checked. ZeusTek
         supplies no default agency thresholds. Manual, document and assessment
-        requirements remain for review against their linked evidence.
+        requirements remain for review against their linked evidence. Versioned
+        five-exercise water-skills progress and 24-skill circuit progress are
+        available when their source is cited; neither grants course certification.
       </p>
       <div className="record-fields">
         <label>
@@ -157,6 +162,7 @@ export function ProfessionalRequirementBuilder({
               <option value="professional-evidence">Evaluator-backed professional result</option>
               <option value="canonical-skill">Canonical Skill Evidence</option>
               <option value="water-skills">Five-exercise water-skills progress</option>
+              <option value="skill-circuit">24-skill circuit progress</option>
             </select>
           </label>
           {assessmentSource === 'professional-evidence' ? <label>Exact activity
@@ -164,7 +170,7 @@ export function ProfessionalRequirementBuilder({
               <option value="">Choose the activity captured by the source</option>
               {PROFESSIONAL_ASSESSMENT_ACTIVITIES.map(item => <option key={item.code} value={item.code}>{item.label}</option>)}
             </select>
-          </label> : assessmentSource === 'water-skills' ? <p className="focus-muted">Adds a versioned five-exercise metric progress rubric to this draft. It tracks 15/25 points but does not decide PADI course completion. Review and cite the source before saving the new requirement version.</p> : <>
+          </label> : assessmentSource === 'water-skills' ? <p className="focus-muted">Adds a versioned five-exercise metric progress rubric to this draft. It tracks 15/25 points but does not decide PADI course completion. Review and cite the source before saving the new requirement version.</p> : assessmentSource === 'skill-circuit' ? <p className="focus-muted">Adds a copied 24-skill, 82/120 progress rubric to this requirement version. Current instructor confirmation is pending. Review the cited list before capture; no PADI pass or certification is claimed.</p> : <>
             <label>Find canonical Skill
               <input value={skillSearch} onChange={event => setSkillSearch(event.target.value)} placeholder="Search saved Skills" />
             </label>
