@@ -34,6 +34,3 @@
 .columnChooser label{display:flex;align-items:center;gap:.45rem;min-height:38px;font-size:.78rem}.columnChooser input{width:18px;height:18px}
 @media(max-width:640px){.columnChooser{width:100%;margin-left:0}.columnChooser>div{left:0;right:auto;grid-template-columns:1fr}.cylinderTable{min-width:36rem}}
 .loadoutTitle{background:none;border:0;color:inherit;font:inherit;text-align:left;padding:0;overflow-wrap:anywhere}.loadoutTitle:hover{text-decoration:underline}
-:global([data-record-editor-workspace]) .editor{width:100%;max-height:none;overflow:visible}
-:global([data-record-editor-workspace]) .editor>fieldset{display:grid;gap:1rem}
-:global([data-record-editor-workspace]) .cylinderDetail{width:100%;max-height:none;overflow:visible}

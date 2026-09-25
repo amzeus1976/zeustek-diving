@@ -5,9 +5,9 @@ import {recordNavigation} from '../../lib/editor/navigation-guard';
 import {editorReturnTrigger} from '../../lib/editor/focus-return';
 import styles from './record-editor-workspace.module.css';
 
-export function RecordEditorWorkspace({label,close,save,children,value,dirty=false,busy=false,saveDisabled=false,saveLabel='Save',closeLabel='Cancel',statusText,contentClassName,trackInteractions=true}:{
+export function RecordEditorWorkspace({label,close,save,children,value,dirty=false,busy=false,saveDisabled=false,saveLabel='Save',contentClassName,trackInteractions=true}:{
   label:string;close:()=>void;save?:()=>void|Promise<unknown>;children:ReactNode;value?:unknown;
-  dirty?:boolean;busy?:boolean;saveDisabled?:boolean;saveLabel?:string;closeLabel?:string;statusText?:string;
+  dirty?:boolean;busy?:boolean;saveDisabled?:boolean;saveLabel?:string;
   contentClassName?:string|undefined;
   /** Disable when value fully describes edits and other inputs only filter the view. */
   trackInteractions?:boolean;
@@ -63,8 +63,7 @@ export function RecordEditorWorkspace({label,close,save,children,value,dirty=fal
     finally{setSaving(false);}
   }
   return <section ref={root} tabIndex={-1} aria-label={label} data-record-editor-workspace className={styles.workspace}
-    onInputCapture={event=>{if(trackInteractions&&!(event.target instanceof Element&&event.target.closest('.editor-section-nav')))setInteractionDirty(true);}}
-    onChangeCapture={event=>{if(trackInteractions&&!(event.target instanceof Element&&event.target.closest('.editor-section-nav')))setInteractionDirty(true);}}
+    onInputCapture={()=>{if(trackInteractions)setInteractionDirty(true);}} onChangeCapture={()=>{if(trackInteractions)setInteractionDirty(true);}}
     onClickCapture={event=>{
       const target=event.target instanceof Element?event.target:null;
       if(target?.closest('dialog'))return;
@@ -75,12 +74,12 @@ export function RecordEditorWorkspace({label,close,save,children,value,dirty=fal
       if(event.key!=='Escape'||(event.target instanceof Element&&event.target.closest('dialog')))return;
       event.preventDefault();event.stopPropagation();leave(close);
     }}>
-    <header className={styles.header}><div><span className="focus-eyebrow">RECORD WORKSPACE</span><h1>{label}</h1><small>{working?'Saving…':changed?'Unsaved changes':statusText??'Review and edit'}</small></div>
-      <div className={styles.actions}><button type="button" className="focus-secondary" disabled={working} onClick={()=>leave(close)}>{closeLabel}</button>
+    <header className={styles.header}><div><span className="focus-eyebrow">RECORD WORKSPACE</span><h1>{label}</h1><small>{working?'Saving…':changed?'Unsaved changes':'Review and edit'}</small></div>
+      <div className={styles.actions}><button type="button" className="focus-secondary" disabled={working} onClick={()=>leave(close)}>Cancel</button>
         {save&&<button type="button" className="focus-primary" disabled={working||saveDisabled} onClick={()=>void persist()}>{working?'Saving…':saveLabel}</button>}</div></header>
     <div className={[styles.body,contentClassName].filter(Boolean).join(' ')}>{children}</div>
     {error&&<p role="alert" className="dive-save-error">{error}</p>}
-    <footer className={styles.actions}><button type="button" className="focus-secondary" disabled={working} onClick={()=>leave(close)}>{closeLabel}</button>
+    <footer className={styles.actions}><button type="button" className="focus-secondary" disabled={working} onClick={()=>leave(close)}>Cancel</button>
       {save&&<button type="button" className="focus-primary" disabled={working||saveDisabled} onClick={()=>void persist()}>{working?'Saving…':saveLabel}</button>}</footer>
     {confirming&&<AccessibleDialog label="Discard unsaved changes?" className="focus-modal" close={keepEditing} containDismiss onEscape={keepEditing}>
       <h2>Discard unsaved changes?</h2><p>Your edits have not been saved.</p>

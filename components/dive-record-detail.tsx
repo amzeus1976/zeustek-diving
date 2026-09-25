@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { Info, Link2Off, Pencil, Plus, Trash2 } from 'lucide-react';
-import { RecordEditorWorkspace } from './shared/record-editor-workspace';
+import { Info, Link2Off, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { AccessibleDialog } from './accessible-dialog';
 import { MediaGallery } from './media-gallery';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { DIVE_VIEWS, parseDiveView, saveDivePerspective, type DivePerspectivePatch, type DiveView } from '../lib/offline/dive-perspectives';
@@ -10,7 +10,6 @@ import { CANONICAL_SKILL_GROUPS, CANONICAL_SKILLS_CHANGED_EVENT, SKILL_COMPETENC
 import { refreshDiveRecords } from '../lib/offline/dive-store';
 import { listEquipmentSets, listPeople, type DiveTripRecord, type EquipmentSetRecord, type PersonRecord } from '../lib/offline/dive-planning';
 import { DiveEditorWrites } from '../lib/offline/dive-editor-writes';
-import { recordNavigation } from '../lib/editor/navigation-guard';
 import { ComputerProfileEvidence } from './computer-profile-evidence';
 
 const debriefFields = [
@@ -72,9 +71,8 @@ export function SkillEvidenceDialog({ dive, skills, people, equipmentSets, evide
   const [notes, setNotes] = useState(evidence?.notes || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function submit() {
-    if (busy) return;
-    setBusy(true); setError('');
+  async function submit(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setError('');
     try {
       let selectedSkillKey = skillKey;
       if (createNew) {
@@ -109,9 +107,10 @@ export function SkillEvidenceDialog({ dive, skills, people, equipmentSets, evide
     const query = skillSearch.trim().toLocaleLowerCase('en-GB');
     return !query || skill.entityId === currentSkill?.entityId || `${skillRecordName(skill)} ${skillRecordGroup(skill)} ${skill.description || ''}`.toLocaleLowerCase('en-GB').includes(query);
   }).sort((a, b) => skillRecordGroup(a).localeCompare(skillRecordGroup(b), 'en-GB') || skillRecordName(a).localeCompare(skillRecordName(b), 'en-GB'));
-  return <RecordEditorWorkspace label={evidence ? 'Edit skill evidence' : 'Add skill evidence'} close={close} save={submit} busy={busy} saveLabel={evidence ? 'Save evidence' : 'Add to Dive'} saveDisabled={createNew ? !newSkillName.trim() || !performedAt : !skillKey || !performedAt} value={{skillKey,createNew,newSkillName,newSkillGroup,performedAt,environment,assessment,competenceLevel,confidenceLevel,evaluatorPersonId,equipmentSetId,notes}} trackInteractions={false} contentClassName="skill-evidence-workspace">
-      <div>
-        <p className="focus-eyebrow">SKILLS PRACTISED</p>
+  return <div className="focus-modal-bg skill-evidence-modal-bg">
+    <AccessibleDialog editable label={evidence ? 'Edit skill evidence' : 'Add skill evidence'} className="focus-modal skill-evidence-modal" close={() => { if (!busy) close(); }}>
+      <form onSubmit={event => void submit(event)}>
+        <header><div><span className="focus-eyebrow">SKILLS PRACTISED</span><h2>{evidence ? 'Edit skill evidence' : 'Add skill'}</h2></div><button type="button" className="focus-icon" disabled={busy} aria-label="Close skill evidence editor" data-dialog-close onClick={close}><X /></button></header>
         <fieldset disabled={busy} className="skill-evidence-fields">
           {!createNew && <><label>Search existing skills<input value={skillSearch} onChange={event => setSkillSearch(event.target.value)} placeholder="Search by Skill group, name or description" /></label><label>Canonical skill<select required value={skillKey} onChange={event => setSkillKey(event.target.value)}><option value="">Choose a saved skill</option>{selectableSkills.map(skill => <option key={skill.entityId} value={skillRecordKey(skill)}>{skillRecordLabel(skill)}{skill.archived ? ' — archived' : ''}</option>)}</select></label>{skillSearch && selectableSkills.length === 0 && <p>No active Skills match that search. Clear the search or create a new canonical Skill.</p>}</>}
           {!evidence && <button type="button" className="focus-secondary skill-create-toggle" data-dialog-dirty aria-pressed={createNew} onClick={() => setCreateNew(value => !value)}>{createNew ? 'Choose a saved skill' : 'Create a new canonical skill'}</button>}
@@ -119,7 +118,7 @@ export function SkillEvidenceDialog({ dive, skills, people, equipmentSets, evide
           <div className="skill-evidence-grid">
             <label>Practised at<input type="datetime-local" required value={performedAt} onChange={event => setPerformedAt(event.target.value)} /></label>
             <label>Environment<input value={environment} onChange={event => setEnvironment(event.target.value)} placeholder="Open water, quarry, pool…" /></label>
-            <div className="skill-competence-choice"><div className="skill-competence-label"><label htmlFor={competenceSelectId}>Competence</label><button type="button" className="skill-competence-help" aria-label="Show Skill-specific competence definitions" aria-expanded={competenceHelpOpen} aria-controls={`${competenceDescriptionId}-all`} data-tooltip={competenceContext} onClick={() => setCompetenceHelpOpen(value => !value)}><Info size={16}/></button></div><select id={competenceSelectId} aria-describedby={competenceDescriptionId} value={competenceLevel} onChange={event => setCompetenceLevel(event.target.value)}><option value="">Not assessed</option>{evidence?.competenceLevel != null && !isSkillCompetenceLevel(evidence.competenceLevel) && <option value={String(evidence.competenceLevel)}>Legacy competence: {evidence.competenceLevel} / 5</option>}{SKILL_COMPETENCE_LEVELS.map(level => <option key={level} value={level}>{skillCompetenceLevelLabel(level)}</option>)}</select><output id={competenceDescriptionId} className={`skill-competence-context${selectedCompetence && !selectedDefinition ? ' definition-missing' : ''}`} aria-live="polite">{selectedCompetence && <b>{skillCompetenceLevelLabel(selectedCompetence)}</b>}<span>{competenceContext}</span></output>{competenceHelpOpen && <div id={`${competenceDescriptionId}-all`} className="skill-competence-all"><b>Definitions for {selectedSkill ? skillRecordName(selectedSkill) : 'the selected Skill'}</b>{SKILL_COMPETENCE_LEVELS.map(level => <div key={level}><strong>{skillCompetenceLevelLabel(level)}</strong><span>{skillCompetenceDefinition(selectedSkill, level) || 'No Skill-specific definition has been recorded yet.'}</span></div>)}</div>}</div>
+            <div className="skill-competence-choice"><div className="skill-competence-label"><label htmlFor={competenceSelectId}>Competence</label><button type="button" className="skill-competence-help" aria-label="Show Skill-specific competence definitions" aria-expanded={competenceHelpOpen} aria-controls={`${competenceDescriptionId}-all`} data-tooltip={competenceContext} onClick={() => setCompetenceHelpOpen(value => !value)}><Info size={16}/></button></div><select id={competenceSelectId} aria-describedby={competenceDescriptionId} value={competenceLevel} onChange={event => setCompetenceLevel(event.target.value)}><option value="">Not assessed</option>{evidence?.competenceLevel != null && !isSkillCompetenceLevel(evidence.competenceLevel) && <option value={String(evidence.competenceLevel)}>Legacy competence: {evidence.competenceLevel} / 5</option>}{SKILL_COMPETENCE_LEVELS.map(level => <option key={level} value={level}>{skillCompetenceLevelLabel(level)}</option>)}</select><div id={competenceDescriptionId} className={`skill-competence-context${selectedCompetence && !selectedDefinition ? ' definition-missing' : ''}`} role="status" aria-live="polite">{selectedCompetence && <b>{skillCompetenceLevelLabel(selectedCompetence)}</b>}<span>{competenceContext}</span></div>{competenceHelpOpen && <div id={`${competenceDescriptionId}-all`} className="skill-competence-all"><b>Definitions for {selectedSkill ? skillRecordName(selectedSkill) : 'the selected Skill'}</b>{SKILL_COMPETENCE_LEVELS.map(level => <div key={level}><strong>{skillCompetenceLevelLabel(level)}</strong><span>{skillCompetenceDefinition(selectedSkill, level) || 'No Skill-specific definition has been recorded yet.'}</span></div>)}</div>}</div>
             <label>Confidence<select value={confidenceLevel} onChange={event => setConfidenceLevel(event.target.value)}><option value="">Not recorded</option>{[0,1,2,3,4,5].map(level => <option key={level} value={level}>{level} — {['None','Very low','Low','Moderate','High','Very high'][level]}</option>)}</select></label>
             <label>Evaluator<select value={evaluatorPersonId} onChange={event => setEvaluatorPersonId(event.target.value)}><option value="">No evaluator recorded</option>{people.map(person => <option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label>
             <label>Equipment configuration<select value={equipmentSetId} onChange={event => setEquipmentSetId(event.target.value)}><option value="">No equipment set recorded</option>{equipmentSets.map(set => <option key={set.entityId} value={set.entityId}>{set.name}</option>)}</select></label>
@@ -129,8 +128,10 @@ export function SkillEvidenceDialog({ dive, skills, people, equipmentSets, evide
           {evidence?.attachmentIds?.length ? <p>{evidence.attachmentIds.length} existing evidence attachment{evidence.attachmentIds.length === 1 ? '' : 's'} retained.</p> : <p>Photos and videos remain attached to the Dive below; evidence records preserve any existing attachment references.</p>}
         </fieldset>
         {error && <p role="alert" className="dive-save-error">{error}</p>}
-      </div>
-    </RecordEditorWorkspace>;
+        <footer><button type="button" className="focus-secondary" disabled={busy} data-dialog-close onClick={close}>Cancel</button><button className="focus-primary" disabled={busy || (!createNew && !skillKey)}>{busy ? 'Saving…' : evidence ? 'Save evidence' : 'Add to Dive'}</button></footer>
+      </form>
+    </AccessibleDialog>
+  </div>;
 }
 
 export function SkillEvidenceCard({ item, skill, people, busy = false, edit, unlink, remove }: {
@@ -180,11 +181,11 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
   const refreshContext = useCallback(async () => {
     const [items, definitions, evaluators, sets, original] = await Promise.all([listSkillEvidence(), listCanonicalSkills(), listPeople(), listEquipmentSets(), loadOriginatingPlan(dive)]);
     setEvidence(items); setSkills(definitions); setPeople(evaluators); setEquipmentSets(sets); setPlan(original); setContextError('');
-  }, [dive, setEvidence, setSkills, setPeople, setEquipmentSets, setPlan, setContextError]);
+  }, [dive]);
   useEffect(() => {
     let active = true;
     const skillsChanged = () => { if (active) void refreshContext(); };
-    queueMicrotask(() => { if (active) void refreshContext().catch(() => { if (active) setContextError('Linked evidence is unavailable on this device. Existing references are retained.'); }); });
+    void refreshContext().catch(() => { if (active) setContextError('Linked evidence is unavailable on this device. Existing references are retained.'); });
     void Promise.all([refreshDiveRecords('skill_evidence'), refreshDiveRecords('skill')]).then(() => { if (active) return refreshContext(); }).catch(() => {});
     window.addEventListener(CANONICAL_SKILLS_CHANGED_EVENT, skillsChanged);
     return () => { active = false; window.removeEventListener(CANONICAL_SKILLS_CHANGED_EVENT, skillsChanged); };
@@ -216,20 +217,6 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
     try { await queue.current.afterSaved(action); } catch { /* Keep this mounted until a retry succeeds. */ }
     finally { setLeaving(false); }
   }
-  useEffect(() => {
-    if (skillEditor !== undefined) return;
-    return recordNavigation.register(action => {
-      if (leaving) return;
-      setLeaving(true);
-      void queue.current.afterSaved(action).catch(() => { /* Keep the Dive mounted for retry. */ }).finally(() => setLeaving(false));
-    });
-  }, [skillEditor, leaving]);
-  useEffect(() => {
-    if (!status.startsWith('Saving') && !error) return;
-    const preventUnfinishedExit = (event: BeforeUnloadEvent) => { event.preventDefault(); };
-    window.addEventListener('beforeunload', preventUnfinishedExit);
-    return () => window.removeEventListener('beforeunload', preventUnfinishedExit);
-  }, [status, error]);
   function retry() {
     enqueue(draft.current, true);
   }
@@ -263,10 +250,12 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
     catch (reason) { setContextError(reason instanceof Error ? reason.message : 'Evidence could not be deleted.'); }
     finally { setSkillBusy(''); }
   }
-  return <div data-dive-id={dive.entityId}>
-    <div hidden={skillEditor !== undefined}>
-    <RecordEditorWorkspace label={title} close={() => void leave(close)} closeLabel="Close Dive detail" statusText={error ? 'Local save needs attention' : status || eyebrow} trackInteractions={false} contentClassName="dive-multiview">
-      <p className="dive-shared-date">{dive.date} · {[dive.timeIn, dive.timeOut].filter(Boolean).join(' – ') || 'Time not recorded'}</p>
+  return <div className="focus-modal-bg" data-dive-id={dive.entityId}>
+    <AccessibleDialog editable label={title} close={() => void leave(close)} className="focus-modal record-detail dive-multiview">
+      <header>
+        <div><span className="focus-eyebrow">{eyebrow}</span><h2>{title}</h2><p className="dive-shared-date">{dive.date} · {[dive.timeIn, dive.timeOut].filter(Boolean).join(' – ') || 'Time not recorded'}</p></div>
+        <button className="focus-icon" disabled={leaving} aria-label="Close Dive detail" onClick={() => void leave(close)}><X /></button>
+      </header>
       <div className="dive-shared-stats"><span>#{dive.diveNumber ?? '—'}</span><span>{dive.maxDepthM ?? '—'} m maximum</span><span>{dive.totalElapsedMin ?? dive.bottomTimeMin ?? '—'} min</span><span>{dive.gas || 'Gas not recorded'}</span></div>
       {dive.originatingPlanId && <p className="dive-plan-link"><a className="focus-link" href={`/?section=Dive%20Plans&planId=${encodeURIComponent(dive.originatingPlanId)}`} onClick={event => { event.preventDefault(); const url = event.currentTarget.href; void leave(() => window.location.assign(url)); }}>Originating Dive Plan</a></p>}
       <div className="record-actions dive-shared-actions">
@@ -291,10 +280,10 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
           <h3>Post-dive debrief</h3><p className="dive-view-help">Optional reflections. Dive facts above remain unchanged.</p>
           {debriefFields.map(([field, label]) => <label key={field}>{label}<textarea value={debrief[field] ?? ''} onChange={event => changeDebrief({ [field]: event.target.value })} /></label>)}
           <section className="dive-skill-evidence">
-            <div className="dive-skill-head"><div><h3>Skills practised</h3><p>Reusable Skills and their evidence stay shared with future Skills &amp; Currency views.</p></div><button className="focus-primary" onClick={() => void leave(() => setSkillEditor(null))}><Plus size={16}/> Add skill</button></div>
-            {contextError && <output>{contextError}</output>}
-            {linkedEvidence.map((item, index) => item ? <SkillEvidenceCard key={item.entityId} item={item} skill={skillForEvidence(item)} people={people} busy={skillBusy === item.entityId} edit={() => void leave(() => setSkillEditor(item))} unlink={() => void unlinkEvidence(item.entityId)} remove={() => void deleteEvidence(item.entityId)} /> : <p key={evidenceIds[index]}>Saved evidence {evidenceIds[index]} — unavailable. <button className="focus-secondary" onClick={() => void unlinkEvidence(evidenceIds[index]!)}>Unlink evidence</button></p>)}
-            {!evidenceIds.length && <div className="dive-skill-empty"><p>No skills recorded for this dive yet.</p><button className="focus-secondary" onClick={() => void leave(() => setSkillEditor(null))}><Plus size={16}/> Add skill</button></div>}
+            <div className="dive-skill-head"><div><h3>Skills practised</h3><p>Reusable Skills and their evidence stay shared with future Skills &amp; Currency views.</p></div><button className="focus-primary" onClick={() => setSkillEditor(null)}><Plus size={16}/> Add skill</button></div>
+            {contextError && <p role="status">{contextError}</p>}
+            {linkedEvidence.map((item, index) => item ? <SkillEvidenceCard key={item.entityId} item={item} skill={skillForEvidence(item)} people={people} busy={skillBusy === item.entityId} edit={() => setSkillEditor(item)} unlink={() => void unlinkEvidence(item.entityId)} remove={() => void deleteEvidence(item.entityId)} /> : <p key={evidenceIds[index]}>Saved evidence {evidenceIds[index]} — unavailable. <button className="focus-secondary" onClick={() => void unlinkEvidence(evidenceIds[index]!)}>Unlink evidence</button></p>)}
+            {!evidenceIds.length && <div className="dive-skill-empty"><p>No skills recorded for this dive yet.</p><button className="focus-secondary" onClick={() => setSkillEditor(null)}><Plus size={16}/> Add skill</button></div>}
             {unlinkedEvidence.length > 0 && <details className="dive-existing-evidence"><summary>Link existing evidence ({unlinkedEvidence.length})</summary>{unlinkedEvidence.map(item => <div key={item.entityId}><span><b>{skillNameForEvidence(item)}</b><small>{item.performedAt || 'Date not recorded'}</small></span><button className="focus-secondary" disabled={skillBusy === item.entityId} onClick={() => void linkEvidence(item.entityId)}>Link to this Dive</button></div>)}</details>}
           </section>
           <details className="dive-human-factors"><summary>Human factors outcome</summary>{humanFactorsFields.map(([field, label]) => <label key={field}>{label}<textarea value={debrief.humanFactorsOutcome?.[field] ?? ''} onChange={event => changeDebrief({ humanFactorsOutcome: { ...draft.current.debrief?.humanFactorsOutcome, [field]: event.target.value } })} /></label>)}</details>
@@ -312,11 +301,11 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
           </div>)}<button className="focus-secondary" onClick={() => changeStory({ timelineNotes: [...(draft.current.story?.timelineNotes ?? []), { text: '' }] })}>Add timeline note</button></section>
         </TabsContent>
       </Tabs>
-      <output className="dive-local-save">{status}</output>
+      <p role="status" className="dive-local-save">{status}</p>
       {error && <div role="alert" className="dive-save-error"><p>{error}</p><button className="focus-secondary" onClick={retry}>Retry local save</button></div>}
       <MediaGallery ownerKind="dive" ownerId={dive.entityId} retainOfflineMetadata {...(view === 'story' ? { featuredIds: story.featuredAttachmentIds ?? [], onFeaturedChange: (ids: string[]) => changeStory({ featuredAttachmentIds: ids }) } : {})} />
-    </RecordEditorWorkspace>
-    </div>
+      <footer><button className="focus-secondary" disabled={leaving} onClick={() => void leave(close)}>Close</button></footer>
+    </AccessibleDialog>
     {skillEditor !== undefined && <SkillEvidenceDialog dive={dive} skills={skills} people={people} equipmentSets={equipmentSets} evidence={skillEditor} close={() => setSkillEditor(undefined)} saved={(item, ids) => { setEvidence(current => [...current.filter(value => value.entityId !== item.entityId), item]); applyEvidenceIds(ids); setSkillEditor(undefined); void refreshContext(); }} />}
   </div>;
 }

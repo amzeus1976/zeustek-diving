@@ -31,9 +31,7 @@ describe('T04 Trips & Expeditions shell integration', () => {
   it('preserves T03 containment and reuses common private evidence files and protected Trip editors', () => {
     expect(DIVE_RECORD_KINDS).toContain('site-overhead-profile');
     const source=read('components/trips-expeditions.tsx');
-    expect(source).toContain('<RecordEditorWorkspace label={item?\'Edit trip\':\'New trip\'}');
-    expect(source).toContain('value={value} dirty={dirty} trackInteractions={false}');
-    expect(source).not.toContain('<AccessibleDialog editable dirty={dirty}');
+    expect(source).toContain('<AccessibleDialog editable dirty={dirty}');
     expect(source).toContain('<TripResources');
     expect(read('components/trip-resources.tsx')).toContain('acceptFiles retainOfflineMetadata accessibleViewer');
     const mediaKinds = read('app/api/media/route.ts').match(/const documentFile = \[([^\]]+)\]\.includes\(ownerKind\)/)?.[1] ?? '';

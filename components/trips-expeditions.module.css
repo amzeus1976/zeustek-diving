@@ -62,7 +62,7 @@
 .notes h3 { grid-column: 1 / -1; }
 .notes > div { padding: 0.65rem; border-radius: 0.65rem; background: rgba(255,255,255,.035); }
 .notes p { white-space: pre-wrap; }
-.editor { width: 100%; max-height: none; overflow: visible; }
+.editor { width: min(76rem, calc(100vw - 2rem)); max-height: 94vh; overflow: auto; }
 .choiceSection, .repeatSection, .safetyNotes { margin: 0.9rem 0; }
 .choiceSection .focus-card-head > div { display: flex; gap: 0.5rem; align-items: center; }
 .choiceGrid {
@@ -121,7 +121,7 @@
 @media (max-width: 780px) {
   .toolbar, .linkColumns, .notes, .repeatRow { grid-template-columns: 1fr; }
   .hero { align-items: flex-start; }
-  .detail { width: calc(100vw - 1rem); max-height: 96vh; }
+  .detail, .editor { width: calc(100vw - 1rem); max-height: 96vh; }
   .repeatRow :global(.record-wide), .notes h3 { grid-column: auto; }
 }
 

@@ -47,8 +47,6 @@ describe('T12 shell', () => {
       'No Dive assignment or field decision is required',
     );
     expect(importUi).not.toContain('Continue to assignment');
-    expect(importUi).toMatch(/<RecordEditorWorkspace\s+label="Review computer import"/);
-    expect(reviewUi).toMatch(/<RecordEditorWorkspace\s+label=\{`Link profile/);
     for (const label of [
       'Imported Profiles',
       'Unlinked profiles',

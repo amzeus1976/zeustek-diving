@@ -1,5 +1,14 @@
 {
   "baseline": "b2e86827c19239776c80b51fc93067c7dc4b18ac",
+  "approvedTouchpoints": [
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "originalSha256": "0e4e7054e7c858e351ad5a9b6a4130d08e108e114a57001294c9d9a41fb94104",
+      "approvedSha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a",
+      "scope": "Cylinder ID allocation uses the first free two-digit ID; gas, NDL, MOD, PPO2, time and reserve calculations are unchanged.",
+      "ownerApproval": "2026-09-25 explicit bounded CALCULATION_TOUCHPOINT approval in this task"
+    }
+  ],
   "files": [
     {
       "path": "lib/offline/buhlmann-ndl.ts",
@@ -28,8 +37,8 @@
     },
     {
       "path": "lib/offline/loadouts-gas.ts",
-      "sha256": "0e4e7054e7c858e351ad5a9b6a4130d08e108e114a57001294c9d9a41fb94104",
-      "workingTreeSha256": "0e4e7054e7c858e351ad5a9b6a4130d08e108e114a57001294c9d9a41fb94104"
+      "sha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a",
+      "workingTreeSha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a"
     },
     {
       "path": "lib/gas-rates.ts",

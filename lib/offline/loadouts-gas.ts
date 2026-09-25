@@ -192,6 +192,10 @@ function cylinderIdNumber(value: string | null | undefined) {
 }
 
 const formatCylinderId = (value: number) => String(value).padStart(2, '0');
+function firstAvailableCylinderId(used: Set<number>) {
+  for (let number = 1; number <= 99; number += 1) if (!used.has(number)) return number;
+  throw new Error('Cylinder ID capacity reached. IDs are limited to 01–99.');
+}
 let cylinderIdAssignmentQueue: Promise<void> = Promise.resolve();
 
 async function ensureCylinderIds() {
@@ -199,22 +203,21 @@ async function ensureCylinderIds() {
     const inventory = (await readCylinderInventory()).sort((left, right) =>
       `${left.createdAt ?? ''}:${left.entityId}`.localeCompare(`${right.createdAt ?? ''}:${right.entityId}`),
     );
-    const used = new Set<number>();
-    let highest = 0;
+    const reserved = new Set(inventory.map((item) => cylinderIdNumber(item.cylinderNumber)).filter((value): value is number => value != null));
+    const seen = new Set<number>();
     const repairs: Array<{ item: InventoryCylinder; cylinderNumber: string }> = [];
     for (const item of inventory) {
       const parsed = cylinderIdNumber(item.cylinderNumber);
-      if (parsed != null && !used.has(parsed)) {
-        used.add(parsed);
-        highest = Math.max(highest, parsed);
+      if (parsed != null && !seen.has(parsed)) {
+        seen.add(parsed);
         const normalised = formatCylinderId(parsed);
         if (item.cylinderNumber !== normalised) repairs.push({ item, cylinderNumber: normalised });
         continue;
       }
-      do highest += 1; while (used.has(highest));
-      if (highest > 99) throw new Error('Cylinder ID capacity reached. IDs are limited to 01–99.');
-      used.add(highest);
-      repairs.push({ item, cylinderNumber: formatCylinderId(highest) });
+      const available = firstAvailableCylinderId(reserved);
+      reserved.add(available);
+      seen.add(available);
+      repairs.push({ item, cylinderNumber: formatCylinderId(available) });
     }
     for (const { item, cylinderNumber } of repairs) {
       const { recordStorageKind, ...record } = item;
@@ -428,9 +431,8 @@ export async function saveCylinderProfile(
   const existing = input.entityId ? inventory.find((item) => item.entityId === input.entityId) : null;
   let cylinderNumber = existing?.cylinderNumber ?? null;
   if (!cylinderNumber) {
-    const highest = inventory.reduce((maximum, cylinder) => Math.max(maximum, cylinderIdNumber(cylinder.cylinderNumber) ?? 0), 0);
-    if (highest >= 99) throw new Error('Cylinder ID capacity reached. IDs are limited to 01–99.');
-    cylinderNumber = formatCylinderId(highest + 1);
+    const used = new Set(inventory.map((cylinder) => cylinderIdNumber(cylinder.cylinderNumber)).filter((value): value is number => value != null));
+    cylinderNumber = formatCylinderId(firstAvailableCylinderId(used));
   }
   const lastTestAt = monthValue(input.lastTestAt);
   const lastTestType = lastTestAt ? input.lastTestType ?? null : null;

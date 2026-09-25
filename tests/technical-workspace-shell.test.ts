@@ -39,10 +39,4 @@ describe('T07 shell and architecture integration', () => {
     expect(read('lib/workflow/workflow-model.ts')).toContain("{ route: 'Technical Diving', label: 'Technical Diving'");
     expect(dashboard).toContain("active === 'Technical Diving' && <TechnicalWorkspace go={go} />");
   });
-
-  it('edits a versioned reference in the in-route workspace', () => {
-    const component = read('components/technical-workspace.tsx');
-    expect(component).toContain('<RecordEditorWorkspace label="Technical pathway reference snapshot"');
-    expect(component).not.toContain('<AccessibleDialog editable containDismiss label="Technical pathway reference snapshot"');
-  });
 });

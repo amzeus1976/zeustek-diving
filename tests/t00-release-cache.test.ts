@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { AppVersionLink } from '../components/app-changelog';
 import { version } from '../package.json';
-import { appChangelog } from '../lib/app-changelog';
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
@@ -15,15 +14,6 @@ it('renders the exact accessible current-version link and preserves the canonica
   expect(html).toContain(`v${version}`);
   const hosting = JSON.parse(readFileSync(new URL('../.openai/hosting.json', import.meta.url), 'utf8'));
   expect(hosting.project_id).toBe('appgprj_6a91926878b48191a80d70f1681ef135');
-});
-
-it('advances the Stage 9 release and isolates its navigation and static caches', () => {
-  expect(version).toBe('1.0.62');
-  expect(appChangelog[0]?.version).toBe(version);
-  const worker = readFileSync(new URL('../app/service-worker.ts', import.meta.url), 'utf8');
-  expect(worker).toContain("cacheName:'zeustek-navigation-v12'");
-  expect(worker).toContain("cacheName: 'zeustek-static-v11'");
-  expect(worker).toContain("'zeustek-navigation-v12'].map(name=>caches.delete(name))");
 });
 
 it('reproduces the existing PWA timeout returning stale HTML despite a healthy newer network response', async () => {
