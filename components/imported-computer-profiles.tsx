@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link2, Search, Trash2, Unlink, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import type { DiveRecord } from '../lib/offline/dives';
 import type { DiveSiteRecord, Stored } from '../lib/offline/dive-planning';
 import type {
@@ -493,7 +494,6 @@ function ProfileLinkDialog({
   close: () => void;
   saved: (message: string) => Promise<void>;
 }) {
-  const closeRef = useRef<HTMLButtonElement>(null);
   const candidates = useMemo(
     () => matchesFor(profile, dives, sites),
     [dives, profile, sites],
@@ -563,31 +563,23 @@ function ProfileLinkDialog({
   }
 
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        editable
-        containDismiss
-        onEscape={() => closeRef.current?.click()}
-        label={`Link profile ${profile.sourceDiveId}`}
-        close={close}
-        className={`focus-modal ${styles.linkDialog}`}
-      >
-        <header>
+    <RecordEditorWorkspace
+      label={`Link profile ${profile.sourceDiveId}`}
+      close={close}
+      save={link}
+      busy={busy}
+      saveLabel={applyFields ? 'Link and apply decisions' : 'Link only'}
+      saveDisabled={!targetDiveId}
+      value={{targetDiveId,applyFields,decisions}}
+      trackInteractions={false}
+      contentClassName={styles.linkDialog}
+    >
+        <div>
           <div>
             <span className="focus-eyebrow">LINK AFTER IMPORT</span>
             <h2>Choose a Dive log</h2>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            className="focus-icon"
-            data-dialog-close
-            aria-label="Close profile linking"
-            onClick={close}
-          >
-            <X />
-          </button>
-        </header>
+        </div>
         <p>
           Same-date and nearest-time Dives are listed first, followed by Site,
           duration and depth similarity. Linking alone never overwrites a Dive
@@ -694,25 +686,7 @@ function ProfileLinkDialog({
               </article>
             );
           })}
-        <div className={styles.stepActions}>
-          <button type="button" className="focus-secondary" onClick={close}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="focus-primary"
-            disabled={busy || !targetDiveId}
-            onClick={() => void link()}
-          >
-            {busy
-              ? 'Linking…'
-              : applyFields
-                ? 'Link and apply decisions'
-                : 'Link only'}
-          </button>
-        </div>
-      </AccessibleDialog>
-    </div>
+    </RecordEditorWorkspace>
   );
 }
 

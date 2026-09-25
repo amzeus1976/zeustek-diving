@@ -1,15 +1,14 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   FileUp,
   HardDriveDownload,
   ShieldCheck,
   Upload,
-  X,
 } from 'lucide-react';
-import { AccessibleDialog } from './accessible-dialog';
+import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { ZeusTekIcon } from './zeustek-icon';
 import { ImportedComputerProfiles } from './imported-computer-profiles';
 import { useRecordRefresh } from './record-status';
@@ -440,7 +439,6 @@ function ImportWizard({
   close: () => void;
   committed: (result: Awaited<ReturnType<typeof commitComputerImport>>) => void;
 }) {
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [step, setStep] = useState(1);
   const [reviewedUpdatedIds, setReviewedUpdatedIds] = useState<string[]>([]);
   const [message, setMessage] = useState('');
@@ -487,16 +485,18 @@ function ImportWizard({
   }
 
   return (
-    <div className="focus-modal-bg">
-      <AccessibleDialog
-        editable
-        containDismiss
-        onEscape={() => closeButtonRef.current?.click()}
-        label="Review computer import"
-        close={close}
-        className={`focus-modal ${styles.wizard}`}
-      >
-        <header>
+    <RecordEditorWorkspace
+      label="Review computer import"
+      close={close}
+      save={commit}
+      busy={busy}
+      saveLabel="Import all new profiles"
+      saveDisabled={step!==2||!durable}
+      value={reviewedUpdatedIds}
+      trackInteractions={false}
+      contentClassName={styles.wizard}
+    >
+        <div>
           <div>
             <span className="focus-eyebrow">LOCAL IMPORT REVIEW</span>
             <h2>{stage.fileName}</h2>
@@ -505,16 +505,7 @@ function ImportWizard({
               {stage.fileHash.slice(0, 16)}…
             </p>
           </div>
-          <button
-            ref={closeButtonRef}
-            className="focus-icon"
-            data-dialog-close
-            aria-label="Close import review"
-            onClick={close}
-          >
-            <X />
-          </button>
-        </header>
+        </div>
         {message && <output className="focus-notice">{message}</output>}
         {stage.warnings.map((warning) => (
           <p key={warning} className={styles.warning}>
@@ -633,14 +624,6 @@ function ImportWizard({
               >
                 Back to preview
               </button>
-              <button
-                className="focus-primary"
-                type="button"
-                disabled={busy || !durable}
-                onClick={() => void commit()}
-              >
-                {busy ? 'Importing…' : 'Import all new profiles'}
-              </button>
             </div>
             {!durable && (
               <p className={styles.blocker}>
@@ -650,8 +633,7 @@ function ImportWizard({
             )}
           </section>
         )}
-      </AccessibleDialog>
-    </div>
+    </RecordEditorWorkspace>
   );
 }
 
