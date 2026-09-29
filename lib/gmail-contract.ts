@@ -14,6 +14,9 @@ export type GmailDiagnosticCode =
   | 'reconnect_required'
   | 'insufficient_scope'
   | 'rate_limited'
+  | 'request_timeout'
+  | 'network_failure'
+  | 'provider_failure'
   | 'upstream_failure'
   | 'invalid_request'
   | 'sync_in_progress'
@@ -87,6 +90,21 @@ const details: Record<GmailDiagnosticCode, [string, string, boolean]> = {
   rate_limited: [
     'Google temporarily limited mailbox requests.',
     'Wait before starting another manual sync. Cached stories remain available.',
+    false,
+  ],
+  request_timeout: [
+    'The mailbox provider did not respond before the request timed out.',
+    'Wait before retrying. Cached stories remain available.',
+    false,
+  ],
+  network_failure: [
+    'A network connection to the mailbox provider could not be completed.',
+    'Check server connectivity before retrying. Cached stories remain available.',
+    false,
+  ],
+  provider_failure: [
+    'The mailbox provider returned an unsuccessful response.',
+    'Check the provider status before retrying. Cached stories remain available.',
     false,
   ],
   upstream_failure: [

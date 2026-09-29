@@ -157,6 +157,35 @@ describe('T14 Gmail manual acceptance contract', () => {
         .all(),
     ).toEqual(before);
   });
+  it('classifies bounded fetch failures without persisting provider exception text', async () => {
+    const env = environment();
+    await finishGmailConnection(
+      env,
+      owner,
+      'code',
+      gmailCallbackUri('https://dive.amzeus.co.uk'),
+    );
+    const failures = [
+      [new DOMException('fixture-sensitive-timeout-detail', 'TimeoutError'), 'request_timeout'],
+      [new TypeError('fixture-sensitive-network-detail Bearer fixture-secret'), 'network_failure'],
+      [new Error('fixture-sensitive-unclassified-detail'), 'upstream_failure'],
+    ] as const;
+    for (const [failure, code] of failures) {
+      fetcher.mockRejectedValueOnce(failure);
+      const result = await syncGmailNews(env, owner, `fixture-${code}`);
+      expect(result).toMatchObject({ status: 'failed', diagnostic: { code } });
+      expect(JSON.stringify(result)).not.toMatch(/fixture-sensitive|fixture-secret/);
+    }
+    fetcher.mockResolvedValueOnce(
+      json({ error: { message: 'fixture-sensitive-provider-detail' } }, 503),
+    );
+    const providerResult = await syncGmailNews(env, owner, 'fixture-provider');
+    expect(providerResult).toMatchObject({
+      status: 'failed',
+      diagnostic: { code: 'provider_failure' },
+    });
+    expect(JSON.stringify(providerResult)).not.toContain('fixture-sensitive');
+  });
   it('refuses a duplicate concurrent run before another mailbox request', async () => {
     const env = environment();
     await finishGmailConnection(
@@ -332,7 +361,7 @@ describe('T14 Gmail manual acceptance contract', () => {
       [403, 'insufficientPermissions', 'insufficient_scope'],
       [403, 'rateLimitExceeded', 'rate_limited'],
       [429, '', 'rate_limited'],
-      [503, '', 'upstream_failure'],
+      [503, '', 'provider_failure'],
     ] as const) {
       expect(gmailFailure(status, reason).code).toBe(code);
     }

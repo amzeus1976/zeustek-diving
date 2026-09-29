@@ -283,7 +283,7 @@ export function gmailFailure(status: number, reason: string): GmailDiagnostic {
                 ? 'insufficient_scope'
                 : status === 400
                   ? 'invalid_request'
-                  : 'upstream_failure';
+                  : 'provider_failure';
   return gmailDiagnostic(code);
 }
 const safeDiagnostic = (error: unknown) =>
@@ -294,6 +294,13 @@ export function gmailCallbackUri(requestUrl: string) {
   const url = new URL(requestUrl);
   return `${['localhost', '127.0.0.1'].includes(url.hostname) ? url.origin : 'https://dive.amzeus.co.uk'}/api/gmail/callback`;
 }
+function gmailFetchFailure(error: unknown): GmailDiagnosticCode {
+  const name = error instanceof Error ? error.name : '';
+  if (name === 'TimeoutError' || name === 'AbortError')
+    return 'request_timeout';
+  if (name === 'TypeError') return 'network_failure';
+  return 'upstream_failure';
+}
 async function googleJson<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -302,8 +309,8 @@ async function googleJson<T>(url: string, init?: RequestInit): Promise<T> {
       signal: AbortSignal.timeout(20_000),
       redirect: 'error',
     });
-  } catch {
-    throw new GmailError('upstream_failure');
+  } catch (error) {
+    throw new GmailError(gmailFetchFailure(error));
   }
   const body = (await response.json().catch(() => null)) as
     | (T & {
