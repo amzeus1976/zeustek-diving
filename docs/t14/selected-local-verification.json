@@ -1,0 +1,97 @@
+{
+  "kind": "local implementation checkpoint; selected scope and release acceptance are incomplete",
+  "date": "2026-10-02",
+  "branch": "t14/tasks-1-2-3-4-6-7",
+  "applicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
+  "auditCheckpoint": "dc1d4530d08127f8fb36a8208bfe0b2bc35550ae",
+  "regression": {
+    "command": "pnpm test",
+    "filesPassed": 150,
+    "testsPassed": 952,
+    "testsFailed": 0,
+    "exitCode": 0,
+    "localStartTime": "08:32:22 Europe/London",
+    "durationSeconds": 10.9,
+    "ignoredLog": "work/selected-tasks/final-local-regression.log",
+    "coverageOrAssertionsWeakened": false
+  },
+  "typecheck": {
+    "command": "pnpm typecheck",
+    "exitCode": 0,
+    "ignoredLog": "work/selected-tasks/final-local-typecheck.log"
+  },
+  "productionBuild": {
+    "command": "pnpm build",
+    "exitCode": 0,
+    "precacheEntries": 427,
+    "precacheKiB": 42453.78,
+    "ignoredLog": "work/selected-tasks/final-local-production-build.log",
+    "warningsRetained": [
+      "intermediate build phases report no files for an early precache glob",
+      "existing Node deprecation and chunk-size advisory"
+    ]
+  },
+  "targetedLint": {
+    "tool": "existing oxlint with unchanged configuration",
+    "files": 28,
+    "rawExitCode": 1,
+    "allDiagnostics": 83,
+    "matchedByteUnchangedBaselineDiagnostics": 83,
+    "newOrChangedDiagnostics": 0,
+    "suppressionOrRuleChanges": false,
+    "comparisonBaseline": "dc1d453",
+    "ignoredEvidence": "work/selected-tasks/lint-comparison.json"
+  },
+  "focusedEvidence": {
+    "initialUsabilityTests": 13,
+    "retainedUsabilityRelatedTests": 53,
+    "exportAndBackupTests": 32,
+    "pureCylinderReviewTests": 10,
+    "gmailEngineStatusIsolationAndGateTests": 39,
+    "latestFocusedRunBeforeGateAddition": { "files": 8, "tests": 72 },
+    "testFirstEvidence": [
+      "actual upcoming-trip, headline evidence/deep-link and catalogue fixture failures before fixes",
+      "Blob transport, export stage/font/Unicode/category fixture failures before fixes",
+      "missing cylinder review module and stale/collision fixtures before pure helper",
+      "redacted Gmail status/storage/transport fixtures and missing gate module before fixes",
+      "SSR chart-size warning fixture before initial chart dimensions",
+      "actual browser crop/KPI/domain/grid/card-header failures before bounded CSS corrections"
+    ]
+  },
+  "versionAndCache": {
+    "localPackageVersion": "1.0.70",
+    "navigationCache": "zeustek-navigation-v18",
+    "staticCache": "zeustek-static-v17",
+    "retainedVersionCacheTestPassed": true,
+    "finalReleaseVersionAndFreeze": "OPEN; derive after all selected implementation is complete"
+  },
+  "securityEvidence": "selected-local-security-evidence.json",
+  "downloadEvidence": "selected-export-download-evidence.json",
+  "browserEvidence": "selected-browser-checkpoint.json",
+  "pendingAuthorisations": [
+    "exact #86 CALCULATION_TOUCHPOINT patch before editing the frozen file",
+    "#81/#82 implementation/security plan before feature coding",
+    "one new bounded Gmail live acceptance and any conditional manual restoration"
+  ],
+  "production": {
+    "unchanged": true,
+    "appVersion": "1.0.70",
+    "sitesVersion": 141,
+    "deploymentId": "appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2",
+    "publishedSource": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
+    "acceptedGitHubMain": "bb6cae3a4d5537f20db9d3a80c4a4eca3b647a51",
+    "acceptedTree": "9ac0cd710e1200419984f15423e7b1bafd483131",
+    "rollbackVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_2c15683c77348191875aa8b81cb488cd",
+    "rollbackArchiveBytes": 95477760,
+    "mustReverifyImmediatelyBeforeDeployment": true
+  },
+  "ownerData": {
+    "productionWritesByThisTask": 0,
+    "productionSyntheticRecords": 0,
+    "freshReleaseFingerprintComparison": "OPEN; historical audit counts are not a release target",
+    "approvedProductionProfilePublications": 0,
+    "productionApiCredentialsIssued": 0,
+    "liveGmailOperations": 0
+  },
+  "deploymentPushOrPrPerformed": false
+}

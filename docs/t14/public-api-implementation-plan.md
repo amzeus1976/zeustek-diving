@@ -27,6 +27,10 @@ app/page.tsx gates the dashboard through Sites ChatGPT identity and household al
 
 ## Tests and abuse cases
 
+Security review refinements from the preserved source: the private household setup currently contains literal household names/contact details in client source. Before a public landing release, remove those literals from client artifacts and obtain permitted display details through the authenticated household status response; absent details use generic wording. Do not import the dashboard, private store or household identities into the public renderer. Check anonymous HTML, client artifacts and response DTOs independently, rather than treating an allowlisted snapshot alone as sufficient.
+
+Photo validation must be independent of an honest editor: the server checks raster signatures, bounded dimensions/pixel count and byte size, then rejects or strips JPEG APP/COM and PNG metadata/unknown ancillary chunks before storage. Do not accept SVG, remote image URLs, original private attachment keys or arbitrary metadata-bearing bytes. Test forged MIME types, malformed segments, oversized images and metadata rejection/stripping as well as the browser-generated derivative. The exact preview must show the derivative that will actually be published.
+
 Test-first pure DTO validation/projection and actual handlers with SQLite/D1 fixtures: disabled defaults; exact preview; unknown/nested field leakage; malicious text remains text; owner/member/anonymous writes; cross-owner record/photo/object attacks; private API protection; revoke/update/expiry/cache boundaries; metadata stripping; consent and once-only key response; hash verification, invalid/expired/revoked/rotated/scoped keys; cursor tampering; denied writes; rate counter; equipment snapshot/direct/hire/unknown semantics; no canonical mutations; secret exclusion from backups/support/client artifacts. Two dummy AMZeus/ZeusTek clients only. Four required widths plus320/430, keyboard/focus/console/overflow. Full retained gate and nine frozen hashes.
 
 ## Rollout, approval and recovery
