@@ -50,6 +50,9 @@ html[data-brand='zeustek-diving'] .focus-sidebar nav button { height: auto; padd
 html[data-brand='zeustek-diving'] .focus-topbar { height: auto; min-height: 69px; padding-block: .5rem; }
 html[data-brand='zeustek-diving'] .focus-topbar > * { min-width: 0; }
 html[data-brand='zeustek-diving'] .focus-topbar > button { flex-shrink: 0; }
+/* News already has a bounded sidebar column; nesting two columns made its
+   connection controls wrap a word at a time on desktop. */
+html[data-brand='zeustek-diving'] .news-sidebar { grid-template-columns: minmax(0, 1fr); }
 html[data-brand='zeustek-diving'] :is(.record-actions, .focus-card-head, .section-tabs) { flex-wrap: wrap; }
 html[data-brand='zeustek-diving'] :is(.profile-picture-editor, .person-avatar-zoom, .person-avatar-zoom label) {
   min-width: 0;
