@@ -1,12 +1,12 @@
 {
-  "checkedAtUtc": "2026-10-02T19:14:15Z",
-  "previousGoalTurnClassification": "progress",
-  "previousProgressEvidence": "1334141 preserves b144b43 application verification: 1177 tests, actual downloads and unchanged local source-record fingerprints.",
-  "currentGoalTurnClassification": "no_progress",
-  "consecutiveNoProgressGoalTurns": 1,
-  "reason": "All currently authorised independent implementation and local verification is preserved. Explicit feature-plan and external acceptance gates remain unresolved; read-only revalidation is not implementation progress or a running-process wait.",
+  "checkedAtUtc": "2026-10-02T19:19:05Z",
+  "previousGoalTurnClassification": "no_progress",
+  "previousGoalTurnEvidence": "3524e22 revalidated unchanged feature approvals and preserved b144b43; status-only evidence did not count as implementation progress.",
+  "currentGoalTurnClassification": "progress",
+  "consecutiveNoProgressGoalTurns": 0,
+  "reason": "Independent review identified the earlier calendar-client preference gate as self-imposed. Read-only browser discovery verified an already authenticated supported Google Calendar and its actual import controls, then staged the exact separate dummy target without creating or uploading. This changes the next action to one concrete browser-tool upload confirmation, rather than an unknown-client or login dependency. It is not calendar import acceptance or feature implementation.",
   "branch": "t14/outstanding-requests",
-  "checkedHead": "1334141798ab9eb0b1a88aa60a298f1a825b0b64",
+  "checkedHead": "3524e22ca74af3b4e64fdaadea75054b5d1bab58",
   "applicationCheckpoint": "b144b43443a714250fb6b66b6590afcf1f51a504",
   "workingTreeCleanAtCheck": true,
   "sites": {
@@ -19,7 +19,7 @@
   "github": {
     "openIssueNumbers": [50, 54, 55, 56, 60, 61, 83, 84],
     "newOpenIssuesFound": false,
-    "independentApprovalAuditAtUtc": "2026-10-02T19:09:15Z",
+    "independentApprovalAuditAtUtc": "2026-10-02T19:19:05Z",
     "explicitPlanApprovalFound": false,
     "pullRequest72": "Open stale overlapping Gmail source; do not merge as the accepted combined candidate."
   },
@@ -42,11 +42,23 @@
     },
     {
       "issue": 83,
-      "requiredAction": "Select the supported calendar client and disposable dummy acceptance target; execute import, re-import, edit and cancellation procedure without owner-private content.",
+      "requiredAction": "Confirm upload of seven prepared synthetic ICS files into four new private disposable ZEUSTEK QA 2026-10-02 Google calendars, then execute the prepared import/re-import/update/cancellation/DST/Unicode procedure without owner-private content or invitations.",
       "authority": "https://github.com/amzeus1976/zeustek-diving/issues/83",
-      "state": "awaiting_calendar_client_acceptance",
+      "state": "awaiting_specific_browser_upload_confirmation",
       "actualIcsDownloadsVerified": true,
-      "actualCalendarClientImportVerified": false
+      "actualCalendarClientImportVerified": false,
+      "clientPreferenceIsHardIssueGate": false,
+      "uploadConfirmationAuthority": "cua_repl browser confirmation policy: uploads require specific pre-approval or confirmation; vague do-everything requests are not blanket pre-approval.",
+      "supportedClient": "Google Calendar web in existing Brave session",
+      "alreadyAuthenticated": true,
+      "normalLoginOrReconnectPerformed": false,
+      "timezoneObserved": "United Kingdom Time (GMT+01:00), Europe/London current offset",
+      "readOnlyImportControlsObserved": true,
+      "dummyTargetCreationFormStaged": true,
+      "calendarsCreated": 0,
+      "filesUploaded": 0,
+      "handoffTab": "404125657",
+      "ignoredScreenshot": "work/selected-tasks/calendar-client-acceptance/google-calendar-confirmation.png"
     },
     {
       "issue": 55,
@@ -61,7 +73,7 @@
     "No application edit, test assertion change, production record change, external calendar upload, Gmail operation, credential activation or source push this turn.",
     "No real profile/share publication or API keys authorised by this audit.",
     "Existing 1177-test evidence applies to the unchanged b144b43 application; no tests repeated merely to wait.",
-    "Goal remains active; this is the first consecutive no-progress goal turn, not the three-turn blocked threshold."
+    "The first no-progress audit is retained as history. This turn adds concrete supported-client/tool-confirmation evidence; no blocked threshold is met."
   ],
-  "nextSteps": "Resolve the concrete approval/client gates; test-first approved feature implementations; supported-calendar dummy acceptance; full exact combined candidate gate and fresh owner/rollback evidence; one publication and exact accepted GitHub reconciliation. Never repeat consumed Gmail runs."
+  "nextSteps": "Resolve the pending #50/#54 explicit approvals. On specific Google upload confirmation, reverify the handoff tab, create only the four approved private dummy targets and execute the seven-file client procedure; preserve actual counts/update/cancellation limitations and verify no invitation. Then approved feature implementations and full exact combined candidate/fresh owner/rollback/release/reconciliation gates. Never repeat consumed Gmail runs."
 }

@@ -1,5 +1,13 @@
 # T14 resumable handover
 
+## Calendar browser acceptance preparation — 2 October 2026, 19:19 UTC
+
+Preserve branch **t14/outstanding-requests**, application checkpoint **b144b43** and later documentation checkpoints **1334141 / 3524e22**. No application edits, deployment, push, owner-record writes or Gmail operation occurred during this continuation. Existing 1177-test evidence remains for the unchanged application; no passing test was rerun simply to wait.
+
+Read **outstanding-approval-wait-evidence.json**. GitHub still contains no explicit #50/#54 plan approval and the same eight open issues. Independent review correctly distinguished the self-imposed calendar-client preference from the browser tool's actual upload-confirmation requirement. Google Calendar web is already authenticated in Brave; existing import controls and UK/London timezone are verified. The separate dummy-calendar creation form is staged, not submitted, in handoff tab **404125657**. Screenshot and seven synthetic ICS files remain ignored under work/selected-tasks/calendar-client-acceptance. **Zero calendars created; zero uploads; no login, reconnect or existing-event changes.**
+
+A specific confirmation was requested for four new private ZEUSTEK QA 2026-10-02 calendars and the seven-file initial/repeated/update/cancellation/DST/Unicode acceptance procedure. This is tool confirmation for concrete dummy uploads, not another product-scope approval or permission to publish owner content. Reverify current tab/state after a reply; perform only the confirmed operations. Until then the actual client-import gate remains UNVERIFIED. #50/#54 approvals and any fresh Gmail live grant remain separate. The goal is not complete, and the no-partial-release rule remains intact.
+
 ## Final local downloads / sync checkpoint — 2 October 2026
 
 Preserve branch **t14/outstanding-requests** and application checkpoint **b144b43443a714250fb6b66b6590afcf1f51a504**, after6259eef/5b7db6c. The working tree was clean before this documentation-only checkpoint. No source reset, live operation, deployment or push occurred. Accepted production/main remain **app1.0.71 / Sites143 / source525effa / main d1937fb**, with the recoverable Sites143 artifact retained. Reverify actual production, owner data and rollback immediately before any later release.
