@@ -483,7 +483,7 @@ export async function gmailConnectionStatus(
   const lastRun=await readRun(env,userId);
   const acceptanceRunId=await availableGmailAcceptanceRunId(env,userId,
     config.configured&&connection?.email.toLowerCase()===NEWS_MAILBOX&&!diagnostic?.reconnect&&
-      !Boolean(lastRun&&['running','uncertain'].includes(lastRun.status)),
+      !(lastRun&&['running','uncertain'].includes(lastRun.status)),
     (ownerId,runId)=>readRun(env,ownerId,runId));
   return {
     ...config,
