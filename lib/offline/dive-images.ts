@@ -19,14 +19,24 @@ export async function imageSource(image:CardImage,account:string){
   }catch{}}
   return navigator.onLine?url:'';
 }
-export async function prepareCardImages(record:Record<string,unknown>,account:string){
+export async function prepareCardImages(record:Record<string,unknown>,account:string,isCurrent=()=>true){
+  const assertCurrent=()=>{if(!isCurrent())throw new Error('The account changed during image preparation.');};
+  assertCurrent();
   const next={...record};
   for(const field of ['cardFront','cardBack','profileImage','diveMapImage']){
+    assertCurrent();
     const image=next[field] as CardImage|null|undefined;if(!image||image.remoteKey)continue;
-    const local=await zeustekDb.diveImages.get(image.attachmentId);if(!local||local.account!==account)throw new Error('A certification image is unavailable on this device. Restore its attachment before syncing.');
+    const local=await zeustekDb.diveImages.get(image.attachmentId);assertCurrent();if(!local||local.account!==account)throw new Error('A certification image is unavailable on this device. Restore its attachment before syncing.');
     let remoteKey=local.remoteKey;
-    if(!remoteKey){const form=new FormData();form.append('file',new File([local.blob],local.name,{type:local.blob.type}));form.append('attachmentId',image.attachmentId);const response=await fetch('/api/cert-image',{method:'POST',body:form});const result=await response.json() as {imageKey?:string;error?:string};if(!response.ok||!result.imageKey)throw new Error(result.error??'Image upload pending');remoteKey=result.imageKey;await zeustekDb.diveImages.update(local.id,{remoteKey});}
+    if(!remoteKey){
+      const form=new FormData();form.append('file',new File([local.blob],local.name,{type:local.blob.type}));form.append('attachmentId',image.attachmentId);
+      assertCurrent();const response=await fetch('/api/cert-image',{method:'POST',body:form});assertCurrent();
+      const result=await response.json() as {imageKey?:string;error?:string};assertCurrent();
+      if(!response.ok||!result.imageKey)throw new Error(result.error??'Image upload pending');remoteKey=result.imageKey;
+      assertCurrent();await zeustekDb.diveImages.update(local.id,{remoteKey});assertCurrent();
+    }
     next[field]={...image,remoteKey};
   }
+  assertCurrent();
   return next;
 }

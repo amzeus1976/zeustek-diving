@@ -1,6 +1,6 @@
 'use client';
 import {cylinderNumberIssues} from '../lib/cylinders/cylinder-number-review';
-import {resolveCylinderReview} from '../lib/cylinders/review-destination';
+import {resolveCylinderReviewAttempt,type CylinderReviewAttemptState} from '../lib/cylinders/review-destination';
 import {CylinderNumberReviewEditor} from './gear/cylinder-number-review';
 import {EquipmentEventSource} from './equipment-maintenance-log';
 
@@ -145,7 +145,7 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
   const [cylinders, setCylinders] = useState<Array<Stored<CylinderEquipmentRecord>>>([]);
   const [sourceReview,setSourceReview]=useState<{fillId?:string;analysisId?:string;historyUnavailable:boolean}|undefined>();
   const [sourceUnavailable,setSourceUnavailable]=useState(false);
-  const openedCylinder=useRef('');
+  const openedCylinder=useRef<CylinderReviewAttemptState>({openedKey:null,handledKey:null});
   const [numberReview,setNumberReview]=useState<Stored<CylinderEquipmentRecord>|null>(null);
   const numberRows=cylinders.map(item=>({...item,recordStorageKind:item.recordStorageKind??'cylinder' as const}));
   const numberIssues=cylinderNumberIssues(numberRows);
@@ -166,11 +166,12 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
     setLoadouts(sets.map((set) => normaliseReusableLoadout(set as Stored<ReusableLoadoutRecord>)));
     setFills(fillRows); setAnalyses(analysisRows); setPeople(persons); setPlans(planRows); setDives(diveRows);
     if(tab==='cylinders'){
-      const query=new URLSearchParams(window.location.search),key=[query.get('cylinderId'),query.get('recordId'),query.get('fillId'),query.get('analysisId')].join('|');
-      if(openedCylinder.current!==key){
-        const review=resolveCylinderReview(query,cylinderRows,fillRows,analysisRows);openedCylinder.current=key;
+      const query=new URLSearchParams(window.location.search);
+      const attempt=resolveCylinderReviewAttempt(query,cylinderRows,fillRows,analysisRows,openedCylinder.current);
+      if(attempt){
+        const review=attempt.review;openedCylinder.current=attempt.nextState;
         setSourceUnavailable(review.state==='unavailable');
-        if(review.state==='found'){setCylinder(review.cylinder);setSourceReview({...(review.fillId?{fillId:review.fillId}:{}),...(review.analysisId?{analysisId:review.analysisId}:{}),historyUnavailable:review.historyUnavailable});}
+        if(review.state==='found'){if(attempt.openCylinder)setCylinder(review.cylinder);setSourceReview({...(review.fillId?{fillId:review.fillId}:{}),...(review.analysisId?{analysisId:review.analysisId}:{}),historyUnavailable:review.historyUnavailable});}
       }
     }
   }, [tab]);
