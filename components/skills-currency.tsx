@@ -108,7 +108,10 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
   const [group, setGroup] = useState('all');
   const [status, setStatus] = useState<'all' | SkillCurrencyStatus>('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  useEffect(()=>setPage(0),[query,group,status,verifiedOnly]);
+  const filterQuery=(value:string)=>{setQuery(value);setPage(0);};
+  const filterGroup=(value:string)=>{setGroup(value);setPage(0);};
+  const filterStatus=(value:'all'|SkillCurrencyStatus)=>{setStatus(value);setPage(0);};
+  const filterVerifiedOnly=(value:boolean|((previous:boolean)=>boolean))=>{setVerifiedOnly(value);setPage(0);};
   const [asOf, setAsOf] = useState(() => new Date());
   useEffect(() => {
     const tick = () => setAsOf(new Date());
@@ -127,17 +130,6 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
   );
   const [detail, setDetail] = useState<CanonicalSkillRecord | null>(null);
   const evidenceLinkOpened = useRef(false);
-  useEffect(() => {
-    if (evidenceLinkOpened.current) return;
-    const params=new URLSearchParams(window.location.search);
-    const skillId=params.get('skillId')??params.get('recordId');
-    if(skillId){const exact=skills.find(item=>item.entityId===skillId);if(exact){evidenceLinkOpened.current=true;setDetail(exact);}return;}
-    const id = params.get('evidenceId');
-    if (!id) { evidenceLinkOpened.current = true; return; }
-    const linked = evidence.find(item => item.entityId === id);
-    const skill = linked && resolveCanonicalSkillReference(linked.skillKey,skills);
-    if (skill) { evidenceLinkOpened.current = true;setDetail(skill); }
-  }, [evidence,skills]);
   const [policySkill, setPolicySkill] = useState<CanonicalSkillRecord | null>(
     null,
   );
@@ -162,6 +154,15 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
       listPeople(),
       listEquipmentSets(),
     ]);
+    if (!evidenceLinkOpened.current) {
+      const params=new URLSearchParams(window.location.search);
+      const skillId=params.get('skillId')??params.get('recordId');
+      const evidenceId=params.get('evidenceId');
+      const linked=evidenceId?evidenceRows.find(item=>item.entityId===evidenceId):null;
+      const exact=skillId?skillRows.find(item=>item.entityId===skillId):linked?resolveCanonicalSkillReference(linked.skillKey,skillRows):null;
+      if (exact) {evidenceLinkOpened.current=true;setDetail(exact);}
+      else if (!skillId&&!evidenceId) evidenceLinkOpened.current=true;
+    }
     setSkills(skillRows);
     setEvidence(evidenceRows);
     setPolicies(policyRows);
@@ -246,25 +247,25 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
         </button>
       </header>
       <Card className={styles.summary}>
-        <button onClick={() => setStatus('current')}>
+        <button onClick={() => filterStatus('current')}>
           <CheckCircle2 />
           <strong>{summary.current}</strong>
           <span>Current</span>
         </button>
-        <button onClick={() => setStatus('due-soon')}>
+        <button onClick={() => filterStatus('due-soon')}>
           <Clock3 />
           <strong>{summary['due-soon']}</strong>
           <span>Due soon</span>
         </button>
-        <button onClick={() => setStatus('needs-practice')}>
+        <button onClick={() => filterStatus('needs-practice')}>
           <CalendarDays />
           <strong>{summary['needs-practice']}</strong>
           <span>Needs practice</span>
         </button>
-        <button onClick={() => setStatus('not-assessed')}>
+        <button onClick={() => filterStatus('not-assessed')}>
           <Clock3 /><strong>{summary['not-assessed']}</strong><span>Not assessed</span>
         </button>
-        <button onClick={() => setVerifiedOnly((value) => !value)}>
+        <button onClick={() => filterVerifiedOnly((value) => !value)}>
           <ShieldCheck />
           <strong>{summary.verified}</strong>
           <span>Evaluator recorded</span>
@@ -276,7 +277,7 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
           <input
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => filterQuery(event.target.value)}
             placeholder="Search skills"
           />
         </label>
@@ -284,7 +285,7 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
           Group
           <select
             value={group}
-            onChange={(event) => setGroup(event.target.value)}
+            onChange={(event) => filterGroup(event.target.value)}
           >
             <option value="all">All groups</option>
             {groups.map((value) => (
@@ -299,7 +300,7 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
           <select
             value={status}
             onChange={(event) =>
-              setStatus(event.target.value as 'all' | SkillCurrencyStatus)
+              filterStatus(event.target.value as 'all' | SkillCurrencyStatus)
             }
           >
             <option value="all">All statuses</option>
@@ -314,14 +315,14 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
           <input
             type="checkbox"
             checked={verifiedOnly}
-            onChange={(event) => setVerifiedOnly(event.target.checked)}
+            onChange={(event) => filterVerifiedOnly(event.target.checked)}
           />
           Evaluator recorded only
         </label>
       </Card>
       <div className={styles.layout}>
         <main>
-          <nav aria-label="Skill catalogue pages" className="record-actions"><button className="focus-secondary" disabled={cataloguePage.page===0} onClick={()=>setPage(cataloguePage.page-1)}>Previous Skills</button><p role="status">Showing {cataloguePage.from}–{cataloguePage.to} of {cataloguePage.total} matching Skills · {rows.length} total · page {cataloguePage.page+1} of {cataloguePage.pages}</p><button className="focus-secondary" disabled={cataloguePage.page+1>=cataloguePage.pages} onClick={()=>setPage(cataloguePage.page+1)}>Next Skills</button></nav>
+          <nav aria-label="Skill catalogue pages" className="record-actions"><button className="focus-secondary" disabled={cataloguePage.page===0} onClick={()=>setPage(cataloguePage.page-1)}>Previous Skills</button><output>Showing {cataloguePage.from}–{cataloguePage.to} of {cataloguePage.total} matching Skills · {rows.length} total · page {cataloguePage.page+1} of {cataloguePage.pages}</output><button className="focus-secondary" disabled={cataloguePage.page+1>=cataloguePage.pages} onClick={()=>setPage(cataloguePage.page+1)}>Next Skills</button></nav>
           <div className={styles.skillGrid}>
             {cataloguePage.items.map((row) => {
               const latest = row.projection.latestEvidence;

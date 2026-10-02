@@ -65,3 +65,12 @@
 .page :focus-visible,.editor :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
 .teamRow:has(.teamDetails),.gasWarningButton{border-radius:var(--zt-radius-card)}
 @media(max-width:720px){.hero{min-height:0}.editorGrid fieldset{padding:10px}.actions{background:var(--zt-surface-raised)}}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.upcoming,.card,.actions,.editorGrid fieldset,.readinessDialog{background:var(--zt-surface)}
+.heroQuote i{background:var(--brand-primary)}
+.planTabs .active{border-color:var(--brand-primary);box-shadow:inset 0 0 0 1px var(--zt-accent-soft)}
+.planTabs button>span,.siteFacts b,.editorGrid a{color:var(--brand-secondary)}
+.siteArt,.planTabs button,.siteCard>div>span,.selectedPills>div,.gasSummary,.gasSummaryGrid>span,.selectedFact,.pickerResults button,.choiceList label{border-radius:var(--zt-radius-md)}
+.pickerResults button:hover{border-color:var(--brand-secondary)}
+.readyButton{color:var(--brand-primary);border-color:var(--brand-primary);background:var(--zt-accent-soft);border-radius:var(--zt-radius-md)}

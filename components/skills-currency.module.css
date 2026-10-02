@@ -318,3 +318,9 @@
   width: 1.25rem;
   flex: 0 0 1.25rem;
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.skillCard,.timeline article{background:var(--zt-surface);border-radius:var(--zt-radius-lg)}
+.summary svg{color:var(--brand-secondary)}
+.side h2{color:var(--brand-primary)}
+.statusHero>div{border-radius:var(--zt-radius-md)}

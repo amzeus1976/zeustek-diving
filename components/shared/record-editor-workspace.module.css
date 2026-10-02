@@ -9,3 +9,8 @@
 .workspace fieldset{min-width:0}
 .workspace textarea{min-height:7rem;resize:vertical}
 @media(max-width:600px){.header{position:static;align-items:stretch;flex-direction:column;padding:.85rem}.actions>button{flex:1}.workspace{gap:.75rem}}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.header{background:var(--zt-surface);border-color:var(--zt-border);border-radius:var(--zt-radius-lg)}
+.header h1{color:var(--brand-primary)}
+.header small{color:var(--zt-text-muted)}

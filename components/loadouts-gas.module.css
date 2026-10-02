@@ -37,3 +37,9 @@
 :global([data-record-editor-workspace]) .editor{width:100%;max-height:none;overflow:visible}
 :global([data-record-editor-workspace]) .editor>fieldset{display:grid;gap:1rem}
 :global([data-record-editor-workspace]) .cylinderDetail{width:100%;max-height:none;overflow:visible}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.tabs>button{background:var(--zt-surface);color:var(--zt-text);border-radius:var(--zt-radius-md)}
+.slotGroups h3,.serviceDefaults b{color:var(--brand-primary)}
+.currentState svg{color:var(--brand-secondary)}
+.editor :is(input,select,textarea),.applyDialog :is(input,select,textarea),.cylinderDetail :is(input,select,textarea),.search input{background:var(--zt-bg);border-radius:var(--zt-radius-md)}

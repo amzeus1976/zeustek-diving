@@ -637,3 +637,11 @@
 .contextChecks p,.provenance,.provenanceChain{border-color:var(--zt-accent-cyan);background:var(--zt-surface-raised)}
 .page :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
 @media(max-width:640px){.hero{gap:.75rem}.workArea,.detailPane{min-width:0}.tabs{max-width:100%;overflow-x:auto}}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.hero,.sideRail,.detailCard,.emptyPane{background:var(--zt-surface)}
+.sideRail button,.eventList button,.summaryGrid span,.evidenceGrid>div{background:var(--zt-surface-2);border-radius:var(--zt-radius-md)}
+.sideRail h2,.sideRail h3{color:var(--brand-secondary)}
+.calendarGrid i{background:var(--brand-secondary)}
+.eventList em,.editorCylinderList legend,.formulaResults strong,.tableReference legend{color:var(--brand-primary)}
+.formulaResults small,.emptyPane svg{color:var(--brand-secondary)}

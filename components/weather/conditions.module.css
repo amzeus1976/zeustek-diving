@@ -312,3 +312,11 @@
     align-items: stretch;
   }
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.workspace,.tile,.water{background:var(--zt-surface);border-color:var(--zt-border-strong);border-radius:var(--zt-radius-lg)}
+.conditions,.workspace,.configuration,.group h4,.tile>strong,.detail>summary{color:var(--zt-text)}
+.heading span,.metric,.depth,.tile summary,.tile a,.attribution a{color:var(--brand-secondary)}
+.heading p,.note,.empty,.tile small,.tile dd,.tile>strong>span,.detail>p,.forecast small,.diagnostics small{color:var(--zt-text-muted)}
+.controls input,.controls select,.configuration select{background:var(--zt-bg);border-color:var(--zt-border);border-radius:var(--zt-radius-md);color:var(--zt-text)}
+.forecast article,.diagnostics li{border-radius:var(--zt-radius-md)}

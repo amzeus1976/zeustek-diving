@@ -31,3 +31,9 @@
 .advisory :focus-visible,.heading :focus-visible{outline:2px solid var(--zt-focus);outline-offset:3px}
 @media(max-width:680px){.advisory{grid-template-columns:1fr}.heading{align-items:stretch}}
 [data-record-editor-workspace] .referenceEditor{width:100%;max-height:none;overflow:visible}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.heading{background:var(--zt-surface)}
+.pathways>h2,.dashboard h2{color:var(--brand-primary)}
+.config svg,.gas svg,.practice svg{color:var(--brand-secondary)}
+.metrics span{border-radius:var(--zt-radius-md)}

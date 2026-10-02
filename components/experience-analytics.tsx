@@ -3,12 +3,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   BarChart3,
-  CalendarDays,
-  Clock3,
   Download,
   Gauge,
   Settings2,
-  Waves,
   X,
 } from 'lucide-react';
 import {
@@ -139,12 +136,6 @@ type CountProgress = {
 
 const round = (value: number | null, digits = 1) =>
   value == null ? '—' : value.toFixed(digits).replace(/\.0$/, '');
-const formatMinutes = (minutes: number | null) => {
-  if (minutes == null) return '—';
-  const hours = Math.floor(minutes / 60);
-  const rest = Math.round(minutes % 60);
-  return hours ? `${hours}h ${rest}m` : `${rest}m`;
-};
 const normal = (value: string | null | undefined) =>
   (value ?? '').toLocaleLowerCase('en-GB').replace(/\s+/g, '');
 const recordHref = (section: string, parameter: string, id: string) =>
@@ -501,7 +492,6 @@ export function ExperienceAnalytics({ go }: Props) {
     window.setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
-  const h = projection.headlines;
   const ownerProfile=findOwnerProfile(people);
   const headlineContext={dives:scopedDives,owner:ownerProfile,certifications};
   const sourceProjection=buildExperienceAnalyticsProjection(dives,sites,loadouts,{...scope,excludedDiveIds:[]});
@@ -706,7 +696,7 @@ function AnalyticsDetailDialog({
               are unknown, never zero.
             </p>
             <div aria-hidden="true">
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer initialDimension={{width:320,height:200}} width="100%" height={260}>
                 <BarChart data={waterDepth}>
                   <CartesianGrid
                     stroke="rgba(255,255,255,.08)"
@@ -763,7 +753,7 @@ function AnalyticsDetailDialog({
             </p>
             <p>SAC is shown in bar/min and remains cylinder-specific. It is never relabelled as L/min.</p>
             <div className={styles.bigChart} aria-hidden="true">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer initialDimension={{width:320,height:200}} width="100%" height="100%">
                 <ScatterChart>
                   <CartesianGrid stroke="rgba(255,255,255,.08)" />
                   <XAxis dataKey="date" tick={{ fill: '#a7b2bc' }} />
@@ -791,7 +781,7 @@ function AnalyticsDetailDialog({
           <section className={styles.detailPanel}>
             <h3>Surface-volume RMV observations</h3>
             <p>{projection.headlines.averageRmvLMin.denominator} valid dives; {projection.headlines.averageRmvLMin.missingCount} missing or non-qualifying. RMV is tank-independent L/min.</p>
-            <div className={styles.bigChart} aria-hidden="true"><ResponsiveContainer width="100%" height="100%"><ScatterChart><CartesianGrid stroke="rgba(255,255,255,.08)"/><XAxis dataKey="date" tick={{fill:'#a7b2bc'}}/><YAxis dataKey="rmvLMin" tick={{fill:'#a7b2bc'}}/><Tooltip contentStyle={{background:'#0a1115',border:'1px solid #16435a'}}/><Scatter data={projection.rmvTrend} fill="#ff8b1f"/></ScatterChart></ResponsiveContainer></div>
+            <div className={styles.bigChart} aria-hidden="true"><ResponsiveContainer initialDimension={{width:320,height:200}} width="100%" height="100%"><ScatterChart><CartesianGrid stroke="rgba(255,255,255,.08)"/><XAxis dataKey="date" tick={{fill:'#a7b2bc'}}/><YAxis dataKey="rmvLMin" tick={{fill:'#a7b2bc'}}/><Tooltip contentStyle={{background:'#0a1115',border:'1px solid #16435a'}}/><Scatter data={projection.rmvTrend} fill="#ff8b1f"/></ScatterChart></ResponsiveContainer></div>
             <AccessibleRows rows={projection.rmvTrend.map((row)=>[`${row.date} · ${row.site}`,`${round(row.rmvLMin)} L/min`,`${row.waterType} · ${row.training?'training':'non-training'}`])}/>
           </section>
         )}

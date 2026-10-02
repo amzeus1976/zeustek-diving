@@ -258,3 +258,10 @@
 }
 
 :global([data-record-editor-workspace]) .dialog{width:100%;max-width:100%;max-height:none;overflow:visible}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.modeTabs button,.row,.packPreview{background:var(--zt-surface);border-color:var(--zt-border);border-radius:var(--zt-radius-md);color:var(--zt-text)}
+.modeTabs button[data-active='true']{background:var(--zt-accent-soft);border-color:var(--brand-primary)}
+.row:hover,.row:focus-visible{background:var(--zt-surface-2);border-color:var(--brand-secondary)}
+.row em{color:var(--brand-primary)}
+.questionFacts div,.diagnosticFacts div,.packList label,.attemptQuestion{border-radius:var(--zt-radius-md)}

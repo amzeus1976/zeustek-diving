@@ -731,3 +731,13 @@
 .importReviewGrid .profileRows article[data-selected=true]{border-color:var(--zt-accent-orange);background:color-mix(in srgb,var(--zt-accent-orange) 8%,var(--zt-surface-card))}
 @media(max-width:900px){.importReviewGrid{grid-template-columns:1fr}.importReviewGrid .profile{position:static}.importReviewGrid .profileRows{max-height:45vh}}
 @media(max-width:480px){.importReviewGrid .profileFilters{grid-template-columns:1fr}}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.importBox,.sources,.profile,.recent,.importedProfiles,.segmentList,.assignment,.resolution,.profileReview,.commitPreview{background:var(--zt-surface);border-color:var(--zt-border-strong);border-radius:var(--zt-radius-lg)}
+.sources>button,.profileRows>article,.steps button,.chart,.chartEmpty{background:var(--zt-surface-2);border-color:var(--zt-border);border-radius:var(--zt-radius-md)}
+.drop strong,.compare h3,.segmentList h3,.assignment h3,.resolution h3,.profileReview h3,.commitPreview h3{color:var(--brand-primary)}
+.heroQuote i{background:var(--brand-primary)}
+.sources>button svg,.importBox aside svg,.importBox aside b{color:var(--brand-secondary)}
+.steps button[aria-current='step']{border-color:var(--brand-primary);color:var(--brand-primary)}
+.profileRows>article[data-selected='true']{border-color:var(--brand-secondary)}
+.formats b,.steps span{background:var(--zt-surface-2)}

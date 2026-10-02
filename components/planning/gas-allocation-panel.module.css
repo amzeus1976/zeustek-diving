@@ -169,3 +169,7 @@
 .field > button {
   justify-self: start;
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.panel,.panel fieldset,.cards article{border-radius:var(--zt-radius-lg)}
+.panel input,.panel select,.panel textarea,.panel button,.panel details,.reserves>.fields{border-radius:var(--zt-radius-md)}

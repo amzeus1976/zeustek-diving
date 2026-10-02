@@ -131,3 +131,9 @@
 .tripCard>p,.dates{color:var(--zt-text-muted);line-height:1.6}
 .toolbar{background:var(--zt-surface-card);border:1px solid var(--zt-border-cyan);border-radius:var(--zt-radius-card)}
 .toolbar :is(input,select){min-height:44px;background:#081921;border-color:var(--zt-border-muted);color:var(--zt-text)}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.tripCard{background:var(--zt-surface)}
+.toolbar :is(input,select){background:var(--zt-bg);border-radius:var(--zt-radius-md)}
+.stack article,.repeatRow{border-radius:var(--zt-radius-lg)}
+.checks>span,.packing label,.notes>div,.guestList article{background:var(--zt-surface-2);border-radius:var(--zt-radius-md)}

@@ -3,10 +3,11 @@ import {SummaryImageFailure} from './summary-card';
 import {fontBase64,loadSummaryFonts,summaryTypeface,unsupportedSummaryGlyphs,type SummaryFontOptions,type SummaryTypeface} from './summary-font';
 export type SummaryImage={label:string;bytes:Uint8Array;type:'jpg'|'png';width:number;height:number};
 export async function collectSummaryImages(sources:Array<{label:string;load:()=>Promise<Omit<SummaryImage,'label'>|null>}>){const images:SummaryImage[]=[];const warnings:string[]=[];const failures:Partial<Record<'source'|'transport'|'decode'|'render'|'unknown',number>>={};for(const source of sources){try{const image=await source.load();if(!image)throw new Error();images.push({...image,label:source.label});}catch(error){const stage=error instanceof SummaryImageFailure?error.stage:'unknown';failures[stage]=(failures[stage]??0)+1;warnings.push(`${source.label}: image unavailable${error instanceof SummaryImageFailure?` (${error.stage})`:''}; text retained.`);}}return {images,warnings,failures};}
+const hasUnicode=(value:string)=>Array.from(value).some(char=>(char.codePointAt(0)??0)>0x7f);
 const documentValues=(dto:SummaryDocument,images:SummaryImage[])=>[dto.title,`Prepared ${dto.generatedAt}`,...dto.sections.flatMap(s=>[s.title,...s.lines]),...images.map(image=>image.label)];
 export async function renderSummaryPdf(dto:SummaryDocument,images:SummaryImage[]=[],options:SummaryFontOptions={}):Promise<Uint8Array>{
  const {jsPDF}=await import('jspdf');const pdf=new jsPDF({unit:'mm',format:'a4',compress:false});let y=20;
- const values=documentValues(dto,images),unicode=values.some(value=>/[^\x00-\x7F]/.test(value));
+ const values=documentValues(dto,images),unicode=values.some(hasUnicode);
  if(unicode){const unsupported=unsupportedSummaryGlyphs(values.join('\n'));if(unsupported.length)throw new Error(`Document font does not cover ${unsupported.join(', ')}. TXT, CSV and JSON preserve this text.`);const fonts=await loadSummaryFonts(options);for(const [file,family,data] of [['NotoSans-Regular.ttf','NotoSans',fonts.latin],['NotoSansJP-Regular.ttf','NotoSansJP',fonts.japanese]] as const){pdf.addFileToVFS(file,fontBase64(data));pdf.addFont(file,family,'normal');}}
  type Glyph={char:string;font:SummaryTypeface;width:number};
  const setFont=(font:SummaryTypeface,heading:boolean)=>pdf.setFont(font,font==='helvetica'&&heading?'bold':'normal');
@@ -17,7 +18,7 @@ export async function renderSummaryPdf(dto:SummaryDocument,images:SummaryImage[]
  return new Uint8Array(pdf.output('arraybuffer'));
 }
 export async function renderSummaryDocx(dto:SummaryDocument,images:SummaryImage[]=[],options:SummaryFontOptions={}):Promise<Uint8Array>{
- const docx=await import('docx');const unicode=documentValues(dto,images).some(value=>/[^\x00-\x7F]/.test(value));const fonts=unicode?await loadSummaryFonts(options):null;
+ const docx=await import('docx');const unicode=documentValues(dto,images).some(hasUnicode);const fonts=unicode?await loadSummaryFonts(options):null;
  const font={ascii:fonts?'Noto Sans':'Arial',hAnsi:fonts?'Noto Sans':'Arial',eastAsia:fonts?'Noto Sans JP':'Arial',cs:fonts?'Noto Sans':'Arial'};
  const paragraph=(text:string,options:Omit<ConstructorParameters<typeof docx.Paragraph>[0]&object,'text'|'children'>={})=>new docx.Paragraph({...options,children:[new docx.TextRun({text,font})]});
  const children:InstanceType<typeof docx.Paragraph>[]=[paragraph(dto.title,{heading:docx.HeadingLevel.TITLE}),paragraph(`Prepared ${dto.generatedAt}`)];
