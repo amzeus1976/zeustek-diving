@@ -37,3 +37,7 @@
 .pathways>h2,.dashboard h2{color:var(--brand-primary)}
 .config svg,.gas svg,.practice svg{color:var(--brand-secondary)}
 .metrics span{border-radius:var(--zt-radius-md)}
+.dashboard>section{min-width:0;overflow-wrap:anywhere}
+.dashboard header{flex-wrap:wrap;align-items:flex-start}
+.dashboard header h2{flex:1 1 8rem;min-width:0}
+.dashboard header button{flex:0 0 auto;max-width:100%;white-space:normal;overflow-wrap:anywhere}
