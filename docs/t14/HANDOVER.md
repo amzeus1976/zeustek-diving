@@ -1,5 +1,15 @@
 # T14 resumable handover
 
+## Blocked audit / exact restart — 2 October 2026, 19:23 UTC
+
+Preserve **t14/outstanding-requests**, tested application **b144b43** and subsequent documentation through **83df58f**. This checkpoint changes documentation only; no application edits, tests, production writes, deployment, source push or Gmail operation. Fresh Sites evidence still shows **Sites143**, active, unchanged update timestamp 15:23:29.964225Z. The local application remains byte-identical to the 1177-test gate. Do not replace it with accepted main or production.
+
+The same #50/#54 explicit plan-approval condition remains unresolved across three consecutive goal turns (3524e22, 83df58f, current). Prior calendar discovery was progress but did not remove the recurring blocker. Independent audit found no remaining permitted implementation or live acceptance job to wait on. The blocked threshold is satisfied; **the full goal remains incomplete**.
+
+**Required restart inputs:** explicit approval of **outstanding-sharing-plan.md** for #50 and **outstanding-topic-plan.md** for #54; specific browser-upload confirmation for the seven synthetic ICS files/four new private Google test calendars. Google Calendar handoff tab **404125657** is reverified on the unsubmitted creation form; zero calendars/uploads. Reinspect fresh UI before any confirmed operation. Both Gmail runs remain consumed/FAILED; a future live operation requires fresh distinct consent, never repeat an old grant. Real public content remains off and production keys unissued.
+
+After inputs arrive, resume test-first approved feature implementation and actual supported-calendar import/re-import/update/cancellation/DST/Unicode acceptance. Then finish the complete changed-candidate/version/cache/security/browser gate, fresh production owner/rollback capture, one combined publication and exact accepted GitHub PR/main reconciliation. Existing green local tests/download syntax do not replace remaining features or external/production acceptance. Preserve all lower evidence as history.
+
 ## Calendar browser acceptance preparation — 2 October 2026, 19:19 UTC
 
 Preserve branch **t14/outstanding-requests**, application checkpoint **b144b43** and later documentation checkpoints **1334141 / 3524e22**. No application edits, deployment, push, owner-record writes or Gmail operation occurred during this continuation. Existing 1177-test evidence remains for the unchanged application; no passing test was rerun simply to wait.
