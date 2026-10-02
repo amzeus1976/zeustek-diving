@@ -2,6 +2,18 @@
 
 Read the newest dated checkpoint first. All lower release checkpoints are retained as history and must not be treated as current production or next-step instructions.
 
+## Current combined selected-task candidate — 2 October 2026
+
+Preserve `t14/tasks-1-2-3-4-6-7` and inspect actual HEAD/status. Tasks 1/2/4/6/7 are implemented locally, including the explicitly approved #86 read-policy/cylinder-number review, default-off public profile and unissued scoped read-only API controls. Task 3 redacted diagnostics/mocked repair is local; successful live Gmail restoration remains OPEN. No Task 5/T15 work.
+
+The finished local candidate is **app1.0.71 / static-v18**. Full **992 tests in 155 files**, typecheck and production build/PWA pass (427 entries / 42483.67 KiB). Targeted lint has **zero new diagnostics**, 83 byte-unchanged baseline diagnostics (raw exit 1). All nine current approved protected hashes match: eight untouched and only the exact owner-approved #86 ID-policy diff in loadouts-gas.ts (e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5). Gas/NDL/MOD/reserve formulas unchanged. 31 approved PNGs and 748 superset preserved.
+
+Owner consent received for one NEW Gmail run after the complete non-Gmail gate and deployment: prior 90 days, max 100 metadata/snippet messages, existing encrypted connection, no retry/reconnect/credential or mailbox changes. Manual-only restoration is allowed only on verified success. Historical failed run remains consumed/FAILED. No new live request has occurred. Exact real public content and real API-key issuance still require separate confirmation; both can ship disabled/unissued.
+
+Current accepted production reverified **app1.0.70 / Sites141**, deployment appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2, source 7fcb27ac2fa96d44d06de01e3ce91e58320f646c; recoverable saved artifact retained. GitHub main bb6cae3a4d5537f20db9d3a80c4a4eca3b647a51. No deployment or accepted product push has occurred in this selected-task execution.
+
+Next: finish compiled local six-width/auth/cache/secret checks; persist exact application checkpoint/evidence; capture fresh owner/relationship fingerprints and reverify rollback; freeze/package one combined candidate; execute only the authorised new Gmail run once; verify production and then reconcile exact accepted source through GitHub PR/main. Roll back on mandatory failure. Do not restore from old production/main or treat older checkpoint text below as current instructions.
+
 ## Selected tasks implementation checkpoint (2 October 2026)
 
 Preserve `t14/tasks-1-2-3-4-6-7`, based on audit dc1d453. Current application checkpoint is **bd0ba8ced8e45cc0718b7a7b5d04b03547a6c459**; later documentation commits do not change its tested application. Read `selected-tasks-implementation.md`, `selected-local-verification.json`, `selected-browser-checkpoint.json`, `selected-export-evidence.md`, `selected-gmail-evidence-and-acceptance.md` and `public-api-implementation-plan.md`. Check actual HEAD/working tree before resuming; do not reset to production/main or repeat completed architecture.

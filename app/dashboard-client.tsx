@@ -58,6 +58,8 @@ import {
 } from 'lucide-react';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
+import {PublicProfileSettings} from '../components/sharing/public-profile-settings';
+import {IntegrationKeySettings} from '../components/sharing/integration-key-settings';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
@@ -627,6 +629,8 @@ export default function DiveApp({ userId }: { userId: string }) {
 const configurationLinks = [
   ['settings-overview', 'Settings overview'],
   ['household-setup', 'Household setup and configuration'],
+  ['public-profile-settings', 'Public profile'],
+  ['integration-key-settings', 'Read-only API integrations'],
   ['skill-catalogue', 'Skill Catalogue'],
   ['equipment-training-lists', 'Equipment & training lists'],
   ['equipment-category-icons', 'Equipment category icons'],
@@ -653,6 +657,8 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
     <div className="site-configuration-grid">
       <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage and local device controls"><PlatformSettings section="overview" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="public-profile-settings" defaultMinimized className="site-configuration-card" title="Public profile" eyebrow="PUBLICATION" status="Off by default · exact visitor preview · explicit publication"><PublicProfileSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="integration-key-settings" defaultMinimized className="site-configuration-card" title="Read-only API integrations" eyebrow="OWNER CONSENT" status="Selected records · separate AMZeus and ZeusTek keys"><IntegrationKeySettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="equipment-training-lists" defaultMinimized className="site-configuration-card" title="Equipment & training lists" eyebrow="GEAR · TRAINING" status="Agencies, qualifications, equipment categories and manufacturers"><PlatformSettings section="lists" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="equipment-category-icons" defaultMinimized className="site-configuration-card" title="Equipment category icons" eyebrow="GEAR" status="Built-in and owner-uploaded category visuals"><PlatformSettings section="icons" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="training-agency-logos" defaultMinimized className="site-configuration-card" title="Training agency logos" eyebrow="TRAINING" status="Owner-selected agency visuals"><PlatformSettings section="logos" /></CollapsibleWorkCard>
@@ -689,7 +695,7 @@ function HouseholdSettings() {
     const response = await fetch('/api/household', { cache: 'no-store' });
     if (!response.ok) { setMessage('Household access is unavailable.'); return; }
     const next = await response.json() as HouseholdState; setState(next);
-    setMessage(next.partner?.userId ? `${next.partner.displayName ?? 'Your partner'} is connected.` : 'Gemma can connect using her invited account after this update is published.');
+    setMessage(next.partner?.userId ? `${next.partner.displayName ?? 'Your partner'} is connected.` : 'Your partner can connect using their invited account.');
   }, []);
   useEffect(() => { void load(); }, [load]);
   async function change(area: string, canView: boolean) {
@@ -708,9 +714,9 @@ function HouseholdSettings() {
   for (const item of state?.shared ?? []) sharedByKind.set(item.kind, [...(sharedByKind.get(item.kind) ?? []), item]);
   const itemTitle = (item: Record<string,unknown>) => String(item.title ?? item.name ?? item.site ?? item.certification ?? item.model ?? item.subject ?? 'Record');
   return <Card className="household-settings">
-    <span className="focus-eyebrow">TWO-PERSON HOUSEHOLD</span><h2>Zeus &amp; Gemma</h2>
+    <span className="focus-eyebrow">TWO-PERSON HOUSEHOLD</span><h2>{state?.current.displayName && state.partner?.displayName ? `${state.current.displayName} & ${state.partner.displayName}` : 'Your household'}</h2>
     <p className="focus-copy">Each person edits only their own personal records. Turn on an area to let the other person view it read-only.</p>
-    <div className="household-member-strip"><div><Users size={20}/><span><b>{state?.current.displayName ?? 'Your profile'}</b><small>{state?.current.email}</small></span></div><div><Users size={20}/><span><b>Gemma</b><small>gemmalouisebrown1983@gmail.com · {state?.partner?.userId ? 'connected' : 'invited'}</small></span></div></div>
+    <div className="household-member-strip"><div><Users size={20}/><span><b>{state?.current.displayName ?? 'Your profile'}</b><small>{state?.current.email}</small></span></div><div><Users size={20}/><span><b>{state?.partner?.displayName ?? 'Your partner'}</b><small>{state?.partner?.email ? `${state.partner.email} · ` : ''}{state?.partner?.userId ? 'connected' : 'invited'}</small></span></div></div>
     <div className="household-shared-gear"><Wrench size={19}/><span><b>Shared gear</b><small>Both people can view, add, edit and service the same equipment records.</small></span><Check size={18}/></div>
     <h3>Allow {state?.partner?.displayName ?? 'the other person'} to view</h3>
     <div className="household-permissions">{HOUSEHOLD_AREAS.map(([area,label]) => { const enabled = Boolean(state?.shares.find((share) => share.area === area)?.canView); return <label key={area}><input type="checkbox" checked={enabled} disabled={!state} onChange={(event) => void change(area,event.target.checked)}/><span><b>{label}</b><small>{enabled ? (area==='albums'?'Shared editing & uploads':'Shared read-only · copying allowed') : 'Private'}</small></span></label>; })}</div>
@@ -730,7 +736,8 @@ const DEFAULT_DASHBOARD_AWARDS = [
   'nightDives',
   'boatDives',
 ];
-const DEFAULT_NEWSLETTER_EMAIL = 'zeustekdivenews@gmail.com';
+// The dedicated mailbox comes from private saved settings/status, never public client source.
+const DEFAULT_NEWSLETTER_EMAIL = '';
 
 function ConfigurationPreferenceCard({domain}:{domain:ConfigurationDomain}) {
   const [record,setRecord]=useState<Stored<DashboardSettingsRecord>|null>(null);

@@ -6,7 +6,8 @@ function label(value:unknown){
 export function cylinderNumberConstraint(kind:string,data:unknown,previous:unknown,id:string,owner:string,gearOwners:string[]){
  const next=data&&typeof data==='object'?data as Record<string,unknown>:null;
  const prior=previous&&typeof previous==='object'?previous as Record<string,unknown>:null;
- const physical=kind==='cylinder'||kind==='equipment'&&/\b(cylinder|tank)\b/.test(`${String(next?.category??'')} ${String(next?.name??'')}`.normalize('NFKC').toLowerCase());
+ const category=typeof next?.category==='string'?next.category:'',name=typeof next?.name==='string'?next.name:'';
+ const physical=kind==='cylinder'||kind==='equipment'&&/\b(cylinder|tank)\b/.test(`${category} ${name}`.normalize('NFKC').toLowerCase());
  const number=label(next?.cylinderNumber);
  // Missing/invalid historical labels remain readable/restorable, and ordinary
  // edits must not force a repair of an unchanged pre-existing duplicate.

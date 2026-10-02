@@ -12,6 +12,7 @@ import './audit-improvements.css';
 import './t14-record-workspaces.css';
 import './t14-cpd-news.css';
 import './brand-application.css';
+import './sharing.css';
 import { PwaRegister } from '@/components/pwa-register';
 
 const geistSans = Inter({

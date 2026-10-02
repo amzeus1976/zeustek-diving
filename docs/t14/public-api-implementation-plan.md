@@ -1,6 +1,6 @@
 # Public profile and read-only API — bounded implementation/security plan
 
-This is the #81 front-page/profile slice of #50 plus #82. No Gas Plan shares, calendar export, data-health centre, automatic publication, additional login provider or live-updating public record graph. Owner review is required before feature code. Production profile content and real integration keys need later distinct confirmations.
+This is the #81 front-page/profile slice of #50 plus #82. No Gas Plan shares, calendar export, data-health centre, automatic publication, additional login provider or live-updating public record graph. The owner's implement-all-fixes direction approves this bounded implementation/security plan. Production profile content and real integration keys need later distinct confirmations.
 
 ## Inspected boundaries
 
@@ -37,4 +37,6 @@ Test-first pure DTO validation/projection and actual handlers with SQLite/D1 fix
 
 Additive schema/artifacts only; no owner record migration. Ship publication disabled and no issued keys unless exact later consent is obtained. Local fixtures prove full capabilities without production synthetic records. Production smoke reads status/disabled visitor page/auth and verifies security/cache boundaries; never publishes profile or creates keys implicitly. Rollback restores the then-current accepted Sites artifact; disable publication/revoke keys if a newly enabled capability fails. Preserve source/evidence. Accepted source goes to GitHub only after live release verification.
 
-Approval requested for this specific implementation plan, including exclusion of broader #50 Gas Plan/password/encrypted shares. It is not permission to publish a real biography/photo or generate live credentials, and it is not Gmail authorisation.
+Owner's subsequent direction to implement all fixes authorises this bounded implementation/security plan, including exclusion of broader #50 Gas Plan/password/encrypted shares. It is not permission to publish a real biography/photo or generate live credentials. The separate new Gmail acceptance approval is recorded in selected-gmail-evidence-and-acceptance.md.
+
+Implemented-contract clarifications: Dive duration uses saved total elapsed runtime, with bottom-time fallback only when absent, matching current Insights and exports. Dive mode comes from the canonical diveMode field. Suppressed duplicate records do not enter the public summary projection; absent time/depth evidence is labelled Not recorded. Equipment-usage DTOs expose an opaque diveId only when that same Dive is separately selected under the key's Dives scope and still passes owner/deletion checks; this allows exact joins without exposing canonical IDs or unselected Dives. Photos undergo independent CRC/decompression and JPEG frame/scan structure validation as well as metadata removal. All of these clarify the reviewed scope; no additional provider or record store is introduced.

@@ -2,7 +2,7 @@
 import { clientsClaim, type WorkboxPlugin } from 'workbox-core';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { CacheFirst, NetworkOnly, NetworkFirst } from 'workbox-strategies';
+import { CacheFirst, NetworkOnly } from 'workbox-strategies';
 import {ExpirationPlugin} from 'workbox-expiration';
 import {isCompleteIconPath} from '../lib/brand/icon-path';
 
@@ -12,20 +12,18 @@ precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 clientsClaim();
 
-// The root is dynamically authenticated HTML, not an entry in the build precache.
-// Cache only a successfully loaded dashboard; sign-in/out always clears that shell.
+// Identity-dependent HTML and revocable public snapshots must never be replayed.
+const clearNavigationCaches=async()=>{
+  const names=await caches.keys();
+  await Promise.all(names.filter(name=>name.startsWith('zeustek-navigation-')).map(name=>caches.delete(name)));
+};
+self.addEventListener('activate',event=>event.waitUntil(clearNavigationCaches()));
 registerRoute(({request,url})=>request.mode==='navigate'&&/^\/(?:signin-with-chatgpt|signout-with-chatgpt|callback)(?:\/|$)/.test(url.pathname),async({request})=>{
-  await Promise.all(['zeustek-navigation-v1','zeustek-navigation-v2','zeustek-navigation-v3','zeustek-navigation-v4','zeustek-navigation-v5','zeustek-navigation-v6','zeustek-navigation-v7','zeustek-navigation-v8','zeustek-navigation-v9','zeustek-navigation-v10','zeustek-navigation-v11','zeustek-navigation-v12','zeustek-navigation-v13','zeustek-navigation-v14','zeustek-navigation-v15','zeustek-navigation-v16','zeustek-navigation-v17','zeustek-navigation-v18'].map(name=>caches.delete(name)));
+  await clearNavigationCaches();
   return fetch(request);
 });
-registerRoute(new NavigationRoute(new NetworkFirst({
-  cacheName:'zeustek-navigation-v18',networkTimeoutSeconds:1,
-  plugins:[{
-    cacheKeyWillBeUsed:async({request})=>new URL('/',request.url).href,
-    cacheWillUpdate:async({response})=>response.status===200&&!response.redirected&&response.headers.get('content-type')?.includes('text/html')?response:null,
-  }],
-}),{allowlist:[/^\/(?:\?.*)?$/]}));
-registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v17' }));
+registerRoute(new NavigationRoute(new NetworkOnly()));
+registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v18' }));
 registerRoute(({ url }) => url.pathname.startsWith('/api/'), new NetworkOnly());
 registerRoute(({url})=>url.origin===self.location.origin&&isCompleteIconPath(url.pathname),new CacheFirst({
   cacheName:'zeustek-complete-icons-v1',

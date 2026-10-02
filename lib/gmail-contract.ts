@@ -1,4 +1,3 @@
-export const NEWS_MAILBOX = 'zeustekdivenews@gmail.com';
 export const GMAIL_READ_SCOPE =
   'https://www.googleapis.com/auth/gmail.readonly';
 // Owner-approved release isolation. Keep the connection and cached stories;
@@ -74,7 +73,7 @@ const details: Record<GmailDiagnosticCode, [string, string, boolean]> = {
   ],
   wrong_account: [
     'The connected Google account is not the dedicated newsletter mailbox.',
-    `Reconnect as ${NEWS_MAILBOX}. No messages from the other account were imported.`,
+    'Reconnect using the dedicated newsletter account shown in connection settings. No messages from the other account were imported.',
     true,
   ],
   reconnect_required: [

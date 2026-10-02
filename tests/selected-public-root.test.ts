@@ -1,0 +1,15 @@
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {beforeEach,expect,it,vi} from 'vitest';
+const state=vi.hoisted(()=>({user:null as {userId:string;email:string;displayName:string;fullName:null}|null,loaded:0}));
+vi.mock('cloudflare:workers',()=>({env:{DB:{prepare:()=>({bind:()=>({first:async()=>null})})}}}));
+vi.mock('../app/chatgpt-auth',()=>({getChatGPTUser:async()=>state.user,chatGPTSignInPath:(path:string)=>`/signin-with-chatgpt?return_to=${encodeURIComponent(path)}`,chatGPTSignOutPath:(path:string)=>`/signout-with-chatgpt?return_to=${encodeURIComponent(path)}`}));
+vi.mock('../lib/server/household',()=>({allowedHouseholdUser:(user:{userId:string})=>user.userId==='approved'}));
+vi.mock('next/navigation',()=>({redirect:(path:string)=>{throw new Error(`REDIRECT:${path}`);}}));
+vi.mock('../app/dashboard-client',()=>{state.loaded++;return {default:({userId}:{userId:string})=>createElement('div',{'data-private-user':userId},'Private dashboard')};});
+import Page from '../app/page';
+beforeEach(()=>{state.user=null;});
+it('gives anonymous visitors a generic disabled welcome without loading private dashboard identity',async()=>{const before=state.loaded,html=renderToStaticMarkup(await Page({searchParams:Promise.resolve({})}));expect(html).toContain('Welcome to ZeusTek Diving');expect(html).not.toMatch(/data-private-user|private@example|amzeusddo|gemmalouisebrown/);expect(state.loaded).toBe(before);});
+it('preserves anonymous exact-record deep links through the established ChatGPT sign-in',async()=>{await expect(Page({searchParams:Promise.resolve({section:'People',personId:'exact-person'})})).rejects.toThrow('return_to=%2F%3Fsection%3DPeople%26personId%3Dexact-person');});
+it('retains the private dashboard for approved users and gives unapproved visitors a safe welcome',async()=>{state.user={userId:'unapproved',email:'unapproved@example.invalid',displayName:'Visitor',fullName:null};const welcome=renderToStaticMarkup(await Page({searchParams:Promise.resolve({section:'People',personId:'exact-person'})}));expect(welcome).not.toContain('Private dashboard');expect(welcome).toContain('has not been invited');expect(welcome).toContain('return_to=%2F%3Fsection%3DPeople%26personId%3Dexact-person');state.user={...state.user,userId:'approved'};const privatePage=renderToStaticMarkup(await Page({searchParams:Promise.resolve({section:'People',personId:'exact-person'})}));expect(privatePage).toContain('data-private-user="approved"');});
+it('permits generic PWA/source and campaign URLs to show the public welcome',async()=>{expect(renderToStaticMarkup(await Page({searchParams:Promise.resolve({source:'pwa',utm_source:'campaign'})}))).toContain('Welcome to ZeusTek Diving');});

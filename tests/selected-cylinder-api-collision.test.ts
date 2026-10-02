@@ -12,7 +12,7 @@ const post=(id:string,kind:string,data:object,baseModifiedAt:string|null=null)=>
 beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)');fixture.db=database();});afterEach(()=>sqlite.close());
 describe('atomic cylinder-label protection',()=>{
  it('rejects concurrent same-number new cylinders with one winner and preserves both identities',async()=>{
-  const results=await Promise.all([post('a','cylinder',{name:'A',cylinderNumber:'02'}),post('b','cylinder',{name:'B',cylinderNumber:'02'})]);expect(results.map(row=>row.status).sort()).toEqual([200,409]);expect(sqlite.prepare("SELECT COUNT(*) AS n FROM dive_records WHERE kind='cylinder'").get()).toEqual({n:1});
+  const results=await Promise.all([post('a','cylinder',{name:'A',cylinderNumber:'02'}),post('b','cylinder',{name:'B',cylinderNumber:'02'})]);expect(results.map(row=>row.status).sort((a,b)=>a-b)).toEqual([200,409]);expect(sqlite.prepare("SELECT COUNT(*) AS n FROM dive_records WHERE kind='cylinder'").get()).toEqual({n:1});
  });
  it('rejects a duplicate shared legacy equipment number while ignoring another owner’s private cylinders',async()=>{
   add('legacy','fixture-partner','equipment',{name:'Shared tank',category:'Cylinder',cylinderNumber:'2'});expect((await post('new','cylinder',{name:'New',cylinderNumber:'02'})).status).toBe(409);

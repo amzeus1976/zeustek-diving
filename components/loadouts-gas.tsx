@@ -1,6 +1,6 @@
+'use client';
 import {cylinderNumberIssues} from '../lib/cylinders/cylinder-number-review';
 import {CylinderNumberReviewEditor} from './gear/cylinder-number-review';
-'use client';
 
 import {
   AlertTriangle,

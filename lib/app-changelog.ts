@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.71',
+    date: '2026-10-02',
+    title: 'Clearer controls, safer records and selected sharing',
+    changes: [
+      'Brand styling, touch controls, Skills paging, trip selection and Insights links are more consistent on small and large screens.',
+      'Viewing cylinders keeps their numbers unchanged; duplicate numbers have an explicit review and correction workflow.',
+      'Diver Summary downloads retain selected images and multilingual text across the supported formats.',
+      'Public profile controls start off and publish only an approved snapshot; separate read-only integration keys require selected records and fields.',
+      'Gmail failures have clearer private diagnostics; restoring manual updates requires verified owner-authorised acceptance.',
+    ],
+  },
+  {
     version: '1.0.70',
     date: '2026-09-25',
     title: 'Reviewed whole-dive gas-use estimate',

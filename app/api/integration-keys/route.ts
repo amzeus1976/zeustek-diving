@@ -1,0 +1,11 @@
+import {env} from 'cloudflare:workers';
+import {apiKeyMetadata,issueApiKey,ownedApiKey,rotationInput,validateConsentRecords} from '@/lib/server/readonly-api';
+import {sharingOwner,sharingJson,boundedJson} from '@/lib/server/sharing-access';
+import {validateApiKeyInput} from '@/lib/sharing/readonly-api';
+import {strictObject,opaqueId} from '@/lib/sharing/public-profile';
+export async function GET(){const access=await sharingOwner();if(access.error)return access.error;try {return sharingJson({keys:await apiKeyMetadata(env.DB,access.user.userId)});}catch{return sharingJson({error:'Integration status unavailable.'},503);}}
+export async function POST(request:Request){const access=await sharingOwner(request);if(access.error)return access.error;let body:Record<string,unknown>;try {body=strictObject(await boundedJson(request,512*1024),['action','client','expiresAt','scopes','selection','id']);}catch{return sharingJson({error:'Use the supported integration settings.'},400);}
+  if(body.action==='create'){let input;try {const {action:_,...value}=body;input=validateApiKeyInput(value);await validateConsentRecords(env.DB,access.user.userId,input);}catch{return sharingJson({error:'Select owner records, supported fields and an expiry within one year.'},400);}try {return sharingJson(await issueApiKey(env.DB,access.user.userId,input));}catch{return sharingJson({error:'Integration key could not be issued.'},503);}}
+  if(!['rotate','revoke'].includes(String(body.action))||!opaqueId(body.id)||Object.keys(body).some(key=>!['action','id',...(body.action==='rotate'?['expiresAt']:[])].includes(key)))return sharingJson({error:'Choose Create, Rotate or Revoke.'},400);
+  try {const row=await ownedApiKey(env.DB,access.user.userId,body.id);if(!row||row.revoked_at!==null)return sharingJson({error:'Integration unavailable.'},404);if(body.action==='revoke'){await env.DB.prepare('UPDATE dive_api_keys SET revoked_at=? WHERE id=? AND owner_user_id=?').bind(Date.now(),row.id,access.user.userId).run();return sharingJson({revoked:true});}let input;try {input=validateApiKeyInput(rotationInput(row,String(body.expiresAt)));}catch{return sharingJson({error:'Select an expiry within one year.'},400);}return sharingJson(await issueApiKey(env.DB,access.user.userId,input,row.id));}catch{return sharingJson({error:'Integration change could not be saved.'},503);}
+}

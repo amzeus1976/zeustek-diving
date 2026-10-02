@@ -18,7 +18,7 @@ describe('explicit cylinder numbering instead of inventory repair',()=>{
  it('reuses the first gap for explicit new saves, including concurrent saves, without renumbering existing tanks',async()=>{
   await saveLocalRecord('cylinder',{entityId:'one',name:'One',cylinderNumber:'01'});await saveLocalRecord('cylinder',{entityId:'three',name:'Three',cylinderNumber:'03'});
   await Promise.all([saveCylinderProfile({entityId:'new-a',name:'New A'}),saveCylinderProfile({entityId:'new-b',name:'New B'})]);
-  const rows=await listCylinderInventory();expect(rows.find(row=>row.entityId==='three')?.cylinderNumber).toBe('03');expect(rows.filter(row=>row.entityId.startsWith('new-')).map(row=>row.cylinderNumber).sort()).toEqual(['02','04']);
+  const rows=await listCylinderInventory();expect(rows.find(row=>row.entityId==='three')?.cylinderNumber).toBe('03');expect(rows.filter(row=>row.entityId.startsWith('new-')).map(row=>row.cylinderNumber).sort((a,b)=>(a??'').localeCompare(b??''))).toEqual(['02','04']);
  });
  it('recovers the explicit-save queue after a rejected input',async()=>{
   await expect(saveCylinderProfile({name:''})).rejects.toThrow('name');await saveCylinderProfile({entityId:'valid',name:'Valid'});expect((await listCylinderInventory())[0]?.cylinderNumber).toBe('01');

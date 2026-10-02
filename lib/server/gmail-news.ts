@@ -1,7 +1,6 @@
 import {
   GMAIL_READ_SCOPE,
   GMAIL_SYNC_RELEASE_DISABLED,
-  NEWS_MAILBOX,
   gmailDiagnostic,
   normaliseGmailDiagnostic,
   normaliseGmailSyncRun,
@@ -13,6 +12,7 @@ import {
   type GmailConnectionStatus,
 } from '../gmail-contract';
 import { verifiedGmailManualRelease, type GmailReleaseEnv } from './gmail-release-policy';
+const NEWS_MAILBOX = 'zeustekdivenews@gmail.com';
 type GmailRuntimeEnv = GmailReleaseEnv & {
   DB: D1Database;
   GOOGLE_GMAIL_CLIENT_ID?: string;

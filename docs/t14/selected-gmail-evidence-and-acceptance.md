@@ -2,6 +2,8 @@
 
 ## Current authority
 
+**2026-10-02 owner approval received:** “Approve one run and manual-only restoration on verified success (Recommended)”, in direct reply to the bounded Task 3 consent request. This authorises exactly one **new** run after the complete candidate passes its non-Gmail gates and is deployed, prior 90 days, at most 100 messages, metadata/snippets only, using the existing encrypted connection. It conditionally authorises manual-only restoration following verified success. It does not authorise retry, reconnect, credential change, sending, deletion, read-state change or background ingestion. No new live run has yet occurred; issue the new UUID/window only at its designated acceptance point and retain its outcome separately from the consumed historical run.
+
 The consumed historical acceptance run `fdeda6a4-5504-49d0-881d-d1795839955b` remains **FAILED — upstream_failure**, started 2026-09-23T22:41:59.261Z and completed .612Z. It did not record the failing phase or HTTP status. New fixtures cannot reconstruct that original cause. Do not overwrite its result, rerun that ID, reconnect, rotate credentials, revoke the connection or enable background ingestion.
 
 The hard release isolation flag remains enabled; ordinary manual sync returns disabled before database/provider activity. News browsing reads connection status and cached stories only. Current production remains Sites141/app1.0.70. No live Gmail request has been made during this implementation.
@@ -39,4 +41,4 @@ The proposed grant may authorise one new bounded run plus conditional manual-onl
 
 ## Remaining steps
 
-Obtain the separately requested live-operation approval, then configure the existing default-off gate only at the complete combined candidate's designated acceptance point. Inspect the then-current ledger before execution to prove this new grant has not been consumed. A completed or uncertain run is resolved through status, never another invocation. Until approval arrives, leave both controls off and finish independent work. Real connection storage remains untouched. Plan approval for public/API or a protected-file change does not authorise a Gmail operation.
+The separate live-operation approval above is now received. Configure the existing default-off gate only at the complete combined candidate's designated acceptance point. Inspect the then-current ledger before execution to prove this new grant has not been consumed. A completed or uncertain run is resolved through status, never another invocation. Until that acceptance point, leave both controls off and finish the remaining release checks. Real connection storage remains untouched. The exact public preview and production API key confirmations are separate from this Gmail grant.
