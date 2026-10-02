@@ -67,3 +67,7 @@ Every acceptance item needs authoritative evidence. Existing 996 tests and six-w
 ## Exact next steps
 
 Complete current test-first local work and save its evidence. Submit/review the concrete #50/#54 plans before those feature edits. Continue independently permitted Task5/provider work while approvals are pending. Revalidate current live/app/branch before release; no Gmail run, real publication, key issuance or frozen-byte change is inferred from broad goal access.
+
+## Verified local Task5 checkpoint
+
+Calendar/health projection, owner permission, actual download/revision boundary and exact source receivers are now implemented locally. All **1157tests/176files PASS**, typecheck and nine approved hashes PASS. See outstanding-task5-local-evidence.json. Provider assessment is complete with disabled access exceptions. Supported-client calendar acceptance, compiled six-width browser/build/privacy gates and final combined release remain pending. #50/#54 feature-plan approval is still pending; no code for those features. No live Gmail operation occurred and both failures remain unchanged. Production/main are unchanged.

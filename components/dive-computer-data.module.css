@@ -3,6 +3,8 @@
   gap: 12px;
   min-width: 0;
 }
+.sourceReview { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; }
+.sourceReview a { min-height: 44px; display: inline-flex; align-items: center; padding: 8px; }
 .hero {
   min-height: 122px;
   padding: 18px;

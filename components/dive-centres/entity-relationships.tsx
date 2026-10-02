@@ -6,12 +6,18 @@ import {ENTITY_RELATION_TYPES,entityRelationForEditor,entityRelationIdentity,nor
 
 type Draft=EntityRelation & {draftKey:string};
 const choices=[...ENTITY_RELATION_TYPES,'operated-by','owned-by','hosts','contains','used-by','boat-provided-by','has-resort-dive-centre','charters'];
-export function EntityRelationships({entity,operators,links,close,onSaved,go}:{
+// Saved date evidence must remain editable even when it fails the normal Save validation.
+function editorProjection(link:EntityRelation,entityId:string){
+  const {startDate: _startDate,endDate: _endDate,...undated}=link;
+  return {...entityRelationForEditor(undated,entityId),...(link.startDate!==undefined?{startDate:link.startDate}:{}),...(link.endDate!==undefined?{endDate:link.endDate}:{})};
+}
+export function EntityRelationships({entity,operators,links,close,onSaved,go,sourceRelationshipId}:{
   entity:Stored<OperatorRecord>;operators:Stored<OperatorRecord>[];links:ReadonlyArray<EntityRelation>;
+  sourceRelationshipId?:string|undefined;
   close:()=>void;onSaved:()=>void|Promise<void>;go:(route:string)=>void;
 }){
   const [original]=useState(()=>links.filter(link=>link.fromOperatorId===entity.entityId||link.toOperatorId===entity.entityId));
-  const [drafts,setDrafts]=useState<Draft[]>(()=>original.map((link,index)=>({...entityRelationForEditor(link,entity.entityId),draftKey:link.entityId??`existing-${index}`})));
+  const [drafts,setDrafts]=useState<Draft[]>(()=>original.map((link,index)=>({...editorProjection(link,entity.entityId),draftKey:link.entityId??`existing-${index}`})));
   const [nextKey,setNextKey]=useState(0);
   const others=operators.filter(row=>row.entityId!==entity.entityId);
   const update=(key:string,patch:Partial<Draft>)=>setDrafts(rows=>rows.map(row=>row.draftKey===key?{...row,...patch}:row));
@@ -36,10 +42,11 @@ export function EntityRelationships({entity,operators,links,close,onSaved,go}:{
     <p>Associate this Dive Entity with other existing centres, resorts, vessels or organisations. Each direction is shown from the other record automatically.</p>
     {!others.length?<p>No other Dive Entities are available yet.</p>:<p>Available entities: {others.map(row=>row.name).join(', ')}.</p>}
     <button type="button" className="focus-secondary" disabled={!others.length} onClick={()=>{const key=`new-${nextKey}`;setNextKey(value=>value+1);setDrafts(rows=>[...rows,{draftKey:key,fromOperatorId:entity.entityId,toOperatorId:others[0]!.entityId,relationType:'associated-with',active:true}]);}}>Add entity relationship</button>
-    <div className="record-fields">{drafts.map(row=><fieldset key={row.draftKey} className="focus-card"><legend>{operators.find(item=>item.entityId===row.toOperatorId)?.name??'Unavailable entity'}</legend>
+    <div className="record-fields">{drafts.map(row=><fieldset key={row.draftKey} className="focus-card" data-relationship-id={row.entityId} data-requested-source={Boolean(sourceRelationshipId)&&row.entityId===sourceRelationshipId}><legend>{operators.find(item=>item.entityId===row.toOperatorId)?.name??'Unavailable entity'}</legend>
+      {sourceRelationshipId&&row.entityId===sourceRelationshipId&&<output>Linked entity relationship from the data review</output>}
       <p>From {entity.name}</p>
       <label>Relationship<select value={row.relationType} onChange={event=>update(row.draftKey,{relationType:event.target.value})}>{choices.map(type=><option key={type} value={type}>{type.replaceAll('-',' ')}</option>)}</select></label>
-      <label>Other Dive Entity<select value={row.toOperatorId} onChange={event=>update(row.draftKey,{toOperatorId:event.target.value})}>{others.map(item=><option key={item.entityId} value={item.entityId}>{item.name}</option>)}</select></label>
+      <label>Other Dive Entity<select value={row.toOperatorId} onChange={event=>update(row.draftKey,{toOperatorId:event.target.value})}>{!others.some(item=>item.entityId===row.toOperatorId)&&<option value={row.toOperatorId}>Unavailable saved entity</option>}{others.map(item=><option key={item.entityId} value={item.entityId}>{item.name}</option>)}</select></label>
       {row.relationType==='other'&&<><label>Forward label<input value={row.forwardLabel??''} onChange={event=>update(row.draftKey,{forwardLabel:event.target.value})}/></label><label>Reverse label<input value={row.reverseLabel??''} onChange={event=>update(row.draftKey,{reverseLabel:event.target.value})}/></label></>}
       <label><input type="checkbox" checked={row.active} onChange={event=>update(row.draftKey,{active:event.target.checked})}/>Active relationship</label>
       <label>Start date<input type="date" value={row.startDate??''} onChange={event=>update(row.draftKey,{startDate:event.target.value})}/></label>

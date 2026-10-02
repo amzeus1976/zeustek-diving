@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Plus, Wrench } from 'lucide-react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRecordRefresh } from './record-status';
 import {
   equipmentEventsFor,
@@ -15,6 +15,7 @@ import {
   type EquipmentEventType,
 } from '../lib/offline/equipment-events';
 import type { EquipmentRecord, Stored } from '../lib/offline/dive-planning';
+import {resolveEquipmentEventSource,includeEquipmentEventSource} from '../lib/equipment-event-source';
 import styles from './equipment-maintenance-log.module.css';
 
 const eventTypes: Array<[EquipmentEventType, string]> = [
@@ -43,13 +44,52 @@ function labelForType(value: EquipmentEventType) {
   return eventTypes.find(([key]) => key === value)?.[1] ?? value;
 }
 
+type EquipmentHistory=Awaited<ReturnType<typeof listEquipmentEvents>>;
+type EquipmentHistoryLoadState='loading'|'loaded'|'unavailable';
+function useSourceEventId(sourceEventId:string|undefined){
+  const [urlId,setUrlId]=useState('');
+  useEffect(()=>{if(sourceEventId!==undefined)return;const frame=requestAnimationFrame(()=>setUrlId(new URLSearchParams(window.location.search).get('eventId')??''));return()=>cancelAnimationFrame(frame);},[sourceEventId]);
+  return sourceEventId??urlId;
+}
+
+/** Read-only event context for either ordinary Equipment or canonical Cylinders. No correction controls. */
+export function EquipmentEventSource({equipmentId,sourceEventId,events,loadState,showEvent=true}:{
+  equipmentId:string;sourceEventId?:string|undefined;events?:ReadonlyArray<EquipmentHistory[number]>|undefined;loadState?:EquipmentHistoryLoadState|undefined;showEvent?:boolean|undefined;
+}){
+  const requestedId=useSourceEventId(sourceEventId),[localEvents,setLocalEvents]=useState<EquipmentHistory>([]),[localState,setLocalState]=useState<EquipmentHistoryLoadState>('loading');
+  const sourceRef=useRef<HTMLElement>(null);
+  const refresh=useCallback(()=>{
+    if(events!==undefined||!requestedId)return;
+    setLocalState('loading');
+    return listEquipmentEvents().then(rows=>{setLocalEvents(rows);setLocalState('loaded');}).catch(()=>setLocalState('unavailable'));
+  },[events,requestedId]);
+  useRecordRefresh(refresh);
+  const state=loadState??(events===undefined?localState:'loaded');
+  const source=resolveEquipmentEventSource(events??localEvents,equipmentId,requestedId);
+  const selectedId=state==='loaded'&&source.state==='available'?source.event.entityId:null;
+  useEffect(()=>{if(!showEvent||!selectedId)return;const frame=requestAnimationFrame(()=>sourceRef.current?.focus());return()=>cancelAnimationFrame(frame);},[selectedId,showEvent,equipmentId]);
+  if(!requestedId)return null;
+  return <section className="focus-notice" aria-label="Linked equipment event">
+    {state==='loading'?<output>Loading the linked equipment event…</output>:state==='unavailable'?<output>Equipment history is unavailable on this device. No substitute event has been opened.</output>
+      :source.state==='mismatched'?<output>The linked event does not belong to this equipment item. No substitute event has been opened.</output>
+        :source.state!=='available'?<output>The linked equipment event is unavailable on this device. No substitute event has been opened.</output>
+          :showEvent?<article ref={sourceRef} tabIndex={-1} data-equipment-event-source={source.event.entityId}><h4>Reviewed source event</h4><b>{source.event.title}</b><p>{labelForType(source.event.eventType)} · {source.event.status}</p><p>Recorded date: {source.event.occurredAt||'Not recorded'}{source.event.resolvedAt&&<> · Resolution date: {source.event.resolvedAt}</>}</p>{source.event.description&&<p>{source.event.description}</p>}</article>
+            :<output>The reviewed source event remains shown below regardless of history filters.</output>}
+  </section>;
+}
+
 export function EquipmentMaintenanceLog({
   equipment,
   onEquipmentChanged,
+  sourceEventId,
 }: {
   equipment: Stored<EquipmentRecord>;
   onEquipmentChanged?: () => void;
+  sourceEventId?:string|undefined;
 }) {
+  const requestedSourceId=useSourceEventId(sourceEventId);
+  const [historyState,setHistoryState]=useState<EquipmentHistoryLoadState>('loading');
+  const requestedEventRef=useRef<HTMLElement>(null);
   const [events, setEvents] = useState<
     Awaited<ReturnType<typeof listEquipmentEvents>>
   >([]);
@@ -75,15 +115,16 @@ export function EquipmentMaintenanceLog({
   const reportButton = useRef<HTMLButtonElement>(null);
 
   const refresh = useCallback(() => {
+    setHistoryState('loading');
     return listEquipmentEvents()
-      .then(setEvents)
-      .catch((error) =>
+      .then(rows=>{setEvents(rows);setHistoryState('loaded');})
+      .catch((error) => {setHistoryState('unavailable');
         setMessage(
           error instanceof Error
             ? error.message
             : 'History is temporarily unavailable.',
-        ),
-      );
+        );
+      });
   }, []);
   useRecordRefresh(refresh);
 
@@ -102,7 +143,10 @@ export function EquipmentMaintenanceLog({
         (statusFilter === 'all' || event.status === statusFilter),
     );
   }, [allForEquipment, typeFilter, statusFilter]);
-  const visible = showAll ? filtered : latest;
+  const sourceContext=resolveEquipmentEventSource(historyState==='loaded'?events:[],equipment.entityId,requestedSourceId);
+  const visible = includeEquipmentEventSource(showAll ? filtered : latest,sourceContext);
+  const selectedSourceId=sourceContext.state==='available'?sourceContext.event.entityId:null;
+  useEffect(()=>{if(!selectedSourceId)return;const frame=requestAnimationFrame(()=>requestedEventRef.current?.focus());return()=>cancelAnimationFrame(frame);},[selectedSourceId,equipment.entityId]);
 
   function resetEventForm() {
     setEventType('issue');
@@ -260,6 +304,8 @@ export function EquipmentMaintenanceLog({
         </button>
       </div>
 
+      <EquipmentEventSource equipmentId={equipment.entityId} sourceEventId={requestedSourceId} events={events} loadState={historyState} showEvent={false}/>
+
       {adding && (
         <fieldset
           disabled={busy}
@@ -410,12 +456,13 @@ export function EquipmentMaintenanceLog({
 
       <div className={styles.events}>
         {visible.map((event) => (
-          <article className={styles.event} key={event.entityId} data-equipment-event-id={event.entityId}>
+          <article className={styles.event} key={event.entityId} data-equipment-event-id={event.entityId} data-reviewed-source={event.entityId===selectedSourceId} ref={event.entityId===selectedSourceId?requestedEventRef:undefined} tabIndex={event.entityId===selectedSourceId?-1:undefined}>
+            {event.entityId===selectedSourceId&&<strong>Reviewed source event</strong>}
             <div className={styles.eventHead}>
               <div>
                 <b>{event.title}</b>
                 <small>
-                  {new Date(`${event.occurredAt}T12:00:00`).toLocaleDateString(
+                  {event.entityId===selectedSourceId?`Recorded date: ${event.occurredAt||'Not recorded'}`:new Date(`${event.occurredAt}T12:00:00`).toLocaleDateString(
                     'en-GB',
                   )}
                 </small>
@@ -449,7 +496,7 @@ export function EquipmentMaintenanceLog({
             {event.resolvedAt && (
               <small className={styles.meta}>
                 <Check size={13} /> Resolved{' '}
-                {new Date(`${event.resolvedAt}T12:00:00`).toLocaleDateString(
+                {event.entityId===selectedSourceId?event.resolvedAt:new Date(`${event.resolvedAt}T12:00:00`).toLocaleDateString(
                   'en-GB',
                 )}
                 {event.resolutionNotes ? ` · ${event.resolutionNotes}` : ''}

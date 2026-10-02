@@ -60,6 +60,10 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
 import {PublicProfileSettings} from '../components/sharing/public-profile-settings';
 import {IntegrationKeySettings} from '../components/sharing/integration-key-settings';
+import {DataHealthWorkspace} from '../components/admin/data-health';
+import {DataReviewLinks} from '../components/admin/data-review-links';
+import {useOwnerDataReviewPermission} from '../components/admin/use-owner-data-review';
+import {CalendarDownloadWorkspace} from '../components/planning/calendar-download-workspace';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
@@ -601,7 +605,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           {active === 'Dive Knowledge' && <KnowledgeCentre go={go} />}{' '}
           {active === 'Dive Computer Imports' && <DiveComputerData go={go} />}{' '}
           {active === 'Admin' && <AdminPanel />}{' '}
-          {active === 'Data & Backups' && <DataCentre initialTab={destinationTab} />}
+          {active === 'Data & Backups' && <DataCentre initialTab={destinationTab} go={go} />}
           {active === 'Imports' && <Imports />}
           {active === 'Sync' && <SyncCentre />}{' '}
           {active === 'Backups' && <BackupsScreen />}{' '}
@@ -670,6 +674,7 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
       <CollapsibleWorkCard id="dive-news-settings" defaultMinimized className="site-configuration-card" title="Dive News settings" eyebrow="NEWS" status="Sources, inbox and ranking preferences"><><ConfigurationPreferenceCard domain="news"/><NewsSourceSettings /></></CollapsibleWorkCard>
       <CollapsibleWorkCard id="acceptance-fixture-review" defaultMinimized className="site-configuration-card" title="Synthetic data & record controls" eyebrow="OWNER CONFIRMATION" status="All canonical kinds, dependencies and safe actions" alert="No automatic deletion"><SyntheticFixtureReview go={go}/></CollapsibleWorkCard>
       <CollapsibleWorkCard id="other-site-data-tools" defaultMinimized className="site-configuration-card" title="Other site data tools" eyebrow="ADMIN" status="Diagnostics and records needing attention"><AdminPanel /></CollapsibleWorkCard>
+      <DataReviewLinks go={go}/>
     </div>
   </>;
 }
@@ -1294,6 +1299,7 @@ function Equipment() {
   const [adding, setAdding] = useState(false);
   const [viewing, setViewing] = useState<Stored<EquipmentRecord> | null>(null);
   const openedEquipment=useRef('');
+  const [sourceUnavailable,setSourceUnavailable]=useState(false);
   useEffect(()=>{const id=new URLSearchParams(window.location.search).get('equipmentId');if(!id||openedEquipment.current===id)return;const item=items.find(row=>row.entityId===id);if(item){const frame=requestAnimationFrame(()=>{openedEquipment.current=id;setViewing(item);});return()=>cancelAnimationFrame(frame);}},[items]);
   const refresh = useCallback(() => {
     void Promise.all([
@@ -1304,6 +1310,8 @@ function Equipment() {
     ]).then(
       ([nextItems, nextDives, nextSets, nextCatalogOptions]) => {
         setItems(nextItems);
+        const query=new URLSearchParams(window.location.search),requested=query.get('equipmentId');
+        setSourceUnavailable(query.has('equipmentId')&&!nextItems.some(item=>item.entityId===requested));
         setDives(nextDives);
         setSets(nextSets);
         setCatalogOptions(nextCatalogOptions);
@@ -1338,6 +1346,7 @@ function Equipment() {
     });
   return (
     <div className="t14-record-domain t14-equipment">
+      {sourceUnavailable&&<output>The requested Equipment source is unavailable. No substitute record was opened.</output>}
       <Heading
         eyebrow="SERVICE · OWNERSHIP · HISTORY"
         title="Equipment"
@@ -4589,11 +4598,13 @@ function DiverSummaryExport(){
       <Card><div className="focus-card-head"><div><span className="focus-eyebrow">DIVES</span><h3>{selectedDiveIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedDiveIds(new Set(dives.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedDiveIds(new Set())}>None</button></div></div><div className="summary-check-list dive-list">{dives.map(dive=><label key={dive.entityId}><input type="checkbox" checked={selectedDiveIds.has(dive.entityId)} onChange={event=>toggleId(setSelectedDiveIds,dive.entityId,event.target.checked)}/><span><b>#{dive.diveNumber??'—'} · {dive.site}</b><small>{dive.date} · {dive.maxDepthM??'—'} m · {dive.totalElapsedMin??dive.bottomTimeMin??'—'} min</small></span></label>)}</div></Card></div></div>;
 }
 
-function DataCentre({initialTab}:{initialTab:string}) {
-  const tabs=['Imports','Sync','Backups','Diver summary','Site coordinates'];
-  const [tab, setTab] = useState(tabs.includes(initialTab)?initialTab:'Imports');
-  useEffect(()=>{if(tabs.includes(initialTab))setTab(initialTab);},[initialTab]);
-  return <><Heading eyebrow="YOUR DATA" title="Data & backups" copy="Import records, check synchronisation and protect your data." /><div className="section-tabs" role="tablist" aria-label="Data tools">{tabs.map(name => <button key={name} role="tab" aria-selected={tab === name} onClick={() => setTab(name)}>{name}</button>)}</div><CollapsibleWorkCard id={`data-tools-${tab.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`} title={tab} eyebrow="DATA TOOL" status="Local-first data remains available while this card is minimised"><div role="tabpanel">{tab === 'Imports' ? <Imports /> : tab === 'Sync' ? <SyncCentre /> : tab === 'Diver summary' ? <DiverSummaryExport/> : tab === 'Site coordinates' ? <SiteCoordinateAudit onUpdated={()=>void refreshDiveRecords('site',true)}/> : <BackupsScreen />}</div></CollapsibleWorkCard></>;
+function DataCentre({initialTab,go}:{initialTab:string;go:(destination:string)=>void}) {
+  const ownerReview=useOwnerDataReviewPermission();
+  const tabs=['Imports','Sync','Backups','Diver summary','Site coordinates',...(ownerReview?['Evidence & data health','Calendar download']:[])];
+  const [selectedTab,setTab]=useState<string|null>(null);
+  const requestedTab=selectedTab??initialTab;
+  const tab=tabs.includes(requestedTab)?requestedTab:'Imports';
+  return <><Heading eyebrow="YOUR DATA" title="Data & backups" copy="Import records, check synchronisation and protect your data." /><div className="section-tabs" role="tablist" aria-label="Data tools">{tabs.map(name => <button key={name} role="tab" aria-selected={tab === name} onClick={() => setTab(name)}>{name}</button>)}</div><CollapsibleWorkCard id={`data-tools-${tab.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`} title={tab} eyebrow="DATA TOOL" status="Local-first data remains available while this card is minimised"><div role="tabpanel">{tab === 'Imports' ? <Imports /> : tab === 'Sync' ? <SyncCentre /> : tab === 'Diver summary' ? <DiverSummaryExport/> : tab === 'Site coordinates' ? <SiteCoordinateAudit onUpdated={()=>void refreshDiveRecords('site',true)}/> : tab==='Evidence & data health'&&ownerReview ? <DataHealthWorkspace go={go}/> : tab==='Calendar download'&&ownerReview ? <CalendarDownloadWorkspace go={go}/> : <BackupsScreen />}</div></CollapsibleWorkCard></>;
 }
 
 function Imports() {

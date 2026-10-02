@@ -1,11 +1,13 @@
 'use client';
-import {useCallback,useState} from 'react';
+import {useCallback,useMemo,useState} from 'react';
 import {Building2,ExternalLink,MapPin,Pencil,Plus,Search,Star,Trash2,Users} from 'lucide-react';
 import {listOperators,saveOperator,deleteOperator,listPeople,listPersonEntityLinks,listEntityRelations,type OperatorRecord,type PersonRecord,type Stored} from '../../lib/offline/dive-planning';
 import {filterDiveCentres,linkedOperatorPeople,normaliseOperatorDraft,OPERATOR_SERVICES,OPERATOR_TYPES,safeOperatorUrl,type OperatorDraft} from '../../lib/operators/dive-centres';
-import {entityRelationLabel,projectPersonEntityLinks,relationshipStatus} from '../../lib/operators/entity-relationships';
+import {projectPersonEntityLinks,relationshipStatus} from '../../lib/operators/entity-relationships';
 import {reviewEntityDuplicates} from '../../lib/operators/duplicate-review';
 import {EntityRelationships} from './entity-relationships';
+import {RelationshipSourceContextCard} from '../people/relationship-source-context';
+import {resolveRelationshipSourceContext,retainedEntityRelationLabel,type RelationshipSourceRequest} from '../../lib/operators/relationship-source-context';
 import {personDisplayName} from '../../lib/offline/people-profiles';
 import {useRecordRefresh} from '../record-status';
 import {RecordEditorWorkspace} from '../shared/record-editor-workspace';
@@ -28,16 +30,27 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
   const [editing,setEditing]=useState<OperatorDraft|null>(null);
   const [removing,setRemoving]=useState<Stored<OperatorRecord>|null>(null);
   const [managing,setManaging]=useState<Stored<OperatorRecord>|null>(null);
+  const [sourceRequest,setSourceRequest]=useState<RelationshipSourceRequest|null>(null);
+  const [sourcesLoaded,setSourcesLoaded]=useState(false);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const refresh=useCallback(async()=>{
+    setSourcesLoaded(false);
     try{
       const [operators,persons,links,relations]=await Promise.all([listOperators(),listPeople(),listPersonEntityLinks(),listEntityRelations()]);
       setCentres(operators);setPeople(persons);setPersonLinks(links);setEntityLinks(relations);
       const query=new URLSearchParams(window.location.search),requested=query.get('operatorId')??query.get('recordId');
-      setSelectedId(current=>requested||current||'');
+      const relationshipId=query.get('relationshipId');
+      if(relationshipId){
+        const request:RelationshipSourceRequest={kind:'operator-operator-link',relationshipId,endpointId:requested??''};
+        setSourceRequest(request);
+        const context=resolveRelationshipSourceContext(request,{people:persons,operators,personLinks:links,entityLinks:relations});
+        setSelectedId(context?.canManage?request.endpointId:'');
+      }else {setSourceRequest(null);setSelectedId(current=>requested||current||'');}
+      setSourcesLoaded(true);
     }catch(reason){setError(reason instanceof Error?reason.message:'Could not load Dive Centres.');}
   },[]);
   useRecordRefresh(refresh);
+  const sourceContext=useMemo(()=>sourceRequest&&sourcesLoaded?resolveRelationshipSourceContext(sourceRequest,{people,operators:centres,personLinks,entityLinks}):null,[sourceRequest,sourcesLoaded,people,centres,personLinks,entityLinks]);
   const visible=filterDiveCentres(centres,{query,type,status,service,favourites});
   const selected=centres.find(row=>row.entityId===selectedId)??null;
   const linked=selected?linkedOperatorPeople(selected.entityId,people,personLinks):[];
@@ -52,12 +65,13 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
     if(!draft.entityId){const matches=reviewEntityDuplicates(draft,centres);if(matches.length&&!window.confirm(`Review existing Dive Entity: ${matches.map(row=>row.name).join(', ')}. Create a separate entity anyway?`))return;}
     const result=await saveOperator(normaliseOperatorDraft(draft));setSelectedId(result.id);setEditing(null);await refresh();
   }}/>;
-  if(managing)return <EntityRelationships entity={managing} operators={centres} links={entityLinks} close={()=>setManaging(null)} onSaved={refresh} go={route=>{const requested=new URLSearchParams(route.split('&').slice(1).join('&')).get('operatorId');if(requested)setSelectedId(requested);setManaging(null);go(route);}}/>;
+  if(managing)return <EntityRelationships entity={managing} operators={centres} links={entityLinks} sourceRelationshipId={sourceContext?.canManage&&sourceContext.sourceId===managing.entityId?sourceContext.relationshipId:undefined} close={()=>setManaging(null)} onSaved={refresh} go={route=>{const requested=new URLSearchParams(route.split('&').slice(1).join('&')).get('operatorId');if(requested)setSelectedId(requested);setManaging(null);go(route);}}/>;
   return <main className={styles.page}>
     <header className={styles.hero}><ZeusTekAssetIcon name="dive-centres" label="Dive Centres" size={64} fallback={<Building2/>}/>
       <div><span className="focus-eyebrow">DIVE DATA</span><h1>Dive Centres</h1><p>Non-human dive organisations, operations and vessels, with their linked People and entities.</p></div>
       <button className="focus-primary" onClick={()=>setEditing(emptyCentre())}><Plus size={18}/>Add Dive Entity</button></header>
     {error&&<p role="alert" className="focus-notice danger">{error}</p>}
+    {sourceContext&&<RelationshipSourceContextCard context={sourceContext} go={go} manage={()=>{const entity=centres.find(row=>row.entityId===sourceContext.sourceId);if(sourceContext.canManage&&entity)setManaging(entity);}}/>}
     <div className={styles.workspace}>
       <aside className={styles.filters} aria-label="Dive Centre filters">
         <h2><Search size={18}/>Find a centre</h2>
@@ -98,7 +112,7 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
             {linked.length?<ul className={styles.people}>{linked.map(person=><li key={person.entityId}><button className="focus-secondary" onClick={()=>go('People&personId='+encodeURIComponent(person.entityId))}>{personDisplayName(person)}</button> · {projectPersonEntityLinks([person],personLinks).filter(link=>link.operatorId===selected.entityId).map(link=>`${link.role} (${relationshipStatus(link)})`).join(', ')}</li>)}</ul>:<p>No linked People yet.</p>}
             <p>Create and edit People in People. Manage affiliations from each Person profile.</p><button className="focus-secondary" onClick={()=>go('People')}>Open People</button></div>
           <div className={styles.detailSection}><h3>Related Dive Entities</h3>
-            {selectedRelationships.length?<ul>{selectedRelationships.map(link=>{const otherId=link.fromOperatorId===selected.entityId?link.toOperatorId:link.fromOperatorId;return <li key={link.entityId}><button className="focus-secondary" onClick={()=>{setSelectedId(otherId);go('Dive Centres&operatorId='+encodeURIComponent(otherId));}}>{centres.find(row=>row.entityId===otherId)?.name??'Unavailable entity'}</button> · {entityRelationLabel(link,selected.entityId)} · {relationshipStatus(link)}</li>;})}</ul>:<p>No entity relationships recorded.</p>}
+            {selectedRelationships.length?<ul>{selectedRelationships.map(link=>{const otherId=link.fromOperatorId===selected.entityId?link.toOperatorId:link.fromOperatorId;return <li key={link.entityId}><button className="focus-secondary" onClick={()=>{setSelectedId(otherId);go('Dive Centres&operatorId='+encodeURIComponent(otherId));}}>{centres.find(row=>row.entityId===otherId)?.name??'Unavailable entity'}</button> · {retainedEntityRelationLabel(link,selected.entityId)} · {relationshipStatus(link)}</li>;})}</ul>:<p>No entity relationships recorded.</p>}
             <button className="focus-secondary" onClick={()=>setManaging(selected)}>Manage entity relationships</button></div>
           <div className={styles.detailSection}><h3>Notes</h3><p className={styles.notes}>{selected.notes||'No notes recorded.'}</p></div>
         </>:<div className={styles.empty}><Building2/><h2>{selectedId?'Centre unavailable':'Select a Dive Centre'}</h2><p>{selectedId?'The linked record may be unavailable on this device. Choose a centre from the list.':'Choose a centre to view services, contact details and people.'}</p></div>}

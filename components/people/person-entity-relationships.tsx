@@ -6,8 +6,9 @@ import {personLinkWritePhases,planPersonLinkChanges,projectPersonEntityLinks,typ
 import {personDisplayName} from '@/lib/offline/people-profiles';
 
 type DraftLink=ProjectedPersonEntityLink & {draftKey:string};
-export function PersonEntityRelationships({person,operators,links,close,onSaved,go}:{
+export function PersonEntityRelationships({person,operators,links,close,onSaved,go,sourceRelationshipId}:{
   person:Stored<PersonRecord>;operators:Stored<OperatorRecord>[];links:ReadonlyArray<PersonEntityLink>;
+  sourceRelationshipId?:string|undefined;
   close:()=>void;onSaved:()=>void|Promise<void>;go:(route:string)=>void;
 }){
   const [original]=useState(()=>projectPersonEntityLinks([person],links));
@@ -36,7 +37,8 @@ export function PersonEntityRelationships({person,operators,links,close,onSaved,
     {operators.length>0&&!drafts.length&&<p>Available entities: {operators.map(row=>row.name).join(', ')}.</p>}
     <button type="button" className="focus-secondary" onClick={add} disabled={!operators.length}>Add affiliation</button>
     <div className="record-fields">
-      {drafts.map(link=><fieldset key={link.draftKey} className="focus-card">
+      {drafts.map(link=><fieldset key={link.draftKey} className="focus-card" data-relationship-id={link.entityId} data-requested-source={Boolean(sourceRelationshipId)&&link.entityId===sourceRelationshipId}>
+        {sourceRelationshipId&&link.entityId===sourceRelationshipId&&<output>Linked affiliation from the data review</output>}
         <legend>{operators.find(row=>row.entityId===link.operatorId)?.name??'Unavailable legacy Dive Entity'}</legend>
         <label>Dive Entity<select value={link.operatorId} onChange={event=>update(link.draftKey,{operatorId:event.target.value})}>
           {!operators.some(row=>row.entityId===link.operatorId)&&<option value={link.operatorId}>Unavailable legacy entity · {link.operatorId.slice(-8)}</option>}
