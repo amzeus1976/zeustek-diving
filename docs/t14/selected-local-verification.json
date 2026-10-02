@@ -2,7 +2,7 @@
   "kind": "Finished local combined candidate; production acceptance remains open",
   "date": "2026-10-02",
   "branch": "t14/tasks-1-2-3-4-6-7",
-  "applicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
+  "applicationCommit": "e28ebf4d73740fe356e3a9c3c3cc1640b4317a86",
   "auditCheckpoint": "dc1d4530d08127f8fb36a8208bfe0b2bc35550ae",
   "regression": {
     "command": "vitest run --config vitest.config.ts (installed project binary)",
@@ -10,8 +10,8 @@
     "testsPassed": 996,
     "testsFailed": 0,
     "exitCode": 0,
-    "localStartTime": "15:38:19 Europe/London",
-    "durationSeconds": 13.34,
+    "localStartTime": "16:08:58 Europe/London",
+    "durationSeconds": 13.2,
     "ignoredLog": "work/selected-tasks/final-regression.log",
     "coverageOrAssertionsWeakened": false
   },
@@ -24,7 +24,7 @@
     "command": "project prebuild then vinext build (installed project binary)",
     "exitCode": 0,
     "precacheEntries": 427,
-    "precacheKiB": 42484.07,
+    "precacheKiB": 42484.32,
     "ignoredLog": "work/selected-tasks/final-build.log",
     "warningsRetained": [
       "intermediate build phases report no files for an early precache glob",
@@ -71,16 +71,16 @@
   },
   "securityEvidence": "selected-local-security-evidence.json",
   "downloadEvidence": "selected-export-download-evidence.json",
-  "browserEvidence": "selected-compiled-browser-evidence.json",
+  "browserEvidence": "selected-corrected-browser-evidence.json",
   "pendingAuthorisations": [
     "Exact real-owner public content preview before publication (ships off)",
     "Exact client/scopes/records/fields/expiry before real API-key issuance (ships unissued)"
   ],
   "production": {
-    "unchanged": true,
+    "unchanged": "Sites142 rejected; verified Sites141 restored before correction. No accepted source reconciliation.",
     "appVersion": "1.0.70",
     "sitesVersion": 141,
-    "deploymentId": "appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2",
+    "deploymentId": "appgdep_6abfc8b662388191b6655e46ec1607a9",
     "publishedSource": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
     "acceptedGitHubMain": "bb6cae3a4d5537f20db9d3a80c4a4eca3b647a51",
     "acceptedTree": "9ac0cd710e1200419984f15423e7b1bafd483131",
@@ -91,10 +91,10 @@
   "ownerData": {
     "productionWritesByThisTask": 0,
     "productionSyntheticRecords": 0,
-    "freshReleaseFingerprintComparison": "Fresh 6485-record read-only baseline saved; encrypted recoverable backup verified. Post-release comparison remains open.",
+    "freshReleaseFingerprintComparison": "Fresh pre-release and verified rollback comparison: all6485 IDs/content/timestamps unchanged; no imports from failed Gmail run. Corrected release post-compare outstanding.",
     "approvedProductionProfilePublications": 0,
     "productionApiCredentialsIssued": 0,
-    "liveGmailOperations": 0,
+    "liveGmailOperations": 1,
     "preReleaseFingerprint": "3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743",
     "preReleaseCounts": {
       "all": 6485,
@@ -112,7 +112,7 @@
     }
   },
   "deploymentPushOrPrPerformed": false,
-  "previousApplicationCommit": "421d446e054c126e48492e9a82db09c72fd26281",
+  "previousApplicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
   "diffWhitespace": {
     "fullRangeExitCode": 2,
     "applicationAndEvidenceExcludingLiteralReviewedPatchExitCode": 0,

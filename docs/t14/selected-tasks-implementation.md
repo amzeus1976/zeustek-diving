@@ -44,7 +44,7 @@ Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, B
 | 3.2 | Encrypted token storage/retention, cached stories/non-Gmail preserved | LOCAL PASS | Mock encrypted refresh retention; browser cached News retained; no real connection writes |
 | 3.3 | Success/failure fixtures and minimal repair warranted by evidence | LOCAL PASS | 40 Gmail fixtures; bounded transport/storage/redaction/idempotence fixes and default-off acceptance gate |
 | 3.4 | Separate live acceptance authorisation and concrete one-run procedure | OWNER AUTHORISED | One NEW run: 90 days, max 100 metadata/snippet messages, no retry/reconnect/credential/mailbox changes |
-| 3.5 | Verified restoration + authorised enablement | OPEN | Manual-only restoration authorised conditionally on verified successful new run; background remains disabled |
+| 3.5 | Verified restoration + authorised enablement | BLOCKED | New consented run consumed/FAILED token_refresh transport; sync stays disabled under existing release exception; no retry |
 | 4.1 | #75 establish actual image failure stage; PDF and DOCX selected images | LOCAL PASS | Blob transport TypeError before decode reproduced; bounded image loader/crop cleanup fixed |
 | 4.2 | #76 licensed embedded Unicode glyph coverage | LOCAL PASS | SIL OFL Noto Sans/JP; Greek/Cyrillic/Japanese/subscripts; unsupported PDF glyphs report safely |
 | 4.3 | #78 duplicate activity case normalisation without source writes | LOCAL PASS | Normalised per-Dive counts across five shared projections; saved tags untouched |
@@ -102,3 +102,7 @@ Task 6/7 handlers, settings and SQL/R2 security fixtures are implemented locally
 ## Final local checkpoint 6a939efee044afe011e6dae3a03281a7e55cc541
 
 996/156 retained regression, typecheck, build/PWA (427 / 42484.07 KiB), zero new targeted lint, privacy/artwork/protected-hash gate pass. See selected-local-verification.json and selected-compiled-browser-evidence.json. The backup endpoint returns all 6485 live records; the inspection-tool returned array was truncated to2000, not the application. No backup implementation rewrite was retained. Two real-SQL large-owner/empty fixtures were added and pass. Fresh recovery decrypt verified. Publication/keys remain off/unissued; Gmail remains unverified until the one new consented live run. No partial production release.
+
+## Corrected application checkpoint e28ebf4d73740fe356e3a9c3c3cc1640b4317a86
+
+Sites142 was rejected for an actual internal heading collapse and verified Sites141 restored. All6485 ordinary owner fingerprints unchanged after recovery. Header correction passes186 stronger compiled checks and final996/156 tests/typecheck/build/PWA/privacy/hash/lint checks. Gmail new run f2356ba1-2c8d-4f55-af40-7c59feac342f is consumed/FAILED token_refresh transport. Task3 restoration BLOCKED; retain existing Gmail release exception, never retry or imply PASS. Corrected combined publication and GitHub acceptance remain OPEN.

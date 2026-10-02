@@ -70,11 +70,12 @@
     "navigationMastersInPrecache": false,
     "exportFontsInPrecache": false
   },
-  "applicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
+  "applicationCommit": "e28ebf4d73740fe356e3a9c3c3cc1640b4317a86",
   "gmailReleaseControls": {
     "serverOnlyNamesChecked": 7,
     "clientMatches": 0,
-    "configuredInProductionByThisTask": false,
-    "liveOperations": 0
+    "configuredInProductionByThisTask": true,
+    "liveOperations": 1,
+    "manualStatus": "disabled; failed token_refresh transport; one new grant consumed"
   }
 }

@@ -2,6 +2,20 @@
 
 Read the newest dated checkpoint first. All lower release checkpoints are retained as history and must not be treated as current production or next-step instructions.
 
+## Corrected selected-task candidate after verified recovery — 2 October 2026
+
+Preserve branch t14/tasks-1-2-3-4-6-7 and application checkpoint **e28ebf4d73740fe356e3a9c3c3cc1640b4317a86**, app1.0.71/static-v18. All work is retained. Sites142/source2e0850967da05f42dfa87e698ee29f06d1d52696 was rejected during live acceptance: Bibliography header h1 became width0 at820 because its actions consumed the flex row. Verified Sites141/app1.0.70/source7fcb27ac2fa96d44d06de01e3ce91e58320f646c was restored by deployment **appgdep_6abfc8b662388191b6655e46ec1607a9**, succeeded; live version1.0.70 verified. No rejected source was pushed to GitHub or merged.
+
+The bounded correction lets route titles/actions wrap without collapsing the title. Final996/156 regression, typecheck, build/PWA427/42484.32KiB, zero new lint and all privacy/protected hash gates pass. **186 stronger compiled route checks** across320/390/430/820/1024/1440 include actual heading visibility/width/internal containment, page/nav overflow and broken images; zero failures/console errors. Bibliography correction is verified at each width. No calculation/source-record changes.
+
+The new authorised Gmail run **f2356ba1-2c8d-4f55-af40-7c59feac342f** was invoked ONCE on Sites142,14:56:44.569Z→.909Z and is consumed: **FAILED upstream_failure; token_refresh / transport**, no HTTP response obtained; imported/updated/unchanged0, failed1. Connection preserved, ordinary/manual/background sync disabled, acceptance action unavailable. Underlying transport cause remains unresolved. Historical failed run remains separate/unchanged. **Do not retry/reconnect/rotate/enable Gmail**. Task3 restoration is BLOCKED; retain the owner's existing explicit Gmail release exception when shipping independent verified fixes. No new run ID may be substituted.
+
+Read-only recovery comparison at15:09:35Z: all6485 ordinary records, IDs/content/timestamps unchanged, fingerprint3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743;66Dives/oneGasPlan. Only expected server connection/run diagnostic metadata changed, outside secret-excluded backup. Encrypted recovery is verified. Public profile off, zero real API keys.
+
+Next: freeze current evidence clean, preserve rejected archive/attempt, package corrected artifact with installed Git Bash and TAR_OPTIONS=--force-local (Windows helper compatibility), exclude generated local helper directories reversibly. Existing OAuth/encryption keys remain untouched; consumed grant/config cannot authorise normal sync. Publish one corrected combined candidate, perform full read-only production/security/exports/UI/data acceptance with no Gmail run, then exact accepted GitHub PR/main. Verify actual returned Sites/deployment identifiers; current accepted recovery remains Sites141. Keep Task5/T15 excluded and real-public-preview/key consent separate. Do not claim task3 or original T14 entirely complete.
+
+The next section is the historical pre-attempt checkpoint, retained as evidence only.
+
 ## Current combined release candidate — 2 October 2026
 
 Preserve `t14/tasks-1-2-3-4-6-7`; final application checkpoint **6a939efee044afe011e6dae3a03281a7e55cc541**, app1.0.71 / static-v18. Documentation-only checkpoints after it do not change the tested application. Tasks 1/2/4/6/7 are implemented locally. Task 3 diagnostics and bounded one-use acceptance UI are local; **live verification/restoration remains OPEN**. Task 5/T15 excluded.

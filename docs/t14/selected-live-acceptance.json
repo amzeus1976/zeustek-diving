@@ -1,7 +1,7 @@
 {
-  "state": "READY; not deployed or consumed",
+  "state": "Sites142 REJECTED for material Bibliography heading collapse; Sites141 RESTORED and verified. Corrected candidate local PASS, not accepted yet.",
   "date": "2026-10-02",
-  "applicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
+  "applicationCommit": "e28ebf4d73740fe356e3a9c3c3cc1640b4317a86",
   "preDeploymentOwnerEvidence": {
     "refreshedAt": "2026-10-02T14:45:24.161Z",
     "records": 6485,
@@ -23,24 +23,77 @@
     "maximumMessages": 100,
     "windowDays": 90,
     "metadataAndSnippetsOnly": true,
-    "newRunInvocations": 0,
-    "result": "NOT RUN",
+    "newRunInvocations": 1,
+    "result": "FAILED upstream_failure; token_refresh / transport; no HTTP response",
     "configurationDetected": true,
     "dedicatedAccountMatches": true,
     "reconnectRequired": false,
     "backgroundSyncEnabled": false,
-    "manualRestoration": "Only after persisted completed zero-failure result for this exact run; conditional owner consent received",
-    "prohibited": ["retry", "reconnect", "credential change", "send", "delete", "read-state change", "background ingestion"]
+    "manualRestoration": "BLOCKED; no successful run, normal sync remains disabled",
+    "prohibited": [
+      "retry",
+      "reconnect",
+      "credential change",
+      "send",
+      "delete",
+      "read-state change",
+      "background ingestion"
+    ],
+    "persistedResult": {
+      "runId": "f2356ba1-2c8d-4f55-af40-7c59feac342f",
+      "status": "failed",
+      "startedAt": "2026-10-02T14:56:44.569Z",
+      "completedAt": "2026-10-02T14:56:44.909Z",
+      "count": 0,
+      "imported": 0,
+      "updated": 0,
+      "unchanged": 0,
+      "failed": 1,
+      "hasMore": false,
+      "diagnostic": {
+        "code": "upstream_failure",
+        "message": "The mailbox provider could not complete the request.",
+        "remedy": "Check connection status and the recorded sync result before retrying.",
+        "reconnect": false,
+        "evidence": {
+          "version": 1,
+          "phase": "token_refresh",
+          "kind": "transport"
+        }
+      }
+    },
+    "newAcceptanceConsumed": true,
+    "releaseException": "Existing explicit owner-approved Gmail release exception retained; do not claim task3 complete or repeat live run"
   },
-  "publicProfile": { "publicationEnabled": false, "realContentPublished": false },
-  "integrationApi": { "productionKeysIssued": 0 },
+  "publicProfile": {
+    "publicationEnabled": false,
+    "realContentPublished": false
+  },
+  "integrationApi": {
+    "productionKeysIssued": 0
+  },
   "rollback": {
     "appVersion": "1.0.70",
     "sitesVersion": 141,
-    "deploymentId": "appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2",
+    "deploymentId": "appgdep_6abfc8b662388191b6655e46ec1607a9",
     "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_2c15683c77348191875aa8b81cb488cd",
     "source": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
     "archiveSha256": "dcd1376e981983631816da600a3674a85ded0d207ef7d4a619fbe4e001c72742"
   },
-  "next": "Freeze/publish the exact combined candidate, invoke the new authorised Gmail action ONCE, verify read-only production and owner data, then reconcile GitHub only after acceptance. Any uncertain run resolves from recorded status, never another sync. Restore verified rollback on mandatory failure."
+  "next": "Publish corrected frozen source under existing Gmail exception. Never repeat consumed acceptance. Verify non-Gmail production/data gates, then exact source GitHub PR/main. Roll back Sites141 on a genuine remaining blocker.",
+  "rejectedRelease": {
+    "sitesVersion": 142,
+    "source": "2e0850967da05f42dfa87e698ee29f06d1d52696",
+    "deploymentId": "appgdep_6abfc525c3548191af2fde001fc174bb",
+    "reason": "Bibliography h1 width0 at820; actions occupied flex row. No page scroll alone exposed it.",
+    "githubPushOrMerge": false
+  },
+  "recoveryComparison": {
+    "records": 6485,
+    "fingerprint": "3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743",
+    "sameAsPreDeployment": true,
+    "rollbackSource": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
+    "rollbackDeployment": "appgdep_6abfc8b662388191b6655e46ec1607a9",
+    "checkedAt": "2026-10-02T15:09:35.223Z"
+  }
 }
