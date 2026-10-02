@@ -18,7 +18,10 @@ export type GmailDiagnosticCode =
   | 'invalid_request'
   | 'sync_in_progress'
   | 'uncertain_outcome';
+export type GmailDiagnosticPhase='token_exchange'|'token_refresh'|'account_verification'|'message_listing'|'metadata_retrieval'|'parsing'|'persistence';
+export type GmailDiagnosticEvidence={version:1;phase:GmailDiagnosticPhase;kind:'http'|'transport'|'parsing'|'validation'|'storage';httpStatus?:number};
 export type GmailDiagnostic = {
+  evidence?:GmailDiagnosticEvidence;
   code: GmailDiagnosticCode;
   message: string;
   remedy: string;
@@ -110,7 +113,38 @@ const details: Record<GmailDiagnosticCode, [string, string, boolean]> = {
     false,
   ],
 };
-export function gmailDiagnostic(code: GmailDiagnosticCode): GmailDiagnostic {
+export function gmailDiagnostic(code: GmailDiagnosticCode,evidence?:GmailDiagnosticEvidence): GmailDiagnostic {
   const [message, remedy, reconnect] = details[code];
-  return { code, message, remedy, reconnect };
+  return { code, message, remedy, reconnect,...(safeGmailEvidence(evidence)?{evidence:safeGmailEvidence(evidence)!}:{}) };
+}
+
+const phases=['token_exchange','token_refresh','account_verification','message_listing','metadata_retrieval','parsing','persistence'] as const;
+function safeGmailEvidence(value:unknown):GmailDiagnosticEvidence|null {
+ if(!value||typeof value!=='object')return null;
+ const row=value as Record<string,unknown>;
+ if(row.version!==1||!phases.includes(row.phase as GmailDiagnosticPhase)||!['http','transport','parsing','validation','storage'].includes(String(row.kind)))return null;
+ return {version:1,phase:row.phase as GmailDiagnosticPhase,kind:row.kind as GmailDiagnosticEvidence['kind'],...(typeof row.httpStatus==='number'&&Number.isInteger(row.httpStatus)&&row.httpStatus>=100&&row.httpStatus<=599?{httpStatus:row.httpStatus}:{})};
+}
+/** Rebuild from the allowlist: never echo stored/provider messages or unknown keys. */
+export function normaliseGmailDiagnostic(value:unknown):GmailDiagnostic|null {
+ if(!value||typeof value!=='object')return null;
+ const row=value as Record<string,unknown>;
+ if(typeof row.code!=='string'||!Object.prototype.hasOwnProperty.call(details,row.code))return gmailDiagnostic('upstream_failure');
+ return gmailDiagnostic(row.code as GmailDiagnosticCode,safeGmailEvidence(row.evidence)??undefined);
+}
+export function gmailDiagnosticEvidenceLabel(diagnostic:GmailDiagnostic|null|undefined) {
+ const evidence=safeGmailEvidence(diagnostic?.evidence);
+ if(!evidence)return 'Failure stage was not recorded for this result.';
+ const labels:Record<GmailDiagnosticPhase,string>={token_exchange:'OAuth token exchange',token_refresh:'Token refresh',account_verification:'Account verification',message_listing:'Message listing',metadata_retrieval:'Metadata retrieval',parsing:'Message parsing',persistence:'Application persistence'};
+ const kinds={http:'Provider response',transport:'Transport failure',parsing:'Response parsing',validation:'Invalid response or credential',storage:'Storage failure'};
+ return `${labels[evidence.phase]} · ${kinds[evidence.kind]}${evidence.httpStatus?` · HTTP ${evidence.httpStatus}`:''}`;
+}
+
+export function normaliseGmailSyncRun(value:unknown):GmailSyncRun|null {
+ if(!value||typeof value!=='object')return null;const row=value as Record<string,unknown>;
+ if(typeof row.runId!=='string'||!/^[a-zA-Z0-9-]{8,100}$/.test(row.runId)||!['running','completed','failed','uncertain'].includes(String(row.status)))return null;
+ const date=(value:unknown)=>typeof value==='string'&&value.length<=40&&/^\d{4}-\d{2}-\d{2}T/.test(value)&&Number.isFinite(Date.parse(value))?new Date(value).toISOString():'';
+ const count=(value:unknown)=>typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=100?value:0;
+ const diagnostic=normaliseGmailDiagnostic(row.diagnostic),completedAt=date(row.completedAt);
+ return {runId:row.runId,status:row.status as GmailSyncRun['status'],startedAt:date(row.startedAt),...(completedAt?{completedAt}:{}),count:count(row.count),imported:count(row.imported),updated:count(row.updated),unchanged:count(row.unchanged),failed:count(row.failed),hasMore:row.hasMore===true,...(diagnostic?{diagnostic}:{})};
 }

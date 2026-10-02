@@ -18,6 +18,7 @@ import {
   createOAuthState,
   consumeOAuthState,
 } from '../lib/server/gmail-news';
+import {normaliseGmailSyncRun,gmailDiagnosticEvidenceLabel} from '../lib/gmail-contract';
 let sqlite: DatabaseSync;
 function database() {
   const wrap = (sql: string, args: unknown[] = []) => ({
@@ -337,4 +338,62 @@ describe('T14 Gmail manual acceptance contract', () => {
       expect(gmailFailure(status, reason).code).toBe(code);
     }
   });
+});
+
+describe('Selected Gmail bounded diagnostic stages',()=>{
+ it('classifies run-table persistence failure before any provider request',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));const connection=await readGmailConnection(env,owner);fetcher.mockClear();
+  vi.spyOn(env.DB,'batch').mockRejectedValueOnce(new Error('PRIVATE_STORAGE_CONNECTION'));
+  await expect(syncGmailNews(env,owner,'fixture-schema-failure')).rejects.toMatchObject({diagnostic:{code:'upstream_failure',evidence:{phase:'persistence',kind:'storage'}}});expect(fetcher).not.toHaveBeenCalled();expect((await readGmailConnection(env,owner))?.encryptedRefreshToken).toBe(connection?.encryptedRefreshToken);
+ });
+ it('does not misreport run insertion storage failure as another sync in progress',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));fetcher.mockClear();const original=env.DB.prepare.bind(env.DB);
+  vi.spyOn(env.DB,'prepare').mockImplementation(sql=>{const statement=original(sql);if(!sql.startsWith('INSERT INTO gmail_sync_runs'))return statement;const bound=statement.bind.bind(statement);vi.spyOn(statement,'bind').mockImplementation((...values)=>{const value=bound(...values);vi.spyOn(value,'run').mockRejectedValueOnce(new Error('PRIVATE_STORAGE_CONNECTION'));return value;});return statement;});
+  await expect(syncGmailNews(env,owner,'fixture-run-insert-failure')).rejects.toMatchObject({diagnostic:{code:'upstream_failure',evidence:{phase:'persistence',kind:'storage'}}});expect(fetcher).not.toHaveBeenCalled();
+ });
+
+ it.each([
+  ['token_refresh','/token'],['account_verification','/profile'],
+  ['message_listing','/messages?'],['metadata_retrieval','/messages/'],
+ ])('distinguishes %s HTTP failure without changing cached stories or credentials',async(phase,path)=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
+  await syncGmailNews(env,owner,'fixture-cached-before');const before=sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all();const connection=await readGmailConnection(env,owner);issueRefresh=false;
+  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>String(url).includes(path)?json({error:'PRIVATE_UPSTREAM_CONTENT'},503):original(url));
+  const result=await syncGmailNews(env,owner,'fixture-phase-'+phase.replaceAll('_','-'));
+  expect(result).toMatchObject({status:'failed',diagnostic:{code:'upstream_failure',evidence:{version:1,phase,kind:'http',httpStatus:503}}});
+  expect(JSON.stringify(result)).not.toMatch(/PRIVATE|fixture-secret|fixture-access|fixture-refresh/);
+  expect(sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all()).toEqual(before);
+  expect((await readGmailConnection(env,owner))?.encryptedRefreshToken).toBe(connection?.encryptedRefreshToken);
+ });
+ it('distinguishes transport failure at its operation without raw network errors',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
+  fetcher.mockRejectedValue(new TypeError('PRIVATE_NETWORK_URL_BEARER_CONTENT'));
+  const result=await syncGmailNews(env,owner,'fixture-network-failure');expect(result).toMatchObject({status:'failed',diagnostic:{evidence:{phase:'token_refresh',kind:'transport'}}});expect(JSON.stringify(result)).not.toContain('PRIVATE');
+ });
+ it('distinguishes JSON parsing from HTTP and transport failure',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
+  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>String(url).includes('/messages/')?new Response('PRIVATE_MALFORMED_CONTENT',{status:200}):original(url));
+  const result=await syncGmailNews(env,owner,'fixture-json-failure');expect(result).toMatchObject({status:'failed',diagnostic:{evidence:{phase:'metadata_retrieval',kind:'parsing',httpStatus:200}}});expect(JSON.stringify(result)).not.toContain('PRIVATE');
+ });
+ it('rejects malformed metadata before any newsletter persistence',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
+  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>String(url).includes('/messages/')?json({id:'abc123',threadId:'thread1',payload:{headers:'PRIVATE_INVALID_HEADERS'}}):original(url));
+  const result=await syncGmailNews(env,owner,'fixture-invalid-payload');expect(result).toMatchObject({status:'failed',diagnostic:{evidence:{phase:'parsing',kind:'validation'}}});expect(sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all()).toHaveLength(0);expect(JSON.stringify(result)).not.toContain('PRIVATE');
+ });
+ it('records a persistence failure as uncertain and prevents another live operation',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
+  const original=env.DB.batch.bind(env.DB);let batch=0;vi.spyOn(env.DB,'batch').mockImplementation(async statements=>{if(++batch===2)throw new Error('PRIVATE_DATABASE_CONNECTION');return original(statements);});
+  const result=await syncGmailNews(env,owner,'fixture-persistence-failure');expect(result).toMatchObject({status:'uncertain',diagnostic:{code:'uncertain_outcome',evidence:{phase:'persistence',kind:'storage'}}});expect(sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all()).toHaveLength(0);
+  const calls=fetcher.mock.calls.length;expect(await syncGmailNews(env,owner,'fixture-persistence-failure')).toEqual(result);expect(fetcher).toHaveBeenCalledTimes(calls);expect(JSON.stringify(result)).not.toContain('PRIVATE');
+ });
+ it('redacts unknown stored diagnostic properties and does not invent a historical phase',async()=>{
+  const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));const connection=await readGmailConnection(env,owner);
+  sqlite.prepare("UPDATE dive_records SET data_json=? WHERE kind='gmail-connection-secret'").run(JSON.stringify({...connection,diagnostic:{code:'upstream_failure',message:'PRIVATE_RAW_ERROR',remedy:'PRIVATE_SECRET',reconnect:false,token:'PRIVATE_TOKEN',evidence:{version:1,phase:'PRIVATE_URL',kind:'PRIVATE_SECRET'}}}));fetcher.mockClear();
+  const status=await gmailConnectionStatus(env,owner,'https://dive.amzeus.co.uk');expect(status.diagnostic).toEqual(gmailFailure(503,''));expect(JSON.stringify(status)).not.toContain('PRIVATE');expect(fetcher).not.toHaveBeenCalled();
+ });
+});
+
+describe('Gmail status projection privacy',()=>{
+ it('drops unknown run fields and nested provider messages while preserving the recorded outcome',()=>{const raw={runId:'fixture-historical',status:'failed',startedAt:'2026-09-23T22:41:59.261Z',completedAt:'2026-09-23T22:41:59.612Z',count:0,imported:0,updated:0,unchanged:0,failed:1,hasMore:false,token:'PRIVATE',diagnostic:{code:'upstream_failure',message:'PRIVATE',evidence:{version:1,phase:'token_refresh',kind:'http',httpStatus:503,token:'PRIVATE'}}};const before=JSON.stringify(raw);const projected=normaliseGmailSyncRun(raw);expect(projected).toMatchObject({status:'failed',failed:1,diagnostic:{code:'upstream_failure',evidence:{phase:'token_refresh',httpStatus:503}}});expect(JSON.stringify(projected)).not.toContain('PRIVATE');expect(JSON.stringify(raw)).toBe(before);});
+ it('shows a truthful historic unknown stage and a bounded new failure label',()=>{expect(gmailDiagnosticEvidenceLabel(gmailFailure(503,''))).toContain('not recorded');expect(gmailDiagnosticEvidenceLabel({...gmailFailure(503,''),evidence:{version:1,phase:'message_listing',kind:'http',httpStatus:503}})).toBe('Message listing · Provider response · HTTP 503');});
 });
