@@ -82,7 +82,8 @@ All rows initially OPEN. Status vocabulary: OPEN, LOCAL PASS, AWAITING AUTHORISA
 ## Checkpoint / test / decision log
 
 - 2026-10-02: resume verified clean dc1d453, create implementation branch, Sites/GitHub reads match audit. No implementation yet. Read parent AGENTS.md; sources/ remains read-only.
-- Protected change proposal and public/API security plan prepared next; approval-dependent work stays pending.
+- Exact protected diff posted to #86 comment 5945009501; public/API plan posted to #81/#82 comments 5945009640/5945009774. Both separately requested; no feature/frozen code begun.
+- First usability checkpoint: 13 focused tests passed after 9 functional failures plus 2 exact-evidence deep-link failures. Retained relevant 7-file run: 53 PASS. Typecheck PASS including the final route-parameter addition. Upcoming eligibility, all 32 headline evidence mappings, bounded 25-row paging and Certification/Skill/Evidence route parameters implemented locally. Full retained regression: 145 files / 901 tests PASS. Browser verification still required; this is not release acceptance.
 
 ## Exact next actions
 

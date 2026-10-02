@@ -2,6 +2,10 @@
 
 Read the newest dated checkpoint first. All lower release checkpoints are retained as history and must not be treated as current production or next-step instructions.
 
+## Selected tasks implementation checkpoint (2 October 2026)
+
+Preserve `t14/tasks-1-2-3-4-6-7`, based on audit dc1d453. Read `selected-tasks-implementation.md` and `public-api-implementation-plan.md`. Usability changes implement eligible upcoming trips, bounded Skills paging and exact record deep links, and all 32 Insights headline evidence mappings. Focused 13 tests, related 53 tests, full 145-file/901-test regression and typecheck pass. Browser/brand/export/Gmail diagnostics and approved public/API work remain. All nine frozen hashes unchanged. Exact #86 frozen-file diff and public/API plan await separate approval; neither has been applied. Production stays app1.0.70/Sites141. No production write, Gmail operation, push or deployment. Do not treat passing tests or the earlier audit as completion.
+
 ## Current site audit/backlog checkpoint (2026-10-02)
 
 The seven owner-requested brand/usability/Gmail/export/feature research tasks are delivered in [audits/2026-10-02-review.md](audits/2026-10-02-review.md). Branch `audit/2026-10-02-brand-ux-exports` preserves the accepted application source and adds documentation only. Current production is **app1.0.70 / Sites141**, deployment `appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2`, published source `7fcb27ac2fa96d44d06de01e3ce91e58320f646c`. GitHub main `bb6cae3a4d5537f20db9d3a80c4a4eca3b647a51` has the same tree `9ac0cd710e1200419984f15423e7b1bafd483131`. The older Sites140/#57 candidate text below is historical, not an instruction to deploy again.

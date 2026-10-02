@@ -50,6 +50,7 @@ import {
   type SkillCurrencyStatus,
 } from '../lib/offline/skills-currency';
 import styles from './skills-currency.module.css';
+import {pageCatalogue} from '../lib/skills/catalogue-page';
 
 const labels: Record<SkillCurrencyStatus, string> = {
   current: 'Current',
@@ -103,9 +104,11 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [sets, setSets] = useState<Array<Stored<EquipmentSetRecord>>>([]);
   const [query, setQuery] = useState('');
+  const [page,setPage]=useState(0);
   const [group, setGroup] = useState('all');
   const [status, setStatus] = useState<'all' | SkillCurrencyStatus>('all');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  useEffect(()=>setPage(0),[query,group,status,verifiedOnly]);
   const [asOf, setAsOf] = useState(() => new Date());
   useEffect(() => {
     const tick = () => setAsOf(new Date());
@@ -126,7 +129,10 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
   const evidenceLinkOpened = useRef(false);
   useEffect(() => {
     if (evidenceLinkOpened.current) return;
-    const id = new URLSearchParams(window.location.search).get('evidenceId');
+    const params=new URLSearchParams(window.location.search);
+    const skillId=params.get('skillId')??params.get('recordId');
+    if(skillId){const exact=skills.find(item=>item.entityId===skillId);if(exact){evidenceLinkOpened.current=true;setDetail(exact);}return;}
+    const id = params.get('evidenceId');
     if (!id) { evidenceLinkOpened.current = true; return; }
     const linked = evidence.find(item => item.entityId === id);
     const skill = linked && resolveCanonicalSkillReference(linked.skillKey,skills);
@@ -196,6 +202,7 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
           .toLocaleLowerCase('en-GB')
           .includes(q)),
   );
+  const cataloguePage = pageCatalogue(visible,page);
   const recommended = recommendedNextPractice(rows)
     .filter((row) => row.projection.status !== 'current')
     .slice(0, 4);
@@ -314,8 +321,9 @@ export function SkillsCurrency({ go }: { go?: (section: string) => void }) {
       </Card>
       <div className={styles.layout}>
         <main>
+          <nav aria-label="Skill catalogue pages" className="record-actions"><button className="focus-secondary" disabled={cataloguePage.page===0} onClick={()=>setPage(cataloguePage.page-1)}>Previous Skills</button><p role="status">Showing {cataloguePage.from}–{cataloguePage.to} of {cataloguePage.total} matching Skills · {rows.length} total · page {cataloguePage.page+1} of {cataloguePage.pages}</p><button className="focus-secondary" disabled={cataloguePage.page+1>=cataloguePage.pages} onClick={()=>setPage(cataloguePage.page+1)}>Next Skills</button></nav>
           <div className={styles.skillGrid}>
-            {visible.map((row) => {
+            {cataloguePage.items.map((row) => {
               const latest = row.projection.latestEvidence;
               return (
                 <button

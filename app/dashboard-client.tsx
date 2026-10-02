@@ -1,4 +1,5 @@
 'use client';
+import {selectUpcomingTrip} from '@/lib/planning/upcoming-trip';
 import {useSiteForecasts,SevenDayForecastCard} from '../components/weather/overview-conditions';
 import {ConditionsWorkspace} from '../components/weather/conditions-workspace';
 import {ConditionsConfiguration} from '../components/weather/conditions-configuration';
@@ -798,11 +799,7 @@ function Overview({
     .filter((person) => hasPersonRole(person, 'buddy') && buddyCounts.has(person.entityId))
     .sort((a, b) => (buddyCounts.get(b.entityId) ?? 0) - (buddyCounts.get(a.entityId) ?? 0) || a.name.localeCompare(b.name))[0] ?? null;
   const topBuddy = people.find((person) => person.entityId === ownerProfile?.preferredTopBuddyPersonId) ?? derivedTopBuddy;
-  const nextTrip = [...trips]
-    .filter((trip) => trip.status !== 'completed')
-    .sort((a, b) =>
-      (a.startDate || '9999').localeCompare(b.startDate || '9999'),
-    )[0];
+  const nextTrip = selectUpcomingTrip(trips);
   const nextSite = nextTrip
     ? sites.find((site) => site.entityId === nextTrip.siteId) ??
       sites.find(
