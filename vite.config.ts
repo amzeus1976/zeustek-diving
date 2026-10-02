@@ -65,8 +65,8 @@ export default defineConfig((async () => {
         injectRegister: false,
         manifest: {
           id: '/',
-          name: 'Zeustek Dive',
-          short_name: 'Zeustek Dive',
+          name: 'ZeusTek Diving',
+          short_name: 'ZeusTek Diving',
           description: 'Private offline-first dive logbook and planning system',
           start_url: '/?source=pwa',
           scope: '/',

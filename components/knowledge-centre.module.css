@@ -30,7 +30,7 @@
   overflow-wrap: anywhere;
 }
 .snapshot span {
-  font-size: 0.78rem;
+  font-size: 1rem;
   color: #9aabb3;
 }
 .bankList {
@@ -76,7 +76,7 @@
 .bankRow em {
   font-style: normal;
   color: #ff9f3e;
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 .testGrid {
   display: grid;

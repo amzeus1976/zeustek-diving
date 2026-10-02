@@ -68,7 +68,7 @@
 .row em {
   font-style: normal;
   color: #ff9f3e;
-  font-size: 0.72rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 .row[data-review='needs_review'] {
@@ -208,7 +208,7 @@
   align-items: flex-start;
 }
 .attemptQuestion h3 {
-  font-size: 0.95rem;
+  font-size: 1rem;
   margin: 0;
 }
 .attemptQuestion p {

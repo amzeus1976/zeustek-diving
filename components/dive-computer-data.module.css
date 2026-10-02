@@ -29,7 +29,7 @@
   color: #cbd5da;
 }
 .heroQuote {
-  font-size: 14px;
+  font-size: 1rem;
 }
 .heroQuote i {
   display: block;
@@ -94,7 +94,7 @@
 .resolution small,
 .commitPreview small {
   color: #9aa8b1;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .importBox aside {
   border-left: 1px solid rgb(255 255 255 / 12%);
@@ -108,7 +108,7 @@
   color: #72d9ff;
 }
 .importBox aside p {
-  font-size: 12px;
+  font-size: 1rem;
   color: #9da9b0;
 }
 .workspace {
@@ -211,12 +211,12 @@
   display: grid;
 }
 .profileTop dt {
-  font-size: 12px;
+  font-size: 1rem;
   color: #84949d;
 }
 .profileTop dd {
   margin: 0;
-  font-size: 14px;
+  font-size: 1rem;
 }
 .tableScroll {
   overflow-x: auto;
@@ -224,7 +224,7 @@
 }
 .profileTable {
   width: 100%;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .profileTable table {
   border-collapse: collapse;
@@ -242,7 +242,7 @@
 }
 .compare h3 {
   color: #ff8a00;
-  font-size: 14px;
+  font-size: 1rem;
 }
 .compare > div > div {
   display: grid;
@@ -250,7 +250,7 @@
   gap: 8px;
   border-bottom: 1px solid rgb(255 255 255 / 7%);
   padding: 7px;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .recent > button {
   width: 100%;
@@ -355,7 +355,7 @@
 }
 .segmentList em {
   font-style: normal;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .segmentList > label[data-state='already-imported'],
 .segmentList > article[data-state='already-imported'] {
@@ -457,7 +457,7 @@
   display: grid;
   gap: 5px;
   min-width: 0;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .profileFilters label > span {
   display: flex;
@@ -722,7 +722,7 @@
 .importReviewGrid .profileRows>article{grid-template-columns:minmax(0,1fr);gap:.5rem}
 .importReviewGrid .profileRowMain{width:100%;min-width:0}
 .importReviewGrid .rowActions{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:.35rem}
-.importReviewGrid .rowActions button{font-size:.8rem;min-height:38px;flex:1 1 auto;white-space:normal}
+.importReviewGrid .rowActions button{font-size:1rem;min-height:38px;flex:1 1 auto;white-space:normal}
 .importReviewGrid .profileRowMain>*{grid-column:1;overflow-wrap:anywhere}
 .importReviewGrid .profileFilters{grid-template-columns:repeat(2,minmax(0,1fr))}
 .importReviewGrid .profileFilters>*{min-width:0}

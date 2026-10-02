@@ -13,4 +13,4 @@
 .t14-record-domain .site-card .focus-card-head{gap:.75rem}
 .t14-record-domain :is(input,select){min-height:44px;min-width:0}
 .buddy-initials{border-color:var(--zt-border-cyan);color:#a5e8ff;letter-spacing:.03em}
-@media(max-width:640px){.t14-record-domain{gap:.75rem}.t14-record-domain :is(.focus-grid,.wishlist-grid){grid-template-columns:1fr}.t14-record-domain .record-summary>span{font-size:.85rem}}
+@media(max-width:640px){.t14-record-domain{gap:.75rem}.t14-record-domain :is(.focus-grid,.wishlist-grid){grid-template-columns:1fr}.t14-record-domain .record-summary>span{font-size:1rem}}

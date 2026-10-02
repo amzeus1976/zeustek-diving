@@ -58,7 +58,7 @@
 .evidenceFields label {
   display: grid;
   gap: 0.3rem;
-  font-size: 0.78rem;
+  font-size: 1rem;
 }
 .check {
   display: flex !important;
@@ -91,7 +91,7 @@
   display: grid;
 }
 .skillCard > div:first-child span {
-  font-size: 0.72rem;
+  font-size: 1rem;
   text-transform: uppercase;
   color: #8ca0aa;
 }
@@ -103,7 +103,7 @@
   border: 1px solid currentColor;
   border-radius: 999px;
   padding: 0.2rem 0.5rem;
-  font-size: 0.73rem;
+  font-size: 1rem;
   font-style: normal;
 }
 .skillCard dl {
@@ -162,7 +162,7 @@
 }
 .side article span {
   color: #a7b3b9;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 .side article div {
   display: flex;

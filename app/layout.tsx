@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import '../public/brand/kit/zt-brand-core.css';
+import '../public/brand/kit/zeustek-diving.css';
 import './globals.css';
 import './journal-enhancements.css';
 import './platform.css';
@@ -9,6 +11,7 @@ import './issue-register.css';
 import './audit-improvements.css';
 import './t14-record-workspaces.css';
 import './t14-cpd-news.css';
+import './brand-application.css';
 import { PwaRegister } from '@/components/pwa-register';
 
 const geistSans = Inter({
@@ -22,12 +25,12 @@ const geistMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Zeustek Dive',
+  title: 'ZeusTek Diving',
   description: 'A private cloud dive logbook, equipment tracker, site guide and training record.',
-  openGraph: { title: 'Zeustek Dive', description: 'Dive logs, sites, equipment and training — private and available across devices.', images: ['/og.png'] },
-  twitter: { card: 'summary_large_image', title: 'Zeustek Dive', description: 'Dive logs, sites, equipment and training — private and available across devices.', images: ['/og.png'] },
+  openGraph: { title: 'ZeusTek Diving', description: 'Dive logs, sites, equipment and training — private and available across devices.', images: ['/og.png'] },
+  twitter: { card: 'summary_large_image', title: 'ZeusTek Diving', description: 'Dive logs, sites, equipment and training — private and available across devices.', images: ['/og.png'] },
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Zeustek Dive' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ZeusTek Diving' },
   icons: { apple: '/apple-touch-icon.png', icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { url: '/icon-512.png', sizes: '512x512', type: 'image/png' }] },
 };
 
@@ -39,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" data-brand="zeustek-diving">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

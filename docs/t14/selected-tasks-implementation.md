@@ -88,3 +88,5 @@ All rows initially OPEN. Status vocabulary: OPEN, LOCAL PASS, AWAITING AUTHORISA
 ## Exact next actions
 
 Inspect remaining targeted modules; add focused failure fixtures for trip/headline/paging and ID read side effects. Persist exact #86 diff before requesting its approval. Submit public/API plan for approval; continue ordinary usability/exports/Gmail mocked diagnostics while waiting. Recheck all approvals and owner data before any production action.
+
+- Brand/responsive checkpoint: effective approved core + Diving brand imported; legacy aliases reconciled, minimum UI text raised in 27 existing sheets, shared 44px controls/focus, product/PWA naming corrected. Images unchanged. RED browser: 66px award cells scrolled 195/553/702px, title controls 24px. GREEN: all six widths have no headline clipping/page overflow/undersized visible targets. 320px crop viewport remains 160px circle; Zoom/Reset/Cancel/Save Crop fit; keyboard recenter works. Full retained 145-file / 901-test regression PASS. Evidence: selected-brand-browser-evidence.json. Broader final browser gate remains.

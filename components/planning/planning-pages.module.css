@@ -161,7 +161,7 @@
 
 .calendarGrid strong {
   color: #8fa4ad;
-  font-size: 0.75rem;
+  font-size: 1rem;
   text-align: center;
 }
 
@@ -218,7 +218,7 @@
 .calendarGrid em {
   font-style: normal;
   color: #bcd0d8;
-  font-size: 0.72rem;
+  font-size: 1rem;
 }
 
 .eventList {
@@ -268,7 +268,7 @@
 .eventList em {
   font-style: normal;
   color: #ff9c24;
-  font-size: 0.78rem;
+  font-size: 1rem;
 }
 
 .detailPane {
@@ -313,7 +313,7 @@
 
 .detailCard dt {
   color: #8ea4ad;
-  font-size: 0.72rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -435,7 +435,7 @@
 
 .evidenceGrid dt {
   color: #8ea4ad;
-  font-size: 0.72rem;
+  font-size: 1rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
