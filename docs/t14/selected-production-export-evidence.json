@@ -1,0 +1,71 @@
+{
+  "source": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+  "productionFilesProvidedByOwner": [
+    "PDF",
+    "JSON"
+  ],
+  "pdf": {
+    "bytes": 2729413,
+    "sha256": "5401e15d1bbb974c13422a5f24ec3aec4ef2ec197e689edc5b547f8f5be77aa3",
+    "pages": 19,
+    "distinctCardImages": 25,
+    "drawnCardImages": 25,
+    "allSelectedRecordLinesPresent": true,
+    "renderedPages": 19
+  },
+  "json": {
+    "bytes": 11785,
+    "sha256": "f572cab0dbf6504cdb05292012fe02b71915dda42004a446d26c635067272089",
+    "validSharedProjection": true,
+    "connectionSecretsExcluded": true,
+    "certificationTextNumbersOptedOut": true
+  },
+  "recordCounts": {
+    "Dive summary": 3,
+    "Depth experience": 2,
+    "Dive types and activities": 47,
+    "Certifications": 13,
+    "Equipment": 52,
+    "Selected Dive log": 66
+  },
+  "remainingFormatsEvidence": "All five actual production downloads verified. Earlier multilingual, empty, long, missing-image and formula fixtures retained for unchanged export modules.",
+  "docx": {
+    "bytes": 5887227,
+    "distinctCardImages": 25,
+    "embeddedFonts": 2,
+    "allSelectedRecordLinesPresent": true,
+    "renderedPages": 19,
+    "allSelectedRecordLinesPresentAfterRendering": true
+  },
+  "txt": {
+    "bytes": 9345,
+    "allSelectedRecordLinesPresent": true
+  },
+  "csv": {
+    "bytes": 13389,
+    "rows": 186,
+    "allSelectedRecordLinesPresent": true
+  },
+  "productionFilesCapturedFromVerifiedDownloadFolder": [
+    "DOCX",
+    "TXT",
+    "CSV"
+  ],
+  "deploymentId": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+  "appVersion": "1.0.71",
+  "sitesVersion": 143,
+  "verifiedAt": "2026-10-02T16:33:57.135133Z",
+  "renderers": [
+    "PDFium",
+    "Official LibreOffice headless DOCX viewer/rendering"
+  ],
+  "visualInspection": "All 19 PDF pages and all 19 rendered DOCX pages inspected via contact sheets. Images, wrapping, pagination and final selected records retained; no observed clipping.",
+  "privacy": {
+    "connectionSecretsExcluded": true,
+    "privateInternalIdentifiersExcluded": true,
+    "certificationTextNumbersOptedOut": true,
+    "selectedCardImagePixelsCanContainOmittedTextFields": true,
+    "imageDisclosureVisible": true,
+    "rawOwnerDownloadsAndRenderedImagesRemainIgnored": true
+  }
+}
