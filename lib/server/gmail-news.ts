@@ -12,7 +12,8 @@ import {
   type GmailSyncRun,
   type GmailConnectionStatus,
 } from '../gmail-contract';
-type GmailRuntimeEnv = {
+import { verifiedGmailManualRelease, type GmailReleaseEnv } from './gmail-release-policy';
+type GmailRuntimeEnv = GmailReleaseEnv & {
   DB: D1Database;
   GOOGLE_GMAIL_CLIENT_ID?: string;
   GOOGLE_GMAIL_CLIENT_SECRET?: string;
@@ -464,6 +465,9 @@ async function readRun(
     });
   if(!row)return null;try{return normaliseGmailSyncRun(JSON.parse(row.result_json));}catch{throw new GmailError('upstream_failure',{version:1,phase:'persistence',kind:'storage'});}
 }
+export function gmailManualSyncAllowed(env: GmailRuntimeEnv, userId: string) {
+  return verifiedGmailManualRelease(env, userId, (ownerId, runId) => readRun(env, ownerId, runId));
+}
 export async function gmailConnectionStatus(
   env: GmailRuntimeEnv,
   userId: string,
@@ -488,7 +492,7 @@ export async function gmailConnectionStatus(
     lastError: diagnostic?.message ?? '',
     diagnostic,
     reconnectRequired: diagnostic?.reconnect ?? false,
-    syncMode: GMAIL_SYNC_RELEASE_DISABLED ? 'disabled' : 'manual',
+    syncMode: !GMAIL_SYNC_RELEASE_DISABLED || config.configured && connection?.email.toLowerCase() === NEWS_MAILBOX && await gmailManualSyncAllowed(env, userId) ? 'manual' : 'disabled',
     lastRun: await readRun(env, userId),
   };
 }
