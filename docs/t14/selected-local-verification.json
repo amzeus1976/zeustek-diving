@@ -1,0 +1,123 @@
+{
+  "kind": "Finished local combined candidate; production acceptance remains open",
+  "date": "2026-10-02",
+  "branch": "t14/tasks-1-2-3-4-6-7",
+  "applicationCommit": "e28ebf4d73740fe356e3a9c3c3cc1640b4317a86",
+  "auditCheckpoint": "dc1d4530d08127f8fb36a8208bfe0b2bc35550ae",
+  "regression": {
+    "command": "vitest run --config vitest.config.ts (installed project binary)",
+    "filesPassed": 156,
+    "testsPassed": 996,
+    "testsFailed": 0,
+    "exitCode": 0,
+    "localStartTime": "16:08:58 Europe/London",
+    "durationSeconds": 13.2,
+    "ignoredLog": "work/selected-tasks/final-regression.log",
+    "coverageOrAssertionsWeakened": false
+  },
+  "typecheck": {
+    "command": "tsc --noEmit (installed project binary)",
+    "exitCode": 0,
+    "ignoredLog": "work/selected-tasks/final-typecheck.log"
+  },
+  "productionBuild": {
+    "command": "project prebuild then vinext build (installed project binary)",
+    "exitCode": 0,
+    "precacheEntries": 427,
+    "precacheKiB": 42484.32,
+    "ignoredLog": "work/selected-tasks/final-build.log",
+    "warningsRetained": [
+      "intermediate build phases report no files for an early precache glob",
+      "existing Node deprecation and chunk-size advisory"
+    ]
+  },
+  "targetedLint": {
+    "tool": "existing oxlint with unchanged configuration",
+    "files": 69,
+    "rawExitCode": 1,
+    "allDiagnostics": 83,
+    "matchedByteUnchangedBaselineDiagnostics": 83,
+    "newOrChangedDiagnostics": 0,
+    "suppressionOrRuleChanges": "Configuration unchanged; two new native link/image comments narrowly justify revocable opaque resources. No baseline diagnostic suppressed.",
+    "comparisonBaseline": "dc1d453",
+    "ignoredEvidence": "work/selected-tasks/lint-comparison.json"
+  },
+  "focusedEvidence": {
+    "initialUsabilityTests": 13,
+    "retainedUsabilityRelatedTests": 53,
+    "exportAndBackupTests": 32,
+    "pureCylinderReviewTests": 10,
+    "gmailEngineStatusIsolationAndGateTests": 40,
+    "latestFocusedRunBeforeGateAddition": {
+      "files": 8,
+      "tests": 72
+    },
+    "testFirstEvidence": [
+      "actual upcoming-trip, headline evidence/deep-link and catalogue fixture failures before fixes",
+      "Blob transport, export stage/font/Unicode/category fixture failures before fixes",
+      "missing cylinder review module and stale/collision fixtures before pure helper",
+      "redacted Gmail status/storage/transport fixtures and missing gate module before fixes",
+      "SSR chart-size warning fixture before initial chart dimensions",
+      "actual browser crop/KPI/domain/grid/card-header failures before bounded CSS corrections"
+    ],
+    "largeOwnerBackupFixtures": 2
+  },
+  "versionAndCache": {
+    "localPackageVersion": "1.0.71",
+    "navigationCache": "NetworkOnly (legacy private navigation caches deleted)",
+    "staticCache": "zeustek-static-v18",
+    "retainedVersionCacheTestPassed": true,
+    "finalReleaseVersionAndFreeze": "Derived from actual accepted app1.0.70; clean freeze follows this documentation checkpoint"
+  },
+  "securityEvidence": "selected-local-security-evidence.json",
+  "downloadEvidence": "selected-export-download-evidence.json",
+  "browserEvidence": "selected-corrected-browser-evidence.json",
+  "pendingAuthorisations": [
+    "Exact real-owner public content preview before publication (ships off)",
+    "Exact client/scopes/records/fields/expiry before real API-key issuance (ships unissued)"
+  ],
+  "production": {
+    "unchanged": "Sites142 rejected; verified Sites141 restored before correction. No accepted source reconciliation.",
+    "appVersion": "1.0.70",
+    "sitesVersion": 141,
+    "deploymentId": "appgdep_6abfc8b662388191b6655e46ec1607a9",
+    "publishedSource": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
+    "acceptedGitHubMain": "bb6cae3a4d5537f20db9d3a80c4a4eca3b647a51",
+    "acceptedTree": "9ac0cd710e1200419984f15423e7b1bafd483131",
+    "rollbackVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_2c15683c77348191875aa8b81cb488cd",
+    "rollbackArchiveBytes": 95477760,
+    "mustReverifyImmediatelyBeforeDeployment": true
+  },
+  "ownerData": {
+    "productionWritesByThisTask": 0,
+    "productionSyntheticRecords": 0,
+    "freshReleaseFingerprintComparison": "Fresh pre-release and verified rollback comparison: all6485 IDs/content/timestamps unchanged; no imports from failed Gmail run. Corrected release post-compare outstanding.",
+    "approvedProductionProfilePublications": 0,
+    "productionApiCredentialsIssued": 0,
+    "liveGmailOperations": 1,
+    "preReleaseFingerprint": "3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743",
+    "preReleaseCounts": {
+      "all": 6485,
+      "dive": 66,
+      "gas-plan": 1,
+      "person": 11,
+      "operator": 5
+    },
+    "relationshipIntegrity": {
+      "legacyPersonEntityPairs": 8,
+      "missingEndpoints": 0,
+      "explicitPersonEntityLinks": 0,
+      "explicitEntityEntityLinks": 0,
+      "ownerProfiles": 1
+    }
+  },
+  "deploymentPushOrPrPerformed": false,
+  "previousApplicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
+  "diffWhitespace": {
+    "fullRangeExitCode": 2,
+    "applicationAndEvidenceExcludingLiteralReviewedPatchExitCode": 0,
+    "literalUnappliedPatch": "docs/t14/cylinder-read-policy-proposed.patch",
+    "patchSha256Unchanged": "5244c77cf38e61329407a377b43448c5c26881e01906c0c1d4be657f294f138f",
+    "reason": "Literal reviewed diff preserves CRLF/context bytes. That exact owner-approved patch is now applied only to cylinder read/ID policy; formulas unchanged. No Git rule weakened."
+  }
+}

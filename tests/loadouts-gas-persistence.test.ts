@@ -110,20 +110,23 @@ describe('T05 canonical offline records and historical assignments',()=>{
       [third.id,'03'],
     ]);
   });
-  it('assigns permanent two-digit IDs to pre-existing cylinder records that do not have one',async()=>{
+  it('keeps historical missing and one-digit labels intact until an explicit reviewed edit',async()=>{
     await saveLocalRecord('cylinder',{entityId:'legacy-missing',name:'Legacy missing ID',category:'Cylinder',serialNumber:'LEGACY-A'});
     await saveLocalRecord('equipment',{entityId:'legacy-one-digit',name:'Legacy 12L cylinder',category:'Cylinder',cylinderNumber:'2',serialNumber:'LEGACY-B'});
+    const before=await zeustekDb.entities.toArray();const queued=await zeustekDb.outbox.toArray();
     const firstRead=(await listCylinderInventory()).sort((left,right)=>left.entityId.localeCompare(right.entityId));
     expect(firstRead.map((item)=>[item.entityId,item.cylinderNumber])).toEqual([
-      ['legacy-missing','01'],
-      ['legacy-one-digit','02'],
+      ['legacy-missing',undefined],
+      ['legacy-one-digit','2'],
     ]);
+    expect(await zeustekDb.entities.toArray()).toEqual(before);expect(await zeustekDb.outbox.toArray()).toEqual(queued);
     zeustekDb.close();await zeustekDb.open();
     const reopened=(await listCylinderInventory()).sort((left,right)=>left.entityId.localeCompare(right.entityId));
     expect(reopened.map((item)=>[item.entityId,item.cylinderNumber])).toEqual([
-      ['legacy-missing','01'],
-      ['legacy-one-digit','02'],
+      ['legacy-missing',undefined],
+      ['legacy-one-digit','2'],
     ]);
+    expect(await zeustekDb.entities.toArray()).toEqual(before);expect(await zeustekDb.outbox.toArray()).toEqual(queued);
   });
   it('rejects cross-cylinder or pre-fill analyses without creating evidence',async()=>{
     const fill=await saveCylinderFill({cylinderEquipmentId:'a',filledAt:'2026-09-01T10:00:00Z',pressureBar:200,oxygenFraction:.21,heliumFraction:0,provider:'',notes:'',source:'recorded'});

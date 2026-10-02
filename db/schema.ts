@@ -42,6 +42,29 @@ export const diveRecords = sqliteTable('dive_records', {
   dataJson: text('data_json').notNull(), createdAt: integer('created_at').notNull(), updatedAt: integer('updated_at').notNull(), deletedAt: integer('deleted_at'),
 });
 
+// Opt-in publication and per-client credentials are server artifacts, never canonical backup records.
+export const divePublications = sqliteTable('dive_publications', {
+  slot: text('slot').primaryKey(), ownerUserId: text('owner_user_id').notNull(), publicId: text('public_id').notNull(),
+  enabled: integer('enabled').notNull().default(0), snapshotJson: text('snapshot_json').notNull(), photoId: text('photo_id'),
+  createdAt: integer('created_at').notNull(), updatedAt: integer('updated_at').notNull(),
+});
+export const divePublicationPhotos = sqliteTable('dive_publication_photos', {
+  id: text('id').primaryKey(), ownerUserId: text('owner_user_id').notNull(), objectKey: text('object_key').notNull(),
+  contentType: text('content_type').notNull(), createdAt: integer('created_at').notNull(),
+});
+export const diveApiKeys = sqliteTable('dive_api_keys', {
+  id: text('id').primaryKey(), ownerUserId: text('owner_user_id').notNull(), client: text('client').notNull(),
+  verifier: text('verifier').notNull(), scopesJson: text('scopes_json').notNull(), selectionJson: text('selection_json').notNull(),
+  createdAt: integer('created_at').notNull(), expiresAt: integer('expires_at').notNull(), revokedAt: integer('revoked_at'),
+  lastUsedAt: integer('last_used_at'), replacesId: text('replaces_id').unique(),
+});
+export const diveApiObjects = sqliteTable('dive_api_objects', {
+  keyId: text('key_id').notNull(), resource: text('resource').notNull(), recordId: text('record_id').notNull(), publicId: text('public_id').notNull().unique(),
+},table=>[primaryKey({columns:[table.keyId,table.resource,table.recordId]})]);
+export const diveApiRate = sqliteTable('dive_api_rate', {
+  keyId: text('key_id').notNull(), windowStart: integer('window_start').notNull(), requestCount: integer('request_count').notNull(),
+},table=>[primaryKey({columns:[table.keyId,table.windowStart]})]);
+
 export const diveHouseholds = sqliteTable('dive_households', {
   id: text('id').primaryKey(), ownerUserId: text('owner_user_id'), createdAt: integer('created_at').notNull(),
 });

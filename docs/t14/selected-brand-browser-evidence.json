@@ -1,0 +1,71 @@
+{
+  "scope": "Local fixture candidate; not final production acceptance",
+  "red": {
+    "320pxHeadlineClientWidth": 66,
+    "recreationalScrollWidth": 195,
+    "technicalScrollWidth": 553,
+    "professionalScrollWidth": 702,
+    "analysisTitleTargetHeight": 24,
+    "surface": "#0b1418",
+    "title": "Zeustek Dive"
+  },
+  "green": [
+    {
+      "width": 320,
+      "clippedHeadlines": 0,
+      "undersizedTargets": 0,
+      "pageOverflow": false,
+      "headlineCount": 3
+    },
+    {
+      "width": 390,
+      "clippedHeadlines": 0,
+      "undersizedTargets": 0,
+      "pageOverflow": false,
+      "headlineCount": 3
+    },
+    {
+      "width": 430,
+      "clippedHeadlines": 0,
+      "undersizedTargets": 0,
+      "pageOverflow": false,
+      "headlineCount": 3
+    },
+    {
+      "width": 820,
+      "clippedHeadlines": 0,
+      "undersizedTargets": 0,
+      "pageOverflow": false,
+      "headlineCount": 3
+    },
+    {
+      "width": 1024,
+      "clippedHeadlines": 0,
+      "undersizedTargets": 0,
+      "pageOverflow": false,
+      "headlineCount": 3
+    },
+    {
+      "width": 1440,
+      "clippedHeadlines": 0,
+      "undersizedTargets": 0,
+      "pageOverflow": false,
+      "headlineCount": 3
+    }
+  ],
+  "crop320": {
+    "pageWidth": 305,
+    "scrollWidth": 305,
+    "viewportWidth": 160,
+    "viewportHeight": 160,
+    "zoomLabelWidth": 141.99,
+    "zoomButtons": 44,
+    "resetCancelSaveCropVisible": true,
+    "keyboardRecenter": true
+  },
+  "regression": {
+    "files": 145,
+    "tests": 901,
+    "passed": true
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "pdf": {
+    "bytes": 393096,
+    "sha256": "92dfc8ce0ac24c1bf2a2d86ca571639fad29a876fa76bd89d5db6d32b8310a62",
+    "pages": 4,
+    "images": 4,
+    "multilingual": true,
+    "lastDive": true,
+    "msd": true,
+    "equipment": true,
+    "certificateNumbersExcluded": true
+  },
+  "docx": {
+    "bytes": 3625196,
+    "sha256": "e45ef6a337150132755c687bec900e96b2874f41078dd53674a96d6f2e3343f3",
+    "images": 1,
+    "embeddedFonts": 2,
+    "multilingual": true,
+    "lastDive": true,
+    "msd": true,
+    "equipment": true,
+    "certificateNumbersExcluded": true,
+    "renderedPages": 4,
+    "dummyOptOutNumbersChecked": 4
+  },
+  "txt": {
+    "bytes": 5772,
+    "sha256": "9025edb6eeab38ea0d1f06cd6c74521cec46b34733ded838b100b6e6c89f6454",
+    "multilingual": true,
+    "lastDive": true,
+    "msd": true,
+    "equipment": true,
+    "certificateNumbersExcluded": true
+  },
+  "csv": {
+    "bytes": 7773,
+    "sha256": "69a424ba3f2981ddd92cbd178dac6d6021e6441a30b0c64a559b31dddea14472",
+    "multilingual": true,
+    "lastDive": true,
+    "msd": true,
+    "equipment": true,
+    "certificateNumbersExcluded": true
+  },
+  "json": {
+    "bytes": 7198,
+    "sha256": "dd26282f8634ebb011c13054e741c687765c6afe2fdf414782f09730bfe982fa",
+    "multilingual": true,
+    "lastDive": true,
+    "msd": true,
+    "equipment": true,
+    "certificateNumbersExcluded": true
+  }
+}

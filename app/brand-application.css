@@ -1,0 +1,91 @@
+/* Application contracts use the approved core and Diving tokens loaded first.
+   This final layer resolves legacy shell/control rules without changing artwork. */
+html[data-brand='zeustek-diving'] body {
+  background: var(--zt-bg);
+  color: var(--zt-text);
+  font-family: var(--font-inter, Inter), 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+html[data-brand='zeustek-diving'] :is(button, input, select, textarea, summary, a, [role='button']) {
+  min-height: var(--zt-touch-target) !important;
+  min-width: var(--zt-touch-target) !important;
+  font-family: inherit;
+}
+html[data-brand='zeustek-diving'] :is(input, select, textarea) { max-width: 100%; }
+html[data-brand='zeustek-diving'] :is(a, summary) {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+html[data-brand='zeustek-diving'] :is(input[type='checkbox'], input[type='radio']) {
+  width: var(--zt-touch-target) !important;
+  height: var(--zt-touch-target) !important;
+  flex-shrink: 0;
+  accent-color: var(--brand-primary);
+}
+html[data-brand='zeustek-diving'] .focus-app {
+  background: var(--zt-bg);
+  color: var(--zt-text);
+}
+html[data-brand='zeustek-diving'] :is(.focus-card, .panel, .zt-surface-card, .focus-modal) {
+  background: var(--zt-surface);
+  border-color: var(--zt-border);
+  border-radius: var(--zt-radius-lg);
+}
+html[data-brand='zeustek-diving'] :is(.focus-primary, .primary) {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--zt-bg);
+}
+html[data-brand='zeustek-diving'] :is(.focus-secondary, .secondary) {
+  background: var(--zt-surface);
+  border-color: var(--brand-secondary);
+  color: var(--zt-text);
+}
+html[data-brand='zeustek-diving'] .focus-sidebar { background: var(--zt-surface); }
+html[data-brand='zeustek-diving'] .focus-sidebar nav { min-height: 0; flex: 1; }
+html[data-brand='zeustek-diving'] .focus-sidebar nav button { height: auto; padding-block: .5rem; }
+html[data-brand='zeustek-diving'] .focus-topbar { height: auto; min-height: 69px; padding-block: .5rem; }
+html[data-brand='zeustek-diving'] .focus-topbar > * { min-width: 0; }
+html[data-brand='zeustek-diving'] .focus-topbar > button { flex-shrink: 0; }
+html[data-brand='zeustek-diving'] .focus-heading { flex-wrap: wrap; }
+html[data-brand='zeustek-diving'] .focus-heading-title { flex: 1 1 20rem; min-width: min(100%, 18rem); max-width: 100%; }
+html[data-brand='zeustek-diving'] .focus-heading > .record-actions { min-width: 0; max-width: 100%; }
+/* News already has a bounded sidebar column; nesting two columns made its
+   connection controls wrap a word at a time on desktop. */
+html[data-brand='zeustek-diving'] .news-sidebar { grid-template-columns: minmax(0, 1fr); }
+html[data-brand='zeustek-diving'] :is(.record-actions, .focus-card-head, .section-tabs) { flex-wrap: wrap; }
+html[data-brand='zeustek-diving'] :is(.profile-picture-editor, .person-avatar-zoom, .person-avatar-zoom label) {
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-brand='zeustek-diving'] .person-avatar-zoom label { flex: 1 1 0; }
+html[data-brand='zeustek-diving'] .person-avatar-zoom input { min-width: 0 !important; width: 100%; }
+html[data-brand='zeustek-diving'] .profile-picture-editor input[type='file'] { width: 100%; min-width: 0 !important; }
+html[data-brand='zeustek-diving'] :is(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--zt-focus);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  html[data-brand='zeustek-diving'] .focus-topbar { flex-wrap: wrap; gap: .5rem; }
+  html[data-brand='zeustek-diving'] .focus-topbar .topbar-brand { flex: 1 1 0; }
+  html[data-brand='zeustek-diving'] .focus-topbar [aria-label='Dive data status'] { order: 4; }
+  html[data-brand='zeustek-diving'] .focus-topbar .dive-sync-state { order: 5; flex: 1 1 12rem; }
+  html[data-brand='zeustek-diving'] .focus-mobile-nav { min-height: 76px; height: auto; }
+  html[data-brand='zeustek-diving'] .focus-mobile-nav button {
+    min-width: var(--zt-touch-target) !important;
+    flex: 1 1 0;
+    padding: .5rem .2rem;
+    overflow-wrap: anywhere;
+  }
+  /* Compact quick navigation keeps its existing text as the accessible name.
+     The expandable route menu retains every visible route label. */
+  html[data-brand='zeustek-diving'] .focus-mobile-nav button span {
+    position: absolute; width: 1px; height: 1px; padding: 0;
+    clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+  }
+  html[data-brand='zeustek-diving'] .focus-topbar .dive-sync-state { max-width: 100%; width: 100%; }
+  html[data-brand='zeustek-diving'] .focus-topbar .dive-sync-state summary { width: 100%; }
+}

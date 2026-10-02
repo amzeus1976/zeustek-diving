@@ -1,14 +1,19 @@
 import {
   GMAIL_READ_SCOPE,
   GMAIL_SYNC_RELEASE_DISABLED,
-  NEWS_MAILBOX,
   gmailDiagnostic,
+  normaliseGmailDiagnostic,
+  normaliseGmailSyncRun,
+  type GmailDiagnosticEvidence,
+  type GmailDiagnosticPhase,
   type GmailDiagnosticCode,
   type GmailDiagnostic,
   type GmailSyncRun,
   type GmailConnectionStatus,
 } from '../gmail-contract';
-type GmailRuntimeEnv = {
+import { availableGmailAcceptanceRunId, verifiedGmailManualRelease, type GmailReleaseEnv } from './gmail-release-policy';
+const NEWS_MAILBOX = 'zeustekdivenews@gmail.com';
+type GmailRuntimeEnv = GmailReleaseEnv & {
   DB: D1Database;
   GOOGLE_GMAIL_CLIENT_ID?: string;
   GOOGLE_GMAIL_CLIENT_SECRET?: string;
@@ -131,7 +136,7 @@ export async function readGmailConnection(
     .first<{ dataJson: string }>()
     .catch((error: unknown) => {
       if (String(error).includes('no such table')) return null;
-      throw error;
+      throw new GmailError('upstream_failure',{version:1,phase:'persistence',kind:'storage'});
     });
   if (!row) return null;
   try {
@@ -258,8 +263,8 @@ export function gmailAuthorizationUrl(
 
 export class GmailError extends Error {
   readonly diagnostic: GmailDiagnostic;
-  constructor(readonly code: GmailDiagnosticCode) {
-    const diagnostic = gmailDiagnostic(code);
+  constructor(readonly code: GmailDiagnosticCode,evidence?:GmailDiagnosticEvidence) {
+    const diagnostic = gmailDiagnostic(code,evidence);
     super(diagnostic.message);
     this.diagnostic = diagnostic;
   }
@@ -286,66 +291,37 @@ export function gmailFailure(status: number, reason: string): GmailDiagnostic {
                   : 'upstream_failure';
   return gmailDiagnostic(code);
 }
-const safeDiagnostic = (error: unknown) =>
-  error instanceof GmailError
-    ? error.diagnostic
-    : gmailDiagnostic('upstream_failure');
 export function gmailCallbackUri(requestUrl: string) {
   const url = new URL(requestUrl);
   return `${['localhost', '127.0.0.1'].includes(url.hostname) ? url.origin : 'https://dive.amzeus.co.uk'}/api/gmail/callback`;
 }
-async function googleJson<T>(url: string, init?: RequestInit): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      ...init,
-      signal: AbortSignal.timeout(20_000),
-      redirect: 'error',
-    });
-  } catch {
-    throw new GmailError('upstream_failure');
+async function googleJson<T>(url:string,init?:RequestInit,phase:GmailDiagnosticPhase='token_exchange'):Promise<T> {
+  let response:Response;
+  try{response=await fetch(url,{...init,signal:AbortSignal.timeout(20_000),redirect:'error'});}
+  catch{throw new GmailError('upstream_failure',{version:1,phase,kind:'transport'});}
+  let body:(T&{error?:string|{errors?:Array<{reason?:string}>;status?:string}})|null;
+  try{body=await response.json();}
+  catch{throw new GmailError(response.ok?'upstream_failure':gmailFailure(response.status,'').code,{version:1,phase,kind:response.ok?'parsing':'http',httpStatus:response.status});}
+  if(!response.ok){
+    const reason=typeof body?.error==='string'?body.error:(body?.error?.errors?.[0]?.reason??body?.error?.status??'');
+    throw new GmailError(gmailFailure(response.status,typeof reason==='string'?reason:'').code,{version:1,phase,kind:'http',httpStatus:response.status});
   }
-  const body = (await response.json().catch(() => null)) as
-    | (T & {
-        error?:
-          | string
-          | { errors?: Array<{ reason?: string }>; status?: string };
-      })
-    | null;
-  if (!response.ok) {
-    const reason =
-      typeof body?.error === 'string'
-        ? body.error
-        : (body?.error?.errors?.[0]?.reason ?? body?.error?.status ?? '');
-    throw new GmailError(gmailFailure(response.status, reason).code);
-  }
-  if (!body) throw new GmailError('upstream_failure');
+  if(!body||typeof body!=='object'||Array.isArray(body))throw new GmailError('upstream_failure',{version:1,phase,kind:'validation',httpStatus:response.status});
   return body;
 }
-async function tokenRequest(env: GmailRuntimeEnv, parameters: URLSearchParams) {
-  if (!gmailConfiguration(env).configured)
-    throw new GmailError('missing_configuration');
-  const tokens = await googleJson<{
-    access_token?: string;
-    refresh_token?: string;
-    scope?: string;
-  }>('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: parameters,
-  });
-  if (!tokens.access_token) throw new GmailError('reconnect_required');
-  if (tokens.scope && !tokens.scope.split(/\s+/).includes(GMAIL_READ_SCOPE))
-    throw new GmailError('insufficient_scope');
-  return { ...tokens, access_token: tokens.access_token };
+async function tokenRequest(env:GmailRuntimeEnv,parameters:URLSearchParams,phase:GmailDiagnosticPhase='token_exchange') {
+  if(!gmailConfiguration(env).configured)throw new GmailError('missing_configuration',{version:1,phase,kind:'validation'});
+  const tokens=await googleJson<{access_token?:string;refresh_token?:string;scope?:string}>('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:parameters},phase);
+  if(typeof tokens.access_token!=='string'||!tokens.access_token)throw new GmailError('reconnect_required',{version:1,phase,kind:'validation'});
+  if(tokens.refresh_token!==undefined&&typeof tokens.refresh_token!=='string'||tokens.scope!==undefined&&typeof tokens.scope!=='string')throw new GmailError('upstream_failure',{version:1,phase,kind:'validation'});
+  if(tokens.scope&&!tokens.scope.split(/\s+/).includes(GMAIL_READ_SCOPE))throw new GmailError('insufficient_scope',{version:1,phase,kind:'validation'});
+  return {...tokens,access_token:tokens.access_token};
 }
-async function verifyMailbox(token: string) {
-  const profile = await googleJson<{ emailAddress?: string }>(
-    'https://gmail.googleapis.com/gmail/v1/users/me/profile',
-    { headers: { authorization: `Bearer ${token}` } },
-  );
-  if (profile.emailAddress?.toLowerCase() !== NEWS_MAILBOX)
-    throw new GmailError('wrong_account');
+async function verifyMailbox(token:string) {
+  const phase='account_verification';
+  const profile=await googleJson<{emailAddress?:string}>('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{authorization:`Bearer ${token}`}},phase);
+  if(typeof profile.emailAddress!=='string')throw new GmailError('upstream_failure',{version:1,phase,kind:'validation'});
+  if(profile.emailAddress.toLowerCase()!==NEWS_MAILBOX)throw new GmailError('wrong_account',{version:1,phase,kind:'validation'});
   return NEWS_MAILBOX;
 }
 export async function finishGmailConnection(
@@ -453,7 +429,7 @@ async function accessToken(env: GmailRuntimeEnv, connection: GmailConnection) {
       env.GMAIL_TOKEN_ENCRYPTION_KEY,
     );
   } catch {
-    throw new GmailError('reconnect_required');
+    throw new GmailError('reconnect_required',{version:1,phase:'token_refresh',kind:'validation'});
   }
   const tokens = await tokenRequest(
     env,
@@ -463,6 +439,7 @@ async function accessToken(env: GmailRuntimeEnv, connection: GmailConnection) {
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),
+    'token_refresh',
   );
   const credentials = tokens.refresh_token
     ? await encryptToken(tokens.refresh_token, env.GMAIL_TOKEN_ENCRYPTION_KEY)
@@ -484,9 +461,12 @@ async function readRun(
     .first<{ result_json: string }>()
     .catch((error: unknown) => {
       if (String(error).includes('no such table')) return null;
-      throw error;
+      throw new GmailError('upstream_failure',{version:1,phase:'persistence',kind:'storage'});
     });
-  return row ? (JSON.parse(row.result_json) as GmailSyncRun) : null;
+  if(!row)return null;try{return normaliseGmailSyncRun(JSON.parse(row.result_json));}catch{throw new GmailError('upstream_failure',{version:1,phase:'persistence',kind:'storage'});}
+}
+export function gmailManualSyncAllowed(env: GmailRuntimeEnv, userId: string) {
+  return verifiedGmailManualRelease(env, userId, (ownerId, runId) => readRun(env, ownerId, runId));
 }
 export async function gmailConnectionStatus(
   env: GmailRuntimeEnv,
@@ -499,7 +479,12 @@ export async function gmailConnectionStatus(
     ? gmailDiagnostic('missing_configuration')
     : connection?.email.toLowerCase() !== NEWS_MAILBOX && connection
       ? gmailDiagnostic('wrong_account')
-      : (connection?.diagnostic ?? null);
+      : normaliseGmailDiagnostic(connection?.diagnostic);
+  const lastRun=await readRun(env,userId);
+  const acceptanceRunId=await availableGmailAcceptanceRunId(env,userId,
+    config.configured&&connection?.email.toLowerCase()===NEWS_MAILBOX&&!diagnostic?.reconnect&&
+      !(lastRun&&['running','uncertain'].includes(lastRun.status)),
+    (ownerId,runId)=>readRun(env,ownerId,runId));
   return {
     ...config,
     redirectUri: gmailCallbackUri(requestUrl),
@@ -512,8 +497,9 @@ export async function gmailConnectionStatus(
     lastError: diagnostic?.message ?? '',
     diagnostic,
     reconnectRequired: diagnostic?.reconnect ?? false,
-    syncMode: GMAIL_SYNC_RELEASE_DISABLED ? 'disabled' : 'manual',
-    lastRun: await readRun(env, userId),
+    syncMode: !GMAIL_SYNC_RELEASE_DISABLED || config.configured && connection?.email.toLowerCase() === NEWS_MAILBOX && await gmailManualSyncAllowed(env, userId) ? 'manual' : 'disabled',
+    lastRun,
+    acceptanceRunId,
   };
 }
 export async function syncGmailNews(
@@ -529,14 +515,14 @@ export async function syncGmailNews(
   if (previous) return previous;
   let connection = await readGmailConnection(env, userId);
   if (!connection) throw new GmailError('reconnect_required');
-  await env.DB.batch([
+  try { await env.DB.batch([
     env.DB.prepare(
       'CREATE TABLE IF NOT EXISTS gmail_sync_runs (user_id TEXT NOT NULL,run_id TEXT NOT NULL,status TEXT NOT NULL,started INTEGER NOT NULL,result_json TEXT NOT NULL,PRIMARY KEY(user_id,run_id))',
     ),
     env.DB.prepare(
       "CREATE UNIQUE INDEX IF NOT EXISTS gmail_sync_active ON gmail_sync_runs(user_id) WHERE status IN ('running','uncertain')",
     ),
-  ]);
+  ]); } catch { throw new GmailError('upstream_failure',{version:1,phase:'persistence',kind:'storage'}); }
   const initial: GmailSyncRun = {
     runId,
     status: 'running',
@@ -557,14 +543,24 @@ export async function syncGmailNews(
   } catch {
     const duplicate = await readRun(env, userId, runId);
     if (duplicate) return duplicate;
-    throw new GmailError('sync_in_progress');
+    let active;
+    try {
+      active = await env.DB.prepare("SELECT run_id FROM gmail_sync_runs WHERE user_id=? AND status IN ('running','uncertain') LIMIT 1").bind(userId).first();
+    } catch {
+      throw new GmailError('upstream_failure', {version:1,phase:'persistence',kind:'storage'});
+    }
+    if (active) throw new GmailError('sync_in_progress');
+    throw new GmailError('upstream_failure', {version:1,phase:'persistence',kind:'storage'});
   }
   let writing = false;
+  let phase:GmailDiagnosticPhase='account_verification';
   try {
     if (connection.email.toLowerCase() !== NEWS_MAILBOX)
       throw new GmailError('wrong_account');
+    phase='token_refresh';
     const access = await accessToken(env, connection);
     const token = access.accessToken;
+    phase='account_verification';
     await verifyMailbox(token);
     connection = { ...connection, ...access.credentials };
     const auth = { headers: { authorization: `Bearer ${token}` } };
@@ -572,22 +568,25 @@ export async function syncGmailNews(
       maxResults: '100',
       q: 'newer_than:90d -in:spam -in:trash',
     });
+    phase='message_listing';
     const list = await googleJson<{
       messages?: Array<{ id: string; threadId: string }>;
       nextPageToken?: string;
     }>(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages?${query}`,
       auth,
+      'message_listing',
     );
     const messages = list.messages ?? [];
-    if (messages.length > 100) throw new GmailError('upstream_failure');
+    if (!Array.isArray(messages)||messages.length > 100||list.nextPageToken!==undefined&&typeof list.nextPageToken!=='string') throw new GmailError('upstream_failure',{version:1,phase:'parsing',kind:'validation'});
     const items: GmailNewsItem[] = [];
     // Failure in any metadata batch keeps the cached mailbox intact; report a safe diagnostic.
+    phase='metadata_retrieval';
     for (let index = 0; index < messages.length; index += 10) {
       const chunk = await Promise.all(
         messages.slice(index, index + 10).map(async (message) => {
-          if (!/^[a-zA-Z0-9]+$/.test(message.id))
-            throw new GmailError('upstream_failure');
+          if (!message||typeof message.id!=='string'||!/^[a-zA-Z0-9]+$/.test(message.id))
+            throw new GmailError('upstream_failure',{version:1,phase:'parsing',kind:'validation'});
           const details = new URLSearchParams({ format: 'metadata' });
           for (const name of ['Subject', 'From', 'Date'])
             details.append('metadataHeaders', name);
@@ -600,8 +599,9 @@ export async function syncGmailNews(
           }>(
             `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(message.id)}?${details}`,
             auth,
+            'metadata_retrieval',
           );
-          if (data.id !== message.id) throw new GmailError('upstream_failure');
+          if (data.id !== message.id||typeof data.threadId!=='string'||data.snippet!==undefined&&typeof data.snippet!=='string'||data.payload!==undefined&&(!data.payload||typeof data.payload!=='object')||data.payload?.headers!==undefined&&(!Array.isArray(data.payload.headers)||data.payload.headers.some(item=>!item||typeof item.name!=='string'||typeof item.value!=='string'))) throw new GmailError('upstream_failure',{version:1,phase:'parsing',kind:'validation'});
           const from = header(data.payload?.headers, 'From');
           const timestamp =
             Number(data.internalDate) ||
@@ -622,6 +622,7 @@ export async function syncGmailNews(
       );
       items.push(...chunk);
     }
+    phase='persistence';
     const result: GmailSyncRun = {
       ...initial,
       status: 'completed',
@@ -694,8 +695,8 @@ export async function syncGmailNews(
     const recorded = await readRun(env, userId, runId).catch(() => null);
     if (recorded?.status === 'completed') return recorded;
     const diagnostic = writing
-      ? gmailDiagnostic('uncertain_outcome')
-      : safeDiagnostic(error);
+      ? gmailDiagnostic('uncertain_outcome',{version:1,phase:'persistence',kind:'storage'})
+      : error instanceof GmailError?error.diagnostic:gmailDiagnostic('upstream_failure',{version:1,phase,kind:phase==='persistence'?'storage':'validation'});
     const failed: GmailSyncRun = {
       ...initial,
       status: writing ? 'uncertain' : 'failed',

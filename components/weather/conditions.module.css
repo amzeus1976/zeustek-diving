@@ -24,7 +24,7 @@
 }
 .heading span,
 .metric {
-  font-size: 0.73rem;
+  font-size: 1rem;
   letter-spacing: 0.07em;
   font-weight: 700;
   color: #8dc1cc;
@@ -32,7 +32,7 @@
 .heading p,
 .note,
 .empty {
-  font-size: 0.86rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: #b8cbd3;
   margin: 6px 0;
@@ -78,15 +78,15 @@
   color: #f0fbff;
 }
 .tile > strong > span {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #bed5dd;
 }
 .depth {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: #78d8d3;
 }
 .tile small {
-  font-size: 0.74rem;
+  font-size: 1rem;
   line-height: 1.5;
   color: #c1d0d5;
 }
@@ -97,7 +97,7 @@
   color: #96c8bb;
 }
 .tile details {
-  font-size: 0.78rem;
+  font-size: 1rem;
 }
 .tile summary {
   min-height: 36px;
@@ -144,7 +144,7 @@
   margin-right: 6px;
 }
 .detail > p {
-  font-size: 0.83rem;
+  font-size: 1rem;
   color: #bbccd5;
 }
 .forecast {
@@ -156,7 +156,7 @@
   border: 1px solid #244753;
   border-radius: 10px;
   padding: 12px;
-  font-size: 0.8rem;
+  font-size: 1rem;
   min-width: 0;
 }
 .forecast article > div {
@@ -166,14 +166,14 @@
   display: block;
   color: #a5beca;
   margin-top: 3px;
-  font-size: 0.7rem;
+  font-size: 1rem;
 }
 .notice {
   padding: 12px 14px;
   border-left: 3px solid #ddbb72;
   background: #342e22;
   color: #ffe0a6;
-  font-size: 0.84rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 .empty {
@@ -191,7 +191,7 @@
   flex: 1 1 160px;
   flex-direction: column;
   gap: 6px;
-  font-size: 0.83rem;
+  font-size: 1rem;
   min-width: 0;
 }
 .controls > label.check {
@@ -236,7 +236,7 @@
   flex-direction: column;
   gap: 5px;
   min-width: 0;
-  font-size: 0.82rem;
+  font-size: 1rem;
   overflow-wrap: anywhere;
 }
 .diagnostics small {
@@ -246,7 +246,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 0.73rem;
+  font-size: 1rem;
   margin-top: 20px;
 }
 .configuration > label {
@@ -260,7 +260,7 @@
   max-width: 380px;
 }
 .configuration p {
-  font-size: 0.86rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 .configuration input[type='checkbox'] {
@@ -284,7 +284,7 @@
 }
 .configuration code {
   overflow-wrap: anywhere;
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 @media (max-width: 600px) {
   .workspace {
@@ -312,3 +312,11 @@
     align-items: stretch;
   }
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.workspace,.tile,.water{background:var(--zt-surface);border-color:var(--zt-border-strong);border-radius:var(--zt-radius-lg)}
+.conditions,.workspace,.configuration,.group h4,.tile>strong,.detail>summary{color:var(--zt-text)}
+.heading span,.metric,.depth,.tile summary,.tile a,.attribution a{color:var(--brand-secondary)}
+.heading p,.note,.empty,.tile small,.tile dd,.tile>strong>span,.detail>p,.forecast small,.diagnostics small{color:var(--zt-text-muted)}
+.controls input,.controls select,.configuration select{background:var(--zt-bg);border-color:var(--zt-border);border-radius:var(--zt-radius-md);color:var(--zt-text)}
+.forecast article,.diagnostics li{border-radius:var(--zt-radius-md)}

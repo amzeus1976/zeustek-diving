@@ -29,7 +29,7 @@
   color: #cbd5da;
 }
 .heroQuote {
-  font-size: 14px;
+  font-size: 1rem;
 }
 .heroQuote i {
   display: block;
@@ -94,7 +94,7 @@
 .resolution small,
 .commitPreview small {
   color: #9aa8b1;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .importBox aside {
   border-left: 1px solid rgb(255 255 255 / 12%);
@@ -108,7 +108,7 @@
   color: #72d9ff;
 }
 .importBox aside p {
-  font-size: 12px;
+  font-size: 1rem;
   color: #9da9b0;
 }
 .workspace {
@@ -211,12 +211,12 @@
   display: grid;
 }
 .profileTop dt {
-  font-size: 12px;
+  font-size: 1rem;
   color: #84949d;
 }
 .profileTop dd {
   margin: 0;
-  font-size: 14px;
+  font-size: 1rem;
 }
 .tableScroll {
   overflow-x: auto;
@@ -224,7 +224,7 @@
 }
 .profileTable {
   width: 100%;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .profileTable table {
   border-collapse: collapse;
@@ -242,7 +242,7 @@
 }
 .compare h3 {
   color: #ff8a00;
-  font-size: 14px;
+  font-size: 1rem;
 }
 .compare > div > div {
   display: grid;
@@ -250,7 +250,7 @@
   gap: 8px;
   border-bottom: 1px solid rgb(255 255 255 / 7%);
   padding: 7px;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .recent > button {
   width: 100%;
@@ -355,7 +355,7 @@
 }
 .segmentList em {
   font-style: normal;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .segmentList > label[data-state='already-imported'],
 .segmentList > article[data-state='already-imported'] {
@@ -457,7 +457,7 @@
   display: grid;
   gap: 5px;
   min-width: 0;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .profileFilters label > span {
   display: flex;
@@ -722,7 +722,7 @@
 .importReviewGrid .profileRows>article{grid-template-columns:minmax(0,1fr);gap:.5rem}
 .importReviewGrid .profileRowMain{width:100%;min-width:0}
 .importReviewGrid .rowActions{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:.35rem}
-.importReviewGrid .rowActions button{font-size:.8rem;min-height:38px;flex:1 1 auto;white-space:normal}
+.importReviewGrid .rowActions button{font-size:1rem;min-height:38px;flex:1 1 auto;white-space:normal}
 .importReviewGrid .profileRowMain>*{grid-column:1;overflow-wrap:anywhere}
 .importReviewGrid .profileFilters{grid-template-columns:repeat(2,minmax(0,1fr))}
 .importReviewGrid .profileFilters>*{min-width:0}
@@ -731,3 +731,13 @@
 .importReviewGrid .profileRows article[data-selected=true]{border-color:var(--zt-accent-orange);background:color-mix(in srgb,var(--zt-accent-orange) 8%,var(--zt-surface-card))}
 @media(max-width:900px){.importReviewGrid{grid-template-columns:1fr}.importReviewGrid .profile{position:static}.importReviewGrid .profileRows{max-height:45vh}}
 @media(max-width:480px){.importReviewGrid .profileFilters{grid-template-columns:1fr}}
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.importBox,.sources,.profile,.recent,.importedProfiles,.segmentList,.assignment,.resolution,.profileReview,.commitPreview{background:var(--zt-surface);border-color:var(--zt-border-strong);border-radius:var(--zt-radius-lg)}
+.sources>button,.profileRows>article,.steps button,.chart,.chartEmpty{background:var(--zt-surface-2);border-color:var(--zt-border);border-radius:var(--zt-radius-md)}
+.drop strong,.compare h3,.segmentList h3,.assignment h3,.resolution h3,.profileReview h3,.commitPreview h3{color:var(--brand-primary)}
+.heroQuote i{background:var(--brand-primary)}
+.sources>button svg,.importBox aside svg,.importBox aside b{color:var(--brand-secondary)}
+.steps button[aria-current='step']{border-color:var(--brand-primary);color:var(--brand-primary)}
+.profileRows>article[data-selected='true']{border-color:var(--brand-secondary)}
+.formats b,.steps span{background:var(--zt-surface-2)}

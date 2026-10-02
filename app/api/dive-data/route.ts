@@ -1,3 +1,4 @@
+import {cylinderNumberConstraint} from '@/lib/server/cylinder-number-constraint';
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '../../chatgpt-auth';
 import { householdAreaAccess, householdCanEditGear, readHouseholdAreaUserIds, readHouseholdUserIds, allowedHouseholdUser, registerHouseholdUser } from '@/lib/server/household';
@@ -172,6 +173,7 @@ export async function POST(request: Request) {
       if (duplicate) return Response.json({error:'A matching record already exists. Review the existing record before merging.',duplicateId:duplicate.id},{status:409});
     }
   }
+  const numberGuard=cylinderNumberConstraint(kind,body.data,existing?JSON.parse(existing.dataJson):null,id,ownerUserId,(kind==='cylinder'||kind==='equipment')&&body.data?await readHouseholdUserIds(env,user):[]);
   if (body.localMutation) {
     if(existing && (body.data===null ? existing.deletedAt!==null : existing.deletedAt===null && existing.dataJson===dataJson))return Response.json({id,updatedAt:existing.updatedAt});
     const base = body.baseModifiedAt == null ? null : Date.parse(body.baseModifiedAt);
@@ -180,24 +182,25 @@ export async function POST(request: Request) {
       if (base === null) return Response.json({error:'This record already exists. Both versions are retained for review.'},{status:409});
       const updated = await env.DB.prepare(body.data === null
         ? 'UPDATE dive_records SET deleted_at=?,updated_at=? WHERE id=? AND user_id=? AND updated_at=?'+(kind==='operator'?OPERATOR_DELETE_CONSTRAINT:kind==='person'?PERSON_DELETE_CONSTRAINT:kind==='professional-evidence'?PROFESSIONAL_EVIDENCE_DELETE_CONSTRAINT:'')
-        : 'UPDATE dive_records SET data_json=?,updated_at=?,deleted_at=NULL WHERE id=? AND user_id=? AND updated_at=?')
-        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(body.data===null?(kind==='operator'?operatorDeleteBindings(ownerUserId,id):kind==='person'?personDeleteBindings(ownerUserId,id):kind==='professional-evidence'?professionalEvidenceDeleteBindings(ownerUserId,id):[]):[])).run();
+        : 'UPDATE dive_records SET data_json=?,updated_at=?,deleted_at=NULL WHERE id=? AND user_id=? AND updated_at=?'+numberGuard.sql)
+        .bind(body.data === null ? now : dataJson,now,id,ownerUserId,base,...(body.data===null?(kind==='operator'?operatorDeleteBindings(ownerUserId,id):kind==='person'?personDeleteBindings(ownerUserId,id):kind==='professional-evidence'?professionalEvidenceDeleteBindings(ownerUserId,id):[]):numberGuard.bindings)).run();
       if (!updated.meta.changes) return Response.json({error:body.data===null&&(kind==='operator'||kind==='person'||kind==='professional-evidence')?'This record changed or has linked records. Refresh, then unlink its dependencies before deleting. Your local change is retained for review.':'The cloud record changed on another device. Your local version is retained; review both before replacing either.'},{status:409});
     } else {
       if (base !== null) return Response.json({error:'The original cloud record is no longer accessible. Your local version is retained.'},{status:409});
       if (body.data !== null) {
-        const inserted=await env.DB.prepare('INSERT OR IGNORE INTO dive_records (id,user_id,kind,data_json,created_at,updated_at,deleted_at) VALUES (?,?,?,?,?,?,NULL)').bind(id,user.userId,kind,dataJson,now,now).run();
+        const inserted=await env.DB.prepare('INSERT OR IGNORE INTO dive_records (id,user_id,kind,data_json,created_at,updated_at,deleted_at) SELECT ?,?,?,?,?,?,NULL WHERE 1=1'+numberGuard.sql).bind(id,user.userId,kind,dataJson,now,now,...numberGuard.bindings).run();
         if (!inserted.meta.changes) return Response.json({error:'Record identity conflict. Local data is retained.'},{status:409});
       }
     }
     return Response.json({id,updatedAt:now});
   }
 
-  await env.DB.prepare(
-    'INSERT OR REPLACE INTO dive_records (id,user_id,kind,data_json,created_at,updated_at,deleted_at) VALUES (?,?,?,?,?,?,NULL)',
+  const write=await env.DB.prepare(
+    'INSERT OR REPLACE INTO dive_records (id,user_id,kind,data_json,created_at,updated_at,deleted_at) SELECT ?,?,?,?,?,?,NULL WHERE 1=1'+numberGuard.sql,
   )
-    .bind(id, ownerUserId, kind, dataJson, existing?.createdAt ?? now, now)
+    .bind(id, ownerUserId, kind, dataJson, existing?.createdAt ?? now, now,...numberGuard.bindings)
     .run();
+  if(!write.meta.changes)return Response.json({error:'That cylinder number is already in use. Refresh and review the identities; no record was renumbered.'},{status:409});
   if (kind === 'dashboard-settings') {
     const settings = body.data as { diveNumberStart?: number };
     await renumberUserDives(user.userId, Number(settings.diveNumberStart) || 1);

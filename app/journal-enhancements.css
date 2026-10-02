@@ -32,7 +32,7 @@ button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{
   display:flex;
   gap:6px;
   align-items:center;
-  font-size:9px;
+  font-size:1rem;
 }
 .journal-tabs button:hover,.journal-tabs button.active{
   color:#fff;
@@ -41,9 +41,9 @@ button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{
 }
 .journal-tabs button.active{box-shadow:inset 0 -2px var(--orange)}
 .entry-filter>div strong,.entry-filter>div span{display:block}
-.entry-filter>div span{color:var(--muted);font-size:8px;margin-top:3px}
+.entry-filter>div span{color:var(--muted);font-size:1rem;margin-top:3px}
 .entry-date small{display:block;color:#6d6d6a;font:600 7px var(--font-jetbrains-mono);margin-top:5px}
-.entry-context{display:flex;gap:12px;margin:8px 0;color:#777;font-size:8px}
+.entry-context{display:flex;gap:12px;margin:8px 0;color:#777;font-size:1rem}
 .entry-context span{display:flex;gap:4px;align-items:center}
 
 .journal-alt{
@@ -65,7 +65,7 @@ button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{
   margin-bottom:15px;
 }
 .journal-alt h2{font-size:22px;margin:6px 0}
-.journal-alt>p{max-width:460px;color:var(--muted);font-size:10px;line-height:1.6}
+.journal-alt>p{max-width:460px;color:var(--muted);font-size:1rem;line-height:1.6}
 .alt-preview{width:min(680px,92%);display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}
 .alt-preview div{height:92px;border-radius:8px;border:1px solid #303030;background:linear-gradient(145deg,#1c1c1c,#0b0b0b);position:relative}
 .alt-preview div:after{content:'';position:absolute;left:12px;right:12px;bottom:12px;height:3px;background:linear-gradient(90deg,var(--orange),transparent);opacity:.55}
@@ -73,7 +73,7 @@ button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{
 .journal-editor-modal{width:min(780px,100%)}
 .entry-title-input{
   width:100%;height:42px;background:#080808;border:1px solid #333;border-radius:7px;
-  padding:0 12px;margin-bottom:8px;outline:0;font-size:15px;font-weight:600;
+  padding:0 12px;margin-bottom:8px;outline:0;font-size:1rem;font-weight:600;
 }
 .formatbar{
   display:flex;gap:4px;align-items:center;padding:6px;
@@ -85,15 +85,15 @@ button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{
 .rich-editor{
   min-height:230px;max-height:430px;overflow-y:auto;
   padding:14px;background:#080808;border:1px solid #333;border-radius:0 0 7px 7px;
-  outline:0;font-size:12px;line-height:1.65;
+  outline:0;font-size:1rem;line-height:1.65;
 }
 .rich-editor:empty:before{content:attr(data-placeholder);color:#666;pointer-events:none}
 .entry-extras{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:10px}
-.rating{display:flex;align-items:center;gap:2px;color:#777;font-size:8px}
+.rating{display:flex;align-items:center;gap:2px;color:#777;font-size:1rem}
 .rating>span{margin-right:5px}.rating button{border:0;background:transparent;color:#4a4a48;padding:2px}.rating button.on{color:var(--orange)}
 .import-safety{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .import-safety>div{display:flex;align-items:center;gap:9px;background:#0b0b0b;border:1px solid #33251f;border-radius:7px;padding:10px;color:var(--orange)}
-.import-safety strong,.import-safety small{display:block}.import-safety strong{font-size:9px;color:#eee}.import-safety small{font-size:7px;line-height:1.45;color:var(--muted);margin-top:3px}
+.import-safety strong,.import-safety small{display:block}.import-safety strong{font-size:1rem;color:#eee}.import-safety small{font-size:1rem;line-height:1.45;color:var(--muted);margin-top:3px}
 
 @media(max-width:720px){
   .journal-tabs{margin-top:0}

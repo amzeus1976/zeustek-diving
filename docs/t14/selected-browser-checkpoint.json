@@ -1,0 +1,175 @@
+{
+  "kind": "isolated development-fixture observations, not production acceptance",
+  "date": "2026-10-02",
+  "applicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
+  "viewports": [
+    320,
+    390,
+    430,
+    820,
+    1024,
+    1440
+  ],
+  "routeSweep": {
+    "routesPerWidth": 31,
+    "observations": 186,
+    "routes": [
+      "Overview",
+      "Insights",
+      "Equipment",
+      "Loadouts",
+      "Cylinders & Gas",
+      "Gear Wishlist",
+      "Logbook",
+      "Dive Computer Imports",
+      "Sites",
+      "Dive Location Map",
+      "People",
+      "Dive Centres",
+      "Albums",
+      "Diving Calendar & Bookings",
+      "Trips & Expeditions",
+      "Bucket List",
+      "Dive Planning Centre",
+      "Gas Planning",
+      "Certifications",
+      "Planned Training",
+      "Dive Skills",
+      "Technical Diving",
+      "Conservation & AWARE",
+      "Dive Knowledge",
+      "Dive Bibliography",
+      "Dive News",
+      "Professional Development",
+      "Site Logs",
+      "Site Configuration",
+      "Data & Backups",
+      "Diver Summary Export"
+    ],
+    "completedBrokenImages": 0,
+    "clippedHeadlineValues": 0,
+    "undersizedVisibleInteractiveTargets": 0,
+    "pageOverflowAfterFinalTechnicalCorrection": 0,
+    "unchangedRouteObservationsReused": true,
+    "technicalChangedRouteRecheckedAtEveryWidth": true,
+    "bibliographyLocatorTimeouts": "820/1024 waits reported a visible heading; fresh DOM verified the actual page, no application failure inferred"
+  },
+  "navigation": {
+    "approvedUniqueRuntimeArtwork": 31,
+    "naturalPngWidthAndHeight": 128,
+    "ariaHiddenImagesWithAccessibleRouteLabels": true,
+    "peopleAndDiveCentresDistinct": true,
+    "keyboardMobileMenuSectionAndPeopleSelection": true,
+    "menuClosesAndFocusRemainsVisible": true
+  },
+  "insights": {
+    "longAwardFixturesContainedAtAllWidths": true,
+    "positiveContainedChartsAtEachWidth": 7,
+    "recreationalAwardOpenedCanonicalCertificationAnalysis": true,
+    "exactCanonicalCertificationLinkVerified": true,
+    "dialogCloseRestoredHeadlineFocus": true,
+    "showAllDataAndExistingScopeRetained": true
+  },
+  "skills": {
+    "localCatalogueFixtureCount": 61,
+    "pageRowCounts": [
+      25,
+      25,
+      11
+    ],
+    "filteredCount": 31,
+    "singleSearchResultAndResetCountVerified": true,
+    "exactSkillAndEvidenceNavigationVerified": true,
+    "keyboardPagerFocusOutlinePixels": 3
+  },
+  "retainedHumanEntityAndDiveFlows": {
+    "humanAndCanonicalEntityWorkspacesDistinct": true,
+    "exactPersonEntityLinksVerified": true,
+    "ownerSelfCandidateAppearsOnce": true,
+    "selectedInstructorMayRemainBuddy": true,
+    "selfLeaderRetained": true,
+    "diveDraftDiscardedWithoutSaving": true,
+    "crop320pxCircleDiameter": 160,
+    "cropDragKeyboardZoomResetSaveCropDraftAndDiscardVerified": true
+  },
+  "effectiveBrandSamples": {
+    "diveCentreBefore": {
+      "surfaceRgb": [
+        9,
+        26,
+        34
+      ],
+      "radiusPx": 12
+    },
+    "diveCentreAfter": {
+      "surfaceRgb": [
+        18,
+        18,
+        18
+      ],
+      "radiusPx": 18
+    },
+    "professionalDevelopment320pxOverflowBeforePx": 52,
+    "professionalDevelopmentOverflowAfterPx": 0
+  },
+  "technicalHeaderRegression": {
+    "beforeAt1024": {
+      "buttonClientWidth": 44,
+      "buttonScrollWidth": 74,
+      "cardClientWidth": 225,
+      "cardScrollWidth": 261,
+      "rootScrollExcessPx": 1,
+      "actualFractionalHorizontalMovementPx": 0.6622516512870789
+    },
+    "cause": "flex headers squeezed action controls while their text and long content overflowed",
+    "fix": "bounded card/header minimum widths, wrapping, and action flex sizing",
+    "afterAtAllSixWidths": {
+      "rootScrollExcessPx": 0,
+      "scrollingCardHeaderOrButtonCount": 0,
+      "brokenImages": 0,
+      "undersizedTargets": 0,
+      "consoleWarningsOrErrors": 0,
+      "keyboardLoadoutsActionOpensCanonicalWorkspace": true
+    },
+    "overflowHidingOrToleranceRelaxationUsed": false
+  },
+  "browserIncidents": [
+    {
+      "kind": "renderer crash",
+      "context": "local dev server and production build ran concurrently",
+      "applicationCauseEstablished": false
+    },
+    {
+      "kind": "second renderer crash",
+      "context": "later local production build while a dev test tab was open",
+      "applicationCauseEstablished": false
+    }
+  ],
+  "recovery": {
+    "devServerStoppedBeforeFinalProductionBuild": true,
+    "freshSameBrowserTabWithoutConcurrentBuild": true,
+    "affectedViewChecksAtSixWidths": 18,
+    "technicalAdditionalGreenChecks": 6,
+    "consoleWarningsOrErrorsInRecoveredTab": 0,
+    "finishedBuiltAndLiveCandidateStabilityRecheckStillRequired": true,
+    "viewportOverrideReset": true
+  },
+  "dataBoundary": {
+    "fixtureAccountOnly": true,
+    "productionOwnerWrites": 0,
+    "liveGmailSyncRequests": 0,
+    "localPreexistingPendingConflicts": 10,
+    "ordinaryNewsDisplaysCachedStoryAndDisabledGmail": true
+  },
+  "lineEndingOnlyReuse": {
+    "candidateCommit": "bd0ba8ced8e45cc0718b7a7b5d04b03547a6c459",
+    "observedApplicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
+    "normalisedSourceByteEqual": true,
+    "sourceFiles": [
+      "app/issue-register.css",
+      "tests/selected-gmail-status.test.ts",
+      "vite.config.ts"
+    ],
+    "finishedBuiltAndLiveGateStillRequired": true
+  }
+}

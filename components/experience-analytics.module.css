@@ -32,10 +32,10 @@
 .hero p {
   margin: 0;
   color: #d2d9df;
-  font-size: 15px;
+  font-size: 1rem;
 }
 .heroQuote {
-  font-size: 14px;
+  font-size: 1rem;
   line-height: 1.45;
   color: #d4e0e8;
   text-align: left;
@@ -57,7 +57,7 @@
   color: #8edfff;
   border-radius: 999px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 1rem;
   min-height: 44px;
 }
 .toolbar {
@@ -69,9 +69,9 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  border: 1px solid #14506a;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #091216, #071014);
+  border: 1px solid var(--zt-border-strong);
+  border-radius: var(--zt-radius-lg);
+  background: var(--zt-surface);
   overflow: hidden;
 }
 .kpi {
@@ -108,20 +108,20 @@
   color: #08baf2;
 }
 .kpi span {
-  font-size: 12px;
+  font-size: 1rem;
   color: #f0f3f4;
 }
 .kpi b {
   font-size: 24px;
   line-height: 1.1;
-  white-space: nowrap;
+  white-space: normal;
 }
 .kpi small {
-  font-size: 9px;
+  font-size: 1rem;
   color: #71828d;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
   max-width: 100%;
 }
 .grid {
@@ -156,7 +156,7 @@
   gap: 8px;
   text-align: left;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   min-height: 44px;
 }
@@ -196,7 +196,7 @@
   grid-template-columns: 10px 1fr auto auto;
   gap: 8px;
   align-items: center;
-  font-size: 11px;
+  font-size: 1rem;
 }
 .environmentCard li i {
   width: 9px;
@@ -225,11 +225,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .rankList small {
   color: #91a0aa;
-  font-size: 10px;
+  font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -247,7 +247,7 @@
   border-radius: inherit;
 }
 .rankList em {
-  font-size: 10px;
+  font-size: 1rem;
   color: #aab4bb;
   font-style: normal;
   text-align: right;
@@ -287,16 +287,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .siteList small {
-  font-size: 10px;
+  font-size: 1rem;
   color: #80909a;
 }
 .siteList em {
   font-style: normal;
   color: #b9c4cb;
-  font-size: 10px;
+  font-size: 1rem;
 }
 .empty {
   padding: 20px;
@@ -330,10 +330,10 @@
   border-right: 0;
 }
 .readiness article b {
-  font-size: 12px;
+  font-size: 1rem;
 }
 .readiness article strong {
-  font-size: 12px;
+  font-size: 1rem;
 }
 .readiness article > div {
   grid-column: 1/-1;
@@ -350,7 +350,7 @@
 .readiness article small {
   grid-column: 1/-1;
   color: #96a4ad;
-  font-size: 10px;
+  font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -391,7 +391,7 @@
   display: grid;
 }
 .detailPanel dt {
-  font-size: 10px;
+  font-size: 1rem;
   color: #83939e;
 }
 .detailPanel dd {
@@ -444,7 +444,7 @@
 }
 .sourceTable small,
 .sourceTable em {
-  font-size: 10px;
+  font-size: 1rem;
   color: #95a4ad;
   font-style: normal;
 }
@@ -475,7 +475,7 @@
 .filterGrid small {
   color: #80909a;
 }
-.sitePicker>div{display:grid;max-height:240px;overflow:auto;gap:5px}.sitePicker label span{display:grid}.sitePicker label span small{font-size:10px}.dataPointPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}.dataPointPicker>span{color:#8edfff;margin-right:auto}.dataPointPicker details{width:100%;border:1px solid #24414d;border-radius:8px;padding:8px}.dataPointPicker summary{cursor:pointer;font-weight:700}.dataPointPicker details>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}.dataPointPicker label{display:flex;gap:6px;align-items:center;min-height:36px}.dataPointPicker input{width:auto}
+.sitePicker>div{display:grid;max-height:240px;overflow:auto;gap:5px}.sitePicker label span{display:grid}.sitePicker label span small{font-size:1rem}.dataPointPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}.dataPointPicker>span{color:#8edfff;margin-right:auto}.dataPointPicker details{width:100%;border:1px solid #24414d;border-radius:8px;padding:8px}.dataPointPicker summary{cursor:pointer;font-weight:700}.dataPointPicker details>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}.dataPointPicker label{display:flex;gap:6px;align-items:center;min-height:36px}.dataPointPicker input{width:auto}
 .scopeSummary {
   color: #8edfff;
 }
@@ -600,14 +600,14 @@
   }
   .kpi,
   .kpi:last-child {
-    flex-basis: calc(25% - 6px);
+    flex-basis: calc(50% - 4px);
     padding-inline: 4px;
     border: 1px solid #16485d;
     border-radius: 9px;
     background: #091216;
   }
   .kpi b { font-size: 19px; }
-  .kpi span { font-size: 10px; }
+  .kpi span { font-size: 1rem; }
   .grid {
     grid-template-columns: 1fr;
   }
@@ -661,3 +661,17 @@
     font-size: 21px;
   }
 }
+
+/* Headline values must fit their own cells, including multi-word awards. */
+.kpi > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+.kpi b { color: var(--zt-aqua); }
+@media (max-width: 360px) { .kpi, .kpi:last-child { flex-basis: 100%; } }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.card,.readiness,.detailPanel{background:var(--zt-surface);border-radius:var(--zt-radius-lg)}
+.heroQuote i{background:var(--brand-primary)}
+.readiness>span,.detailPanel h3,.filterGrid legend{color:var(--brand-primary)}
+.sourceTable a{background:var(--zt-surface-2);border-radius:var(--zt-radius-md)}
+.filterDialog :is(input,select),.detailDialog :is(input,select){background:var(--zt-bg);border-radius:var(--zt-radius-md)}
+.kpi small,.detailPanel dt{color:var(--zt-text-muted)}
+@media(max-width:680px){.kpi,.kpi:last-child{background:var(--zt-surface);border-radius:var(--zt-radius-lg)}}

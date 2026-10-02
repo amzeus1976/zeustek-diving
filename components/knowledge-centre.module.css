@@ -30,7 +30,7 @@
   overflow-wrap: anywhere;
 }
 .snapshot span {
-  font-size: 0.78rem;
+  font-size: 1rem;
   color: #9aabb3;
 }
 .bankList {
@@ -76,7 +76,7 @@
 .bankRow em {
   font-style: normal;
   color: #ff9f3e;
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 .testGrid {
   display: grid;
@@ -153,3 +153,9 @@
     width: calc(100vw - 12px);
   }
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.snapshot,.bankRow{background:var(--zt-surface);border-color:var(--zt-border);border-radius:var(--zt-radius-lg);color:var(--zt-text)}
+.bankRow:hover,.bankRow:focus-visible{background:var(--zt-surface-2);border-color:var(--brand-secondary)}
+.bankRow em{color:var(--brand-primary)}
+.bankQuestions details{border-radius:var(--zt-radius-md)}

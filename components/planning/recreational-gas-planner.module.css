@@ -46,7 +46,7 @@
 .routeRow label {
   display: grid;
   gap: 5px;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 .controls input,
 .controls select,
@@ -90,7 +90,7 @@
   border: 1px solid #315969;
   border-radius: 8px;
   background: #152329;
-  font-size: 0.82rem;
+  font-size: 1rem;
   color: #c4d2d8;
   overflow-wrap: anywhere;
 }
@@ -110,7 +110,7 @@
   width: 100%;
   min-width: 750px;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 .scroll th,
 .scroll td {
@@ -351,7 +351,7 @@
     content: attr(data-label);
     display: block;
     color: var(--zt-accent-cyan);
-    font-size: 0.75rem;
+    font-size: 1rem;
     margin-bottom: 4px;
   }
   .scroll tr[aria-selected='true'] {

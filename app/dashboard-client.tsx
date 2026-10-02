@@ -1,4 +1,5 @@
 'use client';
+import {selectUpcomingTrip} from '@/lib/planning/upcoming-trip';
 import {useSiteForecasts,SevenDayForecastCard} from '../components/weather/overview-conditions';
 import {ConditionsWorkspace} from '../components/weather/conditions-workspace';
 import {ConditionsConfiguration} from '../components/weather/conditions-configuration';
@@ -57,6 +58,8 @@ import {
 } from 'lucide-react';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
+import {PublicProfileSettings} from '../components/sharing/public-profile-settings';
+import {IntegrationKeySettings} from '../components/sharing/integration-key-settings';
 import { ScreenTiming } from '@/components/screen-timing';
 import { ZeusTekIcon } from '@/components/zeustek-icon';
 import { ZeusTekAssetIcon } from '@/components/brand/zeustek-asset-icon';
@@ -68,7 +71,7 @@ import {applySettingsPatch,type ConfigurationDomain} from '@/lib/admin/configura
 import {buildDiverSummary,summaryText,summaryCsv,summaryJson,type SummaryOptions} from '@/lib/exports/diver-summary';
 import {renderSummaryPdf,renderSummaryDocx,collectSummaryImages} from '@/lib/exports/summary-documents';
 import {safeDiagnostic,retainDiagnostics,diagnosticCsv,diagnosticJson,type DiagnosticEntry} from '@/lib/admin/diagnostics';
-import {GMAIL_SYNC_DISABLED_MESSAGE,gmailDiagnostic,type GmailDiagnosticCode,type GmailConnectionStatus,type GmailSyncRun} from '@/lib/gmail-contract';
+import {GMAIL_SYNC_DISABLED_MESSAGE,gmailDiagnostic,gmailDiagnosticEvidenceLabel,type GmailDiagnosticCode,type GmailConnectionStatus,type GmailSyncRun} from '@/lib/gmail-contract';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
 import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/lib/zeustek-icons';
 import {fillMissingGasRates} from '@/lib/gas-rates';
@@ -97,6 +100,7 @@ import { PeopleOperators } from '@/components/people-operators';
 import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
 import {diveTeamCandidates,normaliseDiveTeamIdentity} from '@/lib/people/dive-team-identity';
 import {resolvePersonDisplayAwards} from '@/lib/people/certification-evidence';
+import { renderSummaryCard } from '@/lib/exports/summary-card';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
 import equipmentEditorStyles from '@/components/equipment-editor.module.css';
@@ -625,6 +629,8 @@ export default function DiveApp({ userId }: { userId: string }) {
 const configurationLinks = [
   ['settings-overview', 'Settings overview'],
   ['household-setup', 'Household setup and configuration'],
+  ['public-profile-settings', 'Public profile'],
+  ['integration-key-settings', 'Read-only API integrations'],
   ['skill-catalogue', 'Skill Catalogue'],
   ['equipment-training-lists', 'Equipment & training lists'],
   ['equipment-category-icons', 'Equipment category icons'],
@@ -651,6 +657,8 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
     <div className="site-configuration-grid">
       <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage and local device controls"><PlatformSettings section="overview" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="public-profile-settings" defaultMinimized className="site-configuration-card" title="Public profile" eyebrow="PUBLICATION" status="Off by default · exact visitor preview · explicit publication"><PublicProfileSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="integration-key-settings" defaultMinimized className="site-configuration-card" title="Read-only API integrations" eyebrow="OWNER CONSENT" status="Selected records · separate AMZeus and ZeusTek keys"><IntegrationKeySettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="equipment-training-lists" defaultMinimized className="site-configuration-card" title="Equipment & training lists" eyebrow="GEAR · TRAINING" status="Agencies, qualifications, equipment categories and manufacturers"><PlatformSettings section="lists" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="equipment-category-icons" defaultMinimized className="site-configuration-card" title="Equipment category icons" eyebrow="GEAR" status="Built-in and owner-uploaded category visuals"><PlatformSettings section="icons" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="training-agency-logos" defaultMinimized className="site-configuration-card" title="Training agency logos" eyebrow="TRAINING" status="Owner-selected agency visuals"><PlatformSettings section="logos" /></CollapsibleWorkCard>
@@ -687,7 +695,7 @@ function HouseholdSettings() {
     const response = await fetch('/api/household', { cache: 'no-store' });
     if (!response.ok) { setMessage('Household access is unavailable.'); return; }
     const next = await response.json() as HouseholdState; setState(next);
-    setMessage(next.partner?.userId ? `${next.partner.displayName ?? 'Your partner'} is connected.` : 'Gemma can connect using her invited account after this update is published.');
+    setMessage(next.partner?.userId ? `${next.partner.displayName ?? 'Your partner'} is connected.` : 'Your partner can connect using their invited account.');
   }, []);
   useEffect(() => { void load(); }, [load]);
   async function change(area: string, canView: boolean) {
@@ -706,9 +714,9 @@ function HouseholdSettings() {
   for (const item of state?.shared ?? []) sharedByKind.set(item.kind, [...(sharedByKind.get(item.kind) ?? []), item]);
   const itemTitle = (item: Record<string,unknown>) => String(item.title ?? item.name ?? item.site ?? item.certification ?? item.model ?? item.subject ?? 'Record');
   return <Card className="household-settings">
-    <span className="focus-eyebrow">TWO-PERSON HOUSEHOLD</span><h2>Zeus &amp; Gemma</h2>
+    <span className="focus-eyebrow">TWO-PERSON HOUSEHOLD</span><h2>{state?.current.displayName && state.partner?.displayName ? `${state.current.displayName} & ${state.partner.displayName}` : 'Your household'}</h2>
     <p className="focus-copy">Each person edits only their own personal records. Turn on an area to let the other person view it read-only.</p>
-    <div className="household-member-strip"><div><Users size={20}/><span><b>{state?.current.displayName ?? 'Your profile'}</b><small>{state?.current.email}</small></span></div><div><Users size={20}/><span><b>Gemma</b><small>gemmalouisebrown1983@gmail.com · {state?.partner?.userId ? 'connected' : 'invited'}</small></span></div></div>
+    <div className="household-member-strip"><div><Users size={20}/><span><b>{state?.current.displayName ?? 'Your profile'}</b><small>{state?.current.email}</small></span></div><div><Users size={20}/><span><b>{state?.partner?.displayName ?? 'Your partner'}</b><small>{state?.partner?.email ? `${state.partner.email} · ` : ''}{state?.partner?.userId ? 'connected' : 'invited'}</small></span></div></div>
     <div className="household-shared-gear"><Wrench size={19}/><span><b>Shared gear</b><small>Both people can view, add, edit and service the same equipment records.</small></span><Check size={18}/></div>
     <h3>Allow {state?.partner?.displayName ?? 'the other person'} to view</h3>
     <div className="household-permissions">{HOUSEHOLD_AREAS.map(([area,label]) => { const enabled = Boolean(state?.shares.find((share) => share.area === area)?.canView); return <label key={area}><input type="checkbox" checked={enabled} disabled={!state} onChange={(event) => void change(area,event.target.checked)}/><span><b>{label}</b><small>{enabled ? (area==='albums'?'Shared editing & uploads':'Shared read-only · copying allowed') : 'Private'}</small></span></label>; })}</div>
@@ -728,7 +736,8 @@ const DEFAULT_DASHBOARD_AWARDS = [
   'nightDives',
   'boatDives',
 ];
-const DEFAULT_NEWSLETTER_EMAIL = 'zeustekdivenews@gmail.com';
+// The dedicated mailbox comes from private saved settings/status, never public client source.
+const DEFAULT_NEWSLETTER_EMAIL = '';
 
 function ConfigurationPreferenceCard({domain}:{domain:ConfigurationDomain}) {
   const [record,setRecord]=useState<Stored<DashboardSettingsRecord>|null>(null);
@@ -798,11 +807,7 @@ function Overview({
     .filter((person) => hasPersonRole(person, 'buddy') && buddyCounts.has(person.entityId))
     .sort((a, b) => (buddyCounts.get(b.entityId) ?? 0) - (buddyCounts.get(a.entityId) ?? 0) || a.name.localeCompare(b.name))[0] ?? null;
   const topBuddy = people.find((person) => person.entityId === ownerProfile?.preferredTopBuddyPersonId) ?? derivedTopBuddy;
-  const nextTrip = [...trips]
-    .filter((trip) => trip.status !== 'completed')
-    .sort((a, b) =>
-      (a.startDate || '9999').localeCompare(b.startDate || '9999'),
-    )[0];
+  const nextTrip = selectUpcomingTrip(trips);
   const nextSite = nextTrip
     ? sites.find((site) => site.entityId === nextTrip.siteId) ??
       sites.find(
@@ -4361,13 +4366,14 @@ function DiveNewsV2() {
     }catch(error){appendApplicationDiagnostic('news-error');setStatus(error instanceof Error?error.message:'News refresh failed. Cached stories remain available.');}
     finally{requestBusy.current=false;setBusy(false);}
   },[refreshLocalNews,gmail?.syncMode]);
-  const showSyncResult=(run:GmailSyncRun)=>setStatus(run.status==='completed'?`Mailbox sync completed: ${run.imported} imported, ${run.updated} updated, ${run.unchanged} unchanged${run.hasMore?' · 100-message limit reached; more remain in the 90-day window':''}.`:`${run.diagnostic?.message??'Mailbox sync is in progress.'} ${run.diagnostic?.remedy??'Refresh connection status before starting another run.'}`);
-  async function syncMailbox(){
-    if(gmail?.syncMode==='disabled'){setStatus(GMAIL_SYNC_DISABLED_MESSAGE);return;}
+  const showSyncResult=(run:GmailSyncRun)=>setStatus(run.status==='completed'?`Mailbox sync completed: ${run.imported} imported, ${run.updated} updated, ${run.unchanged} unchanged${run.hasMore?' · 100-message limit reached; more remain in the 90-day window':''}.`:`${run.diagnostic?.message??'Mailbox sync is in progress.'} ${run.diagnostic?.remedy??'Refresh connection status before starting another run.'} ${run.diagnostic?gmailDiagnosticEvidenceLabel(run.diagnostic):''}`);
+  async function syncMailbox(acceptance=false){
+    if(acceptance&&!gmail?.acceptanceRunId){setStatus('No unconsumed authorised acceptance run is available. Refresh connection status.');return;}
+    if(gmail?.syncMode==='disabled'&&!acceptance){setStatus(GMAIL_SYNC_DISABLED_MESSAGE);return;}
     if(requestBusy.current)return;requestBusy.current=true;setBusy(true);
     const key=`gmail-pending-run:${currentDiveAccount()}`;
     try{
-      pendingRun.current=pendingRun.current??sessionStorage.getItem(key)??crypto.randomUUID();sessionStorage.setItem(key,pendingRun.current);
+      pendingRun.current=acceptance?gmail!.acceptanceRunId!:pendingRun.current??sessionStorage.getItem(key)??crypto.randomUUID();sessionStorage.setItem(key,pendingRun.current);
       const response=await fetch('/api/gmail/sync',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({runId:pendingRun.current})});
       const result=await response.json() as GmailSyncRun & {error?:string};
       if(!response.ok)throw new Error(result.error??'Mailbox sync could not be confirmed.');
@@ -4460,7 +4466,7 @@ function DiveNewsV2() {
       <aside className="news-sidebar"><Card><span className="focus-eyebrow">NEWSLETTERS</span><h2>Email reading list</h2><button type="button" className="newsletter-inbox" onClick={() => void copyText(newsletterEmail, 'Newsletter email copied to the clipboard.')}><Newspaper size={18}/><span><small>Dedicated newsletter inbox · click to copy</small><b>{newsletterEmail}</b></span>{copied ? <Check size={18}/> : <Copy size={18}/>}</button><p className="focus-copy">Use this address when subscribing to the newsletters below.</p>
         {!gmail?.configured && <div className="newsletter-connection-note"><b>Google connection needs one setup step</b>{Boolean(gmail?.missing.length)&&<p>Missing server configuration: {gmail?.missing.join(', ')}.</p>}<p>Create a Google Web OAuth client with the Gmail API enabled, add this authorised redirect URI, then supply its client ID and client secret to the site.</p><button className="copy-value" onClick={() => gmail?.redirectUri && void copyText(gmail.redirectUri, 'Google redirect URI copied.')}><span>{gmail?.redirectUri || 'Loading redirect URI…'}</span><Copy size={14}/></button><small>The dashboard requests read-only Gmail access. It cannot send, change or delete email.</small></div>}
         {gmail?.configured && !gmail.connected && <div className="gmail-connect-panel"><b>Newsletter Gmail is ready to connect</b><p>Google will show exactly which account and read-only permission the dashboard is requesting.</p><button className="focus-primary" disabled={busy} onClick={() => void connectGmail()}>Connect Gmail</button></div>}
-        {gmail?.connected && <div className="gmail-connected-panel"><div><Check size={16}/><span><b>{gmail.email}</b><small>{gmail.lastSyncAt ? `Last checked ${new Date(gmail.lastSyncAt).toLocaleString()} · ${gmail.lastSyncCount} emails` : 'Ready for its first check'}</small></span></div>{gmail.lastError && <p>{gmail.lastError}</p>}<p>{gmail.syncMode==='disabled'?GMAIL_SYNC_DISABLED_MESSAGE:'Sync runs only when you select it. Gmail access is read-only; no mail is sent, changed or deleted.'}</p>{gmail.diagnostic&&<p role="alert">{gmail.diagnostic.remedy}</p>}{gmail.reconnectRequired&&<button className="focus-primary" onClick={()=>void connectGmail()}>Reconnect Gmail</button>}<div><button className="focus-secondary" disabled={busy||gmail.syncMode==='disabled'||gmail.reconnectRequired||Boolean(gmail.lastRun&&['running','uncertain'].includes(gmail.lastRun.status))} onClick={() => void syncMailbox()}>Sync newsletter mailbox</button><button className="focus-secondary" disabled={busy} onClick={()=>void refreshConnection()}>Refresh connection status</button><button className="focus-secondary danger" disabled={busy} onClick={() => setDisconnecting(true)}>Disconnect</button></div></div>}
+        {gmail?.connected && <div className="gmail-connected-panel"><div><Check size={16}/><span><b>{gmail.email}</b><small>{gmail.lastSyncAt ? `Last checked ${new Date(gmail.lastSyncAt).toLocaleString()} · ${gmail.lastSyncCount} emails` : gmail.lastRun?.status==='failed'?'Last attempt failed · sync is not verified':gmail.lastRun?.status==='uncertain'?'Last outcome unconfirmed':'No successful check recorded'}</small></span></div>{gmail.lastError && <p>{gmail.lastError}</p>}<p>{gmail.syncMode==='disabled'?GMAIL_SYNC_DISABLED_MESSAGE:'Sync runs only when you select it. Gmail access is read-only; no mail is sent, changed or deleted.'}</p>{gmail.diagnostic&&<p role="alert">{gmail.diagnostic.remedy} {gmailDiagnosticEvidenceLabel(gmail.diagnostic)}</p>}{gmail.reconnectRequired&&<button className="focus-primary" onClick={()=>void connectGmail()}>Reconnect Gmail</button>}<div>{gmail.acceptanceRunId&&<button className="focus-primary" disabled={busy} onClick={()=>void syncMailbox(true)}>Run authorised Gmail acceptance once (90 days / 100 messages)</button>}<button className="focus-secondary" disabled={busy||gmail.syncMode==='disabled'||gmail.reconnectRequired||Boolean(gmail.lastRun&&['running','uncertain'].includes(gmail.lastRun.status))} onClick={() => void syncMailbox()}>Sync newsletter mailbox</button><button className="focus-secondary" disabled={busy} onClick={()=>void refreshConnection()}>Refresh connection status</button><button className="focus-secondary danger" disabled={busy} onClick={() => setDisconnecting(true)}>Disconnect</button></div></div>}
         {newsletters.map((source) => <a key={source.entityId} className="newsletter-link" href={source.url} target="_blank" rel="noreferrer"><b>{source.name}</b><small>{source.description}</small><ExternalLink size={14}/></a>)}</Card>
         <Card className="news-priority-settings"><span className="focus-eyebrow">NEWS PRIORITY</span><h2>What matters to you</h2><p className="focus-copy">Use commas between words or phrases. Matches in headlines rank highest.</p>{learnedProfile.ratingCount > 0 && <div className="learned-news-profile"><b>Learning from {learnedProfile.ratingCount} rating{learnedProfile.ratingCount === 1 ? '' : 's'}</b>{learnedProfile.liked.length > 0 && <small>More: {learnedProfile.liked.join(', ')}</small>}{learnedProfile.avoided.length > 0 && <small>Less: {learnedProfile.avoided.join(', ')}</small>}</div>}<label>Interested in<textarea value={interestedText} onChange={(event) => setInterestedText(event.target.value)} placeholder="wrecks, technical diving, Red Sea, equipment reviews"/></label><label>Not interested in<textarea value={mutedText} onChange={(event) => setMutedText(event.target.value)} placeholder="competitions, freediving"/></label><label>When a muted keyword matches<select value={mutedMode} onChange={(event) => setMutedMode(event.target.value as NewsPreferencesRecord['mutedMode'])}><option value="hide">Hide the story</option><option value="deprioritize">Move it to the bottom</option></select></label><button className="focus-primary" onClick={() => void savePrioritySettings()}>Save priorities</button></Card>
       </aside></div>
@@ -4566,18 +4572,18 @@ function DiverSummaryExport(){
   const toggleSection=(key:keyof typeof sections)=>setSections(current=>({...current,[key]:!current[key]}));
   const toggleId=(setter:React.Dispatch<React.SetStateAction<Set<string>>>,id:string,checked:boolean)=>setter(current=>{const next=new Set(current);if(checked)next.add(id);else next.delete(id);return next;});
   function saveBlob(blob:Blob,extension:string){const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=`zeustek-diver-summary-${new Date().toISOString().slice(0,10)}.${extension}`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  async function renderedCard(image:CardImage){const source=await imageSource(image,currentDiveAccount());if(!source)return null;try{const response=await fetch(source);if(!response.ok)return null;const blob=await response.blob();const bitmap=await createImageBitmap(blob);const width=952,height=600;const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d');if(!context)return null;context.fillStyle='#111';context.fillRect(0,0,width,height);const scale=Math.max(width/bitmap.width,height/bitmap.height)*image.zoom;const drawWidth=bitmap.width*scale,drawHeight=bitmap.height*scale;context.drawImage(bitmap,(width-drawWidth)*(image.x/100),(height-drawHeight)*(image.y/100),drawWidth,drawHeight);bitmap.close();const output=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));return output?{bytes:new Uint8Array(await output.arrayBuffer()),type:'jpg' as const,width,height}:null;}finally{if(source.startsWith('blob:'))URL.revokeObjectURL(source);}}
+  const renderedCard=(image:CardImage)=>renderSummaryCard(image,()=>imageSource(image,currentDiveAccount()));
   async function exportFile(format:'pdf'|'docx'|'txt'|'csv'|'json'){
     if(busy)return;setBusy(format);setMessage('Preparing selected records…');
     try{const document=buildDiverSummary({name:diverName.trim(),generatedAt:new Date().toISOString(),options:sections,dives:chosenDives,certifications:chosenCertifications,equipment:chosenGear});
-      const images=sections.cards&&sections.certifications?await collectSummaryImages(chosenCertifications.flatMap(cert=>[...(cert.cardFront?[{label:`${cert.agency} ${cert.certification} Front`,load:()=>renderedCard(cert.cardFront!)}]:[]),...(cert.cardBack?[{label:`${cert.agency} ${cert.certification} Back`,load:()=>renderedCard(cert.cardBack!)}]:[])])):{images:[],warnings:[]};
+      const images=(format==='pdf'||format==='docx')&&sections.cards&&sections.certifications?await collectSummaryImages(chosenCertifications.flatMap(cert=>[...(cert.cardFront?[{label:`${cert.agency} ${cert.certification} Front`,load:()=>renderedCard(cert.cardFront!)}]:[]),...(cert.cardBack?[{label:`${cert.agency} ${cert.certification} Back`,load:()=>renderedCard(cert.cardBack!)}]:[])])):{images:[],warnings:[],failures:{}};
       if(format==='pdf')saveBlob(new Blob([new Uint8Array(await renderSummaryPdf(document,images.images)).buffer as ArrayBuffer],{type:'application/pdf'}),format);
       else if(format==='docx')saveBlob(new Blob([new Uint8Array(await renderSummaryDocx(document,images.images)).buffer as ArrayBuffer],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),format);
       else saveBlob(new Blob([format==='txt'?summaryText(document):format==='csv'?summaryCsv(document):summaryJson(document)],{type:format==='json'?'application/json':format==='csv'?'text/csv;charset=utf-8':'text/plain;charset=utf-8'}),format);
-      setMessage(`${format.toUpperCase()} downloaded.${images.warnings.length?` ${images.warnings.length} card image(s) unavailable; certification text was retained.`:''}`);
+      setMessage(`${format.toUpperCase()} downloaded.${images.warnings.length?` ${images.warnings.length} card image(s) unavailable (${Object.entries(images.failures??{}).map(([stage,count])=>`${stage}: ${count}`).join(', ')}); certification text was retained.`:''}`);
     }catch{setMessage('The export could not be prepared. Your records were not changed; try another format or review selected images.');}finally{setBusy('');}
   }
-  return <div className="diver-summary"><Card><span className="focus-eyebrow">OWNER-SELECTED EXPORT</span><h2>Diver summary export</h2><p className="focus-copy">Select the records and fields to include. The same selection is used for every format.</p><label>Diver name<input value={diverName} onChange={event=>setDiverName(event.target.value)} placeholder="Name shown on the document"/></label><fieldset><legend>Include sections</legend>{([['summary','Dive totals'],['types','Dive types and activities'],['deep','Depth experience'],['certifications','Certification details'],['equipment','Equipment'],['logs','Selected Dive log']] as const).map(([key,label])=><label key={key}><input type="checkbox" checked={sections[key]} onChange={()=>toggleSection(key)}/>{label}</label>)}<label><input type="checkbox" disabled={!sections.certifications} checked={sections.certificationNumbers} onChange={()=>toggleSection('certificationNumbers')}/>Include certification numbers</label><label htmlFor="summary-card-images"><input id="summary-card-images" type="checkbox" disabled={!sections.certifications} checked={sections.cards} onChange={()=>toggleSection('cards')}/>Include certification card images in PDF/DOCX</label></fieldset><div className="record-actions">{(['pdf','docx','txt','csv','json'] as const).map(format=><button key={format} className={format==='pdf'?'focus-primary':'focus-secondary'} disabled={Boolean(busy)} onClick={()=>void exportFile(format)}><Download size={16}/>{busy===format?'Preparing…':`Download ${format.toUpperCase()}`}</button>)}</div>{message&&<p role="status" className="focus-notice">{message}</p>}</Card>
+  return <div className="diver-summary"><Card><span className="focus-eyebrow">OWNER-SELECTED EXPORT</span><h2>Diver summary export</h2><p className="focus-copy">Select the records and fields to include. The same selection is used for every format.</p><label>Diver name<input value={diverName} onChange={event=>setDiverName(event.target.value)} placeholder="Name shown on the document"/></label><fieldset><legend>Include sections</legend>{([['summary','Dive totals'],['types','Dive types and activities'],['deep','Depth experience'],['certifications','Certification details'],['equipment','Equipment'],['logs','Selected Dive log']] as const).map(([key,label])=><label key={key}><input type="checkbox" checked={sections[key]} onChange={()=>toggleSection(key)}/>{label}</label>)}<label><input type="checkbox" disabled={!sections.certifications} checked={sections.certificationNumbers} onChange={()=>toggleSection('certificationNumbers')}/>Include certification numbers</label><label htmlFor="summary-card-images"><input id="summary-card-images" type="checkbox" disabled={!sections.certifications} checked={sections.cards} onChange={()=>toggleSection('cards')}/>Include certification card images in PDF/DOCX</label>{sections.cards&&<p className="focus-copy">Card images may show certification numbers or other information omitted from the exported text. Review each selected image before sharing.</p>}</fieldset><div className="record-actions">{(['pdf','docx','txt','csv','json'] as const).map(format=><button key={format} className={format==='pdf'?'focus-primary':'focus-secondary'} disabled={Boolean(busy)} onClick={()=>void exportFile(format)}><Download size={16}/>{busy===format?'Preparing…':`Download ${format.toUpperCase()}`}</button>)}</div>{message&&<output className="focus-notice">{message}</output>}</Card>
     <div className="diver-summary-selectors"><Card><div className="focus-card-head"><div><span className="focus-eyebrow">CERTIFICATIONS</span><h3>{selectedCertIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedCertIds(new Set(certifications.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedCertIds(new Set())}>None</button></div></div><div className="summary-check-list">{certifications.map(cert=><label key={cert.entityId}><input type="checkbox" checked={selectedCertIds.has(cert.entityId)} onChange={event=>toggleId(setSelectedCertIds,cert.entityId,event.target.checked)}/><span><b>{cert.certification}</b><small>{cert.agency}</small></span></label>)}</div></Card>
       <Card><div className="focus-card-head"><div><span className="focus-eyebrow">EQUIPMENT</span><h3>{selectedGearIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedGearIds(new Set(equipment.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedGearIds(new Set())}>None</button></div></div><div className="summary-check-list">{equipment.map(gear=><label key={gear.entityId} aria-label={`Select ${gear.name}`}><input type="checkbox" checked={selectedGearIds.has(gear.entityId)} onChange={event=>toggleId(setSelectedGearIds,gear.entityId,event.target.checked)}/><span><b>{gear.name}</b><small>{gear.category}</small></span></label>)}</div></Card>
       <Card><div className="focus-card-head"><div><span className="focus-eyebrow">DIVES</span><h3>{selectedDiveIds.size} selected</h3></div><div className="record-actions"><button onClick={()=>setSelectedDiveIds(new Set(dives.map(row=>row.entityId)))}>All</button><button onClick={()=>setSelectedDiveIds(new Set())}>None</button></div></div><div className="summary-check-list dive-list">{dives.map(dive=><label key={dive.entityId}><input type="checkbox" checked={selectedDiveIds.has(dive.entityId)} onChange={event=>toggleId(setSelectedDiveIds,dive.entityId,event.target.checked)}/><span><b>#{dive.diveNumber??'—'} · {dive.site}</b><small>{dive.date} · {dive.maxDepthM??'—'} m · {dive.totalElapsedMin??dive.bottomTimeMin??'—'} min</small></span></label>)}</div></Card></div></div>;

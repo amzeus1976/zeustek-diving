@@ -55,7 +55,7 @@ function AnalysisVisual({card,data,environmentFocus,changeEnvironment,go}:{card:
     card.visualization==='line'?<LineChart data={rows} margin={{top:10,right:10,bottom:10,left:0}}>{axes}<Line type="linear" dataKey="value" name={data.unit} stroke="#15c7ec" strokeWidth={2} dot={{r:3}} connectNulls={false}/></LineChart>:
       card.visualization==='donut'?<PieChart><Pie data={rows.map((row,index)=>({...row,fill:palette[index%palette.length]!}))} dataKey="value" nameKey="label" innerRadius="45%" outerRadius="75%"/>{tooltip}</PieChart>:
         <ScatterChart margin={{top:10,right:15,bottom:20,left:5}}><CartesianGrid stroke="#294651"/><XAxis type="number" dataKey="x" domain={['dataMin','dataMax']} name={numericX?'Duration':'Date'} unit={numericX?' min':''} tick={{fill:'#abcbd9',fontSize:10}} tickFormatter={numericX?value=>String(value):value=>new Date(Number(value)).toISOString().slice(5,10)}/><YAxis type="number" dataKey="value" name={data.unit} tick={{fill:'#abcbd9',fontSize:10}}/>{tooltip}<Scatter data={rows.filter(row=>Number.isFinite(row.x))} fill="#ffab50"/></ScatterChart>;
-  return <><div className={styles.chart} aria-hidden="true"><ResponsiveContainer width="100%" height="100%">{plot}</ResponsiveContainer></div>
+  return <><div className={styles.chart} aria-hidden="true"><ResponsiveContainer initialDimension={{width:320,height:200}} width="100%" height="100%">{plot}</ResponsiveContainer></div>
     {environment&&<ul className={styles.legend}>{rows.map(row=><li key={row.id}><button aria-pressed={environmentFocus===row.id} onClick={()=>changeEnvironment(row.id)}>{row.label} · {row.value}</button></li>)}</ul>}
     <details><summary>Accessible data table</summary>{table}</details></>;
 }

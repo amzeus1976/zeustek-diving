@@ -7,6 +7,15 @@
       "approvedSha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a",
       "scope": "Cylinder ID allocation uses the first free two-digit ID; gas, NDL, MOD, PPO2, time and reserve calculations are unchanged.",
       "ownerApproval": "2026-09-25 explicit bounded CALCULATION_TOUCHPOINT approval in this task"
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "originalSha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a",
+      "approvedSha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "scope": "Exactly the two reviewed ID-policy hunks: no inventory-read repair; explicit profile saves serialised. All retained source lines and gas/NDL/MOD/reserve formulas unchanged.",
+      "ownerApproval": "2026-10-02 direct reply: Approve the exact #86 protected-file diff",
+      "reviewedPatch": "docs/t14/cylinder-read-policy-proposed.patch",
+      "patchApplication": "Original patch CRLF/context did not apply with git apply; unique textual hunk matching preserved every retained byte."
     }
   ],
   "files": [
@@ -37,8 +46,8 @@
     },
     {
       "path": "lib/offline/loadouts-gas.ts",
-      "sha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a",
-      "workingTreeSha256": "baf89475637c4fe92bb0d2cbab97c52d673c037258b24254c65d64ea6d17948a"
+      "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "workingTreeSha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5"
     },
     {
       "path": "lib/gas-rates.ts",

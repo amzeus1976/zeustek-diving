@@ -316,3 +316,9 @@
 .editorContent footer {
   flex-wrap: wrap;
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.hero{background:var(--zt-surface)}
+.toolbar input,.toolbar select,.fields input,.fields select,.fields textarea,.fullLabel textarea{background:var(--zt-bg);border-radius:var(--zt-radius-md)}
+.actions button{background:var(--zt-surface-2);border-color:var(--zt-border);border-radius:var(--zt-radius-md)}
+.statGrid>div{border-radius:var(--zt-radius-md)}

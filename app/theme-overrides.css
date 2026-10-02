@@ -12,21 +12,21 @@
   --danger: #ff453a;
   --warning: #ffd60a;
   --focus: #ff9f4a;
-  --zt-surface-page: #080808;
-  --zt-surface-card: #0b1418;
-  --zt-surface-raised: #111b20;
-  --zt-border-cyan: rgba(0, 190, 242, 0.34);
-  --zt-border-muted: rgba(174, 213, 226, 0.18);
-  --zt-accent-cyan: #21c8f2;
-  --zt-accent-orange: #ff8a00;
+  --zt-surface-page: var(--zt-bg);
+  --zt-surface-card: var(--zt-surface);
+  --zt-surface-raised: var(--zt-surface-2);
+  --zt-border-cyan: var(--zt-border-strong);
+  --zt-border-muted: var(--zt-border);
+  --zt-accent-cyan: var(--zt-aqua);
+  --zt-accent-orange: var(--zt-accent);
   --zt-accent-yellow: #ffe11a;
-  --zt-text: #f4fbfd;
-  --zt-text-muted: #adc0c8;
+  --zt-text: #f7f7f7;
+  --zt-text-muted: #b8b8b8;
   --zt-ready: #58e3a4;
   --zt-caution: #ffc15c;
   --zt-blocked: #ff776d;
   --zt-focus: #00d8ff;
-  --zt-radius-card: 14px;
+  --zt-radius-card: var(--zt-radius-lg);
   --zt-target: 44px;
 }
 
@@ -54,7 +54,7 @@
   border-radius: 999px;
   background: var(--zt-surface-raised);
   color: var(--zt-text-muted);
-  font-size: 0.75rem;
+  font-size: 1rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }

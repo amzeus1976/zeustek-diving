@@ -196,3 +196,9 @@
     display: grid;
   }
 }
+
+/* T14 approved domain surfaces; functional states and artwork retained. */
+.event,.form,.resolveBox{background:var(--zt-surface);border-radius:var(--zt-radius-lg)}
+.form input,.form select,.form textarea,.resolveBox input,.resolveBox textarea,.filters select{border-radius:var(--zt-radius-md)}
+.badge{color:var(--brand-primary)}
+.filters button[aria-pressed='true']{border-color:var(--brand-primary);color:var(--brand-primary)}
