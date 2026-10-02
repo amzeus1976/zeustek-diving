@@ -198,37 +198,7 @@ function firstAvailableCylinderId(used: Set<number>) {
 }
 let cylinderIdAssignmentQueue: Promise<void> = Promise.resolve();
 
-async function ensureCylinderIds() {
-  cylinderIdAssignmentQueue = cylinderIdAssignmentQueue.then(async () => {
-    const inventory = (await readCylinderInventory()).sort((left, right) =>
-      `${left.createdAt ?? ''}:${left.entityId}`.localeCompare(`${right.createdAt ?? ''}:${right.entityId}`),
-    );
-    const reserved = new Set(inventory.map((item) => cylinderIdNumber(item.cylinderNumber)).filter((value): value is number => value != null));
-    const seen = new Set<number>();
-    const repairs: Array<{ item: InventoryCylinder; cylinderNumber: string }> = [];
-    for (const item of inventory) {
-      const parsed = cylinderIdNumber(item.cylinderNumber);
-      if (parsed != null && !seen.has(parsed)) {
-        seen.add(parsed);
-        const normalised = formatCylinderId(parsed);
-        if (item.cylinderNumber !== normalised) repairs.push({ item, cylinderNumber: normalised });
-        continue;
-      }
-      const available = firstAvailableCylinderId(reserved);
-      reserved.add(available);
-      seen.add(available);
-      repairs.push({ item, cylinderNumber: formatCylinderId(available) });
-    }
-    for (const { item, cylinderNumber } of repairs) {
-      const { recordStorageKind, ...record } = item;
-      await saveRecord(recordStorageKind, { ...record, entityId: item.entityId, cylinderNumber });
-    }
-  });
-  await cylinderIdAssignmentQueue;
-}
-
 export async function listCylinderInventory() {
-  await ensureCylinderIds();
   return readCylinderInventory();
 }
 export const listCylinderFills = () => listRecords<CylinderFillRecord>('cylinder-fill');
@@ -418,7 +388,14 @@ export async function saveGasAnalysis(input: Omit<GasAnalysisRecord, 'createdAt'
   });
 }
 
-export async function saveCylinderProfile(
+/** Explicit saves allocate IDs serially; reading inventory never repairs records. */
+export function saveCylinderProfile(input: Parameters<typeof saveCylinderProfileInternal>[0]) {
+  const work = cylinderIdAssignmentQueue.then(() => saveCylinderProfileInternal(input));
+  cylinderIdAssignmentQueue = work.then(() => undefined, () => undefined);
+  return work;
+}
+
+async function saveCylinderProfileInternal(
   input: Partial<CylinderEquipmentRecord> & Pick<CylinderEquipmentRecord, 'name'> & { entityId?: string },
 ) {
   if (!input.name.trim()) throw new Error('Enter a cylinder name.');
