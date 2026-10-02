@@ -67,4 +67,3 @@ Every acceptance item needs authoritative evidence. Existing 996 tests and six-w
 ## Exact next steps
 
 Complete current test-first local work and save its evidence. Submit/review the concrete #50/#54 plans before those feature edits. Continue independently permitted Task5/provider work while approvals are pending. Revalidate current live/app/branch before release; no Gmail run, real publication, key issuance or frozen-byte change is inferred from broad goal access.
-

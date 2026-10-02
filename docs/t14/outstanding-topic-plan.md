@@ -42,4 +42,3 @@ Run all retained regression, typecheck/build/PWA/lint/security/privacy/owner-dat
 ## Proposed decision
 
 Approve this read-only canonical Topic Explorer slice. A graph that invents semantic relationships, autonomous factual content, new private-data indexing and new stores are outside the request. The card remains optional in the owner’s existing layout.
-

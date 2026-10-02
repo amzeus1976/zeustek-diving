@@ -51,4 +51,3 @@ Production smoke leaves real links/profile content unpublished unless the owner 
 ## Proposed decision
 
 Approve the snapshot + anyone-with-link first slice, including expiry/revoke/regenerate and the bounded attachment gate. Explicitly defer optional live/password/encrypted modes and visitor analytics to named later designs. Real content publication remains a separate approval.
-
