@@ -2,7 +2,17 @@
 
 Read the newest dated checkpoint first. All lower release checkpoints are retained as history and must not be treated as current production or next-step instructions.
 
-## Current issue #57 additive candidate (2026-09-25)
+## Current site audit/backlog checkpoint (2026-10-02)
+
+The seven owner-requested brand/usability/Gmail/export/feature research tasks are delivered in [audits/2026-10-02-review.md](audits/2026-10-02-review.md). Branch `audit/2026-10-02-brand-ux-exports` preserves the accepted application source and adds documentation only. Current production is **app1.0.70 / Sites141**, deployment `appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2`, published source `7fcb27ac2fa96d44d06de01e3ce91e58320f646c`. GitHub main `bb6cae3a4d5537f20db9d3a80c4a4eca3b647a51` has the same tree `9ac0cd710e1200419984f15423e7b1bafd483131`. The older Sites140/#57 candidate text below is historical, not an instruction to deploy again.
+
+Eleven findings are filed as #73–#80 and #85–#87; four researched requests as #81–#84; bounded Gmail diagnosis is added to #55. Portals #60/#61 and share architecture #50 are linked. Full retained regression **888/888**, 144 files, and typecheck pass; all nine hashes match the approved manifest. No app/schema/calculation/credential change, deployment, GitHub product push or Gmail operation occurred.
+
+Data-safety exception: before/after 6,485 owner records have zero additions/removals, but one cylinder changed display number **03→02** plus timestamps during inventory browsing. Current `listCylinderInventory` silently persists duplicate-ID repairs; the initial data had two 03 numbers. All other content/timestamps and eight legacy Person/entity links remain unchanged. See #86 and the evidence ledger; do not claim zero owner delta or reverse/renumber without direction. No synthetic production record or manual cylinder save was made.
+
+Next work is triage/review of the filed issues, especially #86 data safety and #75/#76/#77/#87 export/source/mobile defects. Public/API requests are researched designs, not implemented capabilities or access authorisation. Gmail stays disabled and another live attempt still requires separate authorisation. Private audit downloads/screenshots stay under ignored work; DOCX visual layout was not certified because a renderer is unavailable.
+
+## Historical issue #57 additive candidate (2026-09-25; superseded by Sites141)
 
 Accepted production is **app1.0.69 / Sites140**, deployment `appgdep_6ab6bd476a648191a37a2978970db305`, published application commit `32ceca4c073e3d0ab259d16790ebd294a5a95627`. PR [#70](https://github.com/amzeus1976/zeustek-diving/pull/70) merged to GitHub main `c063306f5396077aabe15d2fa6a0b72b5db96707`, whose tree `e1cfb6feaeca21cd9ede870edf5de65431ef78b7` exactly matches the published application. Sites140 is the current rollback target. Issue #63 is closed. Its live release had no new console errors or page overflow, and all 6,435 owner IDs/content/timestamps matched the pre-release fingerprint (`994c86268971903af6d59fe4b43e337f1f68e3244744063e34f5ee4d0a2e6bca`), including 66 Dives and one Gas Plan. Gmail sync remains disabled and was not repeated.
 
