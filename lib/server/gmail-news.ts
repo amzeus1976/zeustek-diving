@@ -296,17 +296,37 @@ export function gmailCallbackUri(requestUrl: string) {
   return `${['localhost', '127.0.0.1'].includes(url.hostname) ? url.origin : 'https://dive.amzeus.co.uk'}/api/gmail/callback`;
 }
 async function googleJson<T>(url:string,init?:RequestInit,phase:GmailDiagnosticPhase='token_exchange'):Promise<T> {
+  let signal:AbortSignal;
+  let request:Request;
+  try {
+    signal=AbortSignal.timeout(20_000);
+    request=new Request(url,{...init,signal,redirect:'manual'});
+  } catch {
+    throw new GmailError('upstream_failure',{version:2,phase,kind:'validation',requestStage:'request_setup'});
+  }
+  const timedOut=(error:unknown)=>signal.aborted || error instanceof Error && error.name==='TimeoutError';
   let response:Response;
-  try{response=await fetch(url,{...init,signal:AbortSignal.timeout(20_000),redirect:'error'});}
-  catch{throw new GmailError('upstream_failure',{version:1,phase,kind:'transport'});}
+  try{response=await fetch(request);}
+  catch(error){throw new GmailError(timedOut(error)?'request_timeout':'upstream_failure',{version:2,phase,kind:'transport',requestStage:'fetch'});}
+  // Workers handles redirects manually; reject them without reading a destination or forwarding credentials.
+  if(response.status>=300&&response.status<400){
+    try{await response.body?.cancel();}catch{/* Cleanup cannot replace the bounded redirect evidence. */}
+    throw new GmailError('upstream_failure',{version:2,phase,kind:'http',requestStage:'fetch',httpStatus:response.status});
+  }
   let body:(T&{error?:string|{errors?:Array<{reason?:string}>;status?:string}})|null;
   try{body=await response.json();}
-  catch{throw new GmailError(response.ok?'upstream_failure':gmailFailure(response.status,'').code,{version:1,phase,kind:response.ok?'parsing':'http',httpStatus:response.status});}
+  catch(error){
+    const timeout=timedOut(error);
+    const malformed=error instanceof SyntaxError;
+    throw new GmailError(timeout?'request_timeout':malformed&&!response.ok?gmailFailure(response.status,'').code:'upstream_failure',{
+      version:2,phase,kind:timeout||!malformed?'transport':response.ok?'parsing':'http',requestStage:'response_body',httpStatus:response.status,
+    });
+  }
   if(!response.ok){
     const reason=typeof body?.error==='string'?body.error:(body?.error?.errors?.[0]?.reason??body?.error?.status??'');
-    throw new GmailError(gmailFailure(response.status,typeof reason==='string'?reason:'').code,{version:1,phase,kind:'http',httpStatus:response.status});
+    throw new GmailError(gmailFailure(response.status,typeof reason==='string'?reason:'').code,{version:2,phase,kind:'http',requestStage:'response_body',httpStatus:response.status});
   }
-  if(!body||typeof body!=='object'||Array.isArray(body))throw new GmailError('upstream_failure',{version:1,phase,kind:'validation',httpStatus:response.status});
+  if(!body||typeof body!=='object'||Array.isArray(body))throw new GmailError('upstream_failure',{version:2,phase,kind:'validation',requestStage:'response_body',httpStatus:response.status});
   return body;
 }
 async function tokenRequest(env:GmailRuntimeEnv,parameters:URLSearchParams,phase:GmailDiagnosticPhase='token_exchange') {

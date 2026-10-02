@@ -71,7 +71,7 @@ import {applySettingsPatch,type ConfigurationDomain} from '@/lib/admin/configura
 import {buildDiverSummary,summaryText,summaryCsv,summaryJson,type SummaryOptions} from '@/lib/exports/diver-summary';
 import {renderSummaryPdf,renderSummaryDocx,collectSummaryImages} from '@/lib/exports/summary-documents';
 import {safeDiagnostic,retainDiagnostics,diagnosticCsv,diagnosticJson,type DiagnosticEntry} from '@/lib/admin/diagnostics';
-import {GMAIL_SYNC_DISABLED_MESSAGE,gmailDiagnostic,gmailDiagnosticEvidenceLabel,type GmailDiagnosticCode,type GmailConnectionStatus,type GmailSyncRun} from '@/lib/gmail-contract';
+import {GMAIL_SYNC_DISABLED_MESSAGE,gmailDiagnostic,gmailDiagnosticEvidenceLabel,normaliseGmailDiagnosticCode,type GmailConnectionStatus,type GmailSyncRun} from '@/lib/gmail-contract';
 import { groupNewsStories, canonicalUrl, recordIdentity } from '@/lib/record-identity';
 import { resolveDiveIconId, resolvePageIconId, resolveZeusTekIconId } from '@/lib/zeustek-icons';
 import {fillMissingGasRates} from '@/lib/gas-rates';
@@ -4394,7 +4394,7 @@ function DiveNewsV2() {
     void readConnection().then(connection=>{if(active&&!new URLSearchParams(window.location.search).has('gmailError'))setStatus(connection.syncMode==='disabled'?`Showing cached stories. ${GMAIL_SYNC_DISABLED_MESSAGE}`:'Showing cached stories. Refresh public feeds or explicitly sync the newsletter mailbox.');}).catch(error=>{if(active)setStatus(error instanceof Error?error.message:'Connection status unavailable.');});
     const query=new URLSearchParams(window.location.search);
     const error=query.get('gmailError');
-    if(error){const allowed=['missing_configuration','callback_mismatch','consent_denied','wrong_account','reconnect_required','insufficient_scope','rate_limited','upstream_failure','invalid_request'];const diagnostic=gmailDiagnostic(allowed.includes(error)?error as GmailDiagnosticCode:'upstream_failure');setStatus(`${diagnostic.message} ${diagnostic.remedy}`);}
+    if(error){const diagnostic=gmailDiagnostic(normaliseGmailDiagnosticCode(error));setStatus(`${diagnostic.message} ${diagnostic.remedy}`);}
     void listDashboardSettings().then(records=>{if(active)setNewsletterEmail(records[0]?.newsletterEmail??DEFAULT_NEWSLETTER_EMAIL);});
     return()=>{active=false;};
   },[readConnection]);

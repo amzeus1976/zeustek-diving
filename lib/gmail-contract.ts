@@ -13,12 +13,17 @@ export type GmailDiagnosticCode =
   | 'reconnect_required'
   | 'insufficient_scope'
   | 'rate_limited'
+  | 'request_timeout'
   | 'upstream_failure'
   | 'invalid_request'
   | 'sync_in_progress'
   | 'uncertain_outcome';
 export type GmailDiagnosticPhase='token_exchange'|'token_refresh'|'account_verification'|'message_listing'|'metadata_retrieval'|'parsing'|'persistence';
-export type GmailDiagnosticEvidence={version:1;phase:GmailDiagnosticPhase;kind:'http'|'transport'|'parsing'|'validation'|'storage';httpStatus?:number};
+export type GmailRequestStage = 'request_setup' | 'fetch' | 'response_body';
+type GmailEvidenceFields = {phase:GmailDiagnosticPhase;kind:'http'|'transport'|'parsing'|'validation'|'storage';httpStatus?:number};
+export type GmailDiagnosticEvidence = GmailEvidenceFields & (
+  {version:1} | {version:2;requestStage:GmailRequestStage}
+);
 export type GmailDiagnostic = {
   evidence?:GmailDiagnosticEvidence;
   code: GmailDiagnosticCode;
@@ -92,6 +97,11 @@ const details: Record<GmailDiagnosticCode, [string, string, boolean]> = {
     'Wait before starting another manual sync. Cached stories remain available.',
     false,
   ],
+  request_timeout: [
+    'The mailbox request exceeded its time limit.',
+    'Refresh connection status and inspect the recorded result. Cached stories remain available.',
+    false,
+  ],
   upstream_failure: [
     'The mailbox provider could not complete the request.',
     'Check connection status and the recorded sync result before retrying.',
@@ -119,25 +129,36 @@ export function gmailDiagnostic(code: GmailDiagnosticCode,evidence?:GmailDiagnos
 }
 
 const phases=['token_exchange','token_refresh','account_verification','message_listing','metadata_retrieval','parsing','persistence'] as const;
+const requestStages = ['request_setup', 'fetch', 'response_body'] as const;
 function safeGmailEvidence(value:unknown):GmailDiagnosticEvidence|null {
  if(!value||typeof value!=='object')return null;
  const row=value as Record<string,unknown>;
- if(row.version!==1||!phases.includes(row.phase as GmailDiagnosticPhase)||!['http','transport','parsing','validation','storage'].includes(String(row.kind)))return null;
- return {version:1,phase:row.phase as GmailDiagnosticPhase,kind:row.kind as GmailDiagnosticEvidence['kind'],...(typeof row.httpStatus==='number'&&Number.isInteger(row.httpStatus)&&row.httpStatus>=100&&row.httpStatus<=599?{httpStatus:row.httpStatus}:{})};
+ if(row.version!==1&&row.version!==2||!phases.includes(row.phase as GmailDiagnosticPhase)||!['http','transport','parsing','validation','storage'].includes(String(row.kind)))return null;
+ const fields:GmailEvidenceFields = {phase:row.phase as GmailDiagnosticPhase,kind:row.kind as GmailDiagnosticEvidence['kind'],...(typeof row.httpStatus==='number'&&Number.isInteger(row.httpStatus)&&row.httpStatus>=100&&row.httpStatus<=599?{httpStatus:row.httpStatus}:{})};
+ if(row.version===1)return {version:1,...fields};
+ if(row.version!==2||!requestStages.includes(row.requestStage as GmailRequestStage))return null;
+ return {version:2,...fields,requestStage:row.requestStage as GmailRequestStage};
+}
+export function isGmailDiagnosticCode(value:unknown):value is GmailDiagnosticCode {
+ return typeof value==='string'&&Object.prototype.hasOwnProperty.call(details,value);
+}
+export function normaliseGmailDiagnosticCode(value:unknown):GmailDiagnosticCode {
+ return isGmailDiagnosticCode(value)?value:'upstream_failure';
 }
 /** Rebuild from the allowlist: never echo stored/provider messages or unknown keys. */
 export function normaliseGmailDiagnostic(value:unknown):GmailDiagnostic|null {
  if(!value||typeof value!=='object')return null;
  const row=value as Record<string,unknown>;
- if(typeof row.code!=='string'||!Object.prototype.hasOwnProperty.call(details,row.code))return gmailDiagnostic('upstream_failure');
- return gmailDiagnostic(row.code as GmailDiagnosticCode,safeGmailEvidence(row.evidence)??undefined);
+ if(!isGmailDiagnosticCode(row.code))return gmailDiagnostic('upstream_failure');
+ return gmailDiagnostic(row.code,safeGmailEvidence(row.evidence)??undefined);
 }
 export function gmailDiagnosticEvidenceLabel(diagnostic:GmailDiagnostic|null|undefined) {
  const evidence=safeGmailEvidence(diagnostic?.evidence);
  if(!evidence)return 'Failure stage was not recorded for this result.';
  const labels:Record<GmailDiagnosticPhase,string>={token_exchange:'OAuth token exchange',token_refresh:'Token refresh',account_verification:'Account verification',message_listing:'Message listing',metadata_retrieval:'Metadata retrieval',parsing:'Message parsing',persistence:'Application persistence'};
  const kinds={http:'Provider response',transport:'Transport failure',parsing:'Response parsing',validation:'Invalid response or credential',storage:'Storage failure'};
- return `${labels[evidence.phase]} · ${kinds[evidence.kind]}${evidence.httpStatus?` · HTTP ${evidence.httpStatus}`:''}`;
+ const stages:Record<GmailRequestStage,string>={request_setup:'Request setup',fetch:'Fetch',response_body:'Response body'};
+ return `${labels[evidence.phase]} · ${kinds[evidence.kind]}${evidence.version===2?` · ${stages[evidence.requestStage]}`:''}${evidence.httpStatus?` · HTTP ${evidence.httpStatus}`:''}`;
 }
 
 export function normaliseGmailSyncRun(value:unknown):GmailSyncRun|null {

@@ -18,7 +18,7 @@ import {
   createOAuthState,
   consumeOAuthState,
 } from '../lib/server/gmail-news';
-import {normaliseGmailSyncRun,gmailDiagnosticEvidenceLabel} from '../lib/gmail-contract';
+import {normaliseGmailSyncRun,gmailDiagnosticEvidenceLabel,normaliseGmailDiagnosticCode} from '../lib/gmail-contract';
 let sqlite: DatabaseSync;
 function database() {
   const wrap = (sql: string, args: unknown[] = []) => ({
@@ -59,8 +59,9 @@ let issueRefresh = true;
 let mailbox = expected;
 let tokenError = '';
 let refreshedValue = 'fixture-refresh';
+const fixtureUrl = (input: string | URL | Request) => input instanceof Request ? input.url : String(input);
 let fetcher: Mock<
-  (input: string | URL, init?: RequestInit) => Promise<Response>
+  (input: string | URL | Request, init?: RequestInit) => Promise<Response>
 >;
 beforeEach(() => {
   sqlite = new DatabaseSync(':memory:');
@@ -68,8 +69,8 @@ beforeEach(() => {
   mailbox = expected;
   tokenError = '';
   refreshedValue = 'fixture-refresh';
-  fetcher = vi.fn(async (input: string | URL) => {
-    const url = String(input);
+  fetcher = vi.fn(async (input: string | URL | Request) => {
+    const url = fixtureUrl(input);
     if (url.includes('/token'))
       return tokenError
         ? json(
@@ -103,6 +104,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   sqlite.close();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 describe('T14 Gmail manual acceptance contract', () => {
@@ -119,9 +121,10 @@ describe('T14 Gmail manual acceptance contract', () => {
     issueRefresh = false;
     fetcher.mockClear();
     await syncGmailNews(env, owner, 'fixture-rotation-b');
-    const body = fetcher.mock.calls.find(([url]) =>
-      String(url).includes('/token'),
-    )?.[1]?.body;
+    const tokenCall = fetcher.mock.calls.find(([url]) => fixtureUrl(url).includes('/token'));
+    const body = tokenCall?.[0] instanceof Request
+      ? new URLSearchParams(await tokenCall[0].clone().text())
+      : tokenCall?.[1]?.body;
     expect(
       body instanceof URLSearchParams ? body.get('refresh_token') : null,
     ).toBe('fixture-rotated-refresh');
@@ -144,8 +147,8 @@ describe('T14 Gmail manual acceptance contract', () => {
       .prepare("SELECT * FROM dive_records WHERE kind='gmail-news'")
       .all();
     const original = fetcher.getMockImplementation()!;
-    fetcher.mockImplementation(async (url: string | URL) =>
-      String(url).includes('/messages/')
+    fetcher.mockImplementation(async (url: string | URL | Request) =>
+      fixtureUrl(url).includes('/messages/')
         ? json({ error: { errors: [{ reason: 'rateLimitExceeded' }] } }, 403)
         : original(url),
     );
@@ -175,8 +178,8 @@ describe('T14 Gmail manual acceptance contract', () => {
     const running = new Promise<void>((resolve) => {
       started = resolve;
     });
-    fetcher.mockImplementation(async (url: string | URL) => {
-      if (String(url).includes('/token')) {
+    fetcher.mockImplementation(async (url: string | URL | Request) => {
+      if (fixtureUrl(url).includes('/token')) {
         started();
         await held;
       }
@@ -290,7 +293,7 @@ describe('T14 Gmail manual acceptance contract', () => {
     expect(
       fetcher.mock.calls.every(
         ([url]) =>
-          !new URL(String(url)).pathname.match(/send|modify|trash|delete/),
+          !new URL(fixtureUrl(url)).pathname.match(/send|modify|trash|delete/),
       ),
     ).toBe(true);
   });
@@ -358,9 +361,9 @@ describe('Selected Gmail bounded diagnostic stages',()=>{
  ])('distinguishes %s HTTP failure without changing cached stories or credentials',async(phase,path)=>{
   const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
   await syncGmailNews(env,owner,'fixture-cached-before');const before=sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all();const connection=await readGmailConnection(env,owner);issueRefresh=false;
-  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>String(url).includes(path)?json({error:'PRIVATE_UPSTREAM_CONTENT'},503):original(url));
+  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>fixtureUrl(url).includes(path)?json({error:'PRIVATE_UPSTREAM_CONTENT'},503):original(url));
   const result=await syncGmailNews(env,owner,'fixture-phase-'+phase.replaceAll('_','-'));
-  expect(result).toMatchObject({status:'failed',diagnostic:{code:'upstream_failure',evidence:{version:1,phase,kind:'http',httpStatus:503}}});
+  expect(result).toMatchObject({status:'failed',diagnostic:{code:'upstream_failure',evidence:{version:2,phase,kind:'http',requestStage:'response_body',httpStatus:503}}});
   expect(JSON.stringify(result)).not.toMatch(/PRIVATE|fixture-secret|fixture-access|fixture-refresh/);
   expect(sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all()).toEqual(before);
   expect((await readGmailConnection(env,owner))?.encryptedRefreshToken).toBe(connection?.encryptedRefreshToken);
@@ -372,12 +375,12 @@ describe('Selected Gmail bounded diagnostic stages',()=>{
  });
  it('distinguishes JSON parsing from HTTP and transport failure',async()=>{
   const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
-  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>String(url).includes('/messages/')?new Response('PRIVATE_MALFORMED_CONTENT',{status:200}):original(url));
+  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>fixtureUrl(url).includes('/messages/')?new Response('PRIVATE_MALFORMED_CONTENT',{status:200}):original(url));
   const result=await syncGmailNews(env,owner,'fixture-json-failure');expect(result).toMatchObject({status:'failed',diagnostic:{evidence:{phase:'metadata_retrieval',kind:'parsing',httpStatus:200}}});expect(JSON.stringify(result)).not.toContain('PRIVATE');
  });
  it('rejects malformed metadata before any newsletter persistence',async()=>{
   const env=environment();await finishGmailConnection(env,owner,'code',gmailCallbackUri('https://dive.amzeus.co.uk'));
-  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>String(url).includes('/messages/')?json({id:'abc123',threadId:'thread1',payload:{headers:'PRIVATE_INVALID_HEADERS'}}):original(url));
+  const original=fetcher.getMockImplementation()!;fetcher.mockImplementation(async url=>fixtureUrl(url).includes('/messages/')?json({id:'abc123',threadId:'thread1',payload:{headers:'PRIVATE_INVALID_HEADERS'}}):original(url));
   const result=await syncGmailNews(env,owner,'fixture-invalid-payload');expect(result).toMatchObject({status:'failed',diagnostic:{evidence:{phase:'parsing',kind:'validation'}}});expect(sqlite.prepare("SELECT * FROM dive_records WHERE kind='gmail-news'").all()).toHaveLength(0);expect(JSON.stringify(result)).not.toContain('PRIVATE');
  });
  it('records a persistence failure as uncertain and prevents another live operation',async()=>{
@@ -393,7 +396,126 @@ describe('Selected Gmail bounded diagnostic stages',()=>{
  });
 });
 
+describe('Gmail request lifecycle diagnostics', () => {
+  async function connectedFixture() {
+    const env = environment();
+    await finishGmailConnection(env, owner, 'code', gmailCallbackUri('https://dive.amzeus.co.uk'));
+    const connection = await readGmailConnection(env, owner);
+    fetcher.mockClear();
+    return { env, connection };
+  }
+
+  it('records timeout signal setup failure before fetch and preserves credentials', async () => {
+    const { env, connection } = await connectedFixture();
+    vi.spyOn(AbortSignal, 'timeout').mockImplementation(() => { throw new TypeError('PRIVATE_TIMEOUT_SETUP'); });
+    const result = await syncGmailNews(env, owner, 'fixture-signal-setup');
+    expect(result).toMatchObject({ status: 'failed', diagnostic: { code: 'upstream_failure', evidence: { version: 2, phase: 'token_refresh', kind: 'validation', requestStage: 'request_setup' } } });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect((await readGmailConnection(env, owner))?.encryptedRefreshToken).toBe(connection?.encryptedRefreshToken);
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
+  it('records Request construction failure before fetch', async () => {
+    const { env } = await connectedFixture();
+    const NativeRequest = Request;
+    vi.stubGlobal('Request', class extends NativeRequest {
+      constructor(input: RequestInfo | URL, init?: RequestInit) { super(input, init); throw new TypeError('PRIVATE_REQUEST_SETUP'); }
+    });
+    const result = await syncGmailNews(env, owner, 'fixture-request-setup');
+    expect(result).toMatchObject({ status: 'failed', diagnostic: { code: 'upstream_failure', evidence: { version: 2, kind: 'validation', requestStage: 'request_setup' } } });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
+  it.each([new TypeError('PRIVATE_FETCH_DETAIL'), new DOMException('PRIVATE_ABORT_DETAIL', 'AbortError'), new Error('PRIVATE_UNKNOWN_DETAIL')])('keeps an unproven fetch rejection bounded', async (error) => {
+    const { env } = await connectedFixture();
+    fetcher.mockRejectedValueOnce(error);
+    const result = await syncGmailNews(env, owner, 'fixture-immediate-rejection');
+    expect(result).toMatchObject({ status: 'failed', diagnostic: { code: 'upstream_failure', evidence: { version: 2, phase: 'token_refresh', kind: 'transport', requestStage: 'fetch' } } });
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
+  it('classifies an explicit fetch TimeoutError without inventing an HTTP response', async () => {
+    const { env } = await connectedFixture();
+    fetcher.mockRejectedValueOnce(new DOMException('PRIVATE_TIMEOUT', 'TimeoutError'));
+    const result = await syncGmailNews(env, owner, 'fixture-fetch-timeout');
+    expect(result).toMatchObject({ status: 'failed', diagnostic: { code: 'request_timeout', evidence: { version: 2, kind: 'transport', requestStage: 'fetch' } } });
+    expect(result.diagnostic?.evidence).not.toHaveProperty('httpStatus');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
+  it.each([200, 503])('classifies the owned deadline during a HTTP %i body read', async (status) => {
+    const { env, connection } = await connectedFixture();
+    const deadline = new AbortController();
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadline.signal);
+    const response = new Response('fixture', { status });
+    vi.spyOn(response, 'json').mockImplementation(async () => {
+      deadline.abort(new DOMException('PRIVATE_BODY_REASON', 'TimeoutError'));
+      throw new DOMException('PRIVATE_BODY_ABORT', 'AbortError');
+    });
+    fetcher.mockResolvedValueOnce(response);
+    const result = await syncGmailNews(env, owner, 'fixture-body-timeout');
+    expect(result).toMatchObject({ status: 'failed', diagnostic: { code: 'request_timeout', evidence: { version: 2, phase: 'token_refresh', kind: 'transport', requestStage: 'response_body', httpStatus: status } } });
+    expect((await readGmailConnection(env, owner))?.encryptedRefreshToken).toBe(connection?.encryptedRefreshToken);
+    const calls = fetcher.mock.calls.length;
+    expect(await syncGmailNews(env, owner, 'fixture-body-timeout')).toEqual(result);
+    expect(fetcher).toHaveBeenCalledTimes(calls);
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
+  it('distinguishes an unproven body transport error from malformed JSON', async () => {
+    const { env } = await connectedFixture();
+    const response = json({});
+    vi.spyOn(response, 'json').mockRejectedValueOnce(new TypeError('PRIVATE_BODY_NETWORK'));
+    fetcher.mockResolvedValueOnce(response);
+    const result = await syncGmailNews(env, owner, 'fixture-body-transport');
+    expect(result).toMatchObject({ diagnostic: { code: 'upstream_failure', evidence: { version: 2, kind: 'transport', requestStage: 'response_body', httpStatus: 200 } } });
+    fetcher.mockResolvedValueOnce(new Response('PRIVATE_MALFORMED', { status: 200 }));
+    expect(await syncGmailNews(env, owner, 'fixture-body-parsing')).toMatchObject({ diagnostic: { code: 'upstream_failure', evidence: { version: 2, kind: 'parsing', requestStage: 'response_body', httpStatus: 200 } } });
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+
+  it('uses the retained 20-second deadline and manual redirect mode', async () => {
+    const { env } = await connectedFixture();
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
+    expect(await syncGmailNews(env, owner, 'fixture-runtime-options')).toMatchObject({ status: 'completed' });
+    expect(timeout.mock.calls.every(([duration]) => duration === 20_000)).toBe(true);
+    expect(fetcher.mock.calls.every(([input]) => input instanceof Request && input.redirect === 'manual')).toBe(true);
+  });
+
+  it.each([301, 302, 303, 307, 308])('rejects HTTP %i redirects before reading the body or destination', async (status) => {
+    const { env, connection } = await connectedFixture();
+    const response = new Response('PRIVATE_REDIRECT_BODY', { status, headers: { location: 'https://private-fixture.invalid/PRIVATE_LOCATION' } });
+    const jsonRead = vi.spyOn(response, 'json');
+    const headerRead = vi.spyOn(response.headers, 'get');
+    fetcher.mockResolvedValueOnce(response);
+    const result = await syncGmailNews(env, owner, 'fixture-manual-redirect');
+    expect(result).toMatchObject({ status: 'failed', diagnostic: { code: 'upstream_failure', evidence: { version: 2, kind: 'http', requestStage: 'fetch', httpStatus: status } } });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(jsonRead).not.toHaveBeenCalled();
+    expect(headerRead).not.toHaveBeenCalled();
+    expect((await readGmailConnection(env, owner))?.encryptedRefreshToken).toBe(connection?.encryptedRefreshToken);
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+});
+
 describe('Gmail status projection privacy',()=>{
  it('drops unknown run fields and nested provider messages while preserving the recorded outcome',()=>{const raw={runId:'fixture-historical',status:'failed',startedAt:'2026-09-23T22:41:59.261Z',completedAt:'2026-09-23T22:41:59.612Z',count:0,imported:0,updated:0,unchanged:0,failed:1,hasMore:false,token:'PRIVATE',diagnostic:{code:'upstream_failure',message:'PRIVATE',evidence:{version:1,phase:'token_refresh',kind:'http',httpStatus:503,token:'PRIVATE'}}};const before=JSON.stringify(raw);const projected=normaliseGmailSyncRun(raw);expect(projected).toMatchObject({status:'failed',failed:1,diagnostic:{code:'upstream_failure',evidence:{phase:'token_refresh',httpStatus:503}}});expect(JSON.stringify(projected)).not.toContain('PRIVATE');expect(JSON.stringify(raw)).toBe(before);});
- it('shows a truthful historic unknown stage and a bounded new failure label',()=>{expect(gmailDiagnosticEvidenceLabel(gmailFailure(503,''))).toContain('not recorded');expect(gmailDiagnosticEvidenceLabel({...gmailFailure(503,''),evidence:{version:1,phase:'message_listing',kind:'http',httpStatus:503}})).toBe('Message listing · Provider response · HTTP 503');});
+  it('shows a truthful historic unknown stage and a bounded new failure label',()=>{expect(gmailDiagnosticEvidenceLabel(gmailFailure(503,''))).toContain('not recorded');expect(gmailDiagnosticEvidenceLabel({...gmailFailure(503,''),evidence:{version:1,phase:'message_listing',kind:'http',httpStatus:503}})).toBe('Message listing · Provider response · HTTP 503');});
+  it('preserves only safe version 2 request stages and leaves old evidence unchanged', () => {
+    const original = {runId:'fixture-current-run',status:'failed',startedAt:'2026-10-02T14:56:44.569Z',failed:1,diagnostic:{code:'request_timeout',message:'PRIVATE',evidence:{version:2,phase:'token_refresh',kind:'transport',requestStage:'response_body',httpStatus:200,secret:'PRIVATE'}}};
+    const before = JSON.stringify(original);
+    const result = normaliseGmailSyncRun(original);
+    expect(result?.diagnostic).toMatchObject({code:'request_timeout',evidence:{version:2,phase:'token_refresh',kind:'transport',requestStage:'response_body',httpStatus:200}});
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(JSON.stringify(original)).toBe(before);
+    expect(gmailDiagnosticEvidenceLabel(result?.diagnostic)).toContain('Response body');
+    const invalid = normaliseGmailSyncRun({...original,diagnostic:{code:'upstream_failure',evidence:{version:2,phase:'token_refresh',kind:'transport',requestStage:'PRIVATE'}}});
+    expect(invalid?.diagnostic).not.toHaveProperty('evidence');
+  });
+  it('shares strict diagnostic code validation with the OAuth redirect consumer', () => {
+    expect(normaliseGmailDiagnosticCode('request_timeout')).toBe('request_timeout');
+    expect(normaliseGmailDiagnosticCode('callback_mismatch')).toBe('callback_mismatch');
+    for (const unknown of ['PRIVATE_UNKNOWN', '__proto__', 'constructor', null, {code:'request_timeout'}]) expect(normaliseGmailDiagnosticCode(unknown)).toBe('upstream_failure');
+  });
 });
