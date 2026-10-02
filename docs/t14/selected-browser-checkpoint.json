@@ -2,17 +2,49 @@
   "kind": "isolated development-fixture observations, not production acceptance",
   "date": "2026-10-02",
   "applicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
-  "viewports": [320, 390, 430, 820, 1024, 1440],
+  "viewports": [
+    320,
+    390,
+    430,
+    820,
+    1024,
+    1440
+  ],
   "routeSweep": {
     "routesPerWidth": 31,
     "observations": 186,
     "routes": [
-      "Overview", "Insights", "Equipment", "Loadouts", "Cylinders & Gas", "Gear Wishlist",
-      "Logbook", "Dive Computer Imports", "Sites", "Dive Location Map", "People", "Dive Centres",
-      "Albums", "Diving Calendar & Bookings", "Trips & Expeditions", "Bucket List",
-      "Dive Planning Centre", "Gas Planning", "Certifications", "Planned Training", "Dive Skills",
-      "Technical Diving", "Conservation & AWARE", "Dive Knowledge", "Dive Bibliography", "Dive News",
-      "Professional Development", "Site Logs", "Site Configuration", "Data & Backups", "Diver Summary Export"
+      "Overview",
+      "Insights",
+      "Equipment",
+      "Loadouts",
+      "Cylinders & Gas",
+      "Gear Wishlist",
+      "Logbook",
+      "Dive Computer Imports",
+      "Sites",
+      "Dive Location Map",
+      "People",
+      "Dive Centres",
+      "Albums",
+      "Diving Calendar & Bookings",
+      "Trips & Expeditions",
+      "Bucket List",
+      "Dive Planning Centre",
+      "Gas Planning",
+      "Certifications",
+      "Planned Training",
+      "Dive Skills",
+      "Technical Diving",
+      "Conservation & AWARE",
+      "Dive Knowledge",
+      "Dive Bibliography",
+      "Dive News",
+      "Professional Development",
+      "Site Logs",
+      "Site Configuration",
+      "Data & Backups",
+      "Diver Summary Export"
     ],
     "completedBrokenImages": 0,
     "clippedHeadlineValues": 0,
@@ -40,7 +72,11 @@
   },
   "skills": {
     "localCatalogueFixtureCount": 61,
-    "pageRowCounts": [25, 25, 11],
+    "pageRowCounts": [
+      25,
+      25,
+      11
+    ],
     "filteredCount": 31,
     "singleSearchResultAndResetCountVerified": true,
     "exactSkillAndEvidenceNavigationVerified": true,
@@ -57,8 +93,22 @@
     "cropDragKeyboardZoomResetSaveCropDraftAndDiscardVerified": true
   },
   "effectiveBrandSamples": {
-    "diveCentreBefore": { "surfaceRgb": [9, 26, 34], "radiusPx": 12 },
-    "diveCentreAfter": { "surfaceRgb": [18, 18, 18], "radiusPx": 18 },
+    "diveCentreBefore": {
+      "surfaceRgb": [
+        9,
+        26,
+        34
+      ],
+      "radiusPx": 12
+    },
+    "diveCentreAfter": {
+      "surfaceRgb": [
+        18,
+        18,
+        18
+      ],
+      "radiusPx": 18
+    },
     "professionalDevelopment320pxOverflowBeforePx": 52,
     "professionalDevelopmentOverflowAfterPx": 0
   },
@@ -110,5 +160,16 @@
     "liveGmailSyncRequests": 0,
     "localPreexistingPendingConflicts": 10,
     "ordinaryNewsDisplaysCachedStoryAndDisabledGmail": true
+  },
+  "lineEndingOnlyReuse": {
+    "candidateCommit": "bd0ba8ced8e45cc0718b7a7b5d04b03547a6c459",
+    "observedApplicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
+    "normalisedSourceByteEqual": true,
+    "sourceFiles": [
+      "app/issue-register.css",
+      "tests/selected-gmail-status.test.ts",
+      "vite.config.ts"
+    ],
+    "finishedBuiltAndLiveGateStillRequired": true
   }
 }

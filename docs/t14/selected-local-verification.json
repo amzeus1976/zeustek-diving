@@ -2,7 +2,7 @@
   "kind": "local implementation checkpoint; selected scope and release acceptance are incomplete",
   "date": "2026-10-02",
   "branch": "t14/tasks-1-2-3-4-6-7",
-  "applicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
+  "applicationCommit": "bd0ba8ced8e45cc0718b7a7b5d04b03547a6c459",
   "auditCheckpoint": "dc1d4530d08127f8fb36a8208bfe0b2bc35550ae",
   "regression": {
     "command": "pnpm test",
@@ -10,22 +10,22 @@
     "testsPassed": 952,
     "testsFailed": 0,
     "exitCode": 0,
-    "localStartTime": "08:32:22 Europe/London",
-    "durationSeconds": 10.9,
-    "ignoredLog": "work/selected-tasks/final-local-regression.log",
+    "localStartTime": "09:02:24 Europe/London",
+    "durationSeconds": 11.05,
+    "ignoredLog": "work/selected-tasks/checkpoint-regression.log",
     "coverageOrAssertionsWeakened": false
   },
   "typecheck": {
     "command": "pnpm typecheck",
     "exitCode": 0,
-    "ignoredLog": "work/selected-tasks/final-local-typecheck.log"
+    "ignoredLog": "work/selected-tasks/checkpoint-typecheck.log"
   },
   "productionBuild": {
     "command": "pnpm build",
     "exitCode": 0,
     "precacheEntries": 427,
     "precacheKiB": 42453.78,
-    "ignoredLog": "work/selected-tasks/final-local-production-build.log",
+    "ignoredLog": "work/selected-tasks/checkpoint-build.log",
     "warningsRetained": [
       "intermediate build phases report no files for an early precache glob",
       "existing Node deprecation and chunk-size advisory"
@@ -48,7 +48,10 @@
     "exportAndBackupTests": 32,
     "pureCylinderReviewTests": 10,
     "gmailEngineStatusIsolationAndGateTests": 39,
-    "latestFocusedRunBeforeGateAddition": { "files": 8, "tests": 72 },
+    "latestFocusedRunBeforeGateAddition": {
+      "files": 8,
+      "tests": 72
+    },
     "testFirstEvidence": [
       "actual upcoming-trip, headline evidence/deep-link and catalogue fixture failures before fixes",
       "Blob transport, export stage/font/Unicode/category fixture failures before fixes",
@@ -93,5 +96,23 @@
     "productionApiCredentialsIssued": 0,
     "liveGmailOperations": 0
   },
-  "deploymentPushOrPrPerformed": false
+  "deploymentPushOrPrPerformed": false,
+  "previousApplicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
+  "lineEndingOnlyCheckpoint": {
+    "sourceFiles": [
+      "app/issue-register.css",
+      "tests/selected-gmail-status.test.ts",
+      "vite.config.ts"
+    ],
+    "normalisedContentByteEqualToPrevious": true,
+    "fullRegressionTypecheckBuildPrivacyAndLintRerun": true,
+    "browserAndDownloadedArtifactsReusedBecauseContentUnchanged": true
+  },
+  "diffWhitespace": {
+    "fullRangeExitCode": 2,
+    "applicationAndEvidenceExcludingLiteralReviewedPatchExitCode": 0,
+    "literalUnappliedPatch": "docs/t14/cylinder-read-policy-proposed.patch",
+    "patchSha256Unchanged": "5244c77cf38e61329407a377b43448c5c26881e01906c0c1d4be657f294f138f",
+    "reason": "Stored unapplied diff deliberately preserves the frozen source CRLF/context bytes; its literal context lines are flagged by a repository-wide whitespace check. No Git rule was weakened and no patch or protected file was applied/edited."
+  }
 }
