@@ -54,6 +54,7 @@ export type GmailConnectionStatus = {
   reconnectRequired: boolean;
   diagnostic: GmailDiagnostic | null;
   lastRun: GmailSyncRun | null;
+  acceptanceRunId?: string | null;
 };
 const details: Record<GmailDiagnosticCode, [string, string, boolean]> = {
   missing_configuration: [

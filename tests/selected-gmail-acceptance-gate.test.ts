@@ -4,6 +4,7 @@ import {
   hasGmailManualReleaseConfiguration,
   isGmailAcceptanceRunAllowed,
   verifiedGmailManualRelease,
+  availableGmailAcceptanceRunId,
   type GmailReleaseEnv,
 } from '../lib/server/gmail-release-policy';
 import type { GmailSyncRun } from '../lib/gmail-contract';
@@ -27,6 +28,18 @@ beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(now); });
 afterEach(() => vi.useRealTimers());
 
 describe('default-disabled Gmail acceptance and manual restoration policy', () => {
+  it('offers only the authorised unconsumed owner run and never enables ordinary manual sync',async()=>{
+    const read=vi.fn(async()=>null);
+    expect(await availableGmailAcceptanceRunId(grant,ownerId,true,read)).toBe(runId);
+    expect(hasGmailManualReleaseConfiguration(grant,ownerId)).toBe(false);
+    expect(await availableGmailAcceptanceRunId(grant,'other-owner',true,read)).toBeNull();
+    expect(await availableGmailAcceptanceRunId(grant,ownerId,false,read)).toBeNull();
+    expect(await availableGmailAcceptanceRunId({},ownerId,true,read)).toBeNull();
+    for(const status of ['running','uncertain','failed','completed'] as const){
+      expect(await availableGmailAcceptanceRunId(grant,ownerId,true,async()=>({...completed,status}))).toBeNull();
+    }
+    expect(read).toHaveBeenCalledWith(ownerId,runId);
+  });
   it('requires an explicit complete server grant and never treats configuration as acceptance', () => {
     expect(hasGmailAcceptanceGrant({}, ownerId, now)).toBe(false);
     expect(hasGmailAcceptanceGrant(grant, ownerId, now)).toBe(true);

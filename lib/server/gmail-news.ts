@@ -11,7 +11,7 @@ import {
   type GmailSyncRun,
   type GmailConnectionStatus,
 } from '../gmail-contract';
-import { verifiedGmailManualRelease, type GmailReleaseEnv } from './gmail-release-policy';
+import { availableGmailAcceptanceRunId, verifiedGmailManualRelease, type GmailReleaseEnv } from './gmail-release-policy';
 const NEWS_MAILBOX = 'zeustekdivenews@gmail.com';
 type GmailRuntimeEnv = GmailReleaseEnv & {
   DB: D1Database;
@@ -480,6 +480,11 @@ export async function gmailConnectionStatus(
     : connection?.email.toLowerCase() !== NEWS_MAILBOX && connection
       ? gmailDiagnostic('wrong_account')
       : normaliseGmailDiagnostic(connection?.diagnostic);
+  const lastRun=await readRun(env,userId);
+  const acceptanceRunId=await availableGmailAcceptanceRunId(env,userId,
+    config.configured&&connection?.email.toLowerCase()===NEWS_MAILBOX&&!diagnostic?.reconnect&&
+      !Boolean(lastRun&&['running','uncertain'].includes(lastRun.status)),
+    (ownerId,runId)=>readRun(env,ownerId,runId));
   return {
     ...config,
     redirectUri: gmailCallbackUri(requestUrl),
@@ -493,7 +498,8 @@ export async function gmailConnectionStatus(
     diagnostic,
     reconnectRequired: diagnostic?.reconnect ?? false,
     syncMode: !GMAIL_SYNC_RELEASE_DISABLED || config.configured && connection?.email.toLowerCase() === NEWS_MAILBOX && await gmailManualSyncAllowed(env, userId) ? 'manual' : 'disabled',
-    lastRun: await readRun(env, userId),
+    lastRun,
+    acceptanceRunId,
   };
 }
 export async function syncGmailNews(

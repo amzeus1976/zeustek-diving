@@ -39,6 +39,16 @@ export function isGmailAcceptanceRunAllowed(env: GmailReleaseEnv, ownerId: strin
   return hasGmailAcceptanceGrant(env, ownerId, now) && env.GMAIL_ACCEPTANCE_RUN_ID === runId;
 }
 
+/** A one-use owner action; availability never means ordinary sync is enabled. */
+export async function availableGmailAcceptanceRunId(
+  env:GmailReleaseEnv,ownerId:string,connectionReady:boolean,
+  readRun:(ownerId:string,runId:string)=>Promise<GmailSyncRun|null>,
+) {
+  if (!connectionReady || !hasGmailAcceptanceGrant(env,ownerId)) return null;
+  const runId=env.GMAIL_ACCEPTANCE_RUN_ID!;
+  return await readRun(ownerId,runId) ? null : runId;
+}
+
 export function hasGmailManualReleaseConfiguration(env: GmailReleaseEnv, ownerId: string) {
   const grant = grantMetadata(env, ownerId);
   return env.GMAIL_MANUAL_SYNC_ENABLED === 'true' && Boolean(grant && env.GMAIL_MANUAL_SYNC_VERIFIED_RUN_ID === grant.runId);
