@@ -42,3 +42,9 @@ The proposed grant may authorise one new bounded run plus conditional manual-onl
 ## Remaining steps
 
 The separate live-operation approval above is now received. Configure the existing default-off gate only at the complete combined candidate's designated acceptance point. Inspect the then-current ledger before execution to prove this new grant has not been consumed. A completed or uncertain run is resolved through status, never another invocation. Until that acceptance point, leave both controls off and finish the remaining release checks. Real connection storage remains untouched. The exact public preview and production API key confirmations are separate from this Gmail grant.
+
+## Final local acceptance UI/checkpoint 6a939efee044afe011e6dae3a03281a7e55cc541
+
+40 focused Gmail engine/status/isolation/gate fixtures pass. Owner-only status reveals an acceptance action solely for a valid, connected, unconsumed exact grant. Any stored running/uncertain/failed/completed run suppresses that action. The UI does not generate another ID for acceptance. One loopback-only mocked UI request proved the action disappears and manual sync enables only following the fixture result; no Google or production request occurred. Final compiled six-width controls fit after resolving nested desktop sidebar columns. Full996 retained tests/typecheck/build/privacy pass.
+
+For the single combined deployment, set the new grant and the conditionally authorised manual control with the SAME run ID before deployment. The manual flag alone remains insufficient: persisted completed/zero-failure/valid-account result inside the grant window is required. This avoids a second source or configuration deployment after success. Record this new real run in the live acceptance ledger before invoking; never retry it. Preserve/expire grant metadata needed to verify manual release; no background sync.

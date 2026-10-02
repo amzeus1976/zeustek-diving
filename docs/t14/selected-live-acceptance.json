@@ -1,0 +1,46 @@
+{
+  "state": "READY; not deployed or consumed",
+  "date": "2026-10-02",
+  "applicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
+  "preDeploymentOwnerEvidence": {
+    "refreshedAt": "2026-10-02T14:45:24.161Z",
+    "records": 6485,
+    "diveCount": 66,
+    "gasPlanCount": 1,
+    "fingerprint": "3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743",
+    "sameAsVerifiedEncryptedRecovery": true,
+    "connectionSecretsExported": false,
+    "ownerRecordWrites": 0,
+    "syntheticProductionRecords": 0
+  },
+  "gmail": {
+    "historicalConsumedRunId": "fdeda6a4-5504-49d0-881d-d1795839955b",
+    "historicalResult": "FAILED upstream_failure; original phase unknown; preserved",
+    "newRunId": "f2356ba1-2c8d-4f55-af40-7c59feac342f",
+    "grantIssuedAt": "2026-10-02T14:46:13.419Z",
+    "grantExpiresAt": "2026-10-02T18:46:13.420Z",
+    "authorised": true,
+    "maximumMessages": 100,
+    "windowDays": 90,
+    "metadataAndSnippetsOnly": true,
+    "newRunInvocations": 0,
+    "result": "NOT RUN",
+    "configurationDetected": true,
+    "dedicatedAccountMatches": true,
+    "reconnectRequired": false,
+    "backgroundSyncEnabled": false,
+    "manualRestoration": "Only after persisted completed zero-failure result for this exact run; conditional owner consent received",
+    "prohibited": ["retry", "reconnect", "credential change", "send", "delete", "read-state change", "background ingestion"]
+  },
+  "publicProfile": { "publicationEnabled": false, "realContentPublished": false },
+  "integrationApi": { "productionKeysIssued": 0 },
+  "rollback": {
+    "appVersion": "1.0.70",
+    "sitesVersion": 141,
+    "deploymentId": "appgdep_6ab6c6ce4bcc8191abe78eb20dd45ab2",
+    "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_2c15683c77348191875aa8b81cb488cd",
+    "source": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
+    "archiveSha256": "dcd1376e981983631816da600a3674a85ded0d207ef7d4a619fbe4e001c72742"
+  },
+  "next": "Freeze/publish the exact combined candidate, invoke the new authorised Gmail action ONCE, verify read-only production and owner data, then reconcile GitHub only after acceptance. Any uncertain run resolves from recorded status, never another sync. Restore verified rollback on mandatory failure."
+}

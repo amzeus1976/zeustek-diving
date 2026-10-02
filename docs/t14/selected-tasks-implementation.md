@@ -23,7 +23,7 @@ Each stage gets a recoverable commit. No intermediate stage deployment. Approval
 
 ## Requirement tracking
 
-Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, BLOCKED, PRODUCTION VERIFIED. The current combined application is implemented locally as app1.0.71, static-v18. Full 992 tests / 155 files, typecheck and production build pass; targeted lint has zero new diagnostics. Production acceptance is still OPEN.
+Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, BLOCKED, PRODUCTION VERIFIED. The current combined application is implemented locally as app1.0.71, static-v18. Full 996 tests / 156 files, typecheck and production build pass; targeted lint has zero new diagnostics. Production acceptance is still OPEN.
 
 | ID | Requirement / issue | Status | Evidence / dependency |
 | --- | --- | --- | --- |
@@ -42,7 +42,7 @@ Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, B
 | 2.9 | People/entity separation, relationships/deletion, self identity/photo regressions | LOCAL PASS | Full retained suites and local human/entity/team/crop fixtures; no architecture recreated |
 | 3.1 | #55 bounded original-cause evidence; redacted token/account/list/metadata/parse/transport/persistence diagnostics | LOCAL PASS | Versioned allowlist and safe messages/status; original historical failure cause remains UNKNOWN |
 | 3.2 | Encrypted token storage/retention, cached stories/non-Gmail preserved | LOCAL PASS | Mock encrypted refresh retention; browser cached News retained; no real connection writes |
-| 3.3 | Success/failure fixtures and minimal repair warranted by evidence | LOCAL PASS | 39 Gmail fixtures; bounded transport/storage/redaction/idempotence fixes and default-off acceptance gate |
+| 3.3 | Success/failure fixtures and minimal repair warranted by evidence | LOCAL PASS | 40 Gmail fixtures; bounded transport/storage/redaction/idempotence fixes and default-off acceptance gate |
 | 3.4 | Separate live acceptance authorisation and concrete one-run procedure | OWNER AUTHORISED | One NEW run: 90 days, max 100 metadata/snippet messages, no retry/reconnect/credential/mailbox changes |
 | 3.5 | Verified restoration + authorised enablement | OPEN | Manual-only restoration authorised conditionally on verified successful new run; background remains disabled |
 | 4.1 | #75 establish actual image failure stage; PDF and DOCX selected images | LOCAL PASS | Blob transport TypeError before decode reproduced; bounded image loader/crop cleanup fixed |
@@ -64,16 +64,16 @@ Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, B
 | 7.3 | Per-client AMZeus/ZeusTek keys, scope and selected-record consent | LOCAL PASS | Separate clients, explicit fields and selected owned record consent; real keys unissued |
 | 7.4 | Secret hash verification, once-only display, expiry/revoke/rotation | LOCAL PASS | Hash-only verification, RAM-only once display, expiry/revoke and atomic rotation |
 | 7.5 | Every object/link owner checks; historical saved usage snapshots | LOCAL PASS | Owner/object/link rechecks; saved historical equipment evidence; withheld identities; no current-loadout inference |
-| 7.6 | Bounded cursor paging, units/provenance, rate limits/OpenAPI/safe errors | LOCAL PASS | Bound signed cursors, 1�100 pagination, units/provenance, atomic key limit and OpenAPI 3.1 |
+| 7.6 | Bounded cursor paging, units/provenance, rate limits/OpenAPI/safe errors | LOCAL PASS | Bound signed cursors, 1–100 pagination, units/provenance, atomic key limit and OpenAPI 3.1 |
 | 7.7 | Credential exclusion/log/cache boundaries + dummy backend clients | LOCAL PASS | Dummy keys/backend clients; credential/backup/log/cache security; no production credential issued |
 | 7.8 | Production key issuance confirmation | AWAITING AUTHORISATION | Real client, scope, selected records/fields and expiration approval required; ship unissued |
 | G.1 | Focused RED→GREEN before each implementation | LOCAL PASS | Usability/export/cylinder/Gmail/chart fixtures and actual responsive RED→GREEN retained |
-| G.2 | Full retained regression (historical 888) | LOCAL PASS | 155 files / 992 tests; retained baseline assertions and suites |
+| G.2 | Full retained regression (historical 888) | LOCAL PASS | 156 files / 996 tests; retained baseline assertions and suites |
 | G.3 | Typecheck/build/PWA/version/cache/targeted lint | LOCAL PASS | Typecheck/build/PWA 427 entries; app1.0.71/static-v18; 0 new lint diagnostics, 83 unchanged baseline |
 | G.4 | Privacy/auth/public/API/secret security tests | LOCAL PASS | Public/API auth/field/photo/cache/key/secret security fixtures and built-client credential scan |
-| G.5 | Browser 320/390/430/820/1024/1440; keyboard/focus/contained content | OPEN | Six-width development checks pass; finished production-built checks in progress before release |
+| G.5 | Browser 320/390/430/820/1024/1440; keyboard/focus/contained content | LOCAL PASS | Fully loaded compiled 186-route sweep; six-width Insights/crop/public/API/Gmail controls, no clipping or application errors |
 | G.6 | Nine protected hashes throughout and final comparison | LOCAL PASS | All 9 match current approved manifest; 8 byte-unchanged and exact owner-approved #86 ID-policy touchpoint |
-| G.7 | Fresh owner IDs/counts/content/relationship evidence before/after | OPEN | No synthetic owner records |
+| G.7 | Fresh owner IDs/counts/content/relationship evidence before/after | OPEN | Fresh 6485-record baseline and encrypted recovery verified; post-release comparison outstanding; no synthetic owner records |
 | G.8 | Current recoverable rollback/version/source verification | LOCAL PASS | Actual Sites141 saved artifact/deployment/source verified; reverify immediately before release |
 | G.9 | Clean frozen commit/version/cache/dependencies; single combined deploy | OPEN | No partial release |
 | G.10 | Read-only production acceptance + separately authorised actions | OPEN | Gmail/profile/key writes never implicit |
@@ -95,6 +95,10 @@ Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, B
 6. Read-only live responsive/core/privacy/PWA/owner acceptance; rollback the verified prior deployment on a mandatory failure. Public profile stays disabled and integration keys unissued unless distinct exact content/key consent arrives.
 7. Only after production acceptance push exact accepted GitHub source, attach/merge PR, verify main tree and update issues. Preserve Task 5/T15 exclusions. Do not claim Gmail verified before live success.
 
-## Combined implementation checkpoint � 2 October 2026
+## Combined implementation checkpoint — 2 October 2026
 
 Task 6/7 handlers, settings and SQL/R2 security fixtures are implemented locally. Added tests reproduced saved-runtime/mode projection mistakes and missing explicitly consented equipment-usage Dive links before corrections. Final 992/155 regression, typecheck and production build pass. Gmail new-run and conditional manual-only restoration consent received directly; no live request has occurred. Exact #86 application commit is 0fc19c5e20808a6db8c47f9beba4b624b0fe8563. No product source push/deployment/GitHub PR or real publication/key issuance has occurred.
+
+## Final local checkpoint 6a939efee044afe011e6dae3a03281a7e55cc541
+
+996/156 retained regression, typecheck, build/PWA (427 / 42484.07 KiB), zero new targeted lint, privacy/artwork/protected-hash gate pass. See selected-local-verification.json and selected-compiled-browser-evidence.json. The backup endpoint returns all 6485 live records; the inspection-tool returned array was truncated to2000, not the application. No backup implementation rewrite was retained. Two real-SQL large-owner/empty fixtures were added and pass. Fresh recovery decrypt verified. Publication/keys remain off/unissued; Gmail remains unverified until the one new consented live run. No partial production release.

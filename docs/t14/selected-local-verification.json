@@ -1,31 +1,31 @@
 {
-  "kind": "local implementation checkpoint; selected scope and release acceptance are incomplete",
+  "kind": "Finished local combined candidate; production acceptance remains open",
   "date": "2026-10-02",
   "branch": "t14/tasks-1-2-3-4-6-7",
-  "applicationCommit": "bd0ba8ced8e45cc0718b7a7b5d04b03547a6c459",
+  "applicationCommit": "6a939efee044afe011e6dae3a03281a7e55cc541",
   "auditCheckpoint": "dc1d4530d08127f8fb36a8208bfe0b2bc35550ae",
   "regression": {
-    "command": "pnpm test",
-    "filesPassed": 150,
-    "testsPassed": 952,
+    "command": "vitest run --config vitest.config.ts (installed project binary)",
+    "filesPassed": 156,
+    "testsPassed": 996,
     "testsFailed": 0,
     "exitCode": 0,
-    "localStartTime": "09:02:24 Europe/London",
-    "durationSeconds": 11.05,
-    "ignoredLog": "work/selected-tasks/checkpoint-regression.log",
+    "localStartTime": "15:38:19 Europe/London",
+    "durationSeconds": 13.34,
+    "ignoredLog": "work/selected-tasks/final-regression.log",
     "coverageOrAssertionsWeakened": false
   },
   "typecheck": {
-    "command": "pnpm typecheck",
+    "command": "tsc --noEmit (installed project binary)",
     "exitCode": 0,
-    "ignoredLog": "work/selected-tasks/checkpoint-typecheck.log"
+    "ignoredLog": "work/selected-tasks/final-typecheck.log"
   },
   "productionBuild": {
-    "command": "pnpm build",
+    "command": "project prebuild then vinext build (installed project binary)",
     "exitCode": 0,
     "precacheEntries": 427,
-    "precacheKiB": 42453.78,
-    "ignoredLog": "work/selected-tasks/checkpoint-build.log",
+    "precacheKiB": 42484.07,
+    "ignoredLog": "work/selected-tasks/final-build.log",
     "warningsRetained": [
       "intermediate build phases report no files for an early precache glob",
       "existing Node deprecation and chunk-size advisory"
@@ -33,12 +33,12 @@
   },
   "targetedLint": {
     "tool": "existing oxlint with unchanged configuration",
-    "files": 28,
+    "files": 69,
     "rawExitCode": 1,
     "allDiagnostics": 83,
     "matchedByteUnchangedBaselineDiagnostics": 83,
     "newOrChangedDiagnostics": 0,
-    "suppressionOrRuleChanges": false,
+    "suppressionOrRuleChanges": "Configuration unchanged; two new native link/image comments narrowly justify revocable opaque resources. No baseline diagnostic suppressed.",
     "comparisonBaseline": "dc1d453",
     "ignoredEvidence": "work/selected-tasks/lint-comparison.json"
   },
@@ -47,7 +47,7 @@
     "retainedUsabilityRelatedTests": 53,
     "exportAndBackupTests": 32,
     "pureCylinderReviewTests": 10,
-    "gmailEngineStatusIsolationAndGateTests": 39,
+    "gmailEngineStatusIsolationAndGateTests": 40,
     "latestFocusedRunBeforeGateAddition": {
       "files": 8,
       "tests": 72
@@ -59,22 +59,22 @@
       "redacted Gmail status/storage/transport fixtures and missing gate module before fixes",
       "SSR chart-size warning fixture before initial chart dimensions",
       "actual browser crop/KPI/domain/grid/card-header failures before bounded CSS corrections"
-    ]
+    ],
+    "largeOwnerBackupFixtures": 2
   },
   "versionAndCache": {
-    "localPackageVersion": "1.0.70",
-    "navigationCache": "zeustek-navigation-v18",
-    "staticCache": "zeustek-static-v17",
+    "localPackageVersion": "1.0.71",
+    "navigationCache": "NetworkOnly (legacy private navigation caches deleted)",
+    "staticCache": "zeustek-static-v18",
     "retainedVersionCacheTestPassed": true,
-    "finalReleaseVersionAndFreeze": "OPEN; derive after all selected implementation is complete"
+    "finalReleaseVersionAndFreeze": "Derived from actual accepted app1.0.70; clean freeze follows this documentation checkpoint"
   },
   "securityEvidence": "selected-local-security-evidence.json",
   "downloadEvidence": "selected-export-download-evidence.json",
-  "browserEvidence": "selected-browser-checkpoint.json",
+  "browserEvidence": "selected-compiled-browser-evidence.json",
   "pendingAuthorisations": [
-    "exact #86 CALCULATION_TOUCHPOINT patch before editing the frozen file",
-    "#81/#82 implementation/security plan before feature coding",
-    "one new bounded Gmail live acceptance and any conditional manual restoration"
+    "Exact real-owner public content preview before publication (ships off)",
+    "Exact client/scopes/records/fields/expiry before real API-key issuance (ships unissued)"
   ],
   "production": {
     "unchanged": true,
@@ -91,28 +91,33 @@
   "ownerData": {
     "productionWritesByThisTask": 0,
     "productionSyntheticRecords": 0,
-    "freshReleaseFingerprintComparison": "OPEN; historical audit counts are not a release target",
+    "freshReleaseFingerprintComparison": "Fresh 6485-record read-only baseline saved; encrypted recoverable backup verified. Post-release comparison remains open.",
     "approvedProductionProfilePublications": 0,
     "productionApiCredentialsIssued": 0,
-    "liveGmailOperations": 0
+    "liveGmailOperations": 0,
+    "preReleaseFingerprint": "3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743",
+    "preReleaseCounts": {
+      "all": 6485,
+      "dive": 66,
+      "gas-plan": 1,
+      "person": 11,
+      "operator": 5
+    },
+    "relationshipIntegrity": {
+      "legacyPersonEntityPairs": 8,
+      "missingEndpoints": 0,
+      "explicitPersonEntityLinks": 0,
+      "explicitEntityEntityLinks": 0,
+      "ownerProfiles": 1
+    }
   },
   "deploymentPushOrPrPerformed": false,
-  "previousApplicationCommit": "4c9f26ec53e0db35da952dddd5fd3c7328ded2d4",
-  "lineEndingOnlyCheckpoint": {
-    "sourceFiles": [
-      "app/issue-register.css",
-      "tests/selected-gmail-status.test.ts",
-      "vite.config.ts"
-    ],
-    "normalisedContentByteEqualToPrevious": true,
-    "fullRegressionTypecheckBuildPrivacyAndLintRerun": true,
-    "browserAndDownloadedArtifactsReusedBecauseContentUnchanged": true
-  },
+  "previousApplicationCommit": "421d446e054c126e48492e9a82db09c72fd26281",
   "diffWhitespace": {
     "fullRangeExitCode": 2,
     "applicationAndEvidenceExcludingLiteralReviewedPatchExitCode": 0,
     "literalUnappliedPatch": "docs/t14/cylinder-read-policy-proposed.patch",
     "patchSha256Unchanged": "5244c77cf38e61329407a377b43448c5c26881e01906c0c1d4be657f294f138f",
-    "reason": "Stored unapplied diff deliberately preserves the frozen source CRLF/context bytes; its literal context lines are flagged by a repository-wide whitespace check. No Git rule was weakened and no patch or protected file was applied/edited."
+    "reason": "Literal reviewed diff preserves CRLF/context bytes. That exact owner-approved patch is now applied only to cylinder read/ID policy; formulas unchanged. No Git rule weakened."
   }
 }
