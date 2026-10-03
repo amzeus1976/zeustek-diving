@@ -1,6 +1,7 @@
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {OWNER_EMAIL,isLocalPreviewUser} from './household';
-export const sharingHeaders={'cache-control':'private, no-store','x-content-type-options':'nosniff','x-robots-tag':'noindex, nofollow','referrer-policy':'no-referrer'};
+import {sharingHeaders} from '../sharing/response-headers';
+export {sharingHeaders};
 export const sharingJson=(value:unknown,status=200)=>Response.json(value,{status,headers:sharingHeaders});
 export async function sharingOwner(request?:Request){const user=await getChatGPTUser();if(!user)return {error:sharingJson({error:'Authentication required.'},401)} as const;if(user.email.toLowerCase()!==OWNER_EMAIL&&!isLocalPreviewUser(user))return {error:sharingJson({error:'Only the owner can manage publication and integration keys.'},403)} as const;if(request&&request.headers.get('origin')!==new URL(request.url).origin)return {error:sharingJson({error:'Use the owner settings on this site.'},403)} as const;return {user,slot:isLocalPreviewUser(user)?'local-preview':'landing'} as const;}
 export async function tableExists(db:D1Database,name:string){return Boolean(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").bind(name).first());}
