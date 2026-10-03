@@ -37,7 +37,7 @@ export function AnalysisWorkbench({cards,saveCards,scope,changeScope,projection,
   const topicView=(card:AnalysisCardConfig,expanded=false)=><TopicExplorerView snapshot={snapshot} settings={topicSettings(card)} includedDiveIds={projection.includedDiveIds} onQuery={query=>setQueries(current=>({...current,[card.id]:query}))} expanded={expanded} explore={()=>setOpen({card,view:'analysis'})} go={go?navigate:undefined}/>;
   const dataScope=useMemo(()=>buildExperienceAnalyticsProjection(dives,sites,loadouts,{...scope,excludedDiveIds:[]}),[dives,sites,loadouts,scope]);
   const navigate=(route:string)=>{setOpen(null);go?.(route);};
-  if(configure)return <WorkbenchEditor cards={cards} close={()=>setConfigure(false)} save={async next=>{await saveCards(next);setConfigure(false);}}/>;
+  if(configure)return <WorkbenchEditor cards={cards} close={()=>setConfigure(false)} save={async next=>{await saveCards(next);setQueries({});setConfigure(false);}}/>;
   const openData=open?buildAnalysisCardData(open.card.metric,projection,dives,sites):null;
   const allSourceIds=open?new Set(buildAnalysisCardData(open.card.metric,dataScope,dives,sites).rows.flatMap(row=>row.diveIds)):new Set<string>();
   const changeEnvironment=(key:string)=>changeScope({...scope,environmentFocus:scope.environmentFocus===key?null:key});

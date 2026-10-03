@@ -536,6 +536,7 @@ function ProfileDetail({
         </section>
       </div>
       <footer>
+        {person.roles?.ownerProfile&&<button type="button" className="focus-secondary" onClick={()=>go('Settings&config=shared-links-settings')}>Share selected profile</button>}
         <button className="focus-secondary" onClick={showDives}>Dives together / link history</button>
         <button className="focus-secondary" onClick={manage}>Manage Dive Entity links</button>
         <button className="focus-secondary" onClick={edit}>

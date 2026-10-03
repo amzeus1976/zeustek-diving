@@ -1,5 +1,5 @@
 'use client';
-import {useId,useMemo,useState} from 'react';
+import {useId,useMemo,useRef,useState} from 'react';
 import {workflowDestinationUrl} from '../../lib/workflow/workflow-destination';
 import {buildTopicProjection,TOPIC_FAMILIES,type TopicFamily,type TopicItem,type TopicSettings,type TopicSnapshot} from '../../lib/insights/topic-explorer';
 import styles from './analysis-workbench.module.css';
@@ -28,10 +28,11 @@ export function TopicRecordedSource({item,close,go}:{item:TopicItem;close:()=>vo
 }
 function TopicSourceGroups({items,go}:{items:TopicItem[];go?:((route:string)=>void)|undefined}){
  const [pages,setPages]=useState<Partial<Record<TopicFamily,number>>>({}),[selected,setSelected]=useState<string|null>(null);
+ const triggers=useRef(new Map<string,HTMLButtonElement>());
  return <><div className={styles.topicGroups}>{TOPIC_FAMILIES.map(family=>{
   const result=topicFamilyPage(items,family,pages[family]??0);if(!result.count)return null;
   return <section key={family} aria-label={TOPIC_FAMILY_LABELS[family]}><h3>{TOPIC_FAMILY_LABELS[family]} <small>({result.count})</small></h3>
-   <ul>{result.rows.map(item=><li key={item.id}><button type="button" className={styles.topicRecord} aria-expanded={selected===item.id} onClick={()=>setSelected(current=>current===item.id?null:item.id)}><strong>{item.title}</strong><span>{item.status} · {item.matchClass}</span><small>{item.reason}</small></button>{selected===item.id&&<TopicRecordedSource item={item} close={()=>setSelected(null)} go={go}/>}</li>)}</ul>
+   <ul>{result.rows.map(item=><li key={item.id}><button type="button" ref={node=>{if(node)triggers.current.set(item.id,node);else triggers.current.delete(item.id);}} className={styles.topicRecord} aria-expanded={selected===item.id} onClick={()=>setSelected(current=>current===item.id?null:item.id)}><strong>{item.title}</strong><span>{item.status} · {item.matchClass}</span><small>{item.reason}</small></button>{selected===item.id&&<TopicRecordedSource item={item} close={()=>{setSelected(null);triggers.current.get(item.id)?.focus();}} go={go}/>}</li>)}</ul>
    <div className={styles.panelActions}><button type="button" className="focus-secondary" aria-label={'Previous '+TOPIC_FAMILY_LABELS[family]+' records'} disabled={!result.current} onClick={()=>setPages(current=>({...current,[family]:result.current-1}))}>Previous</button>
     <span>Page {result.current+1} of {result.pages} · {result.count} records</span><button type="button" className="focus-secondary" aria-label={'Next '+TOPIC_FAMILY_LABELS[family]+' records'} disabled={result.current+1>=result.pages} onClick={()=>setPages(current=>({...current,[family]:result.current+1}))}>Next</button></div>
   </section>;

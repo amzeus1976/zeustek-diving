@@ -59,6 +59,7 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
 import {PublicProfileSettings} from '../components/sharing/public-profile-settings';
+import {SharedLinksSettings} from '../components/sharing/shared-links-settings';
 import {IntegrationKeySettings} from '../components/sharing/integration-key-settings';
 import {DataHealthWorkspace} from '../components/admin/data-health';
 import {DataReviewLinks} from '../components/admin/data-review-links';
@@ -635,6 +636,7 @@ const configurationLinks = [
   ['settings-overview', 'Settings overview'],
   ['household-setup', 'Household setup and configuration'],
   ['public-profile-settings', 'Public profile'],
+  ['shared-links-settings', 'Shared Links'],
   ['integration-key-settings', 'Read-only API integrations'],
   ['skill-catalogue', 'Skill Catalogue'],
   ['equipment-training-lists', 'Equipment & training lists'],
@@ -663,6 +665,7 @@ function SiteConfiguration({ go }: { go: (next: string) => void }) {
       <CollapsibleWorkCard id="settings-overview" defaultMinimized className="site-configuration-card site-configuration-core" title="Settings overview" eyebrow="SITE CONFIGURATION" status="Cloud storage and local device controls"><PlatformSettings section="overview" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="household-setup" defaultMinimized className="site-configuration-card" title="Household setup and configuration" eyebrow="SHARING" status="Private profiles and shared gear"><HouseholdSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="public-profile-settings" defaultMinimized className="site-configuration-card" title="Public profile" eyebrow="PUBLICATION" status="Off by default · exact visitor preview · explicit publication"><PublicProfileSettings /></CollapsibleWorkCard>
+      <CollapsibleWorkCard id="shared-links-settings" defaultMinimized revealWhenLinked className="site-configuration-card" title="Shared Links" eyebrow="OWNER PUBLICATION" status="Selected snapshots · exact preview · revoke and regenerate"><SharedLinksSettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="integration-key-settings" defaultMinimized className="site-configuration-card" title="Read-only API integrations" eyebrow="OWNER CONSENT" status="Selected records · separate AMZeus and ZeusTek keys"><IntegrationKeySettings /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="equipment-training-lists" defaultMinimized className="site-configuration-card" title="Equipment & training lists" eyebrow="GEAR · TRAINING" status="Agencies, qualifications, equipment categories and manufacturers"><PlatformSettings section="lists" /></CollapsibleWorkCard>
       <CollapsibleWorkCard id="equipment-category-icons" defaultMinimized className="site-configuration-card" title="Equipment category icons" eyebrow="GEAR" status="Built-in and owner-uploaded category visuals"><PlatformSettings section="icons" /></CollapsibleWorkCard>
