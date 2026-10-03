@@ -21,10 +21,11 @@ export function AccessibleDialog({ label, className, close, editable = false, di
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
+    const fallback = returnFocusTo?.current;
     const dialog = ref.current;
     dialog?.showModal();
     if (dialog) { dialog.scrollTop = 0; dialog.focus({ preventScroll: true }); }
-    return () => { dialog?.close(); restoreDialogFocus(previous, returnFocusTo?.current); };
+    return () => { dialog?.close(); restoreDialogFocus(previous, fallback); };
   }, [returnFocusTo]);
 
   useEffect(() => {
