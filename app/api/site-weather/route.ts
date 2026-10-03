@@ -18,11 +18,18 @@ type WeatherPayload = {hourly?:Record<string,unknown>;daily?:Record<string,unkno
 const upstreamCache=new Map<string,{expires:number;data:WeatherPayload}>();
 const upstreamPending=new Map<string,Promise<WeatherPayload>>();
 const weatherRetryAt=new Map<string,number>();
+class WeatherRateLimit extends Error {
+  constructor(readonly retryAfterSeconds:number){super('Open-Meteo is temporarily rate-limited. Existing entries were kept. Please try again after its limit resets.');}
+}
+function weatherFailure(reason:unknown){
+ const limited=reason instanceof WeatherRateLimit;
+ return Response.json({error:reason instanceof Error?reason.message:'Weather is temporarily unavailable.',code:limited?'rate_limited':'provider_unavailable',directFallback:true},{status:limited?429:502,headers:{'Cache-Control':'private, no-store',...(limited?{'Retry-After':String(reason.retryAfterSeconds)}:{})}});
+}
 async function fetchJson(url:URL):Promise<WeatherPayload> {
  const key=url.href;const cached=upstreamCache.get(key);
  if(cached && cached.expires>Date.now())return cached.data;
  const pending=upstreamPending.get(key);if(pending)return pending;
- if(Date.now()<(weatherRetryAt.get(url.hostname)??0))throw new Error('Weather is temporarily rate-limited. Your log has not been changed. Please try again later.');
+ if(Date.now()<(weatherRetryAt.get(url.hostname)??0))throw new WeatherRateLimit(Math.max(1,Math.ceil(((weatherRetryAt.get(url.hostname)??0)-Date.now())/1000)));
  const work=fetchUpstream(url).then(data=>{if(upstreamCache.size>=200)upstreamCache.delete(upstreamCache.keys().next().value!);upstreamCache.set(key,{expires:Date.now()+20*60*1000,data});return data;}).finally(()=>upstreamPending.delete(key));
  upstreamPending.set(key,work);return work;
 }
@@ -32,7 +39,7 @@ async function fetchUpstream(url: URL) {
   try {
     const response = await fetch(url.toString(), { headers: { accept: 'application/json' }, signal: controller.signal });
     if (response.ok) return (await response.json()) as WeatherPayload;
-    if (response.status === 429) { const seconds=Number(response.headers.get('retry-after'));weatherRetryAt.set(url.hostname,Date.now()+Math.max(60,Number.isFinite(seconds)?seconds:60)*1000);throw new Error('Weather is temporarily rate-limited. Your log has not been changed. Please try again later.'); }
+    if (response.status === 429) {const raw=response.headers.get('retry-after');const numeric=Number(raw);const dateDelay=raw?Math.ceil((Date.parse(raw)-Date.now())/1000):NaN;const seconds=Math.max(60,raw&&Number.isFinite(numeric)?numeric:Number.isFinite(dateDelay)?dateDelay:60);weatherRetryAt.set(url.hostname,Date.now()+seconds*1000);throw new WeatherRateLimit(seconds);}
     throw new Error(`The weather service returned ${response.status}.`);
   } finally { clearTimeout(timeout); }
 }
@@ -72,7 +79,7 @@ export async function GET(request: Request) {
       weatherCache.set(cacheKey, { expires: Date.now() + 20 * 60 * 1000, value });
       return Response.json(value);
     } catch (reason) {
-      return Response.json({ error: reason instanceof Error ? reason.message : 'Forecast temporarily unavailable.', directFallback: true }, { status: 502 });
+      return weatherFailure(reason);
     }
   }
   const latitude = Number(url.searchParams.get('latitude'));
@@ -180,8 +187,6 @@ export async function GET(request: Request) {
       try {const fallback=await nasaDailyWeather(latitude,longitude,date);weatherCache.set(cacheKey,{expires:Date.now()+20*60*1000,value:fallback});return Response.json(fallback);}catch {/* Keep the original failure visible if both providers fail. */}
     }
 
-    return Response.json({
-      error: reason instanceof Error ? reason.message : date ? 'No weather history is available for that date.' : 'Weather forecast is temporarily unavailable.',
-    }, { status: 502 });
+    return weatherFailure(reason);
   }
 }

@@ -1,4 +1,5 @@
 import {cylinderNumberConstraint} from '@/lib/server/cylinder-number-constraint';
+import {diveEntityWriteConstraint} from '@/lib/operators/dive-log-write-boundary';
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '../../chatgpt-auth';
 import { householdAreaAccess, householdCanEditGear, readHouseholdAreaUserIds, readHouseholdUserIds, allowedHouseholdUser, registerHouseholdUser } from '@/lib/server/household';
@@ -173,7 +174,10 @@ export async function POST(request: Request) {
       if (duplicate) return Response.json({error:'A matching record already exists. Review the existing record before merging.',duplicateId:duplicate.id},{status:409});
     }
   }
-  const numberGuard=cylinderNumberConstraint(kind,body.data,existing?JSON.parse(existing.dataJson):null,id,ownerUserId,(kind==='cylinder'||kind==='equipment')&&body.data?await readHouseholdUserIds(env,user):[]);
+  let entityGuard:ReturnType<typeof diveEntityWriteConstraint>;
+  try{entityGuard=diveEntityWriteConstraint(kind,body.data,existing?JSON.parse(existing.dataJson):null,ownerUserId);}catch{return Response.json({error:'Select valid Dive Entity references.'},{status:400});}
+  const cylinderGuard=cylinderNumberConstraint(kind,body.data,existing?JSON.parse(existing.dataJson):null,id,ownerUserId,(kind==='cylinder'||kind==='equipment')&&body.data?await readHouseholdUserIds(env,user):[]);
+  const numberGuard={sql:cylinderGuard.sql+entityGuard.sql,bindings:[...cylinderGuard.bindings,...entityGuard.bindings]};
   if (body.localMutation) {
     if(existing && (body.data===null ? existing.deletedAt!==null : existing.deletedAt===null && existing.dataJson===dataJson))return Response.json({id,updatedAt:existing.updatedAt});
     const base = body.baseModifiedAt == null ? null : Date.parse(body.baseModifiedAt);
@@ -200,7 +204,7 @@ export async function POST(request: Request) {
   )
     .bind(id, ownerUserId, kind, dataJson, existing?.createdAt ?? now, now,...numberGuard.bindings)
     .run();
-  if(!write.meta.changes)return Response.json({error:'That cylinder number is already in use. Refresh and review the identities; no record was renumbered.'},{status:409});
+  if(!write.meta.changes)return Response.json({error:entityGuard.sql?'A selected Dive Entity is unavailable. Refresh and review the association; your local data is retained.':'That cylinder number is already in use. Refresh and review the identities; no record was renumbered.'},{status:409});
   if (kind === 'dashboard-settings') {
     const settings = body.data as { diveNumberStart?: number };
     await renumberUserDives(user.userId, Number(settings.diveNumberStart) || 1);

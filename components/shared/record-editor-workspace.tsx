@@ -31,8 +31,9 @@ export function RecordEditorWorkspace({label,close,save,children,value,dirty=fal
   useEffect(()=>{
     const workspace=root.current,topbar=document.querySelector<HTMLElement>('.focus-topbar');
     if(!workspace||!topbar)return;
-    const place=()=>workspace.style.setProperty('--record-editor-top',Math.ceil(topbar.getBoundingClientRect().height+8)+'px');
-    place();const observer=new ResizeObserver(place);observer.observe(topbar);
+    const header=workspace.querySelector<HTMLElement>(':scope > header');
+    const place=()=>{workspace.style.setProperty('--record-editor-top',Math.ceil(topbar.getBoundingClientRect().height+8)+'px');if(header)workspace.style.setProperty('--record-editor-header-height',Math.ceil(header.getBoundingClientRect().height)+'px');};
+    place();const observer=new ResizeObserver(place);observer.observe(topbar);if(header)observer.observe(header);
     return ()=>observer.disconnect();
   },[]);
   useEffect(()=>{

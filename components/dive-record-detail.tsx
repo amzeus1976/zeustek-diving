@@ -265,7 +265,7 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
   }
   return <div data-dive-id={dive.entityId}>
     <div hidden={skillEditor !== undefined}>
-    <RecordEditorWorkspace label={title} close={() => void leave(close)} closeLabel="Close Dive detail" statusText={error ? 'Local save needs attention' : status || eyebrow} trackInteractions={false} contentClassName="dive-multiview">
+    <RecordEditorWorkspace label={title} close={() => void leave(close)} closeLabel={view === 'overview' ? 'Close Dive detail' : 'Done'} statusText={error ? 'Local save needs attention' : status || eyebrow} trackInteractions={false} contentClassName="dive-multiview">
       <p className="dive-shared-date">{dive.date} · {[dive.timeIn, dive.timeOut].filter(Boolean).join(' – ') || 'Time not recorded'}</p>
       <div className="dive-shared-stats"><span>#{dive.diveNumber ?? '—'}</span><span>{dive.maxDepthM ?? '—'} m maximum</span><span>{dive.totalElapsedMin ?? dive.bottomTimeMin ?? '—'} min</span><span>{dive.gas || 'Gas not recorded'}</span></div>
       {dive.originatingPlanId && <p className="dive-plan-link"><a className="focus-link" href={`/?section=Dive%20Plans&planId=${encodeURIComponent(dive.originatingPlanId)}`} onClick={event => { event.preventDefault(); const url = event.currentTarget.href; void leave(() => window.location.assign(url)); }}>Originating Dive Plan</a></p>}
@@ -277,6 +277,8 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
         <TabsList className="dive-view-selector" aria-label="Dive view" activateOnFocus={false}>
           {DIVE_VIEWS.map(name => <TabsTrigger key={name} className="dive-view-pill" value={name} disabled={leaving}>{name[0]?.toUpperCase()}{name.slice(1)}</TabsTrigger>)}
         </TabsList>
+        {view !== 'overview' && <div className="dive-writing-status"><p>Changes save automatically on this device.</p><output aria-live="polite">{status || 'Ready to write'}</output></div>}
+        {error && <div role="alert" className="dive-save-error"><p>{error}</p><button type="button" className="focus-secondary" onClick={retry}>Retry local save</button></div>}
         <TabsContent value="overview" className="dive-view-body">
           <div className="detail-grid">{factualRows.slice(0, 12).map(([label, value]) => <div key={label}><small>{label}</small><span>{String(value)}</span></div>)}</div>
           <details className="dive-more-facts"><summary>Conditions, equipment, gases and other recorded details</summary><div className="detail-grid">{factualRows.slice(12).map(([label, value]) => <div key={label}><small>{label}</small><span>{String(value)}</span></div>)}</div></details>
@@ -289,31 +291,30 @@ export function DiveRecordDetail({ dive, title, eyebrow, rows, close, edit, remo
         </TabsContent>
         <TabsContent value="debrief" className="dive-view-body">
           <h3>Post-dive debrief</h3><p className="dive-view-help">Optional reflections. Dive facts above remain unchanged.</p>
-          {debriefFields.map(([field, label]) => <label key={field}>{label}<textarea value={debrief[field] ?? ''} onChange={event => changeDebrief({ [field]: event.target.value })} /></label>)}
+          <div className="dive-writing-fields">{debriefFields.map(([field, label]) => <label className="dive-writing-field" key={field}><span>{label}</span><textarea rows={4} value={debrief[field] ?? ''} onChange={event => changeDebrief({ [field]: event.target.value })} /></label>)}</div>
           <section className="dive-skill-evidence">
             <div className="dive-skill-head"><div><h3>Skills practised</h3><p>Reusable Skills and their evidence stay shared with future Skills &amp; Currency views.</p></div><button className="focus-primary" onClick={() => void leave(() => setSkillEditor(null))}><Plus size={16}/> Add skill</button></div>
             {contextError && <output>{contextError}</output>}
             {linkedEvidence.map((item, index) => item ? <SkillEvidenceCard key={item.entityId} item={item} skill={skillForEvidence(item)} people={people} busy={skillBusy === item.entityId} edit={() => void leave(() => setSkillEditor(item))} unlink={() => void unlinkEvidence(item.entityId)} remove={() => void deleteEvidence(item.entityId)} /> : <p key={evidenceIds[index]}>Saved evidence {evidenceIds[index]} — unavailable. <button className="focus-secondary" onClick={() => void unlinkEvidence(evidenceIds[index]!)}>Unlink evidence</button></p>)}
-            {!evidenceIds.length && <div className="dive-skill-empty"><p>No skills recorded for this dive yet.</p><button className="focus-secondary" onClick={() => void leave(() => setSkillEditor(null))}><Plus size={16}/> Add skill</button></div>}
+            {!evidenceIds.length && <div className="dive-skill-empty"><p>No skills recorded for this dive yet.</p></div>}
             {unlinkedEvidence.length > 0 && <details className="dive-existing-evidence"><summary>Link existing evidence ({unlinkedEvidence.length})</summary>{unlinkedEvidence.map(item => <div key={item.entityId}><span><b>{skillNameForEvidence(item)}</b><small>{item.performedAt || 'Date not recorded'}</small></span><button className="focus-secondary" disabled={skillBusy === item.entityId} onClick={() => void linkEvidence(item.entityId)}>Link to this Dive</button></div>)}</details>}
           </section>
-          <details className="dive-human-factors"><summary>Human factors outcome</summary>{humanFactorsFields.map(([field, label]) => <label key={field}>{label}<textarea value={debrief.humanFactorsOutcome?.[field] ?? ''} onChange={event => changeDebrief({ humanFactorsOutcome: { ...draft.current.debrief?.humanFactorsOutcome, [field]: event.target.value } })} /></label>)}</details>
-          <label>Confidence / comfort<select value={debrief.confidenceLevel ?? ''} onChange={event => changeDebrief({ confidenceLevel: event.target.value === '' ? null : Number(event.target.value) })}><option value="">Not rated</option><option value="1">1 — Very uncomfortable</option><option value="2">2 — Uncomfortable</option><option value="3">3 — Mixed / neutral</option><option value="4">4 — Comfortable</option><option value="5">5 — Very comfortable</option></select></label>
+          <details className="dive-human-factors"><summary>Human factors outcome</summary><div className="dive-writing-fields">{humanFactorsFields.map(([field, label]) => <label className="dive-writing-field" key={field}><span>{label}</span><textarea rows={3} value={debrief.humanFactorsOutcome?.[field] ?? ''} onChange={event => changeDebrief({ humanFactorsOutcome: { ...draft.current.debrief?.humanFactorsOutcome, [field]: event.target.value } })} /></label>)}</div></details>
+          <label className="dive-writing-field dive-confidence"><span>Confidence / comfort</span><select value={debrief.confidenceLevel ?? ''} onChange={event => changeDebrief({ confidenceLevel: event.target.value === '' ? null : Number(event.target.value) })}><option value="">Not rated</option><option value="1">1 — Very uncomfortable</option><option value="2">2 — Uncomfortable</option><option value="3">3 — Mixed / neutral</option><option value="4">4 — Comfortable</option><option value="5">5 — Very comfortable</option></select></label>
         </TabsContent>
         <TabsContent value="story" className="dive-view-body dive-story-body">
           <h3>Your Dive story</h3><p className="dive-view-help">Optional, user-authored memories of this same Dive.</p>
-          {storyFields.map(([field, label]) => <label key={field}>{label}<textarea value={story[field] ?? ''} onChange={event => changeStory({ [field]: event.target.value })} /></label>)}
+          <div className="dive-writing-fields">{storyFields.map(([field, label]) => <label className={field === 'narrative' ? 'dive-writing-field dive-writing-primary' : 'dive-writing-field'} key={field}><span>{label}</span><textarea rows={field === 'narrative' ? 8 : 4} value={story[field] ?? ''} onChange={event => changeStory({ [field]: event.target.value })} /></label>)}</div>
           {debrief.decisionsAndAdaptations && <section className="dive-reflection-summary"><h3>What changed and why</h3><p>{debrief.decisionsAndAdaptations}</p><button className="focus-link" onClick={() => void leave(() => setView('debrief'))}>Edit in Debrief</button></section>}
-          <section><h3>Timeline notes</h3>{(story.timelineNotes ?? []).map((note, index) => <div className="dive-timeline-note" key={index}>
-            <label>Minutes into Dive<input type="number" min="0" value={note.timeOffsetMin ?? ''} onChange={event => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).map((row, i) => i === index ? { ...row, timeOffsetMin: event.target.value === '' ? null : Number(event.target.value) } : row) })} /></label>
-            <label>Depth (m)<input type="number" min="0" value={note.depthM ?? ''} onChange={event => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).map((row, i) => i === index ? { ...row, depthM: event.target.value === '' ? null : Number(event.target.value) } : row) })} /></label>
-            <label className="dive-timeline-text">What happened<textarea value={note.text} onChange={event => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).map((row, i) => i === index ? { ...row, text: event.target.value } : row) })} /></label>
+          <section className="dive-story-timeline"><h3>Timeline notes</h3>{!(story.timelineNotes ?? []).length && <p className="dive-view-help">Add an optional moment with its time and depth.</p>}{(story.timelineNotes ?? []).map((note, index) => <div className="dive-timeline-note" key={index}>
+            <label className="dive-writing-field"><span>Minutes into Dive</span><input type="number" min="0" value={note.timeOffsetMin ?? ''} onChange={event => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).map((row, i) => i === index ? { ...row, timeOffsetMin: event.target.value === '' ? null : Number(event.target.value) } : row) })} /></label>
+            <label className="dive-writing-field"><span>Depth (m)</span><input type="number" min="0" value={note.depthM ?? ''} onChange={event => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).map((row, i) => i === index ? { ...row, depthM: event.target.value === '' ? null : Number(event.target.value) } : row) })} /></label>
+            <label className="dive-writing-field dive-timeline-text"><span>Timeline moment</span><textarea rows={3} value={note.text} onChange={event => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).map((row, i) => i === index ? { ...row, text: event.target.value } : row) })} /></label>
             <button className="focus-secondary" onClick={() => changeStory({ timelineNotes: (draft.current.story?.timelineNotes ?? []).filter((_, i) => i !== index) })}>Remove timeline note</button>
           </div>)}<button className="focus-secondary" onClick={() => changeStory({ timelineNotes: [...(draft.current.story?.timelineNotes ?? []), { text: '' }] })}>Add timeline note</button></section>
         </TabsContent>
       </Tabs>
-      <output className="dive-local-save">{status}</output>
-      {error && <div role="alert" className="dive-save-error"><p>{error}</p><button className="focus-secondary" onClick={retry}>Retry local save</button></div>}
+      {view === 'overview' && <output className="dive-local-save" aria-live="polite">{status}</output>}
       <MediaGallery ownerKind="dive" ownerId={dive.entityId} retainOfflineMetadata {...(view === 'story' ? { featuredIds: story.featuredAttachmentIds ?? [], onFeaturedChange: (ids: string[]) => changeStory({ featuredAttachmentIds: ids }) } : {})} />
     </RecordEditorWorkspace>
     </div>

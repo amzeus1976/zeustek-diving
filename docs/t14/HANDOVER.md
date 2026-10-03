@@ -1,5 +1,11 @@
 # T14 resumable handover
 
+## Urgent Dive and sync checkpoint — 3 October 2026
+
+Preserve branch **t14/outstanding-requests** and all current work. Read **2026-10-03-urgent-dive-sync-evidence.md** first. The owner-reported Dive fields, canonical operator/vessel selectors, bounded weather retrieval, Debrief/Story writing surfaces and sync-review placement are locally implemented and checked. Regression **1,230/185**, typecheck/build/PWA, zero new lint findings, privacy and all9 approved hashes pass. Six widths320/390/430/820/1024/1440 have no tested page/internal overflow, broken images or application console errors. Comparison Close restores trigger focus; no production version was selected. Only one explicit disposable local Dive edit created the fixture conflict; do not claim the older local fingerprint unchanged.
+
+Production remains accepted **app1.0.71 / Sites143**; no deployment, accepted source push or Gmail run occurred. Keep the approved #50/#54 work active: Topic pure projection/loader/registry foundations are preserved, **UI/source receivers and sharing are pending**. Next: complete those approved features test-first, prepare the joint human Gmail controls with no automatic run/reconnect/rotation, then the complete combined candidate gate, fresh owner/rollback evidence, one publication and exact GitHub reconciliation. Current app/cache version has not yet been advanced for a release. Do not restart completed stages or publish this intermediate checkpoint.
+
 ## Approved #50/#54 continuation — 3 October 2026
 
 The owner explicitly approved completion of #50/#54, followed by enabling Gmail reading as planned for a joint human test. Read **2026-10-03-approved-sharing-topic-ledger.md** and the two approved contracts. Preserve clean starting **t14/outstanding-requests / a2c696d**, tested application b144b43 and all previous evidence. The old blocked approval audit is now historical. Actual Sites143 and GitHub main d1937fb are unchanged at this restart.

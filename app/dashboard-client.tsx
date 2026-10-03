@@ -56,7 +56,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
 import {PublicProfileSettings} from '../components/sharing/public-profile-settings';
 import {IntegrationKeySettings} from '../components/sharing/integration-key-settings';
@@ -82,6 +82,8 @@ import {fillMissingGasRates} from '@/lib/gas-rates';
 import {initialElapsedRuntime} from '@/lib/dive-elapsed-runtime';
 import {applyMissingWholeDiveOcrmv,isWholeDiveRmvEstimateCurrent} from '@/lib/whole-dive-oc-rmv';
 import {WholeDiveRmvControls} from '@/components/logbook/whole-dive-rmv-controls';
+import {DiveEntitySelect} from '@/components/logbook/dive-entity-select';
+import {fetchDiveLogWeather,applyDiveLogWeather,weatherInputKey,type DiveLogWeatherRequest} from '@/lib/weather/dive-log-weather';
 import { diveHeat } from '@/lib/dive-heat';
 import { logTimeRange } from '@/lib/log-time';
 import { EditorSections } from '@/components/editor-sections';
@@ -566,13 +568,12 @@ export default function DiveApp({ userId }: { userId: string }) {
             />
           </div>
           <PlatformHeaderStatus />
-          <DiveSyncStatus />
           <button className="focus-primary" onClick={openNewDive}>
             <Plus size={16} /> Log dive
           </button>
         </header>
         <RecordOperationStatus />
-        <div className="focus-content"><ScreenTiming key={destinationKey} screen={active}>
+        <div className="focus-content"><DiveSyncStatus /><ScreenTiming key={destinationKey} screen={active}>
           {active === 'Overview' && (
               <Overview openLog={openNewDive} go={go} />
           )}
@@ -4799,6 +4800,10 @@ function DiveModal({
   const [longitude, setLongitude] = useState(item?.longitude?.toString() ?? '');
   const [operator, setOperator] = useState(item?.operator ?? '');
   const [vessel, setVessel] = useState(item?.vessel ?? '');
+  const [operatorId,setOperatorId]=useState(item?.operatorId??'');
+  const [vesselId,setVesselId]=useState(item?.vesselId??'');
+  const [diveEntities,setDiveEntities]=useState<Array<Stored<OperatorRecord>>>([]);
+  const [entityStatus,setEntityStatus]=useState('');
   const [diveTypes, setDiveTypes] = useState<string[]>(item?.diveTypes ?? []);
   const [waterType, setWaterType] = useState<NonNullable<DiveRecord['waterType']>>(
     item?.waterType ?? '',
@@ -4846,6 +4851,16 @@ function DiveModal({
   const [weatherResolution,setWeatherResolution]=useState(item?.weatherResolution??'');
   const [weatherAttribution,setWeatherAttribution]=useState(item?.weatherAttribution??'');
   const [weatherStatus, setWeatherStatus] = useState('');
+  const [weatherBusy,setWeatherBusy]=useState(false);
+  const weatherAbort=useRef<AbortController|null>(null);
+  const weatherSite=sites.find(candidate=>candidate.entityId===siteId);
+  const currentWeatherRequest:DiveLogWeatherRequest={latitude:optionalNumber(latitude)??weatherSite?.latitude??NaN,longitude:optionalNumber(longitude)??weatherSite?.longitude??NaN,date,time:timeIn||'12:00',marine:['shore','boat','wreck','sea'].includes(weatherSite?.siteType??'')};
+  const weatherDraft={weather,airTemp,windSpeed,windDirection,waveHeight,surfaceTemp,currentDirection};
+  const weatherCurrent=useRef({key:weatherInputKey(currentWeatherRequest),fields:weatherDraft,account:currentDiveAccount()});
+  const weatherKey=weatherInputKey(currentWeatherRequest),weatherAccount=currentDiveAccount();
+  useLayoutEffect(()=>{weatherCurrent.current={key:weatherKey,fields:{weather,airTemp,windSpeed,windDirection,waveHeight,surfaceTemp,currentDirection},account:weatherAccount};},[weatherKey,weatherAccount,weather,airTemp,windSpeed,windDirection,waveHeight,surfaceTemp,currentDirection]);
+  useEffect(()=>()=>{weatherAbort.current?.abort();},[]);
+  useEffect(()=>{weatherAbort.current?.abort();},[siteId,date,timeIn,latitude,longitude]);
   const initialGas = ['Air', 'Nitrox', 'Trimix', 'Oxygen', 'Other'].includes(item?.gas ?? '')
     ? (item?.gas as DiveCylinder['gasType'])
     : 'Air';
@@ -4921,6 +4936,7 @@ function DiveModal({
     void listEquipmentSets().then(setSets);
     void listDiveSites().then(setSites);
     void listPeople().then(setPeople);
+    void listOperators().then(setDiveEntities).catch(()=>setEntityStatus('Dive Entities could not be refreshed. Saved associations are retained.'));
     void listCertifications().then(setCertifications);
     void listDives().then(setDives);
     void listDashboardSettings().then((records) =>
@@ -5044,52 +5060,24 @@ function DiveModal({
   }
 
   async function pullWeatherForDive() {
-    const siteRecord = sites.find((candidate) => candidate.entityId === siteId);
-    const lat = optionalNumber(latitude) ?? siteRecord?.latitude ?? null;
-    const lng = optionalNumber(longitude) ?? siteRecord?.longitude ?? null;
-    if (lat == null || lng == null || !date) {
+    if (!Number.isFinite(currentWeatherRequest.latitude)||!Number.isFinite(currentWeatherRequest.longitude)||!date) {
       setWeatherStatus('Select a site with coordinates and a dive date first.');
       return;
     }
+    weatherAbort.current?.abort();const controller=new AbortController();weatherAbort.current=controller;
+    const requested={...currentWeatherRequest};const before={...weatherCurrent.current.fields};const key=weatherInputKey(requested);const account=currentDiveAccount();
+    setWeatherBusy(true);
     setWeatherStatus('Finding recorded conditions…');
     try {
-    const params = new URLSearchParams({
-      latitude: String(lat),
-      longitude: String(lng),
-      date,
-      time: timeIn || '12:00',
-      marine: String(['shore', 'boat', 'wreck', 'sea'].includes(siteRecord?.siteType ?? '')),
-    });
-    const response = await fetch(`/api/site-weather?${params}`, { cache: 'no-store' });
-    const result = (await response.json()) as {
-      error?: string;
-      logConditions?: {
-        weatherSummary?: string;
-        airTemperatureC?: number | null;
-        windSpeedKnots?: number | null;
-        windDirectionDegrees?: number | null;
-        waveHeightM?: number | null;
-        surfaceTemperatureC?: number | null;
-        currentDirectionDegrees?: number | null;
-      };
-      attribution?: string; provider?:string;resolution?:string;
-    };
-    if (!response.ok || !result.logConditions) {
-      appendApplicationDiagnostic('weather-error');setWeatherStatus('Weather conditions are unavailable for that date. Earlier saved observations remain available.');
-      return;
-    }
-    const conditions = result.logConditions;
-    setWeatherProvider(result.provider??'Open-Meteo');setWeatherResolution(result.resolution??'hourly');setWeatherAttribution(result.attribution??'');
-    if(!conditions.weatherSummary && conditions.airTemperatureC == null && conditions.surfaceTemperatureC == null){setWeatherStatus('No weather data are available for that date and time. Existing entries were kept.');return;}
-    setWeather(conditions.weatherSummary || weather);
-    if (conditions.airTemperatureC != null) setAirTemp(String(conditions.airTemperatureC));
-    if (conditions.windSpeedKnots != null) setWindSpeed(String(conditions.windSpeedKnots));
-    if (conditions.windDirectionDegrees != null) setWindDirection(String(conditions.windDirectionDegrees));
-    if (conditions.waveHeightM != null) setWaveHeight(String(conditions.waveHeightM));
-    if (conditions.surfaceTemperatureC != null) setSurfaceTemp(String(conditions.surfaceTemperatureC));
-    if (conditions.currentDirectionDegrees != null) setCurrentDirection(String(conditions.currentDirectionDegrees));
-    setWeatherStatus(`Conditions added. ${result.attribution ?? ''}`);
-    } catch {setWeatherStatus('Weather could not be reached. Your existing entries were kept. Please try again later.');}
+      const result=await fetchDiveLogWeather(requested,controller.signal);
+      if(controller.signal.aborted||weatherCurrent.current.key!==key||currentDiveAccount()!==account)return;
+      const next=applyDiveLogWeather(before,weatherCurrent.current.fields,result.logConditions,true);
+      if(JSON.stringify(next)===JSON.stringify(weatherCurrent.current.fields)){setWeatherStatus('No draft fields were changed. Existing observations or edits made during the request were kept.');return;}
+      setWeather(next.weather);setAirTemp(next.airTemp);setWindSpeed(next.windSpeed);setWindDirection(next.windDirection);setWaveHeight(next.waveHeight);setSurfaceTemp(next.surfaceTemp);setCurrentDirection(next.currentDirection);
+      setWeatherProvider(result.provider);setWeatherResolution(result.resolution);setWeatherAttribution(result.attribution);
+      setWeatherStatus(`Conditions added to this draft. Save the Dive to keep them. ${result.attribution}`);
+    } catch(error){if(!controller.signal.aborted&&weatherCurrent.current.key===key&&currentDiveAccount()===account){appendApplicationDiagnostic('weather-error');setWeatherStatus(error instanceof Error?error.message:'Weather could not be reached. Existing entries were kept.');}}
+    finally{if(weatherAbort.current===controller)setWeatherBusy(false);}
   }
 
   async function submit() {
@@ -5168,6 +5156,8 @@ function DiveModal({
       longitude: optionalNumber(longitude),
       operator,
       vessel,
+      operatorId,
+      vesselId,
       diveTypes,
       waterType,
       maxDepthM: depth ? Number(depth) : null,
@@ -5280,7 +5270,7 @@ function DiveModal({
     } finally { setSaving(false); }
   }
   return (
-    <RecordEditorWorkspace label={item ? 'Edit dive' : 'Log a dive'} close={close} save={submit} busy={saving} saveLabel="Save dive" saveDisabled={!site.trim() || !diveNumber || !timeIn || !timeOut} value={{cylinders,decoStops,diveTeamIds,buddyIds,diveLeaderId,hiredEquipment,equipmentIds,equipmentSetIds,weather,airTemp,surfaceTemp,minimumTemp,windSpeed,waveHeight,visibility}} contentClassName="dive-log-modal">
+    <RecordEditorWorkspace label={item ? 'Edit dive' : 'Log a dive'} close={close} save={submit} busy={saving} saveLabel="Save dive" saveDisabled={!site.trim() || !diveNumber || !timeIn || !timeOut} value={{cylinders,decoStops,diveTeamIds,buddyIds,diveLeaderId,hiredEquipment,equipmentIds,equipmentSetIds,operatorId,vesselId,operator,vessel,weather,airTemp,surfaceTemp,minimumTemp,windSpeed,waveHeight,visibility}} contentClassName="dive-log-modal">
         <EditorSections selector=".dive-form-section"/>
         <section className="dive-form-section">
           <span className="focus-eyebrow">DIVE IDENTITY & SITE</span>
@@ -5321,9 +5311,10 @@ function DiveModal({
             <label>Street address<input value={streetAddress} onChange={(event) => setStreetAddress(event.target.value)} /></label><label>Zip / postal code<input value={postcode} onChange={(event) => setPostcode(event.target.value)} /></label><label>Region / county<input value={region} onChange={(event) => setRegion(event.target.value)} /></label>
             <label>Latitude<input type="number" step="any" value={latitude} onChange={(event) => setLatitude(event.target.value)} /></label>
             <label>Longitude<input type="number" step="any" value={longitude} onChange={(event) => setLongitude(event.target.value)} /></label>
-            <label>Dive operator<input value={operator} onChange={(event) => setOperator(event.target.value)} /></label>
-            <label>Vessel<input value={vessel} onChange={(event) => setVessel(event.target.value)} /></label>
+            <DiveEntitySelect kind="operator" entities={diveEntities} value={{id:operatorId||undefined,name:operator}} onChange={value=>{setOperatorId(value.id??'');setOperator(value.name);}}/>
+            <DiveEntitySelect kind="vessel" entities={diveEntities} value={{id:vesselId||undefined,name:vessel}} onChange={value=>{setVesselId(value.id??'');setVessel(value.name);}}/>
           </div>
+          {entityStatus&&<output>{entityStatus}</output>}
           {site.trim() && !siteId && <p className="inline-create-notice"><Plus size={14} /> “{site.trim()}” will be added to your master Sites list when this dive is saved.</p>}
           <span className="field-subheading">DIVE SETTING & ACTIVITY</span>
           <DiveSettingActivity values={diveTypes} onChange={setDiveTypes}/>
@@ -5394,7 +5385,7 @@ function DiveModal({
             <label>Current direction (°)<input type="number" min="0" max="359" value={currentDirection} onChange={(event) => setCurrentDirection(event.target.value)} /></label>
             <label className="record-wide">Thermoclines<textarea value={thermoclines} onChange={(event) => setThermoclines(event.target.value)} placeholder="One depth or observation per line" /></label>
           </div>
-          <div className="weather-pull"><button className="focus-secondary" onClick={() => void pullWeatherForDive()}><CloudRain size={15} /> Pull local weather for this date and time</button><span>{weatherStatus}</span></div>
+          <div className="weather-pull"><button type="button" className="focus-secondary" disabled={weatherBusy} onClick={() => void pullWeatherForDive()}><CloudRain size={15} />{weatherBusy?'Retrieving weather…':'Pull local weather for this date and time'}</button><output aria-live="polite">{weatherStatus}</output></div>
         </details>
 
         <details className="dive-form-section">

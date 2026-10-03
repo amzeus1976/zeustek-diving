@@ -32,7 +32,7 @@ describe('editable AccessibleDialog dismissal contract', () => {
       readFileSync(new URL('../app/dashboard-client.tsx', import.meta.url), 'utf8'),
     ].join('\n');
     expect(sources).toContain('<RecordEditorWorkspace label={evidence ? \'Edit skill evidence\' : \'Add skill evidence\'}');
-    expect(sources).toContain('<RecordEditorWorkspace label={title} close={() => void leave(close)} closeLabel="Close Dive detail"');
+    expect(sources).toContain("<RecordEditorWorkspace label={title} close={() => void leave(close)} closeLabel={view === 'overview' ? 'Close Dive detail' : 'Done'}");
     expect(sources).not.toContain('<AccessibleDialog editable label={evidence');
     expect(sources).toContain('<RecordEditorWorkspace label={skill');
     expect(sources).toContain('<RecordEditorWorkspace label={item?\'Edit conservation activity\'');

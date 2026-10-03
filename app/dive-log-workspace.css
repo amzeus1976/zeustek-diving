@@ -1,0 +1,54 @@
+/* The Dive editor is an in-route workspace; its fields must not depend on dialog ancestry. */
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .field-grid > label:not(.record-check) {
+  display: flex; flex-direction: column; gap: .4rem; min-width: 0; color: var(--zt-text-muted);
+}
+
+/* Debrief and Story share the same in-route field contract, without dialog selectors. */
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-multiview { width:100%; max-width:100%; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-story-body { max-width:none; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-fields { display:grid; grid-template-columns:minmax(0,1fr); gap:1.25rem; margin:1.25rem 0; min-width:0; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-field { display:flex; flex-direction:column; gap:.5rem; min-width:0; margin:0; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-field > span { color:var(--zt-text); font-weight:600; overflow-wrap:anywhere; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-field :is(input,textarea,select) {
+  display:block; box-sizing:border-box; width:100%; min-width:0 !important;
+  background:var(--zt-surface-page,#070b0d); color:var(--zt-text); border:1px solid var(--zt-border-muted,#345766);
+  border-radius:var(--zt-radius-md,8px); padding:.75rem; font:inherit; line-height:1.6;
+}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-field textarea { min-height:8rem; resize:vertical; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-primary { grid-column:1/-1; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-primary textarea { min-height:15rem; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-field :is(input,textarea,select):focus-visible { outline:3px solid var(--zt-accent-cyan,#62d9f6); outline-offset:2px; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-status { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem 1rem; padding:.75rem 1rem; border:1px solid var(--zt-border-muted,#345766); border-radius:var(--zt-radius-md,8px); background:var(--zt-surface); }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-status p { margin:0; color:var(--zt-text-muted); }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-status output { font-weight:600; color:var(--zt-text); overflow-wrap:anywhere; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-confidence { max-width:28rem; margin-top:1.25rem; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-story-timeline { margin-top:1.5rem; border-top:1px solid var(--zt-border-muted,#345766); padding-top:1rem; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-skill-head { flex-wrap:wrap; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-skill-head > div { min-width:0; flex:1 1 18rem; }
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-skill-head button { flex-shrink:0; }
+@media(min-width:1100px) {
+  html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-writing-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal :is(input,select,textarea):not([type='checkbox']):not([type='radio']) {
+  display: block; width: 100%; min-width: 0 !important; box-sizing: border-box;
+  background: var(--zt-bg); color: var(--zt-text); border: 1px solid var(--zt-border);
+  border-radius: var(--zt-radius-md,8px); padding: .65rem .75rem; line-height: 1.5;
+}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal label:has(input[type='checkbox']) {
+  min-height: var(--zt-touch-target); cursor: pointer; gap: .6rem;
+}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal input[type='checkbox'] {
+  width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important; flex: 0 0 20px;
+}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .record-check {gap:.6rem; padding-block:.5rem;}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .editor-section-nav {position:static; margin:0; z-index:auto;}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .editor-section-nav label {display:flex; flex-wrap:wrap; align-items:center; gap:.75rem;}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .editor-section-nav select {flex:1 1 12rem; width:auto;}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-form-section {scroll-margin-top:calc(var(--record-editor-top,80px) + var(--record-editor-header-height,130px) + 16px);}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .weather-pull {flex-wrap:wrap; align-items:flex-start;}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .weather-pull button {padding-block:.65rem; flex:0 1 20rem; line-height:1.4;}
+html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .weather-pull :is(span,output) {flex:1 1 16rem; min-width:0; overflow-wrap:anywhere;}
+@media(max-width:600px){
+  html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-form-section {scroll-margin-top:calc(var(--record-editor-top,80px) + 16px);padding:12px;}
+  html[data-brand='zeustek-diving'] [data-record-editor-workspace] .dive-log-modal .weather-pull button {flex:auto; width:100%;}
+}

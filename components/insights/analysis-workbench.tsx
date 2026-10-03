@@ -12,7 +12,7 @@ import {ANALYSIS_CARD_REGISTRY,DEFAULT_ANALYSIS_CARDS,buildAnalysisCardData,vali
 import styles from './analysis-workbench.module.css';
 const palette=['#12c8f3','#ff9a40','#39dcab','#ac8eff','#fe748c','#c8ce66','#74bcda'];
 const display=(value:number|null|undefined)=>value==null?'Unknown':new Intl.NumberFormat('en-GB',{maximumFractionDigits:2}).format(value);
-const visualizationLabels:Record<AnalysisVisualization,string>={kpi:'KPI',bar:'Bar chart',line:'Line chart',scatter:'Scatter plot',donut:'Donut',table:'Table','site-map':'Site view'};
+const visualizationLabels:Record<AnalysisVisualization,string>={kpi:'KPI',bar:'Bar chart',line:'Line chart',scatter:'Scatter plot',donut:'Donut',table:'Table','site-map':'Site view',topics:'Topics'};
 type Props={cards:AnalysisCardConfig[];saveCards:(cards:AnalysisCardConfig[])=>Promise<void>;scope:AnalysisScope;changeScope:(scope:AnalysisScope)=>void;projection:ExperienceAnalyticsProjection;dives:DiveWithId[];sites:Stored<DiveSiteRecord>[];loadouts:Stored<ReusableLoadoutRecord>[];go?:((route:string)=>void)|undefined};
 export function AnalysisWorkbench({cards,saveCards,scope,changeScope,projection,dives,sites,loadouts,go}:Props){
   const [configure,setConfigure]=useState(false),[open,setOpen]=useState<{card:AnalysisCardConfig;view:'analysis'|'data'}|null>(null);

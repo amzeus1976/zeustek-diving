@@ -10,8 +10,8 @@ Preserved branch **t14/outstanding-requests**, clean starting HEAD **a2c696d7468
 
 | Requirement | State | Required proof |
 | --- | --- | --- |
-| #54 canonical topic projection, five source families, historical knowledge and exact saved relationships | APPROVED / pending | Focused source/match/provenance fixtures; no inferred/private-note index |
-| #54 bounded account-scoped read-only loader and scope/exclusion handling | pending | No writes/network, ownership/race/partial tests |
+| #54 canonical topic projection, five source families, historical knowledge and exact saved relationships | LOCAL foundation; UI pending | Focused source/match/provenance fixtures pass; no inferred/private-note index. Finish real Certification shape and source views |
+| #54 bounded account-scoped read-only loader and scope/exclusion handling | LOCAL PASS | No-write/no-network, ownership/race/partial tests pass; final combined gate remains required |
 | #54 optional registry card, configuration, grouped paging and exact source receivers | pending | Six defaults/max9 preserved; six-width controls, actual record drill-down |
 | #50 strict profile/Gas Plan snapshot projection and selected derivatives | APPROVED / pending | Nested allowlists, current source ownership, no invented calculations or private endpoint leakage |
 | #50 hash-only capability, preview freshness, expiry/revoke/regenerate, rate/cache boundaries | pending | Anonymous/owner API fixtures, cross-share/account/asset isolation and atomic invalidation |
@@ -21,6 +21,7 @@ Preserved branch **t14/outstanding-requests**, clean starting HEAD **a2c696d7468
 | Joint human Gmail live test | not performed | New human-initiated bounded operation after complete candidate; never repeat either consumed run or start background ingestion |
 | Final combined candidate and release | pending | Full regression/typecheck/build/PWA/version/cache/lint/privacy/security/six widths; nine approved hashes; fresh owner/rollback, one deployment, read-only smoke and exact GitHub reconciliation |
 | #83 supported-calendar imports | pending tool confirmation | Seven synthetic files / four private dummy Google targets; actual re-import/update/cancellation/DST/Unicode. No real data/invitations |
+| Added urgent Dive fields, entity selectors, weather, Debrief/Story and sync review | LOCAL PASS; production pending | 2026-10-03-urgent-dive-sync-evidence.md: 1,230/185, typecheck/build/privacy, nine hashes, six widths; no production writes |
 
 ## Boundaries
 
@@ -32,3 +33,4 @@ The owner's new Gmail instruction supersedes the blanket prohibition on preparin
 
 - Authority/baseline: saved before application edits; nine protected hashes checked against current approved manifest.
 - Next: write focused Topic Explorer and sharing boundary tests before implementation, then source/UI stages with recoverable commits and exact evidence.
+- Urgent local checkpoint: all owner-reported Dive/sync fixes preserved with the Topic foundations; complete the remaining approved features before the combined release. Historic passing totals do not replace their final implementation/acceptance gates.

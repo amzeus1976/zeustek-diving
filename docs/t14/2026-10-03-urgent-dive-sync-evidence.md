@@ -1,0 +1,30 @@
+# Urgent Dive editing and sync review checkpoint — 3 October 2026
+
+## Authority and source
+
+The owner's added Dive Log, operator/vessel, weather, Debrief/Story and sync-review reports steer the approved ongoing work. Preserve `t14/outstanding-requests` and all earlier application/evidence checkpoints. This is an unpublished local checkpoint, not release acceptance. Current accepted production remains app1.0.71 / Sites143; reverify it, its rollback artifact and fresh owner fingerprints immediately before the combined release. No production canonical record edit, Gmail run, publication, key issue, deployment or GitHub source push occurred here.
+
+## Root causes and bounded corrections
+
+- Full-route Dive inputs and Debrief/Story textareas depended on dialog-only CSS ancestry. Dedicated workspace styles now provide visible input surfaces, stacked labels, useful writing space, responsive columns, focus indicators, 20px checkbox glyphs within accessible targets, and jump navigation that does not overlap the workspace header.
+- Operator/vessel strings had no canonical selector. New selectors use existing Operator records, with explicit organisation/vessel types, additive exact ID references and historical display snapshots. Legacy text never auto-links by name. Local and atomic server writes/deletions validate these dependencies without rewriting historical records or requiring preloaded parents during trusted cache hydration.
+- The authenticated current-date Open-Meteo request returned a provider rate-limit result on the shared server. Weather errors now distinguish rate limits and preserve observations. One bounded official no-key browser fallback is allowed only for declared provider failures, never authentication failures. Exact date/hour, optional marine data, account/site/time cancellation and edits made during retrieval are preserved. Retrieval changes only the editor draft; an explicit Dive save is required.
+- Debrief/Story retain their existing local autosave queue and failure/navigation guards. All six writing fields are visible and labelled; the main story has more room; one Add skill action remains; save status and retry sit nearby. No Dive facts or private text were inferred or rewritten.
+- Sync controls previously expanded inside the app header and choices were not associated visually with their source. A separate collapsible, record-specific panel now identifies each review. The comparison shows changed fields first, optional unchanged fields, readable nested values and each choice beneath its own This device/Cloud version. Close restores keyboard focus. Viewing never chooses a version. Missing cloud data cannot be selected as a deletion.
+- The comparison now rejects an account switch during loading and a cloud revision that changed after preview. Review/download projections exclude connection records, tokens and raw transport errors; ordinary device records remain recoverable. The existing shared-equipment access warning remains actionable; the layout fix does not assert that a denied cloud write succeeded or silently select either version.
+
+## Verification
+
+Focused tests were written before the boundary/UX implementation, including account-race and stale-cloud failures reproduced before their fixes. Final checkpoint regression: **1,230 tests /185 files PASS**, typecheck PASS, production/PWA build PASS (**429 entries /42,583.16 KiB**), whitespace PASS. Targeted lint across146 files has **zero new/changed findings** and89 exact byte-unchanged baseline diagnostics; raw lint exit1 is recorded, not called clean. No tests or assertions were removed or weakened; retained weather assertions were updated to truthful429/Retry-After while keeping archive checks.
+
+All **nine approved calculation hashes match**. Client privacy scan:5 credential values/15 variants/64 client files, zero matches; server Gmail controls absent. All31 navigation PNGs and the748-icon superset/curated registries remain unchanged; masters are not eagerly precached.
+
+Compiled-app browser checks at **320/390/430/820/1024/1440** cover Dive fields, operator/vessel draft choices, single Me/self owner, instructor buddy/leader, Debrief/Story, comparison and weather. No page/internal overflow, missing images or application console warnings/errors in tested screens. Both version buttons retain >=44px height; Close returns focus to the exact review trigger. Actual explicit local weather retrieval returned the requested2026-10-01 hourly atmospheric data; unavailable water/visibility values stayed blank. That weather/entity/team draft was discarded, not saved.
+
+Only the isolated `local_seedy` dummy Dive `outstanding-qa-dive` was deliberately edited to create a cloud/device conflict. Both dummy texts are retained for comparison; neither production version was selected. Development evidence and screenshots remain ignored under `work/selected-tasks/urgent-ui-browser/`. The global historical local-fixture fingerprint must not be claimed unchanged after this intentional dummy edit.
+
+## Continuation
+
+The checkpoint also preserves the approved Topic Explorer pure projection/read-only loader and registry foundations. **Topic UI/configuration/source receivers and #50 snapshot sharing remain unfinished**; green tests are not those features' completion. Continue their approved contracts, then prepare bounded human-controlled Gmail testing without replaying consumed runs or enabling background ingestion. Complete the new combined version/cache/security/owner-data/browser/release gate before one Sites release and exact accepted GitHub reconciliation.
+
+Raw gate files: `urgent-ui-regression-checkpoint.json`, `urgent-ui-typecheck-checkpoint.txt`, `urgent-ui-build-checkpoint.txt`, `lint-comparison.json`, `outstanding-local-security-evidence.json` and browser observations under ignored `work/selected-tasks/`. Earlier failed/intermediate runs remain available as history.

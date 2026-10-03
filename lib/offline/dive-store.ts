@@ -6,6 +6,8 @@ import { recordIdentity } from '../record-identity';
 import { prepareCardImages } from './dive-images';
 import { flushComputerEvidenceAttachments } from './evidence-attachments';
 import { personReferencesOperator } from '../operators/operator-dependencies';
+import {diveReferencesOperator} from '../operators/dive-log-selection';
+import {recordHash} from './canonical';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
 
 let account = '';
@@ -131,6 +133,12 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
   const localId = `${module}:${id}`;
   const old = await zeustekDb.entities.get(localId);
   const prior = old?.record as Record<string, JsonValue> | undefined;
+  if(kind==='dive')for(const field of ['operatorId','vesselId']){
+    const reference=data[field];if(reference===undefined||reference===null||reference===''||reference===prior?.[field])continue;
+    if(typeof reference!=='string'||reference.length>256||Array.from(reference).some(char=>char.charCodeAt(0)<32))throw new Error('Select a valid Dive Entity reference.');
+    const parent=await zeustekDb.entities.get(`${module}:${reference}`);
+    if(!parent||parent.deleted||parent.entityType!=='operator')throw new Error('The selected Dive Entity is unavailable. Refresh the list or keep the historical entry.');
+  }
   const queued = (await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending | undefined;
   const now = new Date().toISOString();
   const record = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
@@ -145,6 +153,8 @@ async function deleteLocalRecordInternal(id:string){
   const module=moduleName();const localId=`${module}:${id}`;const old=await zeustekDb.entities.get(localId);
   if (!old) throw new Error('Load this record before deleting it.');
   if(old.entityType==='operator'){
+    const dives=await zeustekDb.entities.where('[module+entityType]').equals([module,'dive']).toArray();
+    if(dives.some(row=>!row.deleted&&diveReferencesOperator(row.record,id)))throw new Error('This Dive Entity is linked to a Dive record. Unlink the association before deleting.');
     const people=await zeustekDb.entities.where('[module+entityType]').equals([module,'person']).toArray();
     if(people.some(row=>!row.deleted&&personReferencesOperator(row.record,id)))
       throw new Error('This Dive Centre has linked Person records. Reassign or unlink them before deleting.');
@@ -171,29 +181,44 @@ async function deleteLocalRecordInternal(id:string){
 }
 export async function pendingDiveChanges() { return zeustekDb.settings.where('key').startsWith(`pending:${moduleName()}:`).toArray(); }
 export async function readDiveConflict(key:string){
-  if(!key.startsWith(`pending:${moduleName()}:`))throw new Error('This change belongs to another account.');
+  const startedAccount=currentDiveAccount(),startedModule=moduleName();
+  const assertAccount=()=>{if(currentDiveAccount()!==startedAccount)throw new Error('The account changed. Reopen this comparison in the current account.');};
+  if(!key.startsWith(`pending:${startedModule}:`))throw new Error('This change belongs to another account.');
   const row=await zeustekDb.settings.get(key);const pending=row?.value as unknown as Pending|undefined;
+  assertAccount();
   if(!pending||pending.state!=='conflict')throw new Error('This conflict has already changed.');
   const response=await fetch(`/api/dive-data?kind=${encodeURIComponent(pending.kind)}`,{cache:'no-store'});
+  assertAccount();
   if(!response.ok)throw new Error('Connect and sign in to review the cloud version.');
   const result=await response.json() as {items:Array<Record<string,JsonValue>&{id:string}>};
+  assertAccount();
   return {pending,cloud:result.items.find(item=>item.id===pending.id)??null};
 }
-export async function resolveDiveConflict(key:string,token:string,choice:'local'|'cloud'){
+export async function resolveDiveConflict(key:string,token:string,choice:'local'|'cloud',reviewedCloud?:Record<string,JsonValue>|null){
+  const startedAccount=currentDiveAccount(),startedModule=moduleName();
+  const assertAccount=()=>{if(currentDiveAccount()!==startedAccount)throw new Error('The account changed. Reopen this comparison in the current account.');};
   const {pending,cloud}=await readDiveConflict(key);
+  assertAccount();
   if(pending.token!==token)throw new Error('The local record changed during review. Reopen the comparison.');
+  if(reviewedCloud!==undefined&&await recordHash(reviewedCloud)!==await recordHash(cloud))throw new Error('The cloud record changed during review. Reopen the comparison before choosing a version.');
+  assertAccount();
   await zeustekDb.transaction('rw',zeustekDb.settings,zeustekDb.entities,async()=>{
+    assertAccount();
     const latest=(await zeustekDb.settings.get(key))?.value as unknown as Pending|undefined;
+    assertAccount();
     if(latest?.token!==token)throw new Error('The local record changed during review.');
-    await zeustekDb.settings.put({key:`conflict-archive:${moduleName()}:${pending.id}:${token}`,value:JSON.parse(JSON.stringify({pending,cloud,choice,resolvedAt:new Date().toISOString()}))});
+    await zeustekDb.settings.put({key:`conflict-archive:${startedModule}:${pending.id}:${token}`,value:JSON.parse(JSON.stringify({pending,cloud,choice,resolvedAt:new Date().toISOString()}))});
+    assertAccount();
     if(choice==='local')await zeustekDb.settings.put({key,value:{...pending,state:'pending',baseModifiedAt:cloud?.modifiedAt??null,token:crypto.randomUUID()} as unknown as JsonValue});
     else{
       await zeustekDb.settings.delete(key);
-      const entityId=`${moduleName()}:${pending.id}`;
+      const entityId=`${startedModule}:${pending.id}`;
       if(cloud){const {id,...record}=cloud;await zeustekDb.entities.update(entityId,{record:{...record,entityId:id},deleted:0,updatedAt:String(cloud.modifiedAt)});}
       else await zeustekDb.entities.update(entityId,{deleted:1});
     }
+    assertAccount();
   });
+  assertAccount();
   changed();void flushDiveChanges();
 }
 export async function flushDiveChanges() {

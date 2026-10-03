@@ -105,6 +105,8 @@ export interface DiveRecord {
   site: string; siteId?: string; streetAddress?: string; postcode?: string; hiredEquipment?: Array<{ name: string; category: string }>; diveNumber?: number; date: string; timeIn?: string; timeOut?: string;
 
   country?: string; region?: string; town?: string; latitude?: number | null; longitude?: number | null; operator?: string; vessel?: string;
+  /** Canonical non-human Dive Entity IDs; operator/vessel retain the saved display names. */
+  operatorId?: string; vesselId?: string;
 
   siteSource?: 'manual' | 'Finstrokes_DB' | 'Divemap_UK' | 'Custom_API';
 
