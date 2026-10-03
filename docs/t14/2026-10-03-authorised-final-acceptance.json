@@ -1,0 +1,79 @@
+{
+  "state": "LOCAL GATES VERIFIED EXCEPT HUMAN DOWNLOAD-CONTROL RESULT; NOT PUBLISHED",
+  "branch": "t14/outstanding-requests",
+  "applicationCommit": "61d787aa2b291487096b6510b66e5d20e5758208",
+  "applicationVersion": "1.0.72",
+  "cache": "zeustek-static-v19",
+  "applicationChangedInThisContinuation": false,
+  "unchangedCandidateGate": {
+    "tests": 1270,
+    "files": 192,
+    "typecheck": "PASS",
+    "buildPWA": "PASS; 431 entries /42645.22KiB",
+    "targetedLint": "0 new findings /89 byte-unchanged baseline findings /171 files; raw exit1 retained",
+    "protectedHashes": "9/9 unchanged versus approved manifest",
+    "privacy": "0 matches /5 credential values /15 encodings /66 client files; no printed values",
+    "responsiveRoutes": "186 PASS: 31 routes at320/390/430/820/1024/1440"
+  },
+  "dummyAttachments": {
+    "chooserUploads": "PASS; two approved dummy files to local QA only",
+    "exactPreviewPublication": "PASS; no real content",
+    "sixWidthVisitor": "PASS; no broken images/containment failures/console errors",
+    "httpDelivery": "PASS; two derivatives, unauthorised denial, private/no-store",
+    "actualDownloadedPDF": "PASS; 2 pages, Unicode, final record, pixel-identical PDFium renders, no active/private metadata",
+    "actualDownloadedPNG": "PASS;128x128RGBA and pixel-identical approved artwork",
+    "revocation": "PASS; separate dummy link snapshot/two files200 before and404 after; refreshed visitor0 links/0 images/console[]",
+    "browserNativeDownload": "UNVERIFIED; tool download event timeout/blob navigation protocol rejection; human result requested",
+    "productionCalls": 0
+  },
+  "calendarClient": {
+    "state": "PASS; actual Google Calendar web observations",
+    "dummyCalendars": 4,
+    "preparedFilesImported": 7,
+    "additionalSameFileImports": 2,
+    "additionalImportOutcome": "0/13, already imported; no forced new UID",
+    "longFileEvents": 170,
+    "finalUnicodeAndNoInvitation": true,
+    "deduplicationEditCancellation": "PASS; one per surviving source, edited11-12October, recoverable cancelled row",
+    "dst": "PASS;00:30UTC versus01:30UTC starts",
+    "originalDisplayZoneRestored": "Europe/London",
+    "existingCalendarEventsChanged": false,
+    "permanentDeletion": false,
+    "sourceEvidence": "work/selected-tasks/calendar-client-acceptance/client-acceptance-result.json"
+  },
+  "ownerSnapshot": {
+    "capturedAt": "2026-10-03T21:40:41.671Z",
+    "ordinaryRows": 6488,
+    "dives": 68,
+    "people": 12,
+    "operators": 5,
+    "gasPlans": 0,
+    "fullFingerprint": "c9c346ec844589bb621ca7ae2895dd0025b7964cf182c8ec07bbfbf3947e6673",
+    "matchesEarlierFullCapture": true,
+    "relationshipIntegrity": "Unique IDs;8 legacy pairs;1 explicit relationship;0 missing endpoints",
+    "encryptedRecoverability": "AES-GCM plus Windows-user DPAPI key, verified recovery"
+  },
+  "production": {
+    "appVersion": "1.0.71",
+    "sitesVersion": 143,
+    "deployment": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+    "publishedSource": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+    "rollbackSavedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_dfb390da5abc8191bbb58a13093389e5",
+    "rollbackTarSHA256": "bba507732118f3210ad748dd8ce3e5017b1ef57547a7bb648ebb056a27da0562",
+    "githubMain": "d1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2",
+    "environmentRevision": 4,
+    "changedInThisContinuation": false
+  },
+  "gmail": "Disabled; both historical FAILED runs consumed; read-only status only; fresh human-only grant not yet configured; no sync/reconnect/rotation",
+  "realPublicContent": "OFF",
+  "productionAPIKeys": "UNISSUED; feature consent recorded, exact per-client scopes/records/fields not selected",
+  "apiGuide": "docs/t14/API_USAGE.md",
+  "next": [
+    "Record actual human two-download result, never relabel consent PASS",
+    "Recheck exact clean candidate/current Sites/main/fresh owner evidence",
+    "Prepare fresh bounded human Gmail grant only when ready",
+    "Package/push through Sites helper, deploy one combined source",
+    "Read-only production acceptance and per-ID fingerprint comparison; verified rollback on genuine blocker",
+    "Only after live acceptance GitHub PR/main exact-source reconciliation"
+  ]
+}
