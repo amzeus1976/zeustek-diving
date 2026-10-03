@@ -1,5 +1,11 @@
 # T14 resumable handover
 
+## Approved #50/#54 continuation — 3 October 2026
+
+The owner explicitly approved completion of #50/#54, followed by enabling Gmail reading as planned for a joint human test. Read **2026-10-03-approved-sharing-topic-ledger.md** and the two approved contracts. Preserve clean starting **t14/outstanding-requests / a2c696d**, tested application b144b43 and all previous evidence. The old blocked approval audit is now historical. Actual Sites143 and GitHub main d1937fb are unchanged at this restart.
+
+Implement approved Topic Explorer and snapshot share links test-first on this branch, then run the combined gate before one release. Real content publication/key activation and specific dummy calendar uploads remain distinct confirmations. Prepare Gmail controls only after the approved features; no automatic/background ingestion or replay of either consumed FAILED run, reconnect or credential rotation. Human testing must produce a new actual recorded outcome, never relabel historical failures. Nine approved calculation hashes remain unchanged.
+
 ## Blocked audit / exact restart — 2 October 2026, 19:23 UTC
 
 Preserve **t14/outstanding-requests**, tested application **b144b43** and subsequent documentation through **83df58f**. This checkpoint changes documentation only; no application edits, tests, production writes, deployment, source push or Gmail operation. Fresh Sites evidence still shows **Sites143**, active, unchanged update timestamp 15:23:29.964225Z. The local application remains byte-identical to the 1177-test gate. Do not replace it with accepted main or production.
