@@ -343,6 +343,7 @@ export function SharedLinksSettings() {
           }
           className="focus-modal"
           containDismiss
+          returnFocusTo={settingsRef}
           close={() => {
             if (!busy) setConfirmation(null);
           }}

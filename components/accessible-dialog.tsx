@@ -1,14 +1,15 @@
 'use client';
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { resolveDiscardEscapeAction } from '../lib/dialog/discard-confirmation-state';
+import { restoreDialogFocus } from '../lib/dialog/focus-restoration';
 
 export const dialogAllowsImplicitDismiss = (editable: boolean) => !editable;
 export const dialogNeedsDiscardConfirmation = (editable: boolean, dirty: boolean) => editable && dirty;
 
-export function AccessibleDialog({ label, className, close, editable = false, dirty = false, trackInteractions = true, containDismiss = false, onEscape, children }: {
+export function AccessibleDialog({ label, className, close, editable = false, dirty = false, trackInteractions = true, containDismiss = false, onEscape, returnFocusTo, children }: {
   label: string; className: string; close: () => void; editable?: boolean; dirty?: boolean;
   trackInteractions?: boolean;
-  containDismiss?: boolean; onEscape?: () => void; children: ReactNode;
+  containDismiss?: boolean; onEscape?: () => void; returnFocusTo?: RefObject<HTMLElement | null>; children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
@@ -23,8 +24,8 @@ export function AccessibleDialog({ label, className, close, editable = false, di
     const dialog = ref.current;
     dialog?.showModal();
     if (dialog) { dialog.scrollTop = 0; dialog.focus({ preventScroll: true }); }
-    return () => { dialog?.close(); if (previous?.isConnected) previous.focus({ preventScroll: true }); };
-  }, []);
+    return () => { dialog?.close(); restoreDialogFocus(previous, returnFocusTo?.current); };
+  }, [returnFocusTo]);
 
   useEffect(() => {
     const dialog = ref.current;
