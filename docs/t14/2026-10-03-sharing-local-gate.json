@@ -1,0 +1,314 @@
+{
+  "status": "LOCAL SOURCE CHECKPOINT; NOT PUBLISHED",
+  "branch": "t14/outstanding-requests",
+  "applicationCommit": "61d787aa2b291487096b6510b66e5d20e5758208",
+  "applicationVersion": "1.0.72",
+  "cache": "zeustek-static-v19",
+  "regression": {
+    "testsPassed": 1270,
+    "testsFailed": 0,
+    "uniqueFiles": 192,
+    "report": "work/selected-tasks/sharing-final-candidate-regression.json"
+  },
+  "typecheck": "PASS",
+  "buildPWA": {
+    "status": "PASS",
+    "entries": 431,
+    "kib": 42645.22
+  },
+  "targetedLint": {
+    "status": "ZERO NEW FINDINGS",
+    "files": 171,
+    "baselineFindings": 89,
+    "rawExit": 1
+  },
+  "privacy": {
+    "credentialValuesChecked": 5,
+    "variantValuesChecked": 15,
+    "filesChecked": 66,
+    "filesContainingCredential": 0,
+    "valuesPrinted": false
+  },
+  "protectedCalculations": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "approvedSHA256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "currentSHA256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "acceptedSites143SourceSHA256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "approvedSHA256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "currentSHA256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "acceptedSites143SourceSHA256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "approvedSHA256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "currentSHA256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "acceptedSites143SourceSHA256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "approvedSHA256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "currentSHA256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "acceptedSites143SourceSHA256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "approvedSHA256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "currentSHA256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "acceptedSites143SourceSHA256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "approvedSHA256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "currentSHA256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "acceptedSites143SourceSHA256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "approvedSHA256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "currentSHA256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "acceptedSites143SourceSHA256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "approvedSHA256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "currentSHA256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "acceptedSites143SourceSHA256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "approvedSHA256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "currentSHA256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "acceptedSites143SourceSHA256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "approvedArtwork": {
+    "navigationPngCount": 31,
+    "completePngCount": 748,
+    "approvedArtworkOrRegistryChanges": [],
+    "navigationMastersInPrecache": false,
+    "exportFontsInPrecache": false
+  },
+  "compiledReadOnlyChecks": {
+    "passed": 12,
+    "productionCalls": 0,
+    "gmailCalls": 0,
+    "uploads": 0
+  },
+  "acceptedProduction": {
+    "appVersion": "1.0.71",
+    "sitesVersion": 143,
+    "deploymentId": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+    "source": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+    "githubMain": "d1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2",
+    "savedRecoveryVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_dfb390da5abc8191bbb58a13093389e5",
+    "officialSavedTarSHA256": "bba507732118f3210ad748dd8ce3e5017b1ef57547a7bb648ebb056a27da0562",
+    "officialSavedTarBytes": 102195200,
+    "localHistoricalGzipIsExactNativeArtifact": false
+  },
+  "remainingMandatory": [
+    "Specific pending dummy image/PDF browser-upload tool confirmation and actual attachment acceptance",
+    "Resolve Task5 scope; specific dummy calendar-client acceptance only if included",
+    "Recheck current live/main/owner baseline and freeze clean source/artifact",
+    "One combined production deployment and read-only acceptance/owner comparison",
+    "Exact accepted GitHub PR/main reconciliation",
+    "Fresh bounded human Gmail test setup/outcome after applicable gates; never unattended or replayed"
+  ],
+  "productionWritesThisContinuation": 0,
+  "gmailLiveRunsThisContinuation": 0,
+  "realSharingPublication": "OFF",
+  "productionIntegrationKeys": "UNISSUED",
+  "browser": {
+    "source": "61d787aa2b291487096b6510b66e5d20e5758208",
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "routes": 31,
+    "routeObservations": 186,
+    "routeChecks": "PASS",
+    "applicationConsoleErrors": 0,
+    "applicationConsoleWarnings": 0,
+    "brokenImages": 0,
+    "pageOverflow": false,
+    "navOverflow": false,
+    "headingOverflow": false,
+    "sharingLifecycle": "PASS",
+    "sharingManager": "PASS all six widths",
+    "anonymousGasPlan": "PASS all six widths; independent per-cylinder states retained",
+    "topicExpanded": "PASS seven groups,39 sources,history,paging,exact links,family configuration,scope/reset",
+    "urgentDiveEditor": "PASS all six widths; one Me,canonical dropdowns,44px controls,no overlap",
+    "debriefStory": "PASS all six widths; visible writing surfaces and containment",
+    "personWorkspace": "PASS all six widths; circular160px unpictured preview,no overflow,no organisation CRUD",
+    "personCropImageUpload": "NOT PERFORMED; previous unchanged crop tests retained",
+    "attachmentBrowser": "PENDING specific dummy upload tool confirmation"
+  },
+  "freshOwnerBaseline": {
+    "exportedAt": "2026-10-03T19:19:54.110Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6488,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 197,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1675,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 11,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "fingerprint": "c9c346ec844589bb621ca7ae2895dd0025b7964cf182c8ec07bbfbf3947e6673",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true,
+    "gasPlans": 0,
+    "recaptureImmediatelyBeforeDeployment": true
+  },
+  "gmailPreparation": {
+    "dummyBrowser": "PASS; one mock run,0 Google/production requests,0 manual sync clicks",
+    "consumedProductionFailuresRetained": [
+      "fdeda6a4-5504-49d0-881d-d1795839955b",
+      "f2356ba1-2c8d-4f55-af40-7c59feac342f"
+    ],
+    "liveRestoration": "UNVERIFIED",
+    "newRun": "Human initiated only, after complete applicable non-Gmail gates and deployment",
+    "backgroundIngestion": "DISABLED"
+  },
+  "scope": {
+    "selectedTasks": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      7
+    ],
+    "additionalOwnerApprovedIssues": [
+      50,
+      54
+    ],
+    "task5": "Clarification requested: preserved ledger claims later expansion, available human task request excludes it; existing work retained"
+  },
+  "rawEvidence": [
+    {
+      "path": "work/selected-tasks/sharing-final-candidate-regression.json",
+      "sha256": "dd419d6c3ef6eef038a7380557110f4edd23d50cde372ac7c6dbdde221191f03"
+    },
+    {
+      "path": "work/selected-tasks/sharing-final-candidate-typecheck.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "work/selected-tasks/sharing-final-candidate-build.txt",
+      "sha256": "1201bd7df11947918d585b902c5454f1d9476b3507437658ac1fa1c5fc82a964"
+    },
+    {
+      "path": "work/selected-tasks/sharing-final-candidate-lint.txt",
+      "sha256": "5756f755a9266aad9163b8b7b0dbe8f2ec2dab4a5e1c8423764ed840caa84b75"
+    },
+    {
+      "path": "work/selected-tasks/outstanding-local-security-evidence.json",
+      "sha256": "e4f59c15286c4240324e2f9fa57cb67806591968670357e82e083f6324b3262d"
+    },
+    {
+      "path": "work/selected-tasks/sharing-compiled-read-gate.json",
+      "sha256": "a289eacfb87f45fd598c989f9b4feeb840703a740c09bf2822de6647c825df06"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/final-all-route-browser.json",
+      "sha256": "91a41ce65f5732cf28752ea19e420fa694fdf4550a8746307b09d312b23ef75d"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/sharing-manager-final-browser.json",
+      "sha256": "eb34e5aeb3758851c6b78ee2c8eb80dbfb438c3cd2eeded522a55d02f501d76f"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/sharing-gas-browser.json",
+      "sha256": "5c9af77d724527b4883050708a7c553a0b09d00774b32cdf220364b5d365b821"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/topic-extended-browser.json",
+      "sha256": "d0f8fe52ab3d8b1a6c1f7a48dfadafee0bd316b14f9987b0fe6f2b6231ea059e"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/gmail-dummy-browser.json",
+      "sha256": "060ea88412c1cc38d4698fc9aead90d30d473d560dbadcde0f08ac986f205ecf"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/final-writing-browser.json",
+      "sha256": "6b8b7692b0fc6c911057e4cb528eee7cff487287da95b8b57d2497f12babbcd6"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/final-dive-editor-browser.json",
+      "sha256": "348748bfbe8a530da861d82a0cf0ffd8156f72601f286561c30bac1e232a8725"
+    },
+    {
+      "path": "work/selected-tasks/urgent-ui-browser/final-people-editor-browser.json",
+      "sha256": "17114529b5f8da9d46a06c2688e371b6a6f06657886384bfba39ea4c69a797cf"
+    },
+    {
+      "path": "work/selected-tasks/share-pdf-evidence/verification.json",
+      "sha256": "5ad6e4ee29533ee90babf9d32c391c4d3d5ff43de8802fd248b61439f440aa35"
+    }
+  ]
+}
