@@ -1,4 +1,5 @@
 import {KNOWLEDGE_TOPICS} from '../knowledge-tests';
+import {TRAINING_COURSES} from '../training-course-maps';
 
 export const TOPIC_FAMILIES=['knowledge','bibliography','news','skills','training','dives','sites'] as const;
 export type TopicFamily=typeof TOPIC_FAMILIES[number];
@@ -33,6 +34,7 @@ export function buildTopicProjection(snapshot:TopicSnapshot,options:Omit<TopicSe
  if(!validateTopicSettings({version:1,query:options.query,mode:options.mode,sources:options.sources}))throw new Error('Use a topic of at most 160 characters and supported sources.');
  const query=normaliseTopicLabel(options.query),selected=new Set(options.sources),scope=new Set(options.includedDiveIds),items:TopicItem[]=[];
  const records=snapshot.records.filter(row=>row.id&&object(row.data)&&!row.data.suppressedFromUse&&row.data.state!=='deleted'&&!row.data.deletedAt);
+ const owners=records.filter(person=>person.kind==='person'&&object(person.data.roles)&&person.data.roles.ownerProfile===true);
  const result:TopicProjection={query:options.query.trim(),topics:[],items,partial:snapshot.coverage.some(row=>row.state==='unknown'),unavailableReferences:0,truncated:false,snapshotAt:snapshot.snapshotAt};
  const labels=new Map<string,string>();
  const label=(value:unknown)=>{const recorded=text(value,160),key=normaliseTopicLabel(recorded);if(key&&!labels.has(key)&&labels.size<2000)labels.set(key,recorded);};
@@ -66,7 +68,7 @@ export function buildTopicProjection(snapshot:TopicSnapshot,options:Omit<TopicSe
    if(reviews.some(review=>review.data.setId===data.setId&&review.data.setVersion===data.version&&review.data.questionId===input.id&&review.data.usageState==='suppressed'))continue;
    label(input.topic);label(input.exactTopic);
    add(row,'knowledge',`${text(data.title,180)} · ${text(input.prompt,240)}`,'Current reviewed question',match([text(input.topic),text(input.exactTopic)],[['Question',input.prompt],['Objective',input.objective]]),[
-    detail('Bank',data.title),detail('Bank identity',data.setId),detail('Version',String(data.version)),detail('Question',input.prompt),detail('Explanation',input.explanation),detail('Recorded provenance',input.provenance),
+    detail('Bank',data.title),detail('Bank identity',data.setId),detail('Version',String(data.version)),detail('Question',input.prompt),detail('Recorded choices',strings(input.options).join('\n')),detail('Recorded answers',strings(input.answers).join(', ')),detail('Explanation',input.explanation),detail('Recorded provenance',input.provenance),
    ],{questionId:text(input.id),setId:text(data.setId),setVersion:Number(data.version)});
   }
  }
@@ -77,7 +79,7 @@ export function buildTopicProjection(snapshot:TopicSnapshot,options:Omit<TopicSe
    if(!object(input)||!text(input.id)||!text(input.setId)||!Number.isSafeInteger(input.setVersion)){result.partial=true;continue;}
    label(input.topic);label(input.exactTopic);
    add(row,'knowledge',text(input.prompt,240),'Historical attempt snapshot',match([text(input.topic),text(input.exactTopic)],[['Question',input.prompt]]),[
-    detail('Question',input.prompt),detail('Explanation in saved attempt',input.explanation),detail('Recorded provenance',input.provenance),detail('Completed',row.data.completedAt),detail('Bank identity',input.setId),detail('Saved version',String(input.setVersion)),
+    detail('Question',input.prompt),detail('Recorded choices',strings(input.options).join('\n')),detail('Response in saved attempt',Array.isArray(input.response)?strings(input.response).join(', '):input.response),detail('Explanation in saved attempt',input.explanation),detail('Recorded provenance',input.provenance),detail('Completed',row.data.completedAt),detail('Bank identity',input.setId),detail('Saved version',String(input.setVersion)),
    ],{questionId:text(input.id),setId:text(input.setId),setVersion:Number(input.setVersion),date:text(row.data.completedAt)});
   }
  }
@@ -93,11 +95,12 @@ export function buildTopicProjection(snapshot:TopicSnapshot,options:Omit<TopicSe
    label(data.group);const name=text(data.name)||text(data.title);
    add(row,'skills',name,data.archived?'Archived Skill':'Skill catalogue',match([text(data.group)],[['Skill name',name],['Description',data.description]]),[detail('Name',name),detail('Group',data.group),detail('Description',data.description)]);
   }else if(row.kind==='training-progress'){
-   add(row,'training',text(data.courseTitle,240),text(data.status),match([], [['Course title',data.courseTitle],['Agency',data.agency]]),[detail('Course title',data.courseTitle),detail('Agency',data.agency),detail('Course reference',data.courseId),detail('Saved status',data.status)]);
+   const catalog=TRAINING_COURSES.find(course=>course.id===data.courseId&&course.agency===data.agency);
+   add(row,'training',text(data.courseTitle,240),text(data.status),match([], [['Course title',data.courseTitle],['Agency',data.agency]]),[detail('Course title',data.courseTitle),detail('Agency',data.agency),detail('Course reference',data.courseId),detail('Saved status',data.status),detail('Current exact catalog context',catalog?.title)]);
   }else if(row.kind==='certification'){
-   const owners=records.filter(person=>person.kind==='person'&&object(person.data.roles)&&person.data.roles.ownerProfile===true);
    if(owners.length!==1||data.personId&&data.personId!==owners[0]!.id)continue;
-   add(row,'training',text(data.title,240)||text(data.name,240),'Recorded owner award',match([], [['Award title',data.title??data.name],['Agency',data.agency]]),[detail('Award title',data.title??data.name),detail('Agency',data.agency),detail('Recorded award date',data.date)]);
+   const award=text(data.certification,240)||text(data.level,240)||text(data.title,240)||text(data.name,240);
+   add(row,'training',award,'Recorded owner award',match([], [['Award title',award],['Agency',data.agency]]),[detail('Award title',award),detail('Agency',data.agency),detail('Recorded award date',data.issuedAt??data.date)]);
   }
  }
  const diveRows=records.filter(row=>row.kind==='dive'&&scope.has(row.id)),diveById=new Map(diveRows.map(row=>[row.id,row]));

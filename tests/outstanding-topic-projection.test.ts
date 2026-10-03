@@ -7,6 +7,12 @@ const bank=(id:string,version:number,reviewed=true)=>row('question-set',id,{form
 const snapshot=(records:TopicRecord[]):TopicSnapshot=>({accountId:'owner',snapshotAt:'2026-10-03T00:00:00Z',records,coverage:[]});
 const project=(records:TopicRecord[],patch:Partial<Parameters<typeof buildTopicProjection>[1]>={})=>buildTopicProjection(snapshot(records),{query:'Buoyancy',mode:'explicit-and-text',sources:['knowledge','bibliography','news','skills','training','dives','sites'],includedDiveIds:['d1'],...patch});
 describe('approved Topic Explorer canonical projection',()=>{
+ it('reads actual canonical award titles/dates and preserves exact owner evidence without private fields',()=>{
+  const result=project([row('person','owner-person',{name:'Owner',roles:{ownerProfile:true}}),row('certification','award',{certification:'Peak Performance Buoyancy',level:'Specialty',agency:'PADI',issuedAt:'2026-09-01',certificationNumber:'PRIVATE-NUMBER',notes:'PRIVATE-NOTES',cardFront:{key:'PRIVATE-KEY'}}),row('certification','other',{personId:'another-person',certification:'Buoyancy',agency:'PADI'})]);
+  expect(result.items).toHaveLength(1);expect(result.items[0]).toMatchObject({recordId:'award',title:'Peak Performance Buoyancy'});
+  expect(result.items[0]?.details).toContainEqual({label:'Recorded award date',value:'2026-09-01'});
+  expect(JSON.stringify(result)).not.toMatch(/PRIVATE-NUMBER|PRIVATE-NOTES|PRIVATE-KEY/);
+ });
  it('discovers normalized recorded labels, without merging canonical source records',()=>{
   expect(normaliseTopicLabel('  ＢＵＯＹＡＮＣＹ\t skills ')).toBe('buoyancy skills');
   const result=project([row('dive-media','m1',{title:'Book',topics:['Ｂｕｏｙａｎｃｙ']}),row('dive-media','m2',{title:'Another',topics:['buoyancy'],url:'https://example.invalid/book'})]);

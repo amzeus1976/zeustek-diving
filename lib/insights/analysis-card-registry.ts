@@ -1,6 +1,6 @@
 import {diveRuntimeMinutes,type DiveWithId,type ExperienceAnalyticsProjection} from '../offline/experience-analytics';
 import type {DiveSiteRecord,Stored} from '../offline/dive-planning';
-import {validateTopicSettings,type TopicSettings} from './topic-explorer';
+import {DEFAULT_TOPIC_SETTINGS,validateTopicSettings,type TopicSettings} from './topic-explorer';
 export type AnalysisVisualization='kpi'|'bar'|'line'|'scatter'|'donut'|'table'|'site-map'|'topics';
 type Registration={label:string;defaultVisualization:AnalysisVisualization;allowed:AnalysisVisualization[];description:string};
 export const ANALYSIS_CARD_REGISTRY={
@@ -20,6 +20,10 @@ export const ANALYSIS_CARD_REGISTRY={
 } satisfies Record<string,Registration>;
 export type AnalysisMetricKey=keyof typeof ANALYSIS_CARD_REGISTRY;
 export type AnalysisCardConfig={id:string;metric:AnalysisMetricKey;visualization:AnalysisVisualization;title?:string;span?:1|2;topic?:TopicSettings};
+export function changeAnalysisCardMetric(card:AnalysisCardConfig,metric:AnalysisMetricKey):AnalysisCardConfig{
+  const {topic:previous,...rest}=card;
+  return {...rest,metric,visualization:ANALYSIS_CARD_REGISTRY[metric].defaultVisualization,...(metric==='topic-explorer'?{topic:structuredClone(previous??DEFAULT_TOPIC_SETTINGS)}:{})};
+}
 export const DEFAULT_ANALYSIS_CARDS:AnalysisCardConfig[]=[
   {id:'depth',metric:'depth-bands',visualization:'bar'},{id:'environment',metric:'environment',visualization:'donut'},
   {id:'sac',metric:'sac-trend',visualization:'line'},{id:'rmv',metric:'rmv-trend',visualization:'line'},

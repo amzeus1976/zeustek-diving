@@ -1,14 +1,19 @@
 'use client';
-import {useMemo,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {BarChart3,Database,Plus,Settings2,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Line,LineChart,Pie,PieChart,ResponsiveContainer,Scatter,ScatterChart,Tooltip,XAxis,YAxis} from 'recharts';
 import {AccessibleDialog} from '../accessible-dialog';
 import {RecordEditorWorkspace} from '../shared/record-editor-workspace';
 import {AnalysisSourceRecords} from './analysis-source-records';
+import {useRecordRefresh} from '../record-status';
+import {TopicExplorerView,TOPIC_FAMILY_LABELS} from './topic-explorer';
+import {DEFAULT_TOPIC_SETTINGS,TOPIC_FAMILIES,type TopicSettings,type TopicSnapshot} from '../../lib/insights/topic-explorer';
+import {readTopicSnapshot} from '../../lib/insights/read-topic-snapshot';
+import {currentDiveAccount} from '../../lib/offline/dive-store';
 import {buildExperienceAnalyticsProjection,type AnalysisScope,type DiveWithId,type ExperienceAnalyticsProjection} from '../../lib/offline/experience-analytics';
 import type {DiveSiteRecord,Stored} from '../../lib/offline/dive-planning';
 import type {ReusableLoadoutRecord} from '../../lib/offline/loadouts-gas';
-import {ANALYSIS_CARD_REGISTRY,DEFAULT_ANALYSIS_CARDS,buildAnalysisCardData,validateAnalysisCards,type AnalysisCardConfig,type AnalysisCardData,type AnalysisDataRow,type AnalysisMetricKey,type AnalysisVisualization} from '../../lib/insights/analysis-card-registry';
+import {ANALYSIS_CARD_REGISTRY,DEFAULT_ANALYSIS_CARDS,buildAnalysisCardData,changeAnalysisCardMetric,validateAnalysisCards,type AnalysisCardConfig,type AnalysisCardData,type AnalysisDataRow,type AnalysisMetricKey,type AnalysisVisualization} from '../../lib/insights/analysis-card-registry';
 import styles from './analysis-workbench.module.css';
 const palette=['#12c8f3','#ff9a40','#39dcab','#ac8eff','#fe748c','#c8ce66','#74bcda'];
 const display=(value:number|null|undefined)=>value==null?'Unknown':new Intl.NumberFormat('en-GB',{maximumFractionDigits:2}).format(value);
@@ -16,6 +21,20 @@ const visualizationLabels:Record<AnalysisVisualization,string>={kpi:'KPI',bar:'B
 type Props={cards:AnalysisCardConfig[];saveCards:(cards:AnalysisCardConfig[])=>Promise<void>;scope:AnalysisScope;changeScope:(scope:AnalysisScope)=>void;projection:ExperienceAnalyticsProjection;dives:DiveWithId[];sites:Stored<DiveSiteRecord>[];loadouts:Stored<ReusableLoadoutRecord>[];go?:((route:string)=>void)|undefined};
 export function AnalysisWorkbench({cards,saveCards,scope,changeScope,projection,dives,sites,loadouts,go}:Props){
   const [configure,setConfigure]=useState(false),[open,setOpen]=useState<{card:AnalysisCardConfig;view:'analysis'|'data'}|null>(null);
+  const [queries,setQueries]=useState<Record<string,string>>({}),[topicSnapshot,setTopicSnapshot]=useState<TopicSnapshot|null>(null),[topicError,setTopicError]=useState(''),[topicBusy,setTopicBusy]=useState(false);
+  const topicEnabled=cards.some(card=>card.metric==='topic-explorer'),topicAccount=currentDiveAccount(),topicRequest=useRef(0);
+  const refreshTopics=useCallback(async()=>{
+    const request=++topicRequest.current;if(!topicEnabled||!topicAccount)return;
+    setTopicBusy(true);setTopicError('');
+    try {const next=await readTopicSnapshot(topicAccount);if(request===topicRequest.current&&currentDiveAccount()===topicAccount)setTopicSnapshot(next);}
+    catch {if(request===topicRequest.current&&currentDiveAccount()===topicAccount)setTopicError('Cached evidence could not be read. Refresh here or reopen the relevant workspace.');}
+    finally {if(request===topicRequest.current&&currentDiveAccount()===topicAccount)setTopicBusy(false);}
+  },[topicEnabled,topicAccount]);
+  useRecordRefresh(refreshTopics);
+  useEffect(()=>()=>{topicRequest.current++;},[]);
+  const snapshot=topicSnapshot?.accountId===topicAccount?topicSnapshot:null;
+  const topicSettings=(card:AnalysisCardConfig):TopicSettings=>({...card.topic??DEFAULT_TOPIC_SETTINGS,query:queries[card.id]??card.topic?.query??''});
+  const topicView=(card:AnalysisCardConfig,expanded=false)=><TopicExplorerView snapshot={snapshot} settings={topicSettings(card)} includedDiveIds={projection.includedDiveIds} onQuery={query=>setQueries(current=>({...current,[card.id]:query}))} expanded={expanded} explore={()=>setOpen({card,view:'analysis'})} go={go?navigate:undefined}/>;
   const dataScope=useMemo(()=>buildExperienceAnalyticsProjection(dives,sites,loadouts,{...scope,excludedDiveIds:[]}),[dives,sites,loadouts,scope]);
   const navigate=(route:string)=>{setOpen(null);go?.(route);};
   if(configure)return <WorkbenchEditor cards={cards} close={()=>setConfigure(false)} save={async next=>{await saveCards(next);setConfigure(false);}}/>;
@@ -24,18 +43,19 @@ export function AnalysisWorkbench({cards,saveCards,scope,changeScope,projection,
   const changeEnvironment=(key:string)=>changeScope({...scope,environmentFocus:scope.environmentFocus===key?null:key});
   return <section className={styles.workbench} aria-label="Analysis workbench">
     <header className={styles.heading}><div><h2>Analysis workbench</h2><p>{cards.length} of 9 cards · titles enlarge analysis; Data opens its records.</p></div><button className="focus-secondary" onClick={()=>setConfigure(true)}><Settings2 size={16}/>Configure cards</button></header>
+    {topicEnabled&&<div className={styles.topicStatus}><span>{topicBusy?'Reading cached topic evidence…':snapshot?'Cached topic evidence · '+new Date(snapshot.snapshotAt).toLocaleString('en-GB'):'Topic evidence not yet loaded.'}</span><button type="button" className="focus-secondary" disabled={topicBusy} onClick={()=>void refreshTopics()}>Refresh cached evidence</button>{topicError&&<p role="alert">{topicError}</p>}</div>}
     <div className={styles.grid}>{cards.map(card=>{
       const data=buildAnalysisCardData(card.metric,projection,dives,sites),title=card.title||ANALYSIS_CARD_REGISTRY[card.metric].label;
       return <article className={styles.card} key={card.id} data-span={card.span??1}><header><button className={styles.title} onClick={()=>setOpen({card,view:'analysis'})} aria-label={'Enlarge '+title}>{title}</button><button className="focus-secondary" onClick={()=>setOpen({card,view:'data'})} aria-label={'Source data for '+title}><Database size={14}/>Data</button></header>
-        <AnalysisVisual card={card} data={data} environmentFocus={scope.environmentFocus??null} changeEnvironment={changeEnvironment} go={go}/>
-        <small>{new Set(data.rows.flatMap(row=>row.diveIds)).size} source Dives{data.missingCount?' · '+data.missingCount+' missing measurements':''}</small>
+        {card.metric==='topic-explorer'?topicView(card,card.visualization==='table'):<><AnalysisVisual card={card} data={data} environmentFocus={scope.environmentFocus??null} changeEnvironment={changeEnvironment} go={go}/>
+        <small>{new Set(data.rows.flatMap(row=>row.diveIds)).size} source Dives{data.missingCount?' · '+data.missingCount+' missing measurements':''}</small></>}
       </article>;
     })}</div>
     {!cards.length&&<p className={styles.empty}>No cards selected. Configure the workbench to add a metric.</p>}
     {open&&openData&&<AccessibleDialog label={(open.view==='data'?'Source data: ':'Enlarged analysis: ')+(open.card.title||ANALYSIS_CARD_REGISTRY[open.card.metric].label)} className={'focus-modal '+styles.dialog} close={()=>setOpen(null)}>
       <header><div><span className="focus-eyebrow">{open.view==='data'?'CANONICAL SOURCE RECORDS':'ANALYSIS WORKBENCH'}</span><h2>{open.card.title||ANALYSIS_CARD_REGISTRY[open.card.metric].label}</h2></div><button className="focus-icon" aria-label="Close workbench detail" onClick={()=>setOpen(null)}><X/></button></header>
       <p>{ANALYSIS_CARD_REGISTRY[open.card.metric].description}</p>
-      {open.view==='analysis'?<div className={styles.enlarged}><AnalysisVisual card={open.card} data={openData} environmentFocus={scope.environmentFocus??null} changeEnvironment={changeEnvironment} go={go}/><button className="focus-secondary" onClick={()=>setOpen({...open,view:'data'})}><Database size={14}/>View source records</button></div>:
+      {open.card.metric==='topic-explorer'?topicView(open.card,true):open.view==='analysis'?<div className={styles.enlarged}><AnalysisVisual card={open.card} data={openData} environmentFocus={scope.environmentFocus??null} changeEnvironment={changeEnvironment} go={go}/><button className="focus-secondary" onClick={()=>setOpen({...open,view:'data'})}><Database size={14}/>View source records</button></div>:
         <><div className={styles.panelActions}>{buildAnalysisCardData(open.card.metric,dataScope,dives,sites).rows.filter(row=>row.siteId||row.equipmentSetId).map(row=><a key={row.id} className="focus-secondary" href={'/?section='+encodeURIComponent(row.siteId?'Sites':'Loadouts & Gas')+'&'+(row.siteId?'siteId':'loadoutId')+'='+encodeURIComponent(row.siteId??row.equipmentSetId!)} onClick={go?event=>{event.preventDefault();navigate((row.siteId?'Sites&siteId=':'Loadouts & Gas&loadoutId=')+encodeURIComponent(row.siteId??row.equipmentSetId!));}:undefined}>{row.label} ↗</a>)}</div>
           <AnalysisSourceRecords dives={dives.filter(dive=>allSourceIds.has(dive.entityId))} excludedIds={scope.excludedDiveIds} changeExcluded={excludedDiveIds=>changeScope({...scope,excludedDiveIds})} go={go?navigate:undefined}/></>}
       <footer><button className="focus-secondary" onClick={()=>setOpen(null)}>Close</button></footer>
@@ -78,11 +98,18 @@ function WorkbenchEditor({cards,close,save}:{cards:AnalysisCardConfig[];close:()
     <p className={styles.safety}>Choose up to nine cards. This layout is separate from the award strip and the current analysis scope.</p>
     <div className={styles.panelActions}><button className="focus-secondary" disabled={draft.length>=9} onClick={()=>setDraft([...draft,{id:crypto.randomUUID(),metric:'total-dives',visualization:'kpi'}])}><Plus size={16}/>Add card</button><button className="focus-secondary" onClick={()=>setDraft(structuredClone(DEFAULT_ANALYSIS_CARDS))}>Restore six default cards</button><span>{draft.length} of 9 cards</span></div>
     <div className={styles.cardEditor}>{draft.map((card,index)=><fieldset key={card.id}><legend><BarChart3 size={15}/>Card {index+1}</legend>
-      <label>Metric<select value={card.metric} onChange={event=>{const metric=event.target.value as AnalysisMetricKey;update(index,{metric,visualization:ANALYSIS_CARD_REGISTRY[metric].defaultVisualization});}}>{Object.entries(ANALYSIS_CARD_REGISTRY).map(([key,entry])=><option key={key} value={key}>{entry.label}</option>)}</select></label>
+      <label>Metric<select value={card.metric} onChange={event=>{const metric=event.target.value as AnalysisMetricKey;setDraft(current=>current.map((entry,i)=>i===index?changeAnalysisCardMetric(entry,metric):entry));}}>{Object.entries(ANALYSIS_CARD_REGISTRY).map(([key,entry])=><option key={key} value={key}>{entry.label}</option>)}</select></label>
       <label>Visualisation<select value={card.visualization} onChange={event=>update(index,{visualization:event.target.value as AnalysisVisualization})}>{ANALYSIS_CARD_REGISTRY[card.metric].allowed.map(value=><option key={value} value={value}>{visualizationLabels[value]}</option>)}</select></label>
       <label>Custom title (optional)<input maxLength={100} value={card.title??''} placeholder={ANALYSIS_CARD_REGISTRY[card.metric].label} onChange={event=>update(index,{title:event.target.value})}/></label>
       <label>Card width<select value={card.span??1} onChange={event=>update(index,{span:Number(event.target.value) as 1|2})}><option value={1}>One column</option><option value={2}>Two columns</option></select></label>
+      {card.metric==='topic-explorer'&&<TopicCardSettings value={card.topic??DEFAULT_TOPIC_SETTINGS} change={topic=>update(index,{topic})}/>}
       <div className={styles.panelActions}><button className="focus-secondary" disabled={!index} onClick={()=>setDraft(current=>{const next=[...current];[next[index-1],next[index]]=[next[index]!,next[index-1]!];return next;})}>Move earlier</button><button className="focus-secondary" onClick={()=>setDraft(draft.filter((_,i)=>i!==index))}>Remove card</button></div>
     </fieldset>)}</div>{errors.length>0&&<p role="alert" className={styles.error}>{errors.join(' ')}</p>}
   </RecordEditorWorkspace>;
+}
+function TopicCardSettings({value,change}:{value:TopicSettings;change:(value:TopicSettings)=>void}){
+  return <div className={styles.topicConfiguration}><label>Starting topic or phrase<input maxLength={160} value={value.query} onChange={event=>change({...value,query:event.target.value})}/></label>
+    <label>Topic matching<select value={value.mode} onChange={event=>change({...value,mode:event.target.value as TopicSettings['mode']})}><option value="explicit-and-text">Explicit topics and recorded text</option><option value="explicit-only">Explicit topics only</option></select></label>
+    <fieldset><legend>Source families</legend>{TOPIC_FAMILIES.map(family=><label className={styles.topicChoice} key={family}><input type="checkbox" checked={value.sources.includes(family)} onChange={event=>change({...value,sources:event.target.checked?[...value.sources,family]:value.sources.filter(source=>source!==family)})}/>{TOPIC_FAMILY_LABELS[family]}</label>)}</fieldset>
+  </div>;
 }

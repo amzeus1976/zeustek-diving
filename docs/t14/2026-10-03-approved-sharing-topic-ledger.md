@@ -10,9 +10,9 @@ Preserved branch **t14/outstanding-requests**, clean starting HEAD **a2c696d7468
 
 | Requirement | State | Required proof |
 | --- | --- | --- |
-| #54 canonical topic projection, five source families, historical knowledge and exact saved relationships | LOCAL foundation; UI pending | Focused source/match/provenance fixtures pass; no inferred/private-note index. Finish real Certification shape and source views |
+| #54 canonical topic projection, five source families, historical knowledge and exact saved relationships | LOCAL PASS; combined gate pending | 2026-10-03-topic-implementation-evidence.md; canonical award shape/owner evidence, safe exact source views |
 | #54 bounded account-scoped read-only loader and scope/exclusion handling | LOCAL PASS | No-write/no-network, ownership/race/partial tests pass; final combined gate remains required |
-| #54 optional registry card, configuration, grouped paging and exact source receivers | pending | Six defaults/max9 preserved; six-width controls, actual record drill-down |
+| #54 optional registry card, configuration, grouped paging and exact source receivers | LOCAL PASS; broader final browser scenarios pending | 30/4 focused, typecheck/build/PWA/lint/privacy; six widths and actual award drill-down |
 | #50 strict profile/Gas Plan snapshot projection and selected derivatives | APPROVED / pending | Nested allowlists, current source ownership, no invented calculations or private endpoint leakage |
 | #50 hash-only capability, preview freshness, expiry/revoke/regenerate, rate/cache boundaries | pending | Anonymous/owner API fixtures, cross-share/account/asset isolation and atomic invalidation |
 | #50 Shared Links manager and anonymous view | pending | Actual fixture create/update/revoke/regenerate, exact preview and responsive/accessibility review |

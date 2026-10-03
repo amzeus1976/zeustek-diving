@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Topic Explorer checkpoint — 3 October 2026
+
+Read `2026-10-03-topic-implementation-evidence.md`. Preserve the urgent b8c548b checkpoint and subsequent Topic source/UI work on **t14/outstanding-requests**. Topic projection, loader, registry, configuration, grouped paging and safe exact-record panel are local; focused **30/4**, typecheck/build/PWA/focused lint/privacy and all9 hashes pass. Populated award-source view passes six widths and opens the exact Certification. Additional grouped historical/source/paging fixtures remain part of the final combined browser gate. Only disposable local Card9 settings were intentionally saved; production unchanged. Next: implement approved issue50 snapshot sharing with bounded attachment/security tests and actual viewer evidence, prepare joint human Gmail controls without a live request, then complete the combined release and source reconciliation. No intermediate deployment/push, real public content or production keys.
+
 ## Urgent Dive and sync checkpoint — 3 October 2026
 
 Preserve branch **t14/outstanding-requests** and all current work. Read **2026-10-03-urgent-dive-sync-evidence.md** first. The owner-reported Dive fields, canonical operator/vessel selectors, bounded weather retrieval, Debrief/Story writing surfaces and sync-review placement are locally implemented and checked. Regression **1,230/185**, typecheck/build/PWA, zero new lint findings, privacy and all9 approved hashes pass. Six widths320/390/430/820/1024/1440 have no tested page/internal overflow, broken images or application console errors. Comparison Close restores trigger focus; no production version was selected. Only one explicit disposable local Dive edit created the fixture conflict; do not claim the older local fingerprint unchanged.
