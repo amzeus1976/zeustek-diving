@@ -1,5 +1,9 @@
 # T14 resumable handover
 
+## Provider backlog correction — 4 October 2026
+
+Read **2026-10-04-provider-credentials-review.md** before resuming #56. The owner-located original DIVE APIS AND MCPS.txt proves that all six established credential values were supplied on23September and match the ignored local server configuration. Current Sites environment revision5 contains none of those provider bindings; the live Settings UI confirms the existing keyed weather providers are unconfigured. Restoring their server configuration and verifying access is our remaining work, not a request for the owner to resend keys. Met Office's403 is historical, SwellCloud's reference records an API approval request, and the direct Copernicus subset bridge is still absent. No new provider request, environment change, deployment, owner-data write or Gmail action occurred during this audit. Accepted Sites144/source and GitHub main remain unchanged.
+
 ## Accepted combined release — 4 October 2026 (current authority)
 
 Read **sites144-release-evidence.json**, **sites144-follow-up-backlog.md** and **API_USAGE.md** first. Production is **app1.0.72 / Sites144**, deployment **appgdep_6ac22c0bb1a081918ace0a0a0fbc88c0**, published source **c39210be47cab1a21d7d6c6ea24b279cf41597bd** / full tree **1987f25e393642fb931970281de7b5c8a11801f7**, cache **zeustek-static-v19**, environment revision5. Source branch **t14/outstanding-requests** is frozen at that source; no application edit or second deployment followed freeze. GitHub **PR89 merged**, main **d57e1536921bd20d49a6d1c51a381db2adb7234a** has exactly the same full tree (native verification and empty local Git diff). This later documentation-only branch **t14/sites144-release-evidence** follows the existing separate evidence convention; do not deploy its documentation checkpoint as a new application.
