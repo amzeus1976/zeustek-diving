@@ -334,6 +334,6 @@ export function DiveRecordDetail({ dive, daySequence, title, eyebrow, rows, clos
     </RecordEditorWorkspace>
     </div>
     {skillEditor !== undefined && <SkillEvidenceDialog dive={dive} skills={skillEditor ? skills : availableDiveSkills({...dive,debrief},skills,evidence)} people={people} equipmentSets={equipmentSets} evidence={skillEditor} close={() => setSkillEditor(undefined)} saved={(item, ids) => { setEvidence(current => [...current.filter(value => value.entityId !== item.entityId), item]); applyEvidenceIds(ids); setSkillEditor(undefined); void refreshContext(); }} />}
-    {batchEditor && <DiveSkillBatchEditor dive={{...dive,debrief}} skills={skills} evidence={evidence} people={people} equipmentSets={equipmentSets} close={() => {setBatchEditor(false);void refreshContext();}} saved={(_items,ids) => {applyEvidenceIds(ids);setBatchEditor(false);void refreshContext();}}/>}
+    {batchEditor && <DiveSkillBatchEditor dive={{...dive,debrief}} skills={skills} evidence={evidence} people={people} equipmentSets={equipmentSets} close={() => {setBatchEditor(false);void refreshContext();}} progress={ids => {applyEvidenceIds(ids);void refreshContext();}} saved={(_items,ids) => {applyEvidenceIds(ids);setBatchEditor(false);void refreshContext();}}/>}
   </div>;
 }

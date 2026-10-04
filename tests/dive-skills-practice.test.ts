@@ -50,7 +50,7 @@ describe('Dive-specific Skills practice projection',()=>{
     const debrief=renderToStaticMarkup(createElement(DiveRecordDetail,{...props,initialView:'debrief'}));expect(debrief).toContain('Open Skills practised');expect(debrief).not.toContain('Link existing evidence');
   });
   it('renders multi-selection with separate ratings and repeat-attempt notes',()=>{
-    const html=renderToStaticMarkup(createElement(DiveSkillBatchEditor,{dive,skills,evidence,close:()=>{},saved:()=>{}}));
+    const html=renderToStaticMarkup(createElement(DiveSkillBatchEditor,{dive,skills,evidence,close:()=>{},saved:()=>{},progress:()=>{}}));
     expect(html).toContain('Select DSMB');expect(html).not.toContain('Select Trim');
     expect(html).toContain('Self assessed');expect(html).toContain('value="Quarry" selected');expect(html).toContain('Save 0 skills');
     expect(html).toContain('notes');expect(html).toContain('data-record-editor-workspace');

@@ -9,10 +9,10 @@ import type { PersonRecord, EquipmentSetRecord } from '../lib/offline/dive-plann
 
 interface PracticeDraft { entityId:string;skillId:string;competence:string;confidence:string;notes:string }
 const PAGE_SIZE=12;
-export function DiveSkillBatchEditor({dive,skills,evidence,people=[],equipmentSets=[],close,saved}:{
+export function DiveSkillBatchEditor({dive,skills,evidence,people=[],equipmentSets=[],close,saved,progress}:{
   dive:DiveRecord & {entityId:string};skills:CanonicalSkillRecord[];evidence:SkillEvidenceRecord[];
   people?:Array<PersonRecord & {entityId:string}>;equipmentSets?:Array<EquipmentSetRecord & {entityId:string}>;
-  close:()=>void;saved:(items:SkillEvidenceRecord[],evidenceIds:string[])=>void;
+  close:()=>void;saved:(items:SkillEvidenceRecord[],evidenceIds:string[])=>void;progress:(evidenceIds:string[])=>void;
 }) {
   const [selected,setSelected]=useState<PracticeDraft[]>([]);
   const [query,setQuery]=useState(''),[group,setGroup]=useState(''),[page,setPage]=useState(0);
@@ -32,6 +32,7 @@ export function DiveSkillBatchEditor({dive,skills,evidence,people=[],equipmentSe
     setBusy(true);setError('');
     try{
       const result=await saveDiveSkillBatch(dive.entityId,selected.map(row=>({entityId:row.entityId,skillKey:skillRecordKey(skills.find(skill=>skill.entityId===row.skillId)!),performedAt:new Date(performedAt).toISOString(),environment,assessment,competenceLevel:isSkillCompetenceLevel(row.competence)?row.competence:null,confidenceLevel:row.confidence===''?null:Number(row.confidence),notes:row.notes.trim(),evaluatorPersonId:evaluator||null,equipmentSetId:equipment||null,planId:dive.originatingPlanId??null})));
+      progress(result.evidenceIds);
       if(result.failed.length){
         const failed=new Set(result.failed.map(row=>row.entityId));setSelected(current=>current.filter(row=>failed.has(row.entityId)));
         setError(`${result.saved.length} saved; ${result.skipped.length} already recorded; ${result.failed.length} need attention. Saved Skills are retained. ${result.failed.map(row=>row.message).join(' ')} Retry saves only the retained drafts.`);

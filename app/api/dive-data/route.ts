@@ -1,4 +1,6 @@
 import {cylinderNumberConstraint} from '@/lib/server/cylinder-number-constraint';
+import {unchangedEquipmentHistory,archivesEquipmentHistoryOnly} from '@/lib/server/equipment-history-sync';
+import {packConditionsRecord,unpackConditionsRecord} from '@/lib/weather/conditions-storage';
 import {diveEntityWriteConstraint} from '@/lib/operators/dive-log-write-boundary';
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '../../chatgpt-auth';
@@ -65,7 +67,7 @@ export async function GET(request: Request) {
   ).bind(...householdIds, kind).all();
   let items: Array<Record<string, unknown> & { id: string; createdAt: string; modifiedAt: string }> = result.results.map((row) => ({
     id: String(row.id),
-    ...(JSON.parse(String(row.dataJson)) as Record<string, unknown>),
+    ...unpackConditionsRecord(kind,JSON.parse(String(row.dataJson)) as Record<string, unknown>),
     ...(sharedGear || collaborativeAlbums ? { householdOwnerId: String(row.ownerUserId), householdOwnedByMe: String(row.ownerUserId) === user.userId } : {}),
     createdAt: new Date(Number(row.createdAt)).toISOString(),
     modifiedAt: new Date(Number(row.updatedAt)).toISOString(),
@@ -109,7 +111,9 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid dive record' }, { status: 400 });
   let id = body.id || crypto.randomUUID();
   let now = Date.now();
-  const dataJson = JSON.stringify(body.data);
+  let dataJson:string;
+  try{dataJson=JSON.stringify(body.data?packConditionsRecord(kind,body.data as Record<string,unknown>):null);}
+  catch{return Response.json({error:'Saved conditions exceed the supported size or contain invalid packed data. The original device record is retained.'},{status:413});}
   if (dataJson.length > 200000)
     return Response.json({ error: 'Record is too large' }, { status: 413 });
   await ensureSchema();
@@ -160,9 +164,19 @@ export async function POST(request: Request) {
       return Response.json({error:'Equipment event requires its canonical Equipment reference.'},{status:400});
     if (existing && JSON.parse(existing.dataJson).equipmentId !== eventData.equipmentId)
       return Response.json({error:'Equipment event association cannot be changed.'},{status:400});
-    const parent = await env.DB.prepare("SELECT user_id AS ownerUserId FROM dive_records WHERE id=? AND kind='equipment' AND deleted_at IS NULL")
+    if (body.localMutation && existing && existing.deletedAt===null) {
+      if (body.baseModifiedAt!=null&&!Number.isFinite(Date.parse(body.baseModifiedAt)))
+        return Response.json({error:'Invalid base revision.'},{status:400});
+      // Access to this exact history was checked above. No write, timestamp change or parent creation.
+      if (unchangedEquipmentHistory(id,JSON.parse(existing.dataJson),eventData))
+        return Response.json({id,updatedAt:existing.updatedAt});
+    }
+    const archiveOnly=body.localMutation&&existing?.deletedAt===null&&archivesEquipmentHistoryOnly(id,JSON.parse(existing.dataJson),eventData);
+    const parent = archiveOnly?null:await env.DB.prepare("SELECT user_id AS ownerUserId FROM dive_records WHERE id=? AND kind='equipment' AND deleted_at IS NULL")
       .bind(eventData.equipmentId).first<{ownerUserId:string}>();
-    if (!parent || !(await householdCanEditGear(env,user,parent.ownerUserId)))
+    if (!archiveOnly&&!parent)
+      return Response.json({error:'Equipment for this history is unavailable. Review its Equipment record before syncing.'},{status:409});
+    if (!archiveOnly&&parent&&!(await householdCanEditGear(env,user,parent.ownerUserId)))
       return Response.json({error:'Shared equipment access required for this history.'},{status:403});
   }
   now=Math.max(now,(existing?.updatedAt??0)+1);

@@ -16,6 +16,7 @@ export type RecordReference = {
   sourceTitle: string;
   path: string;
   synthetic?: boolean;
+  archived?: boolean;
 };
 
 export type RecordAction = 'delete' | 'archive' | 'unlink' | 'manual-review';
@@ -115,8 +116,8 @@ const KIND_DESTINATIONS: Record<string, [string, string]> = {
   equipment: ['Equipment', 'Equipment'],
   'equipment-event': ['Equipment', 'Equipment history'],
   'equipment-set': ['Loadouts & Gas', 'Loadouts & Gas'],
-  'cylinder-fill': ['Loadouts & Gas', 'Cylinder fills'],
-  'gas-analysis': ['Loadouts & Gas', 'Gas analyses'],
+  'cylinder-fill': ['Cylinders & Gas', 'Cylinder fills'],
+  'gas-analysis': ['Cylinders & Gas', 'Gas analyses'],
   'gas-plan': ['Gas Planning', 'Gas Planning'],
   site: ['Sites', 'Sites'],
   'site-overhead-profile': ['Sites', 'Wreck & overhead profiles'],
@@ -125,7 +126,7 @@ const KIND_DESTINATIONS: Record<string, [string, string]> = {
   certification: ['Training', 'Certifications'],
   'training-progress': ['Course Map', 'Planned Training'],
   person: ['People', 'People'],
-  operator: ['People', 'People & operators'],
+  operator: ['Dive Centres', 'Dive Centres'],
   album: ['Albums', 'Albums'],
   'catalog-option': ['Settings', 'Site Configuration'],
   'dashboard-settings': ['Settings', 'Site Configuration'],
@@ -159,6 +160,11 @@ const KIND_DESTINATIONS: Record<string, [string, string]> = {
 
 function valueText(value: unknown) {
   return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+}
+
+/** Review only the exact dependency in this account's loaded canonical inventory. No write or inference. */
+export function resolveReviewReference(reference:RecordReference,records:readonly CanonicalRecordSnapshot[]) {
+  return records.find(snapshot=>snapshot.kind===reference.sourceKind&&snapshot.record.entityId===reference.sourceId);
 }
 
 export function fixtureTitle(record: Record<string, unknown>) {
@@ -231,6 +237,7 @@ export function buildReferenceIndex(records: CanonicalRecordSnapshot[]) {
       const references = index.get(target) ?? [];
       if (!references.some((item) => item.sourceId === source.record.entityId && item.path === path)) {
         references.push({ sourceKind: source.kind, sourceId: source.record.entityId, sourceTitle: fixtureTitle(source.record), path,
+          archived: source.record.archived===true&&source.record.suppressedFromUse===true,
           synthetic: !PROTECTED_DELETE_KINDS.has(source.kind) && looksLikeSyntheticFixture(source.record) });
         index.set(target, references);
       }
@@ -246,7 +253,7 @@ export function referenceCanUnlink(reference: RecordReference) {
 }
 
 export function recommendedRecordAction(kind: string, references: RecordReference[]): RecordAction {
-  if (PROTECTED_DELETE_KINDS.has(kind)) return references.some((reference) => !reference.synthetic) ? 'manual-review' : 'archive';
+  if (PROTECTED_DELETE_KINDS.has(kind)) return references.some((reference) => !reference.synthetic&&!reference.archived) ? 'manual-review' : 'archive';
   if (!references.length) return 'delete';
   if (references.every(referenceCanUnlink)) return 'unlink';
   return 'manual-review';
@@ -373,7 +380,7 @@ export function buildSyntheticCleanupPlan(selectedIds: string[], records: Canoni
     if (!selection.has(item.entityId)) continue;
     plan.selectedIds.push(item.entityId);
     if (PROTECTED_DELETE_KINDS.has(item.kind)) {
-      if (item.references.some((reference) => !reference.synthetic))
+      if (item.references.some((reference) => !reference.synthetic&&!reference.archived))
         plan.blocked.push({ id: item.entityId, reason: recordActionReason(item.kind, item.references) });
       else plan.archiveIds.push(item.entityId);
     }

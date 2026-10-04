@@ -5,7 +5,7 @@ export function householdPersonProjection<T extends Record<string, unknown>>(per
     'operatorId', 'currentDiveOperatorId', 'operatorName', 'operatorType',
     'operatorWebsite', 'operatorBookingUrl', 'operatorEmail', 'operatorPhone',
     'operatorAddress', 'operatorPostcode', 'operatorLocation', 'operatorEmergencyContact',
-    'operatorNotes', 'operatorServices', 'operatorAgencies', 'bookingUrl',
+    'operatorNotes', 'operatorServices', 'operatorAgencies', 'bookingUrl', 'favourite',
   ]) delete copy[field];
   return copy;
 }

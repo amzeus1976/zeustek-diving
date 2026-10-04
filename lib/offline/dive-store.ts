@@ -241,7 +241,7 @@ export async function flushDiveChanges() {
         if (!response.ok) {
           const result=await response.json() as {error?:string};
           if (!isCurrent()) return;
-          if (response.status===409 || response.status===403) {
+          if (response.status===409 || response.status===403 || response.status===413) {
             const conflictChanged = await zeustekDb.transaction('rw',zeustekDb.settings,async()=>{
               if (!isCurrent()) return false;
               const latest=await zeustekDb.settings.get(change.key);
