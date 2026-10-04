@@ -1,5 +1,13 @@
 # T14 resumable handover
 
+## Corrected Dive Plan layout candidate — final local gate, 4 October2026
+
+Read **dive-plan-editor-layout-ledger.md**, **dive-plan-editor-layout-local-gate.json** and **sites148-rejected-attempt.md**. Preserve all valid local work on **fix/dive-plan-editor-layout**. Corrected **app1.0.77/cachezeustek-static-v24** retains ten full-width native editor sections and23large224px full-width multiline controls. Existing editor control bindings match accepted147. The independently reproduced existing `CollapsibleWorkCard` storage-initializer hydration mismatch is corrected by restoring display preferences after initial hydration, with persistence gated until restoration; three new RED→GREEN tests and both remembered states verified. No canonical store/model/owner data or protected calculation change.
+
+Final local **1424 tests/214 files**, focused12/4, typecheck, production build/PWA422entries/42681.39KiB,8-file lint0diagnostics, privacy1355artifact files/0credential matches and all9protected hashes PASS. All31routes at six actual widths320/390/430/820/1024/1440 pass186observations; no application errors, clipping, page overflow or visible broken images. Draft collapse/rerender, local-only save while collapsed/reload and keyboard next-visible-section focus pass. Fresh20:33 owner6499-row snapshot/encrypted recovery/IDs/endpoints captured; do not use historical counts as targets.
+
+**Current accepted production remains app1.0.75/Sites147/source58edbe3**, restored recovery deployment **appgdep_6ac2af6894a08191b5a23424e2873a22**. Sites148/app76 failed console acceptance and was restored; source/evidence remain recoverable. GitHub accepted main9d4ceb0 still matches147. Exact next: freeze clean corrected source/bundle, package/push that exact source using the native helper, save/deploy a new Sites version, settled read-only live full-width/keyboard/source/cache/31icons/owner/console acceptance, then exact GitHub PR/main tree reconciliation. Gmail remains deferred/human-only; do not press the grant or write canonical production fixtures.
+
 ## Sites148 rejected; accepted Sites147 restored — 4 October2026
 
 Read **sites148-rejected-attempt.md** first. Preserve application **d4405015d202c35569f5d96c1a347b6af002b50f** on **fix/dive-plan-editor-layout**, its complete bundle/source and local1421/213 gate. The larger text boxes and ten full-width collapsible cards are implemented locally. Sites148/app1.0.76 was deployed but failed settled Brave console smoke with React418 and was **not accepted or pushed to GitHub**. Recovery deployment **appgdep_6ac2af6894a08191b5a23424e2873a22** restored the actual verified **app1.0.75/Sites147/source58edbe3**, environment6, at19:56UTC. Accepted main remains9d4ceb0.

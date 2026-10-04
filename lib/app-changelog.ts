@@ -1,6 +1,17 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.77',
+    date:'2026-10-04',
+    title:'Roomier Dive Plan editing and remembered-card loading',
+    changes:[
+      'All ten Dive Plan sections use full-width cards with independent Minimise and Expand controls.',
+      'Long-text boxes fill the section, start at a generous editing height and remain vertically resizable.',
+      'Collapsing a Plan section retains text and selected records without discarding changes.',
+      'Remembered card display preferences are restored safely after initial loading, avoiding a page-rendering mismatch.',
+    ],
+  },
+  {
     version:'1.0.76',
     date:'2026-10-04',
     title:'Roomier Dive Plan editing',
