@@ -1,6 +1,16 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.76',
+    date:'2026-10-04',
+    title:'Roomier Dive Plan editing',
+    changes:[
+      'Every Dive Plan editor card spans the full workspace and can be minimised or expanded with the keyboard or pointer.',
+      'Safety, emergency, objectives and notes use larger full-width text boxes with vertical resizing.',
+      'Minimising a card retains its text and selections. Save, Cancel and unsaved-change protection remain available.',
+    ],
+  },
+  {
     version:'1.0.75',
     date:'2026-10-04',
     title:'Full-width weather, buddy awards and daily Dive numbering',

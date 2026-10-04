@@ -14,3 +14,15 @@
 Source audit: `components/dive-planning-centre.tsx` owns the Plan editor and unchanged save/draft handlers. Its CSS uses two card columns and two inner field columns. Long Safety fields such as Task loading and Communication are half width. Textarea minimums vary44/112/128px. The shared CollapsibleWorkCard invokes navigation/discard and unmounts its body; it is inappropriate for collapsing a dirty editor. A scoped native disclosure keeps controls mounted and avoids that guard.
 
 Only presentation components/styles and release identifiers change. No store/schema/calculation/dependency/Gmail/provider/API/public-profile change. Current owner data and imported conditions stay unchanged. Document RED reproduction, focused GREEN and final candidate evidence before publication. Current147 recovery and a fresh owner baseline must be reverified at freeze; older counts are not targets.
+
+## Final local gate
+
+P01–P05 PASS: ten full-width native cards,23full-width224px/vertical-resize textareas; actual six widths verified. Dirty collapse/rerender/reopen, local-only save-while-collapsed/reload and next-visible-header keyboard focus pass. All existing input/select/textarea bindings match accepted147 byte-for-byte. The generic brand44px !important target and inline-summary style required scoped editor overrides; shared/global styles are unchanged.
+
+P06 local PASS:1421tests/213files, focused12/3, typecheck/build/PWA422entries/42680.76KiB, targetedlint6files/0diagnostics, compiled privacy1355files/0credentials, nine matching protected hashes. All31local routes ×six actual widths pass186observations without errors/overflow/clipping/broken visible images. Earlier ineffective IAB viewport measurements are retained as rejected; Brave extension widths were directly checked. Fresh private baseline/encrypted recovery and actual147rollback artifact verified. Native publication/live acceptance/GitHub remain pending for this exact checkpoint.
+
+## Final local gate
+
+P01–P05 PASS: ten full-width native cards,23full-width224px/vertical-resize textareas; actual six widths verified. Dirty collapse/rerender/reopen, local-only save-while-collapsed/reload and next-visible-header keyboard focus pass. All existing input/select/textarea bindings match accepted147 byte-for-byte. The generic brand44px !important target and inline-summary style required scoped editor overrides; shared/global styles are unchanged.
+
+P06 local PASS:1421tests/213files, focused12/3, typecheck/build/PWA422entries/42680.76KiB, targetedlint6files/0diagnostics, compiled privacy1355files/0credentials, nine matching protected hashes. All31local routes ×six actual widths pass186observations without errors/overflow/clipping/broken visible images. Earlier ineffective IAB viewport measurements are retained as rejected; Brave extension widths were directly checked. Fresh private baseline/encrypted recovery and actual147rollback artifact verified. Native publication/live acceptance/GitHub remain pending for this exact checkpoint.

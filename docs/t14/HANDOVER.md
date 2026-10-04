@@ -1,5 +1,13 @@
 # T14 resumable handover
 
+## Dive Plan editor layout — final local gate, 4 October2026
+
+Read **dive-plan-editor-layout-ledger.md** and **dive-plan-editor-layout-local-gate.json**. Preserve branch **fix/dive-plan-editor-layout**, accepted147/application58edbe3, documentation74cb375/requirements0db2bd2 and all subsequent bounded application changes. Candidate **app1.0.76/cachezeustek-static-v23** implements the authorised full-width ten editor cards, independent native minimise/expand and23large full-width multiline boxes. Collapse retains controlled fields without navigation/discard; local-only persisted text survives saving while collapsed and reload. Existing control bindings, save behaviour, stores and9protected files remain unchanged.
+
+Focused12/3 and full1421/213, typecheck/build/PWA422entries/42680.76KiB, targetedlint6files/0diagnostics and compiled privacy pass. All31local routes at actual320/390/430/820/1024/1440 widths pass186observations; ten cards and23textareas verified at each width with no errors/clipping/overflow/broken visible images. The IAB viewport setter did not change actual1440; rejected measurements retained, available Brave extension used for genuine six-width checks. No assertion weakened or coverage removed; release/cache test explicitly advances to76/v23.
+
+**Exact next:** freeze clean tested source/bundle; native source helper/package/save/deploy one bounded release to existing public project. Current accepted147savedversion/source/archive and environment6/all17bindings freshly reverified; use147 for recovery. Fresh owner6499-row snapshot, IDs/fingerprint/endpoints and encrypted recovery captured, not older counts. Read-only live actual source/cache/31icons/fullwidth/keyboard/owner comparison after deployment; no canonical owner save/delete or Gmail call. After acceptance only, exact GitHub PR/main fulltree reconciliation and final documentation checkpoint. Do not mark this local gate as published; older accepted147 below remains current until native publication/acceptance succeeds.
+
 ## Accepted Sites147 — current authority, 4 October2026
 
 Read **sites147-release-evidence.json** and **overview-corrected-sync-conditions-ledger.md**. Production **app1.0.75 / Sites147**, deployment **appgdep_6ac2a2525e4481919e84bc128d24b940**, source **58edbe397f10b51089836a6b157fa6cdb04979c2**, fulltree **9907d067066ada2025fa3ea1234f7a1dd43bc8e5**, cache **zeustek-static-v22**, environment6/all17bindings. **PR91 merged**, main **9d4ceb05bf0f9b7bc069585378fe8040fdd0400c** matches the entire published tree; fetched Git diff is empty. Sites146 stays rejected and its two review findings are corrected. This separate documentation checkpoint is not deployed over the accepted product tree.
