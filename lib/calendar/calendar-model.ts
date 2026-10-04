@@ -129,8 +129,8 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
     if (candidate.month) {
       const range = calendarMonthRange(rawStart);
       if (!range) { omit(category, 'invalid-date', 'The saved due month is invalid and needs review.', record); return; }
-      start = { type: 'date', value: dayStamp(range.start) }; end = { type: 'date', value: dayStamp(range.end) };
-      precision = 'month'; dateLabel = `${rawStart} · due month; exact day unknown`;
+      start = { type: 'date', value: dayStamp(range.start) }; end = { type: 'date', value: dayStamp(addCalendarDays(range.start, 1)!) };
+      precision = 'month'; dateLabel = `${rawStart} · due month; exact day unknown · reminder on ${range.start}`;
     } else if (candidate.timed) {
       precision = 'minute';
       const resolve = (raw: string, boundary: 'start' | 'end') => {
@@ -164,7 +164,7 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
       uid, category, summary: options.fields?.title && candidate.title ? text(candidate.title) : candidate.label,
       start, ...(end ? { end } : {}), precision, transparent: true,
       status: ['cancelled', 'canceled'].includes(status) ? 'CANCELLED' : ['confirmed', 'booked', 'active'].includes(status) || !status ? 'CONFIRMED' : 'TENTATIVE',
-      description: `${candidate.provenance}${precision === 'month' ? ' Due month; exact day unknown. This is not a first-day deadline.' : ''} Reminder only; no inspection compliance, serviceability or diver readiness is asserted.`,
+      description: `${candidate.provenance}${precision === 'month' ? ' Due month; exact day unknown. One reminder on the first day of the month, not a first-day deadline.' : ''} Reminder only; no inspection compliance, serviceability or diver readiness is asserted.`,
       dateLabel, source: { kind: record.kind, id: record.id }, reviewDestination: destination(record),
     };
     const modifiedAt = text(record.modifiedAt ?? record.data.modifiedAt), createdAt = text(record.createdAt ?? record.data.createdAt);
@@ -227,7 +227,7 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
         const explicit = type === 'hydro' ? text(data.hydroDueAt) : text(data.visualDueAt) || text(object(data.visualInspection)?.dueAt);
         const due = explicit || (type === 'hydro' ? schedule.hydroDueAt : schedule.visualDueAt) || '';
         const month = Boolean(calendarMonthRange(due));
-        await project({ record, category: 'cylinder-inspection', discriminator: type, label: `Cylinder ${type} ${month ? 'due month reminder' : 'inspection reminder'}`, title: options.fields?.title && text(data.name) ? `${text(data.name)} · ${type}${month ? ' due month' : ' inspection'}` : '', start: due, month, provenance: explicit ? 'Recorded cylinder inspection due evidence.' : 'Derived month from recorded test evidence using the existing cylinder schedule helper.' });
+        await project({ record, category: 'cylinder-inspection', discriminator: type, label: `Cylinder ${type} ${month ? 'due this month' : 'inspection reminder'}`, title: options.fields?.title && text(data.name) ? `${text(data.name)} · ${type}${month ? ' due this month' : ' inspection'}` : '', start: due, month, provenance: explicit ? 'Recorded cylinder inspection due evidence.' : 'Derived month from recorded test evidence using the existing cylinder schedule helper.' });
       }
     }
     if (record.kind === 'certification' && categories.has('qualification-expiry')) {

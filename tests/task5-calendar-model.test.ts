@@ -109,9 +109,11 @@ describe('selected canonical calendar projection', () => {
     ]), { ...DEFAULT_CALENDAR_OPTIONS, categories: ['cylinder-inspection'] });
     expect(preview.events).toHaveLength(4);
     const month = preview.events.find(event => event.start.value === '20261001')!;
-    expect(month).toMatchObject({ precision: 'month', transparent: true, end: { value: '20261101' } });
+    expect(month).toMatchObject({ precision: 'month', transparent: true, end: { value: '20261002' } });
     expect(month.summary).toContain('month');
     expect(month.description).toContain('exact day unknown');
+    expect(month.description).toContain('not a first-day deadline');
+    expect(month.dateLabel).toContain('reminder on 2026-10-01');
     expect(preview.events.find(event => event.start.value === '20261120')).toMatchObject({ precision: 'day', end: { value: '20261121' } });
     expect(preview.omissions.filter(row => row.code === 'missing-date')).toHaveLength(2);
   });
