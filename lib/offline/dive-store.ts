@@ -6,6 +6,8 @@ import { recordIdentity } from '../record-identity';
 import { prepareCardImages } from './dive-images';
 import { flushComputerEvidenceAttachments } from './evidence-attachments';
 import { personReferencesOperator } from '../operators/operator-dependencies';
+import {diveReferencesOperator} from '../operators/dive-log-selection';
+import {recordHash} from './canonical';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
 
 let account = '';
@@ -131,6 +133,12 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
   const localId = `${module}:${id}`;
   const old = await zeustekDb.entities.get(localId);
   const prior = old?.record as Record<string, JsonValue> | undefined;
+  if(kind==='dive')for(const field of ['operatorId','vesselId']){
+    const reference=data[field];if(reference===undefined||reference===null||reference===''||reference===prior?.[field])continue;
+    if(typeof reference!=='string'||reference.length>256||Array.from(reference).some(char=>char.charCodeAt(0)<32))throw new Error('Select a valid Dive Entity reference.');
+    const parent=await zeustekDb.entities.get(`${module}:${reference}`);
+    if(!parent||parent.deleted||parent.entityType!=='operator')throw new Error('The selected Dive Entity is unavailable. Refresh the list or keep the historical entry.');
+  }
   const queued = (await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending | undefined;
   const now = new Date().toISOString();
   const record = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
@@ -145,6 +153,8 @@ async function deleteLocalRecordInternal(id:string){
   const module=moduleName();const localId=`${module}:${id}`;const old=await zeustekDb.entities.get(localId);
   if (!old) throw new Error('Load this record before deleting it.');
   if(old.entityType==='operator'){
+    const dives=await zeustekDb.entities.where('[module+entityType]').equals([module,'dive']).toArray();
+    if(dives.some(row=>!row.deleted&&diveReferencesOperator(row.record,id)))throw new Error('This Dive Entity is linked to a Dive record. Unlink the association before deleting.');
     const people=await zeustekDb.entities.where('[module+entityType]').equals([module,'person']).toArray();
     if(people.some(row=>!row.deleted&&personReferencesOperator(row.record,id)))
       throw new Error('This Dive Centre has linked Person records. Reassign or unlink them before deleting.');
@@ -171,67 +181,107 @@ async function deleteLocalRecordInternal(id:string){
 }
 export async function pendingDiveChanges() { return zeustekDb.settings.where('key').startsWith(`pending:${moduleName()}:`).toArray(); }
 export async function readDiveConflict(key:string){
-  if(!key.startsWith(`pending:${moduleName()}:`))throw new Error('This change belongs to another account.');
+  const startedAccount=currentDiveAccount(),startedModule=moduleName();
+  const assertAccount=()=>{if(currentDiveAccount()!==startedAccount)throw new Error('The account changed. Reopen this comparison in the current account.');};
+  if(!key.startsWith(`pending:${startedModule}:`))throw new Error('This change belongs to another account.');
   const row=await zeustekDb.settings.get(key);const pending=row?.value as unknown as Pending|undefined;
+  assertAccount();
   if(!pending||pending.state!=='conflict')throw new Error('This conflict has already changed.');
   const response=await fetch(`/api/dive-data?kind=${encodeURIComponent(pending.kind)}`,{cache:'no-store'});
+  assertAccount();
   if(!response.ok)throw new Error('Connect and sign in to review the cloud version.');
   const result=await response.json() as {items:Array<Record<string,JsonValue>&{id:string}>};
+  assertAccount();
   return {pending,cloud:result.items.find(item=>item.id===pending.id)??null};
 }
-export async function resolveDiveConflict(key:string,token:string,choice:'local'|'cloud'){
+export async function resolveDiveConflict(key:string,token:string,choice:'local'|'cloud',reviewedCloud?:Record<string,JsonValue>|null){
+  const startedAccount=currentDiveAccount(),startedModule=moduleName();
+  const assertAccount=()=>{if(currentDiveAccount()!==startedAccount)throw new Error('The account changed. Reopen this comparison in the current account.');};
   const {pending,cloud}=await readDiveConflict(key);
+  assertAccount();
   if(pending.token!==token)throw new Error('The local record changed during review. Reopen the comparison.');
+  if(reviewedCloud!==undefined&&await recordHash(reviewedCloud)!==await recordHash(cloud))throw new Error('The cloud record changed during review. Reopen the comparison before choosing a version.');
+  assertAccount();
   await zeustekDb.transaction('rw',zeustekDb.settings,zeustekDb.entities,async()=>{
+    assertAccount();
     const latest=(await zeustekDb.settings.get(key))?.value as unknown as Pending|undefined;
+    assertAccount();
     if(latest?.token!==token)throw new Error('The local record changed during review.');
-    await zeustekDb.settings.put({key:`conflict-archive:${moduleName()}:${pending.id}:${token}`,value:JSON.parse(JSON.stringify({pending,cloud,choice,resolvedAt:new Date().toISOString()}))});
+    await zeustekDb.settings.put({key:`conflict-archive:${startedModule}:${pending.id}:${token}`,value:JSON.parse(JSON.stringify({pending,cloud,choice,resolvedAt:new Date().toISOString()}))});
+    assertAccount();
     if(choice==='local')await zeustekDb.settings.put({key,value:{...pending,state:'pending',baseModifiedAt:cloud?.modifiedAt??null,token:crypto.randomUUID()} as unknown as JsonValue});
     else{
       await zeustekDb.settings.delete(key);
-      const entityId=`${moduleName()}:${pending.id}`;
+      const entityId=`${startedModule}:${pending.id}`;
       if(cloud){const {id,...record}=cloud;await zeustekDb.entities.update(entityId,{record:{...record,entityId:id},deleted:0,updatedAt:String(cloud.modifiedAt)});}
       else await zeustekDb.entities.update(entityId,{deleted:1});
     }
+    assertAccount();
   });
+  assertAccount();
   changed();void flushDiveChanges();
 }
 export async function flushDiveChanges() {
   if (flushing || !navigator.onLine) return flushing;
-  const module = moduleName();
+  const startingAccount = account;
+  const accountModule = moduleName();
+  const isCurrent = () => account === startingAccount;
   flushing=(async () => {
-    const changes=sortPendingDiveChanges((await pendingDiveChanges()).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
-    for (const change of changes) {
-      if (moduleName() !== module) break;
-      const pending=change.value as unknown as Pending;
-      if (pending.state === 'conflict') continue;
-      const prepared=pending.record?await prepareCardImages(pending.record,account):null;
-      const response=await fetch('/api/dive-data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:pending.id,kind:pending.kind,data:prepared,localMutation:true,baseModifiedAt:pending.baseModifiedAt}),signal:AbortSignal.timeout(20_000)});
-      if (!response.ok) {
-        const result=await response.json() as {error?:string};
-        if (response.status===409 || response.status===403) {
-          await zeustekDb.transaction('rw',zeustekDb.settings,async()=>{
-            const latest=await zeustekDb.settings.get(change.key);
-            if(!latest)return;
-            // A newer local edit may have arrived during this request. Retain it.
-            await zeustekDb.settings.put({...latest,value:{...(latest.value as unknown as Pending),state:'conflict',error:result.error ?? 'Cloud record changed; both versions are preserved.'} as unknown as JsonValue});
-          });
-          changed(); continue;
+    let recordsChanged = false;
+    try {
+      const changes=sortPendingDiveChanges((await pendingDiveChanges()).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
+      for (const change of changes) {
+        if (!isCurrent()) return;
+        const pending=change.value as unknown as Pending;
+        if (pending.state === 'conflict') continue;
+        const prepared=pending.record?await prepareCardImages(pending.record,startingAccount,isCurrent):null;
+        if (!isCurrent()) return;
+        const response=await fetch('/api/dive-data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:pending.id,kind:pending.kind,data:prepared,localMutation:true,baseModifiedAt:pending.baseModifiedAt}),signal:AbortSignal.timeout(20_000)});
+        if (!isCurrent()) return;
+        if (!response.ok) {
+          const result=await response.json() as {error?:string};
+          if (!isCurrent()) return;
+          if (response.status===409 || response.status===403) {
+            const conflictChanged = await zeustekDb.transaction('rw',zeustekDb.settings,async()=>{
+              if (!isCurrent()) return false;
+              const latest=await zeustekDb.settings.get(change.key);
+              if(!latest || !isCurrent())return false;
+              // A newer local edit may have arrived during this request. Retain it.
+              await zeustekDb.settings.put({...latest,value:{...(latest.value as unknown as Pending),state:'conflict',error:result.error ?? 'Cloud record changed; both versions are preserved.'} as unknown as JsonValue});
+              return true;
+            });
+            if (conflictChanged && isCurrent()) changed();
+            continue;
+          }
+          throw new Error(result.error ?? 'Changes are saved on this device. Cloud sync will retry.');
         }
-        throw new Error(result.error ?? 'Changes are saved on this device. Cloud sync will retry.');
+        const result=await response.json() as {updatedAt:number};
+        if (!isCurrent()) return;
+        const acknowledged = await zeustekDb.transaction('rw',zeustekDb.settings,zeustekDb.entities,async () => {
+          if (!isCurrent()) return false;
+          const latest=await zeustekDb.settings.get(change.key);const next=latest?.value as unknown as Pending|undefined;
+          if (!isCurrent()) return false;
+          if (next?.token===pending.token) {
+            await zeustekDb.settings.delete(change.key);
+            const entity=await zeustekDb.entities.get(`${accountModule}:${pending.id}`);
+            if (!isCurrent()) throw new Error('The account changed during sync.');
+            if (entity?.record) await zeustekDb.entities.update(entity.entityId,{record:JSON.parse(JSON.stringify({...prepared,modifiedAt:new Date(result.updatedAt).toISOString()}))});
+            return true;
+          }
+          if(next) {
+            await zeustekDb.settings.put({...latest!,value:{...next,baseModifiedAt:new Date(result.updatedAt).toISOString()} as unknown as JsonValue});
+            return true;
+          }
+          return false;
+        });
+        recordsChanged ||= acknowledged;
       }
-      const result=await response.json() as {updatedAt:number};
-      await zeustekDb.transaction('rw',zeustekDb.settings,zeustekDb.entities,async () => {
-        const latest=await zeustekDb.settings.get(change.key);const next=latest?.value as unknown as Pending|undefined;
-        if (next?.token===pending.token) {
-          await zeustekDb.settings.delete(change.key);
-          const entity=await zeustekDb.entities.get(`${module}:${pending.id}`);
-          if (entity?.record) await zeustekDb.entities.update(entity.entityId,{record:JSON.parse(JSON.stringify({...prepared,modifiedAt:new Date(result.updatedAt).toISOString()}))});
-        } else if(next) await zeustekDb.settings.put({...latest!,value:{...next,baseModifiedAt:new Date(result.updatedAt).toISOString()} as unknown as JsonValue});
-      });
+      if (!isCurrent()) return;
+      const uploaded = await flushComputerEvidenceAttachments(startingAccount, isCurrent);
+      recordsChanged ||= uploaded > 0;
+    } finally {
+      if (recordsChanged && isCurrent()) changed();
     }
-    await flushComputerEvidenceAttachments(account);
-    changed();
-  })().catch(error => { window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); }).finally(()=>{flushing=null;});
+  })().catch(error => { if (isCurrent()) window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); }).finally(()=>{flushing=null;});
   return flushing;
 }

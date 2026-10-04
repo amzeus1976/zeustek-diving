@@ -1,6 +1,19 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.72',
+    date: '2026-10-03',
+    title: 'Readable Dive workspaces and selected snapshot links',
+    changes: [
+      'Dive Log fields, Debrief and Story have clear writing surfaces and usable controls; saved Dive Entities supply the operator and vessel choices.',
+      'Explicit weather retrieval uses the selected date and time, preserves recorded observations and discards stale responses.',
+      'Cloud differences appear in a separate review workspace with each action beside the version it selects.',
+      'Insights Topic Explorer groups recorded material and opens its actual source evidence without editing canonical records.',
+      'Owner-only Shared Links publishes only an explicitly reviewed Profile or saved Gas Plan snapshot with independently selected prepared attachments, expiry and revocation.',
+      'Gmail remains isolated until a new human-initiated bounded test verifies restoration; previous failed attempts remain recorded.',
+    ],
+  },
+  {
     version: '1.0.71',
     date: '2026-10-02',
     title: 'Clearer controls, safer records and selected sharing',

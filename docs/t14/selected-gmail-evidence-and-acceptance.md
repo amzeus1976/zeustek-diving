@@ -1,5 +1,15 @@
 # Gmail #55 — diagnostic checkpoint and bounded live acceptance proposal
 
+## Final Sites143 state — 2 October 2026
+
+The new separately authorised live acceptance run f2356ba1-2c8d-4f55-af40-7c59feac342f is consumed and **FAILED upstream_failure**, token_refresh/transport, no HTTP response obtained. It ran exactly once on Sites142 at14:56:44.569Z→.909Z; imported0/updated0/failed1. No retry was performed during the corrected Sites143 release or smoke. Historical consumed failure remains unchanged. Root transport cause is unresolved; do not infer revoked credentials or an HTTP provider cause.
+
+Sites143 preserves encrypted connection/cached News and shows the truthful temporarily unavailable state. Manual/background ingestion and the acceptance action remain disabled/unavailable because no persisted successful run exists. The existing explicit owner release exception covers successful sync only; all independent security/data/export/calculation gates passed. Task3 restoration/#55 remains BLOCKED/open; improved diagnostics are not Gmail verification.
+
+Next permitted work is redacted fixture/platform transport diagnosis. Any future live operation, reconnect or credential change needs fresh explicit owner authorisation; do not substitute another run ID or repeat a consumed run. Public/profile/key activation is separate. Current accepted source525effa/main d1937fb matches exactly; PR#88 records this exception.
+
+## Retained earlier evidence and procedure (historical)
+
 ## Current authority
 
 **2026-10-02 owner approval received:** “Approve one run and manual-only restoration on verified success (Recommended)”, in direct reply to the bounded Task 3 consent request. This authorises exactly one **new** run after the complete candidate passes its non-Gmail gates and is deployed, prior 90 days, at most 100 messages, metadata/snippets only, using the existing encrypted connection. It conditionally authorises manual-only restoration following verified success. It does not authorise retry, reconnect, credential change, sending, deletion, read-state change or background ingestion. No new live run has yet occurred; issue the new UUID/window only at its designated acceptance point and retain its outcome separately from the consumed historical run.

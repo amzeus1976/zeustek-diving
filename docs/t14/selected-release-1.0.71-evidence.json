@@ -1,0 +1,315 @@
+{
+  "acceptedAt": "2026-10-02T16:16:15.023Z",
+  "status": "ACCEPTED_WITH_EXISTING_OWNER_GMAIL_EXCEPTION",
+  "version": "1.0.71",
+  "sitesVersion": 143,
+  "projectId": "appgprj_6a91926878b48191a80d70f1681ef135",
+  "deploymentId": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+  "source": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+  "sourceTree": "1758f60fac70951be0299c537ecea44be58c4835",
+  "applicationCommit": "e28ebf4d73740fe356e3a9c3c3cc1640b4317a86",
+  "branch": "t14/tasks-1-2-3-4-6-7",
+  "rollback": {
+    "version": "1.0.70",
+    "sitesVersion": 141,
+    "source": "7fcb27ac2fa96d44d06de01e3ce91e58320f646c",
+    "verifiedRestoreDeployment": "appgdep_6abfc8b662388191b6655e46ec1607a9",
+    "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_2c15683c77348191875aa8b81cb488cd",
+    "archiveBytes": 95477760,
+    "archiveSha256": "dcd1376e981983631816da600a3674a85ded0d207ef7d4a619fbe4e001c72742",
+    "verifiedRestoreSucceededAt": "2026-10-02T15:07:51Z"
+  },
+  "tasks": {
+    "1": "IMPLEMENTED_VERIFIED",
+    "2": "IMPLEMENTED_VERIFIED",
+    "3": "DIAGNOSTICS_IMPLEMENTED; RESTORATION_BLOCKED",
+    "4": "IMPLEMENTED_VERIFIED",
+    "6": "IMPLEMENTED_VERIFIED; PUBLICATION_OFF_AWAITING_EXACT_CONTENT_CONSENT",
+    "7": "IMPLEMENTED_VERIFIED; REAL_KEYS_UNISSUED_AWAITING_CLIENT_CONSENT"
+  },
+  "excluded": [
+    5,
+    "T15",
+    "Unrelated enhancements",
+    "Broader #50 Gas Plan/share-link modes"
+  ],
+  "closedIssues": [
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    85,
+    86,
+    87
+  ],
+  "keptOpen": [
+    55,
+    50
+  ],
+  "gate": {
+    "tests": 996,
+    "testFiles": 156,
+    "typecheck": true,
+    "buildPwa": true,
+    "pwaEntries": 427,
+    "pwaKiB": 42484.32,
+    "lintNew": 0,
+    "lintUnchangedBaseline": 83,
+    "privacy": true,
+    "approvedProtectedHashes": 9,
+    "byteUnchangedCalculations": 8,
+    "approvedIdReadPolicyTouchpoint": "#86 exact reviewed loadouts-gas.ts diff; no formula changes",
+    "liveRouteObservations": 186,
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "applicationConsoleErrors": 0,
+    "applicationWarnings": 0,
+    "pageOrInternalOverflowFailures": 0,
+    "navIconsPreserved": 31,
+    "curatedIconsPreserved": 131,
+    "supersetIconsPreserved": 748,
+    "keyboardFocus": true,
+    "cropLiveSixWidths": true,
+    "diveOwnerSelfLiveSixWidths": true,
+    "compiledRouteObservations": 186,
+    "liveHeadlineWidths": 6,
+    "pwaCacheVersion": "static-v18",
+    "liveServiceWorkerSha256": "f9c6de47bc0ac7f6aa886bb6c9ea6f92de50783a2d553917747b7d94f3f7efd4",
+    "liveServiceWorkerMatchesCompiled": true,
+    "legacyCacheUpdatesThroughNormalReload": true,
+    "credentialScan": {
+      "credentialValues": 5,
+      "variants": 15,
+      "clientFiles": 62,
+      "matches": 0,
+      "gmailServerControlNames": 7,
+      "gmailClientControlMatches": 0
+    },
+    "liveSecurity": {
+      "anonymousGenericWelcome": true,
+      "privateRouteRequiresAuthentication": true,
+      "disabledPublicSnapshotUnavailable": true,
+      "unauthenticatedManagementAndIntegrationRequestsRejected": true,
+      "privateResponsesNotCached": true,
+      "openApiVersion": "3.1.0",
+      "backupUnauthorizedResponseCacheHeaderAbsentAtInheritedBaseline": true,
+      "backupRouteExcludedFromServiceWorkerCaches": true,
+      "publicRealContentNotPublished": true,
+      "productionKeysNotIssued": true
+    }
+  },
+  "ownerData": {
+    "records": 6485,
+    "dives": 66,
+    "gasPlans": 1,
+    "people": 11,
+    "operators": 5,
+    "added": 0,
+    "removed": 0,
+    "changed": 0,
+    "fingerprint": "3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743",
+    "checkedAt": "2026-10-02T16:08:37.807Z",
+    "relationshipIntegrity": {
+      "legacyPairs": 8,
+      "missingLegacyEndpoints": 0,
+      "ownerProfiles": 1,
+      "explicitRelationshipRows": 0
+    },
+    "preDeploymentCheckedAt": "2026-10-02T15:21:15.139Z",
+    "scope": "All ordinary canonical IDs/content/timestamps; failed Gmail connection/run diagnostic metadata accounted separately",
+    "recoverableEncryptedBackupVerified": true,
+    "connectionSecretsExcludedFromBackup": true,
+    "syntheticProductionRecords": 0
+  },
+  "gmail": {
+    "status": "BLOCKED; FAILED upstream_failure",
+    "releaseException": "OWNER-APPROVED RELEASE EXCEPTION — Gmail sync deferred",
+    "newRunId": "f2356ba1-2c8d-4f55-af40-7c59feac342f",
+    "newRunInvocations": 1,
+    "newRunConsumed": true,
+    "startedAt": "2026-10-02T14:56:44.569Z",
+    "completedAt": "2026-10-02T14:56:44.909Z",
+    "phase": "token_refresh",
+    "failureKind": "transport",
+    "httpResponseObtained": false,
+    "imported": 0,
+    "updated": 0,
+    "failed": 1,
+    "originalTransportCause": "UNRESOLVED",
+    "historicalConsumedRunId": "fdeda6a4-5504-49d0-881d-d1795839955b",
+    "historicalFailurePreserved": true,
+    "syncMode": "disabled",
+    "manualActionDisabled": true,
+    "acceptanceActionAvailable": false,
+    "backgroundIngestionEnabled": false,
+    "encryptedConnectionPreserved": true,
+    "cachedStoriesPreserved": true,
+    "dedicatedAccountMatches": true,
+    "reconnectRequired": false,
+    "noRetryReconnectRotationOrOtherMailboxOperation": true,
+    "futureLiveOperationsRequireNewExplicitOwnerConsent": true
+  },
+  "publicProfile": {
+    "enabled": false
+  },
+  "api": {
+    "issuedKeys": 0
+  },
+  "exports": {
+    "source": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+    "productionFilesProvidedByOwner": [
+      "PDF",
+      "JSON"
+    ],
+    "pdf": {
+      "bytes": 2729413,
+      "sha256": "5401e15d1bbb974c13422a5f24ec3aec4ef2ec197e689edc5b547f8f5be77aa3",
+      "pages": 19,
+      "distinctCardImages": 25,
+      "drawnCardImages": 25,
+      "allSelectedRecordLinesPresent": true,
+      "renderedPages": 19
+    },
+    "json": {
+      "bytes": 11785,
+      "sha256": "f572cab0dbf6504cdb05292012fe02b71915dda42004a446d26c635067272089",
+      "validSharedProjection": true,
+      "connectionSecretsExcluded": true,
+      "certificationTextNumbersOptedOut": true
+    },
+    "recordCounts": {
+      "Dive summary": 3,
+      "Depth experience": 2,
+      "Dive types and activities": 47,
+      "Certifications": 13,
+      "Equipment": 52,
+      "Selected Dive log": 66
+    },
+    "remainingFormatsEvidence": "All five actual production downloads verified. Earlier multilingual, empty, long, missing-image and formula fixtures retained for unchanged export modules.",
+    "docx": {
+      "bytes": 5887227,
+      "distinctCardImages": 25,
+      "embeddedFonts": 2,
+      "allSelectedRecordLinesPresent": true,
+      "renderedPages": 19,
+      "allSelectedRecordLinesPresentAfterRendering": true
+    },
+    "txt": {
+      "bytes": 9345,
+      "allSelectedRecordLinesPresent": true
+    },
+    "csv": {
+      "bytes": 13389,
+      "rows": 186,
+      "allSelectedRecordLinesPresent": true
+    },
+    "productionFilesCapturedFromVerifiedDownloadFolder": [
+      "DOCX",
+      "TXT",
+      "CSV"
+    ]
+  },
+  "previousAttempt": {
+    "sitesVersion": 142,
+    "source": "2e0850967da05f42dfa87e698ee29f06d1d52696",
+    "rejected": "Bibliography title collapsed at820",
+    "restoredToVerified141": true,
+    "correctedAndFullGateRerun": true
+  },
+  "githubReconciliation": {
+    "pullRequest": "https://github.com/amzeus1976/zeustek-diving/pull/88",
+    "pullRequestNumber": 88,
+    "merged": true,
+    "mainCommit": "d1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2",
+    "mainTree": "1758f60fac70951be0299c537ecea44be58c4835",
+    "publishedTreeMatchesMainExactly": true,
+    "applicationSourcePushedOnlyAfterProductionAcceptance": true,
+    "evidenceBranch": "evidence/2026-10-02-sites143-selected-tasks",
+    "evidenceBranchNotMergedIntoAcceptedMain": true
+  },
+  "evidenceUpdatedAt": "2026-10-02T16:33:57.135133Z",
+  "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_dfb390da5abc8191bbb58a13093389e5",
+  "productionUrl": "https://dive.amzeus.co.uk/",
+  "deploymentStatus": "succeeded",
+  "envRevision": 4,
+  "protectedCalculationComparison": {
+    "checkedAt": "2026-10-02T16:33:57.135133Z",
+    "allCurrentApprovedHashesMatch": true,
+    "byteUnchangedFromPriorRelease": 8,
+    "ownerApprovedTouchpoint": "#86 exact inventory-read/explicit-save ID policy only; gas/NDL/MOD/PPO2/time/reserve formulas unchanged",
+    "files": [
+      {
+        "path": "lib/offline/buhlmann-ndl.ts",
+        "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-planner.ts",
+        "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-reserve.ts",
+        "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/offline/gas-planning-foundation.ts",
+        "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/offline/planning-pages.ts",
+        "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/offline/loadouts-gas.ts",
+        "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/gas-rates.ts",
+        "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/pressure-group-engine.ts",
+        "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "matchesApprovedManifest": true
+      },
+      {
+        "path": "lib/offline/plan-gas-acceptance.ts",
+        "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "matchesApprovedManifest": true
+      }
+    ]
+  },
+  "workerLogObservation": {
+    "checkedAt": "2026-10-02T16:03:35.545Z",
+    "boundedEventsInspected": 100,
+    "canceledInvocationOutcomes": 43,
+    "connectionLossLogEntries": 57,
+    "otherErrorMessages": 0,
+    "routeCategories": [
+      "/api/dive-data",
+      "/api/media"
+    ],
+    "context": "Observed during rapid route acceptance; request-level causal association was not established. No claim of zero server log entries.",
+    "applicationConsoleErrors": 0,
+    "activeReleaseBlockingWorkflowFailureObserved": false
+  },
+  "evidencePolicy": "This later documentation-only branch preserves post-release acceptance without altering the exact accepted main/Sites source tree. No application edits after freeze."
+}

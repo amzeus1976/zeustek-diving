@@ -29,6 +29,9 @@ import {
   type ComputerProfileRecord,
 } from '../lib/offline/computer-import';
 import { currentDiveAccount } from '../lib/offline/dive-store';
+import {resolveComputerReview} from '../lib/imports/review-destination';
+import type {ImportResolutionRecord} from '../lib/offline/import-resolution';
+import {workflowDestinationUrl} from '../lib/workflow/workflow-destination';
 import {
   createComputerEvidenceStore,
   flushComputerEvidenceAttachments,
@@ -53,6 +56,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [stages, setStages] = useState<ComputerImportStage[]>([]);
   const [selectedProfile, setSelectedProfile] = useState('');
+  const [sourceReview,setSourceReview]=useState<{unavailable:boolean;importRecord?:Stored<ComputerImportRecord>;resolution?:Stored<ImportResolutionRecord>}|null>(null);
   const [reviewing, setReviewing] = useState<ComputerImportStage | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -62,13 +66,15 @@ export function DiveComputerData({ evidenceStore }: Props) {
   );
   const refresh = useCallback(async () => {
     void flushComputerEvidenceAttachments(currentDiveAccount());
-    const [nextImports, nextProfiles, nextDives, nextSites, nextStages] =
+    const query=new URLSearchParams(window.location.search);
+    const [nextImports, nextProfiles, nextDives, nextSites, nextStages,nextResolutions] =
       await Promise.all([
         listRecords<ComputerImportRecord>('computer-import'),
         listRecords<ComputerProfileRecord>('computer-profile'),
         listDives(),
         listRecords<DiveSiteRecord>('site'),
         listComputerImportStages(),
+        query.has('resolutionId')?listRecords<ImportResolutionRecord>('import-resolution'):Promise.resolve([] as Array<Stored<ImportResolutionRecord>>),
       ]);
     setImports(
       nextImports.sort((left, right) =>
@@ -79,17 +85,9 @@ export function DiveComputerData({ evidenceStore }: Props) {
     setDives(nextDives);
     setSites(nextSites);
     setStages(nextStages);
-    const requested =
-      typeof window === 'undefined'
-        ? ''
-        : (new URLSearchParams(window.location.search).get('profileId') ?? '');
-    setSelectedProfile((current) =>
-      requested && nextProfiles.some((row) => row.entityId === requested)
-        ? requested
-        : current && nextProfiles.some((row) => row.entityId === current)
-          ? current
-          : (nextProfiles[0]?.entityId ?? ''),
-    );
+    const review=resolveComputerReview(query,nextImports,nextProfiles,nextResolutions);
+    setSourceReview(review.requested?review:null);
+    setSelectedProfile(current=>review.requested?review.selectedProfileId:resolveComputerReview(query,nextImports,nextProfiles,nextResolutions,current).selectedProfileId);
   }, []);
   useRecordRefresh(refresh);
 
@@ -231,6 +229,7 @@ export function DiveComputerData({ evidenceStore }: Props) {
         </aside>
       </details>
       <section className={styles.importReviewGrid} aria-label="Imported Dive master and detail">
+      {sourceReview&&<ComputerSourceReview review={sourceReview}/>}
       <ImportedComputerProfiles
         profiles={profiles}
         imports={imports}
@@ -312,6 +311,23 @@ export function DiveComputerData({ evidenceStore }: Props) {
       </section>
     </main>
   );
+}
+
+export function ComputerSourceReview({review}:{review:{unavailable:boolean;importRecord?:Stored<ComputerImportRecord>;resolution?:Stored<ImportResolutionRecord>}}){
+ const resolution=review.resolution;
+ const decisions=Array.isArray(resolution?.decisions)?resolution.decisions:[];
+ const profileIds=Array.isArray(resolution?.sourceProfileIds)?[...new Set(resolution.sourceProfileIds.filter(id=>typeof id==='string'&&id))]:[];
+ return <section className={`${styles.profile} ${styles.sourceReview}`} aria-label="Requested import source"><h2>Requested import source</h2>
+  {review.unavailable?<output>The exact requested source is unavailable or its references conflict. No substitute profile was selected.</output>:<>
+   {review.importRecord&&<p>Imported file: {review.importRecord.sourceFileName} · {review.importRecord.importedAt}</p>}
+   {resolution&&<><p>Field decisions: {resolution.decidedAt} · {resolution.archivedAt?'Archived':resolution.supersededAt?'Superseded':'Retained current evidence'}</p>
+    <ul>{decisions.slice(0,100).map((decision,index)=><li key={index}>{typeof decision?.fieldPath==='string'?decision.fieldPath.slice(0,200):'Unavailable field'} · {['keep-zeustek','use-imported','append','ignore','manual'].includes(decision?.action)?decision.action:'Unknown action'}</li>)}</ul>
+    {decisions.length>100&&<p>First 100 decisions shown. Remaining decisions are retained in the source record.</p>}
+    {resolution.targetDiveId&&<a className="focus-secondary" href={`/${workflowDestinationUrl({route:'Logbook',recordId:resolution.targetDiveId})}`}>Review exact linked Dive</a>}
+    <ul>{profileIds.slice(0,100).map(id=><li key={id}><a href={`/${workflowDestinationUrl({route:'Dive Computer Imports',params:{profileId:id}})}`}>Review source profile</a></li>)}</ul>
+   </>}
+  </>}
+ </section>;
 }
 
 function ProfileChart({

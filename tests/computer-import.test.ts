@@ -29,6 +29,7 @@ import {
 } from '../lib/offline/computer-profile-management';
 import {
   createComputerEvidenceStore,
+  flushComputerEvidenceAttachments,
   loadComputerEvidenceAttachment,
 } from '../lib/offline/evidence-attachments';
 import {
@@ -436,5 +437,22 @@ describe('T12 staged and atomic computer imports', () => {
     );
     expect(await zeustekDb.attachments.count()).toBe(0);
     expect(await zeustekDb.diveImages.count()).toBe(0);
+  });
+
+  it('counts only acknowledged uploads and preserves denied, mismatched and missing local evidence', async () => {
+    const store = createComputerEvidenceStore('t12-owner'), input = { ownerKind: 'computer-profile', ownerId: 'dummy-profile', fileName: 'dummy.json', mimeType: 'application/json', bytes: new TextEncoder().encode('{}') };
+    const accepted = await store.put(input), denied = await store.put(input), mismatched = await store.put(input), missing = await store.put(input);
+    await zeustekDb.diveImages.delete(missing);
+    vi.stubGlobal('navigator', { onLine: true });
+    const network = vi.fn(async (_url: string, options: RequestInit) => {
+      const id = (options.body as FormData).get('uploadId');
+      return id === denied ? Response.json({ error: 'Denied' }, { status: 403 }) : Response.json({ id: id === mismatched ? 'another-id' : id });
+    }); vi.stubGlobal('fetch', network);
+    expect(await flushComputerEvidenceAttachments('t12-owner')).toBe(1);
+    expect(await zeustekDb.attachments.get(accepted)).toMatchObject({ state: 'acknowledged' });
+    for (const id of [denied, mismatched, missing]) expect(await zeustekDb.attachments.get(id)).toMatchObject({ state: 'pending' });
+    expect(network).toHaveBeenCalledTimes(3);
+    vi.stubGlobal('navigator', { onLine: false });
+    expect(await flushComputerEvidenceAttachments('t12-owner')).toBe(0); expect(network).toHaveBeenCalledTimes(3);
   });
 });

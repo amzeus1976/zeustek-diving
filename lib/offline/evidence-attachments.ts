@@ -28,10 +28,11 @@ function ownerFromRow(account: string, row: AttachmentRow) {
     : null;
 }
 
-async function uploadEvidence(account: string, row: AttachmentRow) {
+async function uploadEvidence(account: string, row: AttachmentRow, isCurrent = () => true) {
+  if (!isCurrent()) return false;
   const owner = ownerFromRow(account, row);
   const local = await zeustekDb.diveImages.get(row.attachmentId);
-  if (!owner || !local || local.account !== account) return false;
+  if (!owner || !local || local.account !== account || !isCurrent()) return false;
   const form = new FormData();
   form.append(
     'file',
@@ -43,7 +44,7 @@ async function uploadEvidence(account: string, row: AttachmentRow) {
   const response = await fetch('/api/media', { method: 'POST', body: form });
   if (!response.ok) return false;
   const result = (await response.json()) as { id?: string };
-  if (result.id !== row.attachmentId) return false;
+  if (result.id !== row.attachmentId || !isCurrent()) return false;
   await zeustekDb.transaction(
     'rw',
     [zeustekDb.attachments, zeustekDb.diveImages],
@@ -59,19 +60,22 @@ async function uploadEvidence(account: string, row: AttachmentRow) {
   return true;
 }
 
-export async function flushComputerEvidenceAttachments(account: string) {
-  if (!account || typeof navigator === 'undefined' || !navigator.onLine) return;
+export async function flushComputerEvidenceAttachments(account: string, isCurrent = () => true) {
+  if (!account || typeof navigator === 'undefined' || !navigator.onLine || !isCurrent()) return 0;
   const prefix = `dive:${account}:`;
   const pending = await zeustekDb.attachments
     .filter((row) => row.state === 'pending' && row.entityId.startsWith(prefix))
     .toArray();
+  let uploaded = 0;
   for (const row of pending) {
+    if (!isCurrent()) break;
     try {
-      await uploadEvidence(account, row);
+      if (await uploadEvidence(account, row, isCurrent)) uploaded++;
     } catch {
       /* Local evidence remains queued. */
     }
   }
+  return uploaded;
 }
 
 export function createComputerEvidenceStore(account: string) {

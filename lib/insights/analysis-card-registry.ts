@@ -1,8 +1,10 @@
 import {diveRuntimeMinutes,type DiveWithId,type ExperienceAnalyticsProjection} from '../offline/experience-analytics';
 import type {DiveSiteRecord,Stored} from '../offline/dive-planning';
-export type AnalysisVisualization='kpi'|'bar'|'line'|'scatter'|'donut'|'table'|'site-map';
+import {DEFAULT_TOPIC_SETTINGS,validateTopicSettings,type TopicSettings} from './topic-explorer';
+export type AnalysisVisualization='kpi'|'bar'|'line'|'scatter'|'donut'|'table'|'site-map'|'topics';
 type Registration={label:string;defaultVisualization:AnalysisVisualization;allowed:AnalysisVisualization[];description:string};
 export const ANALYSIS_CARD_REGISTRY={
+  'topic-explorer':{label:'Topic Explorer',defaultVisualization:'topics',allowed:['topics','table'],description:'Canonical library material with recorded topics, text matches and exact saved relationships. Related Dives and Sites follow Analysis Scope.'},
   'total-dives':{label:'Total Dives',defaultVisualization:'kpi',allowed:['kpi','table'],description:'Canonical Dives inside the active scope.'},
   'total-time':{label:'Total dive time',defaultVisualization:'kpi',allowed:['kpi','table'],description:'Elapsed runtime, with bottom time used only when elapsed time is absent.'},
   'max-depth':{label:'Maximum depth',defaultVisualization:'kpi',allowed:['kpi','table'],description:'Maximum recorded depth. Missing depths are excluded.'},
@@ -17,7 +19,11 @@ export const ANALYSIS_CARD_REGISTRY={
   'depth-v-duration':{label:'Depth vs duration',defaultVisualization:'scatter',allowed:['scatter','table'],description:'Recorded maximum depth against elapsed duration. Missing measurements are excluded.'},
 } satisfies Record<string,Registration>;
 export type AnalysisMetricKey=keyof typeof ANALYSIS_CARD_REGISTRY;
-export type AnalysisCardConfig={id:string;metric:AnalysisMetricKey;visualization:AnalysisVisualization;title?:string;span?:1|2};
+export type AnalysisCardConfig={id:string;metric:AnalysisMetricKey;visualization:AnalysisVisualization;title?:string;span?:1|2;topic?:TopicSettings};
+export function changeAnalysisCardMetric(card:AnalysisCardConfig,metric:AnalysisMetricKey):AnalysisCardConfig{
+  const {topic:previous,...rest}=card;
+  return {...rest,metric,visualization:ANALYSIS_CARD_REGISTRY[metric].defaultVisualization,...(metric==='topic-explorer'?{topic:structuredClone(previous??DEFAULT_TOPIC_SETTINGS)}:{})};
+}
 export const DEFAULT_ANALYSIS_CARDS:AnalysisCardConfig[]=[
   {id:'depth',metric:'depth-bands',visualization:'bar'},{id:'environment',metric:'environment',visualization:'donut'},
   {id:'sac',metric:'sac-trend',visualization:'line'},{id:'rmv',metric:'rmv-trend',visualization:'line'},
@@ -33,6 +39,7 @@ export function validateAnalysisCards(cards:unknown):string[]{
     if(typeof card.id!=='string'||!card.id||ids.has(card.id))errors.push('Cards need distinct identities.');else ids.add(card.id);
     if(card.span!==undefined&&card.span!==1&&card.span!==2)errors.push('Card width must be one or two columns.');
     if(card.title!==undefined&&(typeof card.title!=='string'||card.title.length>100))errors.push('Card titles must be at most 100 characters.');
+    if(card.topic!==undefined&&(card.metric!=='topic-explorer'||!validateTopicSettings(card.topic)))errors.push('Choose supported Topic Explorer settings.');
   }
   return [...new Set(errors)];
 }
@@ -42,7 +49,7 @@ export function normaliseAnalysisCards(value:unknown):AnalysisCardConfig[]{
   for(const entry of value){
     if(validateAnalysisCards([entry]).length)continue;
     const card=entry as AnalysisCardConfig;if(ids.has(card.id))continue;ids.add(card.id);
-    cards.push({id:card.id,metric:card.metric,visualization:card.visualization,...(card.title?{title:card.title}:{}),...(card.span?{span:card.span}:{})});
+    cards.push({id:card.id,metric:card.metric,visualization:card.visualization,...(card.title?{title:card.title}:{}),...(card.span?{span:card.span}:{}),...(card.topic?{topic:structuredClone(card.topic)}:{})});
     if(cards.length===9)break;
   }
   return value.length&&!cards.length?structuredClone(DEFAULT_ANALYSIS_CARDS):cards;
@@ -53,6 +60,7 @@ export function buildAnalysisCardData(metric:AnalysisMetricKey,projection:Experi
   const scoped=dives.filter(dive=>projection.includedDiveIds.includes(dive.entityId));
   const result=(unit:string,rows:AnalysisDataRow[],missingCount=0):AnalysisCardData=>({unit,rows,missingCount});
   switch(metric){
+    case 'topic-explorer':return result('records',[]);
     case 'total-dives':case 'total-time':case 'max-depth':{
       const observation=metric==='total-dives'?projection.headlines.totalDives:metric==='total-time'?projection.headlines.totalDiveTimeMin:projection.headlines.maxDepthM;
       return {unit:observation.unit,value:observation.value,missingCount:observation.missingCount,rows:scoped.filter(d=>observation.sourceDiveIds.includes(d.entityId)).map(dive=>({id:dive.entityId,label:dive.date+' · '+dive.site,value:metric==='total-dives'?1:metric==='total-time'?diveRuntimeMinutes(dive)!:dive.maxDepthM!,diveIds:[dive.entityId]}))};

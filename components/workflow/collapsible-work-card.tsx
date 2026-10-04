@@ -14,6 +14,7 @@ export interface CollapsibleWorkCardProps {
   alert?: ReactNode;
   defaultMinimized?: boolean;
   defaultExpanded?: boolean;
+  revealWhenLinked?: boolean;
   rowCount?: number;
   previewLimit?: number;
   onOpenDetail?: () => void;
@@ -32,7 +33,7 @@ function readPreference(storageKey: string) {
 }
 
 export function CollapsibleWorkCard({
-  id, title, eyebrow, status, alert, defaultMinimized = false, defaultExpanded = false,
+  id, title, eyebrow, status, alert, defaultMinimized = false, defaultExpanded = false, revealWhenLinked = false,
   rowCount, previewLimit = 5, onOpenDetail, actions, className = '', children,
 }: CollapsibleWorkCardProps) {
   const regionId = useId();
@@ -40,6 +41,7 @@ export function CollapsibleWorkCard({
   const [preference] = useState(() => readPreference(storageKey));
   const [minimized, setMinimized] = useState(() => preference?.minimized ?? defaultMinimized);
   const [expanded, setExpanded] = useState(() => preference?.expanded ?? defaultExpanded);
+  useEffect(()=>{let active=true;if(revealWhenLinked&&new URLSearchParams(window.location.search).get('config')===id)void Promise.resolve().then(()=>{if(active)setMinimized(false);});return()=>{active=false;};},[id,revealWhenLinked]);
 
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify({ minimized, expanded })); } catch { /* Device preference only. */ }

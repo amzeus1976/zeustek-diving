@@ -1,0 +1,572 @@
+{
+  "status": "Verified local checkpoint; not a final combined release or production acceptance",
+  "branch": "t14/outstanding-requests",
+  "applicationCommit": "b144b43443a714250fb6b66b6590afcf1f51a504",
+  "applicationCheckpointTree": "27c1cc020f1e3aa77547ba39ee3619befca6ab77",
+  "applicationVersion": "1.0.71; retained accepted version until the complete approved scope is frozen",
+  "acceptedProduction": {
+    "app": "1.0.71",
+    "sites": 143,
+    "deployment": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+    "publishedSource": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+    "githubMain": "d1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2",
+    "changedByThisContinuation": false,
+    "freshOwnerSnapshotRequiredBeforeAnyNewPublication": true
+  },
+  "regression": {
+    "passed": 1177,
+    "failed": 0,
+    "uniqueFiles": 176,
+    "nestedSuites": 384
+  },
+  "typecheck": "PASS on exact b144b43 application",
+  "productionBuildPWA": {
+    "status": "PASS",
+    "precacheEntries": 428,
+    "precacheKiB": 42556.46
+  },
+  "lint": {
+    "filesChecked": 57,
+    "rawExit": 1,
+    "newOrChanged": 0,
+    "byteUnchangedBaselineFindings": 87,
+    "baseline": "dc1d453"
+  },
+  "protectedCalculations": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "clientPrivacy": {
+    "credentialValuesChecked": 5,
+    "variantValuesChecked": 15,
+    "filesChecked": 63,
+    "filesContainingCredential": 0,
+    "valuesPrinted": false
+  },
+  "assets": {
+    "navigationPngCount": 31,
+    "completePngCount": 748,
+    "approvedArtworkOrRegistryChanges": [],
+    "navigationMastersInPrecache": false,
+    "exportFontsInPrecache": false
+  },
+  "gmailServerControlScan": {
+    "serverOnlyNamesChecked": 7,
+    "clientMatches": 0,
+    "configuredInProductionByThisTask": false,
+    "liveOperations": 0
+  },
+  "browser": {
+    "candidate": "b144b43443a714250fb6b66b6590afcf1f51a504",
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "observations": [
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "previewVisible": true,
+        "time": "2026-10-02T18:48:51.338Z",
+        "view": "calendar",
+        "width": 320
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "previewVisible": true,
+        "time": "2026-10-02T18:48:51.378Z",
+        "view": "calendar",
+        "width": 390
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "previewVisible": true,
+        "time": "2026-10-02T18:48:51.424Z",
+        "view": "calendar",
+        "width": 430
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "previewVisible": true,
+        "time": "2026-10-02T18:48:51.467Z",
+        "view": "calendar",
+        "width": 820
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "previewVisible": true,
+        "time": "2026-10-02T18:48:51.508Z",
+        "view": "calendar",
+        "width": 1024
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "previewVisible": true,
+        "time": "2026-10-02T18:48:51.547Z",
+        "view": "calendar",
+        "width": 1440
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "health",
+        "width": 320
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "health",
+        "width": 390
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "health",
+        "width": 430
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "health",
+        "width": 820
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "health",
+        "width": 1024
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "health",
+        "width": 1440
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "import-source",
+        "width": 320
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "import-source",
+        "width": 390
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "import-source",
+        "width": 430
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "import-source",
+        "width": 820
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "import-source",
+        "width": 1024
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "import-source",
+        "width": 1440
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "calendar-source",
+        "width": 320
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "calendar-source",
+        "width": 390
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "calendar-source",
+        "width": 430
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "calendar-source",
+        "width": 820
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "calendar-source",
+        "width": 1024
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "calendar-source",
+        "width": 1440
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "cylinder-source",
+        "width": 320
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "cylinder-source",
+        "width": 390
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "cylinder-source",
+        "width": 430
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "cylinder-source",
+        "width": 820
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "cylinder-source",
+        "width": 1024
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "pageExcess": 0,
+        "view": "cylinder-source",
+        "width": 1440
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "ownerChoices": 1,
+        "pageExcess": 0,
+        "view": "dive-team",
+        "width": 320
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "ownerChoices": 1,
+        "pageExcess": 0,
+        "view": "dive-team",
+        "width": 390
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "ownerChoices": 1,
+        "pageExcess": 0,
+        "view": "dive-team",
+        "width": 430
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "ownerChoices": 1,
+        "pageExcess": 0,
+        "view": "dive-team",
+        "width": 820
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "ownerChoices": 1,
+        "pageExcess": 0,
+        "view": "dive-team",
+        "width": 1024
+      },
+      {
+        "broken": 0,
+        "internalExcess": [],
+        "ownerChoices": 1,
+        "pageExcess": 0,
+        "view": "dive-team",
+        "width": 1440
+      }
+    ],
+    "visibleTextChecks": [
+      {
+        "fonts": "loaded",
+        "intentionallyHiddenAccessibleLabelNodes": 5,
+        "pageExcess": 0,
+        "textClipping": [],
+        "view": "health-visible-text-content",
+        "width": 320
+      },
+      {
+        "fonts": "loaded",
+        "intentionallyHiddenAccessibleLabelNodes": 5,
+        "pageExcess": 0,
+        "textClipping": [],
+        "view": "health-visible-text-content",
+        "width": 390
+      },
+      {
+        "fonts": "loaded",
+        "intentionallyHiddenAccessibleLabelNodes": 5,
+        "pageExcess": 0,
+        "textClipping": [],
+        "view": "health-visible-text-content",
+        "width": 430
+      },
+      {
+        "fonts": "loaded",
+        "intentionallyHiddenAccessibleLabelNodes": 0,
+        "pageExcess": 0,
+        "textClipping": [],
+        "view": "health-visible-text-content",
+        "width": 820
+      },
+      {
+        "fonts": "loaded",
+        "intentionallyHiddenAccessibleLabelNodes": 0,
+        "pageExcess": 0,
+        "textClipping": [],
+        "view": "health-visible-text-content",
+        "width": 1024
+      },
+      {
+        "fonts": "loaded",
+        "intentionallyHiddenAccessibleLabelNodes": 0,
+        "pageExcess": 0,
+        "textClipping": [],
+        "view": "health-visible-text-content",
+        "width": 1440
+      }
+    ],
+    "consoleErrorsOrWarnings": [],
+    "functionalChecks": {
+      "idlePreviewStayedOpenFrom": "2026-10-02T18:48:15.345Z",
+      "idlePreviewStillPresentAt": "2026-10-02T18:48:51.547Z",
+      "exactColdFill": true,
+      "exactAnalysis": true,
+      "exactCylinderEvent": true,
+      "exactPersonRelationship": true,
+      "exactEntityRelationship": true,
+      "mismatchedRelationshipNoSubstitute": true,
+      "exactImportResolution": true,
+      "exactCalendarEvent": true,
+      "summaryNavigationSelected": true,
+      "settingsToHealthDeepLinkSelected": true,
+      "calendarPaging": true,
+      "healthPaging": true,
+      "healthFiltering": true,
+      "emptyCalendarDownloadDisabled": true,
+      "singleOwner": true,
+      "instructorBuddy": true,
+      "selfLeader": true,
+      "localDraftDiscarded": true
+    },
+    "scope": "Calendar download, health results, import source, Calendar booking source, cylinder source, retained Dive team; exact relationship/event navigation additionally observed",
+    "measurementNote": "Raw range probe retained separately: five deliberate one-pixel clip-path inset(50%) mobile accessible labels were distinguished from visible text. No source or test assertion changed.",
+    "downloadEventToolNote": "Browser download-event wait timed out; actual completed files on owner download drive were independently parsed and hashed. UI status alone was not treated as file verification."
+  },
+  "actualDownloads": {
+    "verifiedAt": "2026-10-02T19:01:08.927737+00:00",
+    "compiledCommit": "b144b43",
+    "scope": "Final local UI-ready checkpoint; read-only root D1 and frozen actual browser-download files",
+    "database": {
+      "account": "local_seedy",
+      "readOnly": true,
+      "beforeRecords": 287,
+      "afterRecords": 287,
+      "countUnchanged": true,
+      "beforeFingerprint": "352dea5d4f62622aebe893a692c1924454683ec9e95791465c7974e801d0a6e6",
+      "afterFingerprint": "352dea5d4f62622aebe893a692c1924454683ec9e95791465c7974e801d0a6e6",
+      "fullFingerprintUnchanged": true,
+      "fingerprintFormula": "SHA256 UTF8 json.dumps(SELECT id,kind,data_json,created_at,updated_at,deleted_at WHERE user_id=local_seedy ORDER BY id rows, ensure_ascii=True, separators=(',',':'))",
+      "reviewedPrefixedRows": 91,
+      "all91ReviewedPayloadsUnchanged": true,
+      "resetRepairOrDatabaseWrites": false
+    },
+    "actualDownloadFiles": [
+      {
+        "filename": "zeustek-selected-calendar-2026-10-02.ics",
+        "bytes": 27313,
+        "sha256": "204640e3be7dc0c7862ae5f7bb78d37966b2b6f87a654cd45c008219217879af"
+      },
+      {
+        "filename": "zeustek-selected-calendar-2026-10-02 (1).ics",
+        "bytes": 27313,
+        "sha256": "bde0a0e49813249e00ed092ab70e173cdcef8ad70e72fb782ad0849bbf695322",
+        "eventCount": 55
+      },
+      {
+        "filename": "zeustek-selected-calendar-2026-10-02 (2).ics",
+        "bytes": 28279,
+        "sha256": "fcc62ade65beabf094b8dd9d0b0021860dfef81a3c73c2275184349492327050",
+        "eventCount": 57
+      },
+      {
+        "filename": "zeustek-data-review.json",
+        "bytes": 3667,
+        "sha256": "453765d0dbee364ffff65814fec56b195b3fe6b4944dc137f9a205e2ed1d6444"
+      },
+      {
+        "filename": "zeustek-data-review.csv",
+        "bytes": 2241,
+        "sha256": "508d46708efbedb0110bf6555858a84034c0db2ca4a6aa2d5de8347f4ca9adf5"
+      }
+    ],
+    "frozenCopiedHashesMatch": true,
+    "calendar": {
+      "initialEventCount": 55,
+      "repeatEventCount": 55,
+      "laterFoldEventCount": 57,
+      "initial52NewFixtureStableUidsMatch": true,
+      "initialGregorianExclusiveEndDstMonthChecks": true,
+      "invalidAndUnselectedFixturesAbsent": true,
+      "repeatOnlyDtstampChanges": true,
+      "repeatUidsAndSequencesUnchanged": true,
+      "laterShared55ProjectionsAndSequencesUnchanged": true,
+      "laterOnlyExpectedTwoNewFoldUids": true,
+      "bothLaterStarts0130ZAndSequenceZero": true,
+      "allFilesStrictUtf8CrlfCompleteAnd75OctetBound": true,
+      "monthPrecisionTransparentNoFirstDayDeadline": true
+    },
+    "dataReview": {
+      "safeJsonTopLevelSchema": true,
+      "observationCount": 11,
+      "fixedObservationProjection": true,
+      "csvRows": 12,
+      "csvMatchesJson": true,
+      "coverage": "partial",
+      "totalChecked": 167
+    },
+    "privacy": {
+      "initialIcsJsonCsvAllChecksPass": true,
+      "repeatAllChecksPass": true,
+      "laterFoldAllChecksPass": true,
+      "defaultGenericFieldsOnly": true
+    },
+    "coverage": "Cached device snapshot remains partial/Unknown; root observed 30 initial omissions and 28 after two export-only fold choices",
+    "actualSupportedCalendarClientImport": "NOT PERFORMED. Real viewer/initial import/re-import merge or duplication/edit/cancellation behaviour remains pending separate disposable-calendar acceptance.",
+    "productionOrProviderOperations": false
+  },
+  "ownerDataScope": "Disposable LOCAL fixture D1 only; 287 IDs/content/timestamps unchanged and all91 inserted fixture payloads unchanged. This is not a fresh production owner-data baseline.",
+  "d1Fingerprint": "352dea5d4f62622aebe893a692c1924454683ec9e95791465c7974e801d0a6e6",
+  "retainedDiverSummary": "All five actual production formats remain verified in selected-production-export-evidence.json; export implementation is unchanged by this continuation.",
+  "independentReview": {
+    "status": "No concrete regression found",
+    "focusedTests": 61,
+    "files": 6
+  },
+  "gmail": "Local runtime request-setup repair demonstrated; both consumed live runs remain FAILED; sync disabled; zero live operations in this continuation; not restored or live-verified",
+  "pendingMandatory": [
+    "#50 explicit sharing-plan approval, then approved implementation and exact-content publication gates",
+    "#54 explicit topic-model plan approval, then approved implementation",
+    "#83 supported calendar-client dummy import/re-import/edit/cancellation acceptance; client selection pending",
+    "#55 successful restoration requires a fresh distinct live-operation authorisation; never retry consumed grants",
+    "Final changed combined candidate/version/cache/full-site gate after remaining approved code",
+    "Fresh production owner baseline, verified recoverable rollback, one combined publication, live acceptance and exact GitHub reconciliation"
+  ],
+  "providerExceptions": "Met Office denied/unverified; Copernicus and SwellCloud conditional and disabled; assessment local-complete, no new activation",
+  "publicationState": "No intermediate publication, push or merge; public owner content off and real API keys unissued",
+  "evidenceLocation": "Raw tests/build/privacy/browser/private dummy download files remain ignored under work/selected-tasks; safe aggregate evidence is tracked here."
+}

@@ -67,7 +67,10 @@ describe('T12.5C Plan editor corrections', () => {
       : new Response('', { status: 429, headers: { 'retry-after': '60' } }));
     vi.stubGlobal('fetch', fetcher);
     const { GET } = await import('../app/api/site-weather/route');
-    expect((await GET(new Request('https://example.test/api/site-weather?points=51,-2'))).status).toBe(502);
+    const limited=await GET(new Request('https://example.test/api/site-weather?points=51,-2'));
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get('retry-after')).toBe('60');
+    expect(await limited.json()).toMatchObject({code:'rate_limited',directFallback:true});
     const seasonal = await GET(new Request('https://example.test/api/site-weather?latitude=51&longitude=-2&date=2030-08-12&planning=seasonal'));
     expect(seasonal.status).toBe(200);
     expect(fetcher.mock.calls.some(([url]) => href(url).includes('archive-api.open-meteo.com'))).toBe(true);

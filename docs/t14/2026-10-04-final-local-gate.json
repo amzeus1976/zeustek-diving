@@ -1,0 +1,296 @@
+{
+  "state": "FINAL LOCAL CANDIDATE GATE PASS; production acceptance pending",
+  "branch": "t14/outstanding-requests",
+  "version": "1.0.72",
+  "cache": "zeustek-static-v19",
+  "preservedApplication": "61d787aa2b291487096b6510b66e5d20e5758208",
+  "changedSourceSHA256": {
+    "components/planning/calendar-export.tsx": "bceff53f5eef254ba989af3bfed60a7a5fc49eadfd1cba8815572e79f6a8fb77",
+    "lib/calendar/calendar-model.ts": "f10ba418de223904cd7100fe333914d6dbd04776625662dcc33a830f261bc7b8",
+    "tests/task5-calendar-model.test.ts": "bc349610c2d797757690573279af1c8f70e7d8d8a4717d6284e2f4b6d41b0ec7",
+    "tests/calendar-month-reminder.test.ts": "d2590305f52f866d3c44fb73eeeff70f740a8f3900931c94067cbbd8d27ab4cc"
+  },
+  "focused": {
+    "red": "1 PASS /6 expected FAIL before implementation",
+    "green": "60 PASS /8 files"
+  },
+  "regression": {
+    "passed": 1277,
+    "failed": 0,
+    "files": 193
+  },
+  "typecheck": "PASS",
+  "buildPWA": {
+    "status": "PASS",
+    "entries": 431,
+    "kib": 42645.31
+  },
+  "buildInvocation": "Existing prebuild and vinext build executed directly; current Sites build selector refuses preserved dual-lockfile baseline. Neither lockfile or dependency was altered.",
+  "targetedLint": {
+    "files": 172,
+    "rawExit": 1,
+    "new": 0,
+    "byteUnchangedBaseline": 89,
+    "comparison": "PASS"
+  },
+  "privacy": {
+    "credentialValuesChecked": 5,
+    "variantValuesChecked": 15,
+    "filesChecked": 66,
+    "filesContainingCredential": 0,
+    "valuesPrinted": false
+  },
+  "protectedCalculations": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "assets": {
+    "navigationPngCount": 31,
+    "completePngCount": 748,
+    "approvedArtworkOrRegistryChanges": [],
+    "navigationMastersInPrecache": false,
+    "exportFontsInPrecache": false
+  },
+  "serverGmailControls": "7 names absent from all client bundles",
+  "unchangedBrowserEvidence": "61d787a: 31 routes x 6 widths,186 observations PASS; source changes confined to calendar projection and its explanatory copy",
+  "changedCalendarBrowser": {
+    "checks": [
+      {
+        "brokenImages": 0,
+        "clipped": [],
+        "pageOverflow": false,
+        "pendingVisibleImages": 0,
+        "reminderText": true,
+        "width": 320,
+        "workspaceOverflow": false
+      },
+      {
+        "brokenImages": 0,
+        "clipped": [],
+        "pageOverflow": false,
+        "pendingVisibleImages": 0,
+        "reminderText": true,
+        "width": 390,
+        "workspaceOverflow": false
+      },
+      {
+        "brokenImages": 0,
+        "clipped": [],
+        "pageOverflow": false,
+        "pendingVisibleImages": 0,
+        "reminderText": true,
+        "width": 430,
+        "workspaceOverflow": false
+      },
+      {
+        "brokenImages": 0,
+        "clipped": [],
+        "pageOverflow": false,
+        "pendingVisibleImages": 0,
+        "reminderText": true,
+        "width": 820,
+        "workspaceOverflow": false
+      },
+      {
+        "brokenImages": 0,
+        "clipped": [],
+        "pageOverflow": false,
+        "pendingVisibleImages": 0,
+        "reminderText": true,
+        "width": 1024,
+        "workspaceOverflow": false
+      },
+      {
+        "brokenImages": 0,
+        "clipped": [],
+        "pageOverflow": false,
+        "pendingVisibleImages": 0,
+        "reminderText": true,
+        "width": 1440,
+        "workspaceOverflow": false
+      }
+    ],
+    "logs": [],
+    "visibilityRule": "Closed details are excluded; pending and failed images separated"
+  },
+  "independentICSDateCheck": {
+    "source": "Actual compiled browser-visible file preview, independently unfolded/checked with Python datetime",
+    "events": 55,
+    "monthReminders": [
+      {
+        "start": "20261001",
+        "exclusiveEnd": "20261002",
+        "days": 1
+      },
+      {
+        "start": "20261201",
+        "exclusiveEnd": "20261202",
+        "days": 1
+      },
+      {
+        "start": "20270501",
+        "exclusiveEnd": "20270502",
+        "days": 1
+      },
+      {
+        "start": "20270801",
+        "exclusiveEnd": "20270802",
+        "days": 1
+      }
+    ],
+    "newExternalCalendarImports": 0
+  },
+  "dummyDownloadHumanObservation": "PASS; owner confirmed both PDF pages open; supplied PNG visible and correct. Supplied paths not readable, no byte verification of those paths claimed.",
+  "calendarCleanup": "All4 QA calendars absent, ordinary calendars preserved; agent removed generic, owner removed remaining3",
+  "freshOwnerBaseline": {
+    "exportedAt": "2026-10-04T09:25:57.323Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6488,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 197,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1675,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 11,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "fingerprint": "c9c346ec844589bb621ca7ae2895dd0025b7964cf182c8ec07bbfbf3947e6673",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "gmail": "Both historical FAILED runs remain consumed; fresh human grant pending;0 live requests",
+  "publicContent": "OFF",
+  "productionKeys": "UNISSUED",
+  "remaining": [
+    "Clean source/bundle freeze",
+    "Fresh runtime grant and one combined Sites release",
+    "Read-only live/source/PWA/owner acceptance",
+    "Exact GitHub PR/main reconciliation",
+    "Human-only Gmail test result remains separately pending"
+  ],
+  "evidence": [
+    {
+      "path": "work/selected-tasks/month-reminder-final-regression.json",
+      "sha256": "901a5405e065ab309f5c702f67bc323689687fad4fc2717f5c7f9b5ee6a69f96"
+    },
+    {
+      "path": "work/selected-tasks/month-reminder-final-typecheck.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "work/selected-tasks/month-reminder-final-build.txt",
+      "sha256": "9d2db78bc0c5ce6cc2a2e0b1e70c3dcd1c14d0b824635754f32865f27ad0abbc"
+    },
+    {
+      "path": "work/selected-tasks/month-reminder-final-lint.txt",
+      "sha256": "f323529c260edd518af8ae6787cfd87ab198dfd9ffd6bad7eff5bb655cbc9932"
+    },
+    {
+      "path": "work/selected-tasks/month-reminder-browser.json",
+      "sha256": "6a70320df45e09e0db59c1b1afa3c17c2475f6108cc6ab92cea40e6844b0b90f"
+    },
+    {
+      "path": "work/selected-tasks/month-reminder-browser-preview.ics",
+      "sha256": "f2e3f11b16045c11536f49576304e6cc6221fabca2710525e2a7cb7dd8ba5146"
+    }
+  ]
+}

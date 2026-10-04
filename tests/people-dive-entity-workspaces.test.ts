@@ -1,8 +1,15 @@
 import {describe,it,expect} from 'vitest';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
+import {readFileSync} from 'node:fs';
 
 describe('People and Dive Entity workspace ownership',()=>{
+  it('keeps long human names readable inside narrow Person cards',()=>{
+    const css=readFileSync(new URL('../components/people-operators.module.css',import.meta.url),'utf8');
+    const heading=css.match(/\.personCard h2\s*\{([^}]+)\}/)?.[1]??'';
+    expect(heading).toMatch(/overflow-wrap:\s*anywhere/);
+    expect(heading).not.toMatch(/text-overflow:\s*ellipsis/);
+  });
   it('offers affiliation editing in People using existing entities, without organisation CRUD',async()=>{
     const module=await import('../components/people/person-entity-relationships').catch(()=>null);
     const Component=module?.PersonEntityRelationships;

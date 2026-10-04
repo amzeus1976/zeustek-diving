@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { RecordEditorWorkspace } from '../shared/record-editor-workspace';
 import { bookingRecordLinks } from '../../lib/planning/booking-record-links';
+import {CalendarDownloadWorkspace} from './calendar-download-workspace';
 import { useRecordRefresh } from '../record-status';
 import { CollapsibleWorkCard } from '../workflow/collapsible-work-card';
 import { ZeusTekIcon } from '../zeustek-icon';
@@ -104,19 +105,33 @@ function bookingDraft(item: StoredDivingCalendarBooking | null): BookingDraft {
   };
 }
 
+export function requestedCalendarEventId(search: string): string | null {
+  const params = new URLSearchParams(search);
+  return params.get('eventId') ?? params.get('recordId');
+}
+
+/** An explicit unavailable identity must never select a different source. */
+export function selectCalendarBooking<T extends { entityId: string }>(
+  items: readonly T[], visibleItems: readonly T[], selectedId: string | null,
+): T | null {
+  return selectedId === null ? visibleItems[0] ?? null : items.find(item => item.entityId === selectedId) ?? null;
+}
+
 export function DivingCalendarBookings({ go }: Props) {
   const [items, setItems] = useState<StoredDivingCalendarBooking[]>([]);
-  const [activeTab, setActiveTab] = useState<CalendarView>('calendar');
+  const [requestedId] = useState(() => typeof window === 'undefined' ? null : requestedCalendarEventId(window.location.search));
+  const [activeTab, setActiveTab] = useState<CalendarView>(requestedId === null ? 'calendar' : 'list');
   const [month, setMonth] = useState(localIsoDate().slice(0, 7));
   const [filter, setFilter] = useState<BookingKind | 'all'>('all');
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(requestedId);
+  const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState<
     StoredDivingCalendarBooking | null | undefined
   >(undefined);
 
   const refresh = useCallback(
-    async () => setItems(await listDivingCalendarBookings()),
+    async () => { setItems(await listDivingCalendarBookings()); setLoaded(true); },
     [],
   );
   useRecordRefresh(refresh);
@@ -151,10 +166,7 @@ export function DivingCalendarBookings({ go }: Props) {
       );
     return filtered;
   }, [activeTab, filtered]);
-  const selected =
-    items.find((item) => item.entityId === selectedId) ??
-    visibleItems[0] ??
-    null;
+  const selected = selectCalendarBooking(items, visibleItems, selectedId);
   const days = monthDays(`${month}-01`);
 
   function moveMonth(delta: number) {
@@ -188,6 +200,7 @@ export function DivingCalendarBookings({ go }: Props) {
         </button>
       </header>
 
+      <CalendarDownloadWorkspace go={go}/>
       <div className={styles.shell}>
         <aside className={styles.sideRail}>
           <h2>Event types</h2>
@@ -405,8 +418,8 @@ export function DivingCalendarBookings({ go }: Props) {
           ) : (
             <div className={styles.emptyPane}>
               <CalendarDays />
-              <h2>No event selected</h2>
-              <p>Add a booking or choose an event from the calendar.</p>
+              <h2>{selectedId !== null ? loaded ? 'Linked event unavailable' : 'Loading linked event' : 'No event selected'}</h2>
+              <p>{selectedId !== null ? loaded ? 'The exact requested event is unavailable on this device. Choose another event to review it.' : 'Waiting for the exact requested event. No other event has been selected.' : 'Add a booking or choose an event from the calendar.'}</p>
             </div>
           )}
         </aside>

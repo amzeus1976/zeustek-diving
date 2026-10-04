@@ -514,6 +514,7 @@ export function GasPlanning({ go }: Props) {
               plan={selected}
               divePlan={selectedDivePlan}
               edit={() => setEditing(selected)}
+              {...(go?{share:()=>go(`Settings&config=shared-links-settings&gasPlanId=${encodeURIComponent(selected.entityId)}`)}:{})}
               remove={async () => {
                 if (
                   !window.confirm(
@@ -557,12 +558,14 @@ function GasDetail({
   edit,
   remove,
   saveToPlan,
+  share,
 }: {
   plan: StoredGasPlanRecord;
   divePlan: StoredEnrichedDivePlan | null | undefined;
   edit: () => void;
   remove: () => void;
   saveToPlan: () => Promise<void>;
+  share?: () => void;
 }) {
   const [status, setStatus] = useState('');
   async function linkNotes() {
@@ -609,6 +612,7 @@ function GasDetail({
         </div>
       </dl>
       <div className={styles.actionGrid}>
+        {share&&<button type="button" className="focus-secondary" onClick={share}>Share selected Gas Plan</button>}
         <button className="focus-secondary" onClick={edit}>
           <Pencil size={14} /> Edit gas plan
         </button>

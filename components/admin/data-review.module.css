@@ -1,0 +1,15 @@
+.workspace,.results{min-width:0;max-width:100%;display:grid;gap:1rem}
+.workspace h2,.finding h3{margin:0}
+.workspace p,.results p{overflow-wrap:anywhere;margin:0;line-height:1.6}
+.controls,.filters,.finding header{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;min-width:0}
+.controls button{min-height:44px;white-space:normal;max-width:100%}
+.filters{border:1px solid var(--brand-border,#33444c);border-radius:var(--radius);padding:.8rem}
+.filters label{display:grid;gap:.4rem;flex:1 1 160px;min-width:0}
+.filters select{min-height:44px;max-width:100%}
+.finding{border:1px solid var(--brand-border,#33444c);border-radius:var(--radius);padding:1rem;display:grid;gap:.7rem;min-width:0}
+.finding header{justify-content:space-between}.finding h3{font-size:1rem;text-transform:capitalize}
+.nextStep,.scope{color:var(--muted-foreground)}
+.sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:.4rem;list-style:none;margin:0;padding:0;min-width:0}
+.sources a{display:flex;align-items:center;min-height:44px;padding:.45rem .6rem;overflow-wrap:anywhere;color:var(--brand-blue,#24b9ef);border:1px solid var(--brand-border,#33444c);border-radius:.45rem}
+.sources a:focus-visible{outline:2px solid var(--brand-orange,#ff8a00);outline-offset:3px}
+@media(max-width:430px){.finding{padding:.7rem}.controls>*{flex:1 1 100%}.controls span{text-align:center}}

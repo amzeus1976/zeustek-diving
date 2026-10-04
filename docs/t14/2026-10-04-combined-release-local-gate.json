@@ -1,0 +1,293 @@
+{
+  "status": "FINAL LOCAL GATE PASS; NOT YET DEPLOYED",
+  "branch": "t14/outstanding-requests",
+  "applicationCommit": "849352248487dd3fb3b6b5cfedb6ca74d60c8b9f",
+  "appVersion": "1.0.72",
+  "cache": "zeustek-static-v19",
+  "regression": {
+    "passed": 1302,
+    "failed": 0,
+    "files": 196
+  },
+  "focused": {
+    "passed": 56,
+    "files": 6
+  },
+  "typecheck": "PASS",
+  "buildPWA": {
+    "status": "PASS",
+    "entries": 431,
+    "KiB": 42653.79,
+    "method": "Existing question-set prebuild and Vinext production build; dependencies and both existing lockfiles unchanged. Current Sites build-selector rejects retained dual locks; direct established build succeeded."
+  },
+  "targetedLint": {
+    "files": 182,
+    "newFindings": 0,
+    "unchangedBaselineFindings": 91,
+    "rawExit": 1,
+    "comparison": "PASS; exact unchanged-line/rule/message comparison, no suppression"
+  },
+  "privacy": {
+    "kind": "local checkpoint, not complete release gate",
+    "protectedCalculations": [
+      {
+        "path": "lib/offline/buhlmann-ndl.ts",
+        "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "match": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-planner.ts",
+        "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "match": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-reserve.ts",
+        "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "match": true
+      },
+      {
+        "path": "lib/offline/gas-planning-foundation.ts",
+        "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "match": true
+      },
+      {
+        "path": "lib/offline/planning-pages.ts",
+        "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "match": true
+      },
+      {
+        "path": "lib/offline/loadouts-gas.ts",
+        "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "match": true
+      },
+      {
+        "path": "lib/gas-rates.ts",
+        "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "match": true
+      },
+      {
+        "path": "lib/pressure-group-engine.ts",
+        "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "match": true
+      },
+      {
+        "path": "lib/offline/plan-gas-acceptance.ts",
+        "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "match": true
+      }
+    ],
+    "clientPrivacy": {
+      "credentialValuesChecked": 5,
+      "variantValuesChecked": 15,
+      "filesChecked": 66,
+      "filesContainingCredential": 0,
+      "valuesPrinted": false
+    },
+    "assets": {
+      "navigationPngCount": 31,
+      "completePngCount": 748,
+      "approvedArtworkOrRegistryChanges": [],
+      "navigationMastersInPrecache": false,
+      "exportFontsInPrecache": false
+    },
+    "applicationCommit": "a3f39808616756bd29d31d3e17fc643b53263953",
+    "gmailReleaseControls": {
+      "serverOnlyNamesChecked": 7,
+      "clientMatches": 0,
+      "configuredInProductionByThisTask": false,
+      "liveOperations": 0
+    }
+  },
+  "protectedHashes": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "approvedSHA256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "currentSHA256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "approvedSHA256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "currentSHA256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "approvedSHA256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "currentSHA256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "approvedSHA256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "currentSHA256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "approvedSHA256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "currentSHA256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "approvedSHA256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "currentSHA256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "approvedSHA256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "currentSHA256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "approvedSHA256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "currentSHA256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "approvedSHA256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "currentSHA256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "browser": {
+    "allRoutes": 31,
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "observations": 186,
+    "applicationErrors": 0,
+    "pageOverflow": 0,
+    "brokenVisibleImages": 0,
+    "clipping": "PASS; compact and expanded API/guide plus Person names",
+    "apiControls": "7 resource selectors; select-all counts, independent/all collapse, retained selections and visible keyboard focus PASS. No key issued."
+  },
+  "ownerBaseline": {
+    "exportedAt": "2026-10-04T09:52:35.867Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6488,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 197,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1675,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 11,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "fingerprint": "c6aa7bdda4d0c8f178ef4e4d88174e05d3df7bd6c879a4dbde59c4f9286701e9",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "ownerActivityBeforeFreeze": "Compared with09:25 capture:2 Dive weather/wind/modifiedAt updates; same6488 IDs/counts. They precede deployment and become the new authoritative baseline. No agent writes. No reversal.",
+  "publicProfileState": "Existing live snapshot enabled by owner (1 row, no selected photo); preserve it. No new agent publication or revocation. The previous OFF statement is historical.",
+  "apiKeys": "UNISSUED; live schema has no key table. No new key is implied by feature approval.",
+  "gmail": "2 consumed FAILED runs unchanged;0 agent sync/reconnect/rotation/background requests. Prepare fresh human-only90-day/100-message bounded grant with conditional manual restoration; live success remains unverified.",
+  "rollback": {
+    "app": "1.0.71",
+    "Sites": 143,
+    "versionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_dfb390da5abc8191bbb58a13093389e5",
+    "deployment": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+    "source": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+    "archiveSHA256": "bba507732118f3210ad748dd8ce3e5017b1ef57547a7bb648ebb056a27da0562"
+  },
+  "GitHubMainBeforeRelease": "d1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2",
+  "evidence": [
+    {
+      "path": "work/selected-tasks/combined-publish-final-regression.json",
+      "sha256": "52e8c9db80be158f40184d44a21079f2b3d7617b05124e5fbe8cc7d4b13fdb21"
+    },
+    {
+      "path": "work/selected-tasks/combined-publish-final-typecheck.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "work/selected-tasks/combined-publish-final-build.txt",
+      "sha256": "f79bc9f5d80a5bfddce63a0f8029eadafc389ef3a1b12d40a97425b733337384"
+    },
+    {
+      "path": "work/selected-tasks/combined-publish-final-lint.txt",
+      "sha256": "cbdfdd8bd33072ec870d5c07627a5412fa274c86921581487591d9dafb319114"
+    },
+    {
+      "path": "work/selected-tasks/api-person-final-focused.json",
+      "sha256": "9575b073b523e215693ab30768fee7f7b865abd6ec63b6b418b0dff5136886ff"
+    },
+    {
+      "path": "work/selected-tasks/api-usability-browser.json",
+      "sha256": "097f2e06b8846087ece28d1ee212a28937c892ba13a0c9c9ff8b56b233209d82"
+    },
+    {
+      "path": "work/selected-tasks/combined-final-all-route-browser.json",
+      "sha256": "e43cf253f6feef5f198dd2e3566c4501fedced42765b7216b20e38feb8470f8f"
+    },
+    {
+      "path": "work/selected-tasks/sharing-compiled-read-gate.json",
+      "sha256": "a550de1a42be829f969d55590a81cb5ba9a0b7abc0f09f9f9148b285931d83fd"
+    }
+  ]
+}

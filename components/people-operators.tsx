@@ -5,6 +5,8 @@ import { Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
 import { AccessibleDialog } from './accessible-dialog';
 import { BuddyDiveWorkspace } from './people/buddy-dive-workspace';
 import {PersonEntityRelationships} from './people/person-entity-relationships';
+import {RelationshipSourceContextCard} from './people/relationship-source-context';
+import {resolveRelationshipSourceContext,type RelationshipSourceRequest} from '../lib/operators/relationship-source-context';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { PersonAvatar, ProfilePicture } from './profile-picture';
 import { useRecordRefresh } from './record-status';
@@ -125,8 +127,11 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   const [operators,setOperators]=useState<Awaited<ReturnType<typeof listOperators>>>([]);
   const [personLinks,setPersonLinks]=useState<Awaited<ReturnType<typeof listPersonEntityLinks>>>([]);
   const [managing,setManaging]=useState<StoredPerson|null>(null);
+  const [sourceRequest,setSourceRequest]=useState<RelationshipSourceRequest|null>(null);
+  const [sourcesLoaded,setSourcesLoaded]=useState(false);
   const openedPersonLink=useRef(false);
   const refresh = useCallback(() => {
+    setSourcesLoaded(false);
     void Promise.all([listPeople(), listDives(), listCertifications(),listOperators(),listPersonEntityLinks()]).then(
       ([nextPeople, nextDives, nextCertifications,nextOperators,nextLinks]) => {
         setPeople(nextPeople);
@@ -134,13 +139,18 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
         setCertifications(nextCertifications);
         setOperators(nextOperators);
         setPersonLinks(nextLinks);
+        const query=new URLSearchParams(window.location.search),relationshipId=query.get('relationshipId');
+        setSourceRequest(relationshipId?{kind:'person-operator-link',relationshipId,endpointId:query.get('personId')??query.get('recordId')??''}:null);
+        setSourcesLoaded(true);
       },
-    );
+    ).catch(()=>setError('The requested People snapshot is unavailable on this device.'));
   }, []);
   useRecordRefresh(refresh);
+  const sourceContext=useMemo(()=>sourceRequest&&sourcesLoaded?resolveRelationshipSourceContext(sourceRequest,{people,operators,personLinks,entityLinks:[]}):null,[sourceRequest,sourcesLoaded,people,operators,personLinks]);
   useEffect(()=>{
     if(openedPersonLink.current)return;
     const query=new URLSearchParams(window.location.search),id=query.get('personId')??query.get('recordId');
+    if(query.get('relationshipId')){openedPersonLink.current=true;return;}
     const person=people.find(row=>row.entityId===id);
     if(person){const frame=requestAnimationFrame(()=>{setViewing(person);openedPersonLink.current=true;});return()=>cancelAnimationFrame(frame);}
   },[people]);
@@ -244,10 +254,12 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
     certifications={certifications} error={error}
     close={() => { setEditing(null); setError(''); }} save={save}/>;
   if (buddyView) return <BuddyDiveWorkspace person={buddyView} dives={dives} close={()=>setBuddyView(null)} saved={refresh} go={go}/>;
-  if (managing) return <PersonEntityRelationships person={managing} operators={operators} links={personLinks} close={()=>setManaging(null)} onSaved={refresh} go={go??(()=>undefined)}/>;
+  if (managing) return <PersonEntityRelationships person={managing} operators={operators} links={personLinks} sourceRelationshipId={sourceContext?.canManage&&sourceContext.sourceId===managing.entityId?sourceContext.relationshipId:undefined} close={()=>setManaging(null)} onSaved={refresh} go={go??(()=>undefined)}/>;
 
   return (
     <>
+      {sourceContext&&<RelationshipSourceContextCard context={sourceContext} go={go} manage={()=>{const person=people.find(row=>row.entityId===sourceContext.sourceId);if(sourceContext.canManage&&person)setManaging(person);}}/>}
+      {sourceRequest&&!sourcesLoaded&&!error&&<output>Loading the linked affiliation…</output>}
       <header className={styles.hero}>
         <div>
           <span>PEOPLE · OWNER PROFILE</span>
@@ -524,6 +536,7 @@ function ProfileDetail({
         </section>
       </div>
       <footer>
+        {person.roles?.ownerProfile&&<button type="button" className="focus-secondary" onClick={()=>go('Settings&config=shared-links-settings')}>Share selected profile</button>}
         <button className="focus-secondary" onClick={showDives}>Dives together / link history</button>
         <button className="focus-secondary" onClick={manage}>Manage Dive Entity links</button>
         <button className="focus-secondary" onClick={edit}>

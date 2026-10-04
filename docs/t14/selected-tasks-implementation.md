@@ -1,6 +1,12 @@
 # Selected ZeusTek tasks — implementation ledger
 
-## Authority and baseline (2 October 2026)
+## Accepted production checkpoint (2 October 2026)
+
+app1.0.71/Sites143/source525effa2e91eaf0347f86bd9362ed63730e0dfa3 is published and verified; deployment appgdep_6abfcc2de2e88191898a82be1dd2cbfc. PR#88 merged to main d1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2; full tree1758f60fac70951be0299c537ecea44be58c4835 exactly matches Sites. This documentation-only evidence branch is deliberately separate from accepted main. See selected-release-1.0.71-evidence.json.
+
+Tasks1/2/4 PASS; Tasks6/7 implementation/security PASS with public content OFF and real keys UNISSUED awaiting separate activation consent. Task3 diagnostics PASS but restoration BLOCKED after the one new consumed FAILED token_refresh/transport run; explicit owner Gmail release exception retained. All thirteen completed issues are closed; #55 and broader #50 remain open. Task5/T15 excluded.
+
+## Initial authority and baseline (historical, 2 October 2026)
 
 Owner authorises tasks 1, 2, 3, 4, 6 and 7 through one combined accepted release. Task 5, calendar export, data-health centre, T15 and unrelated work are excluded. Audit findings are requirements, not completed implementation.
 
@@ -23,61 +29,61 @@ Each stage gets a recoverable commit. No intermediate stage deployment. Approval
 
 ## Requirement tracking
 
-Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, BLOCKED, PRODUCTION VERIFIED. The current combined application is implemented locally as app1.0.71, static-v18. Full 996 tests / 156 files, typecheck and production build pass; targeted lint has zero new diagnostics. Production acceptance is still OPEN.
+Status vocabulary: VERIFIED (focused fixtures plus applicable safe live acceptance), VERIFIED; OFF/KEYS UNISSUED, OWNER AUTHORISED, AUTHORISED RUN CONSUMED, AWAITING AUTHORISATION, BLOCKED, PRODUCTION VERIFIED. app1.0.71/static-v18 is accepted live on Sites143. Mutation/secret-issuance/publication success paths use isolated fixtures; production profile is disabled and keys unissued. Task3 restoration is explicitly BLOCKED, not waived or relabelled PASS.
 
 | ID | Requirement / issue | Status | Evidence / dependency |
 | --- | --- | --- | --- |
-| 1.1 | #73 approved guide effective colours and one authoritative token layer | LOCAL PASS | Core/diving tokens and effective domain surfaces checked; guide unchanged |
-| 1.2 | #73 typography, spacing, radii, heroes, product/PWA naming | LOCAL PASS | 27 text sheets and 22 domain sheets reconciled; actual card surface/radius evidence |
-| 1.3 | #79 44px targets, focus, keyboard, active states, accessible names | LOCAL PASS | Six-width route sweep; Skills pager/mobile navigation and card actions tested |
-| 1.4 | Retain 31 navigation PNGs, curated registry, 748 superset/vector controls | LOCAL PASS | 31 unique 128px approved route images; artwork/registry bytes unchanged |
-| 2.1 | #74 exclude expired/cancelled/completed trips; ongoing/undated semantics | LOCAL PASS | Valid ISO dates, ongoing before future, cancelled/invalid/reversed/undated exclusions; no source writes |
-| 2.2 | #77 every headline exact analysis and canonical evidence | LOCAL PASS | All 32 mappings; Certification/Person/Dive evidence destinations; no award-to-Dive fallback |
-| 2.3 | #80 bounded Skills paging/filtering/counts/exact deep links | LOCAL PASS | Unit large-catalogue cases; browser 61 Skills: 25/25/11, filters and exact skill/evidence links |
-| 2.4 | #85 320px crop controls visible, no intrinsic overflow | LOCAL PASS | True 160px circular preview, drag/keyboard/zoom/reset/cancel/draft Save Crop retained |
-| 2.5 | #87 internal KPI containment at all six widths | LOCAL PASS | Long award fixtures, seven positive chart bounds, actual scroll/clipping checks |
-| 2.6 | #86 inventory read never repairs/saves | LOCAL PASS | Owner approved exact #86 patch; read-only inventory, no repairs or saves |
-| 2.7 | #86 duplicate/missing diagnostics and explicit single-record reviewed correction | LOCAL PASS | Explicit one-record review; canonical IDs and references preserved; no bulk renumber |
-| 2.8 | #86 new gap allocation/concurrency/rejection; IDs/links retained | LOCAL PASS | Gap reuse retained; serialised saves plus atomic owner/shared collision rejection; offline conflicts retained |
-| 2.9 | People/entity separation, relationships/deletion, self identity/photo regressions | LOCAL PASS | Full retained suites and local human/entity/team/crop fixtures; no architecture recreated |
-| 3.1 | #55 bounded original-cause evidence; redacted token/account/list/metadata/parse/transport/persistence diagnostics | LOCAL PASS | Versioned allowlist and safe messages/status; original historical failure cause remains UNKNOWN |
-| 3.2 | Encrypted token storage/retention, cached stories/non-Gmail preserved | LOCAL PASS | Mock encrypted refresh retention; browser cached News retained; no real connection writes |
-| 3.3 | Success/failure fixtures and minimal repair warranted by evidence | LOCAL PASS | 40 Gmail fixtures; bounded transport/storage/redaction/idempotence fixes and default-off acceptance gate |
-| 3.4 | Separate live acceptance authorisation and concrete one-run procedure | OWNER AUTHORISED | One NEW run: 90 days, max 100 metadata/snippet messages, no retry/reconnect/credential/mailbox changes |
+| 1.1 | #73 approved guide effective colours and one authoritative token layer | VERIFIED | Core/diving tokens and effective domain surfaces checked; guide unchanged |
+| 1.2 | #73 typography, spacing, radii, heroes, product/PWA naming | VERIFIED | 27 text sheets and 22 domain sheets reconciled; actual card surface/radius evidence |
+| 1.3 | #79 44px targets, focus, keyboard, active states, accessible names | VERIFIED | Six-width route sweep; Skills pager/mobile navigation and card actions tested |
+| 1.4 | Retain 31 navigation PNGs, curated registry, 748 superset/vector controls | VERIFIED | 31 unique 128px approved route images; artwork/registry bytes unchanged |
+| 2.1 | #74 exclude expired/cancelled/completed trips; ongoing/undated semantics | VERIFIED | Valid ISO dates, ongoing before future, cancelled/invalid/reversed/undated exclusions; no source writes |
+| 2.2 | #77 every headline exact analysis and canonical evidence | VERIFIED | All 32 mappings; Certification/Person/Dive evidence destinations; no award-to-Dive fallback |
+| 2.3 | #80 bounded Skills paging/filtering/counts/exact deep links | PRODUCTION VERIFIED | 3874 canonical Skills:3824 active/50 archived; main paging25, management batches75, search/filter/counts and exact record links pass |
+| 2.4 | #85 320px crop controls visible, no intrinsic overflow | PRODUCTION VERIFIED | Live all six widths including320:160px true circle, visible44px controls, keyboard/zoom/reset/cancel; draft discarded |
+| 2.5 | #87 internal KPI containment at all six widths | PRODUCTION VERIFIED | All selected live headlines across six widths; long award fixture bounds and actual internal clipping/overlap checks pass |
+| 2.6 | #86 inventory read never repairs/saves | VERIFIED | Owner approved exact #86 patch; read-only inventory, no repairs or saves |
+| 2.7 | #86 duplicate/missing diagnostics and explicit single-record reviewed correction | VERIFIED | Explicit one-record review; canonical IDs and references preserved; no bulk renumber |
+| 2.8 | #86 new gap allocation/concurrency/rejection; IDs/links retained | VERIFIED | Gap reuse retained; serialised saves plus atomic owner/shared collision rejection; offline conflicts retained |
+| 2.9 | People/entity separation, relationships/deletion, self identity/photo regressions | PRODUCTION VERIFIED | Live People/entity exact links, legacy pairs, circular crop, oneMe and valid instructor buddy/self leader; no saves |
+| 3.1 | #55 bounded original-cause evidence; redacted token/account/list/metadata/parse/transport/persistence diagnostics | PRODUCTION VERIFIED | Redacted v1 phase/kind/status visible; new failure located at token_refresh/transport, no HTTP response; original transport cause UNRESOLVED |
+| 3.2 | Encrypted token storage/retention, cached stories/non-Gmail preserved | VERIFIED | Encrypted connection/cached stories preserved; only expected consumed-failure connection/run metadata changed; no credentials printed or exported |
+| 3.3 | Success/failure fixtures and minimal repair warranted by evidence | VERIFIED | 40 Gmail fixtures; bounded transport/storage/redaction/idempotence fixes and default-off acceptance gate |
+| 3.4 | Separate live acceptance authorisation and concrete one-run procedure | AUTHORISED RUN CONSUMED | Exactly one new90-day/max100 metadata-snippet attempt f2356ba1-2c8d-4f55-af40-7c59feac342f; FAILED; no retry or run substitution |
 | 3.5 | Verified restoration + authorised enablement | BLOCKED | New consented run consumed/FAILED token_refresh transport; sync stays disabled under existing release exception; no retry |
-| 4.1 | #75 establish actual image failure stage; PDF and DOCX selected images | LOCAL PASS | Blob transport TypeError before decode reproduced; bounded image loader/crop cleanup fixed |
-| 4.2 | #76 licensed embedded Unicode glyph coverage | LOCAL PASS | SIL OFL Noto Sans/JP; Greek/Cyrillic/Japanese/subscripts; unsupported PDF glyphs report safely |
-| 4.3 | #78 duplicate activity case normalisation without source writes | LOCAL PASS | Normalised per-Dive counts across five shared projections; saved tags untouched |
-| 4.4 | Equipment/sections/record selection/number opt-in/error recovery | LOCAL PASS | Five actual downloads, equipment/final selected records and four dummy opt-out numbers checked |
-| 4.5 | Card image disclosure warning/preview | LOCAL PASS | Included image pixels may contain details omitted from text; visible disclosure |
-| 4.6 | Actual PDF/DOCX/TXT/CSV/JSON downloads; PDF/DOCX viewer layout | LOCAL PASS | PDFium + official LibreOffice: four pages each inspected; fonts/images/final Dive retained |
-| 4.7 | Empty/long/missing/multilingual/formula/private-secret cases | LOCAL PASS | Five empty downloads plus focused fixtures; retained backup/export privacy coverage |
+| 4.1 | #75 establish actual image failure stage; PDF and DOCX selected images | VERIFIED | Blob transport TypeError before decode reproduced; bounded image loader/crop cleanup fixed |
+| 4.2 | #76 licensed embedded Unicode glyph coverage | VERIFIED | SIL OFL Noto Sans/JP; Greek/Cyrillic/Japanese/subscripts; unsupported PDF glyphs report safely |
+| 4.3 | #78 duplicate activity case normalisation without source writes | VERIFIED | Normalised per-Dive counts across five shared projections; saved tags untouched |
+| 4.4 | Equipment/sections/record selection/number opt-in/error recovery | PRODUCTION VERIFIED | Five actual owner downloads retain66Dives/13awards/52equipment/final records; text numbers opted out; fixture selection/error cases retained |
+| 4.5 | Card image disclosure warning/preview | VERIFIED | Included image pixels may contain details omitted from text; visible disclosure |
+| 4.6 | Actual PDF/DOCX/TXT/CSV/JSON downloads; PDF/DOCX viewer layout | PRODUCTION VERIFIED | Actual PDF/DOCX/TXT/CSV/JSON verified; PDFium/official LibreOffice19pages each/25images; wrapping/pagination/final records inspected |
+| 4.7 | Empty/long/missing/multilingual/formula/private-secret cases | VERIFIED | Five empty downloads plus focused fixtures; retained backup/export privacy coverage |
 | 6.1 | #81/#50 bounded implementation/security plan approval | OWNER AUTHORISED | Implement-all-fixes direction approves reviewed bounded implementation/security plan |
-| 6.2 | Owner editor: text/photo/selected Insights/allowlist/versioned snapshot | LOCAL PASS | Owner Settings editor, strict versioned projection, selected Insights and photo; existing stores |
-| 6.3 | ChatGPT auth + anonymous/unapproved welcome/private exact deep links | LOCAL PASS | Approved private application/deep links; anonymous and unapproved generic welcome; ChatGPT auth retained |
-| 6.4 | Disabled default, same-renderer exact preview/publish/update/revoke | LOCAL PASS | Disabled default; server-bound exact preview; explicit publish/update/revoke; real content remains unpublished |
-| 6.5 | Metadata-stripped derivative; no attachment/account identifiers | LOCAL PASS | PNG/JPEG validation and server metadata stripping; dedicated opaque derivative; private originals untouched |
-| 6.6 | Field/nested/XSS/owner/cache/revoke/private-route security | LOCAL PASS | SQL/R2 fixtures cover ownership, nested/private fields, injection, stale preview, cache and revocation |
+| 6.2 | Owner editor: text/photo/selected Insights/allowlist/versioned snapshot | VERIFIED; OFF | Owner Settings editor, strict versioned projection, selected Insights and photo; existing stores |
+| 6.3 | ChatGPT auth + anonymous/unapproved welcome/private exact deep links | VERIFIED; OFF | Approved private application/deep links; anonymous and unapproved generic welcome; ChatGPT auth retained |
+| 6.4 | Disabled default, same-renderer exact preview/publish/update/revoke | VERIFIED; OFF | Disabled default; server-bound exact preview; explicit publish/update/revoke; real content remains unpublished |
+| 6.5 | Metadata-stripped derivative; no attachment/account identifiers | VERIFIED; OFF | PNG/JPEG validation and server metadata stripping; dedicated opaque derivative; private originals untouched |
+| 6.6 | Field/nested/XSS/owner/cache/revoke/private-route security | VERIFIED; OFF | SQL/R2 fixtures cover ownership, nested/private fields, injection, stale preview, cache and revocation |
 | 6.7 | Real owner preview/publication consent | AWAITING AUTHORISATION | Exact real-owner preview approval required only for content publication; ship default off |
 | 7.1 | #82 implementation/security review before coding | OWNER AUTHORISED | Reviewed security plan approved by implement-all-fixes direction |
-| 7.2 | GET/HEAD v1 Dives/awards/equipment/confirmed usage | LOCAL PASS | Four GET/HEAD v1 resources; strict DTOs; no canonical/backup serialization |
-| 7.3 | Per-client AMZeus/ZeusTek keys, scope and selected-record consent | LOCAL PASS | Separate clients, explicit fields and selected owned record consent; real keys unissued |
-| 7.4 | Secret hash verification, once-only display, expiry/revoke/rotation | LOCAL PASS | Hash-only verification, RAM-only once display, expiry/revoke and atomic rotation |
-| 7.5 | Every object/link owner checks; historical saved usage snapshots | LOCAL PASS | Owner/object/link rechecks; saved historical equipment evidence; withheld identities; no current-loadout inference |
-| 7.6 | Bounded cursor paging, units/provenance, rate limits/OpenAPI/safe errors | LOCAL PASS | Bound signed cursors, 1–100 pagination, units/provenance, atomic key limit and OpenAPI 3.1 |
-| 7.7 | Credential exclusion/log/cache boundaries + dummy backend clients | LOCAL PASS | Dummy keys/backend clients; credential/backup/log/cache security; no production credential issued |
+| 7.2 | GET/HEAD v1 Dives/awards/equipment/confirmed usage | VERIFIED; KEYS UNISSUED | Four GET/HEAD v1 resources; strict DTOs; no canonical/backup serialization |
+| 7.3 | Per-client AMZeus/ZeusTek keys, scope and selected-record consent | VERIFIED; KEYS UNISSUED | Separate clients, explicit fields and selected owned record consent; real keys unissued |
+| 7.4 | Secret hash verification, once-only display, expiry/revoke/rotation | VERIFIED; KEYS UNISSUED | Hash-only verification, RAM-only once display, expiry/revoke and atomic rotation |
+| 7.5 | Every object/link owner checks; historical saved usage snapshots | VERIFIED; KEYS UNISSUED | Owner/object/link rechecks; saved historical equipment evidence; withheld identities; no current-loadout inference |
+| 7.6 | Bounded cursor paging, units/provenance, rate limits/OpenAPI/safe errors | VERIFIED; KEYS UNISSUED | Bound signed cursors, 1–100 pagination, units/provenance, atomic key limit and OpenAPI 3.1 |
+| 7.7 | Credential exclusion/log/cache boundaries + dummy backend clients | VERIFIED; KEYS UNISSUED | Dummy keys/backend clients; credential/backup/log/cache security; no production credential issued |
 | 7.8 | Production key issuance confirmation | AWAITING AUTHORISATION | Real client, scope, selected records/fields and expiration approval required; ship unissued |
-| G.1 | Focused RED→GREEN before each implementation | LOCAL PASS | Usability/export/cylinder/Gmail/chart fixtures and actual responsive RED→GREEN retained |
-| G.2 | Full retained regression (historical 888) | LOCAL PASS | 156 files / 996 tests; retained baseline assertions and suites |
-| G.3 | Typecheck/build/PWA/version/cache/targeted lint | LOCAL PASS | Typecheck/build/PWA 427 entries; app1.0.71/static-v18; 0 new lint diagnostics, 83 unchanged baseline |
-| G.4 | Privacy/auth/public/API/secret security tests | LOCAL PASS | Public/API auth/field/photo/cache/key/secret security fixtures and built-client credential scan |
-| G.5 | Browser 320/390/430/820/1024/1440; keyboard/focus/contained content | LOCAL PASS | Fully loaded compiled 186-route sweep; six-width Insights/crop/public/API/Gmail controls, no clipping or application errors |
-| G.6 | Nine protected hashes throughout and final comparison | LOCAL PASS | All 9 match current approved manifest; 8 byte-unchanged and exact owner-approved #86 ID-policy touchpoint |
-| G.7 | Fresh owner IDs/counts/content/relationship evidence before/after | OPEN | Fresh 6485-record baseline and encrypted recovery verified; post-release comparison outstanding; no synthetic owner records |
-| G.8 | Current recoverable rollback/version/source verification | LOCAL PASS | Actual Sites141 saved artifact/deployment/source verified; reverify immediately before release |
-| G.9 | Clean frozen commit/version/cache/dependencies; single combined deploy | OPEN | No partial release |
-| G.10 | Read-only production acceptance + separately authorised actions | OPEN | Gmail/profile/key writes never implicit |
-| G.11 | Accepted exact source PR/main tree verification/issues update | OPEN | Only after production acceptance |
+| G.1 | Focused RED→GREEN before each implementation | VERIFIED | Usability/export/cylinder/Gmail/chart fixtures and actual responsive RED→GREEN retained |
+| G.2 | Full retained regression (historical 888) | VERIFIED | 156 files / 996 tests; retained baseline assertions and suites |
+| G.3 | Typecheck/build/PWA/version/cache/targeted lint | VERIFIED | Typecheck/build/PWA 427 entries; app1.0.71/static-v18; 0 new lint diagnostics, 83 unchanged baseline |
+| G.4 | Privacy/auth/public/API/secret security tests | VERIFIED | Public/API auth/field/photo/cache/key/secret security fixtures and built-client credential scan |
+| G.5 | Browser 320/390/430/820/1024/1440; keyboard/focus/contained content | PRODUCTION VERIFIED | 186 compiled +186 live route checks, six widths; retained keyboard/focus/Insights/crop/team/evidence checks; zero app errors/overflow/broken images |
+| G.6 | Nine protected hashes throughout and final comparison | VERIFIED | All 9 match current approved manifest; 8 byte-unchanged and exact owner-approved #86 ID-policy touchpoint |
+| G.7 | Fresh owner IDs/counts/content/relationship evidence before/after | PRODUCTION VERIFIED | Fresh6485 IDs/content/timestamps all unchanged, fingerprint3f009f129e0298394fded5b5cf38b79c11723c633526f51c5392e0da08a95743; failed Gmail metadata separate |
+| G.8 | Current recoverable rollback/version/source verification | PRODUCTION VERIFIED | Sites141 recoverable saved archive/source; restore appgdep_6abfc8b662388191b6655e46ec1607a9 succeeded and verified before corrected143 |
+| G.9 | Clean frozen commit/version/cache/dependencies; single combined deploy | PRODUCTION VERIFIED | Clean frozen525effa/app1.0.71/static-v18, corrected combined Sites143 accepted; rejected combined142 preserved/restored, no partial stages |
+| G.10 | Read-only production acceptance + separately authorised actions | PRODUCTION VERIFIED | Read-only final security/UI/export/PWA/owner acceptance PASS; one authorised Gmail run consumed FAILED under explicit exception; no publication/key writes |
+| G.11 | Accepted exact source PR/main tree verification/issues update | PRODUCTION VERIFIED | PR88 merged; maind1937fb022dd8ddc81bbb64d4a8ac6dc0e0794f2 full tree equals published525effa;13closed,55/50remain open |
 
 ## Checkpoint / test / decision log
 
@@ -87,13 +93,13 @@ Status vocabulary: OPEN, LOCAL PASS, OWNER AUTHORISED, AWAITING AUTHORISATION, B
 
 ## Exact next actions
 
-1. Preserve all local checkpoints and completed implementations. Finished app1.0.71 checks pass; record exact clean application commit and evidence before release.
-2. Complete production-built fixture checks at 320/390/430/820/1024/1440 and read-only security/header checks. Reuse actual five-format download evidence only for unchanged export code.
-3. Capture fresh production canonical IDs/counts/content hashes and relationship integrity through read-only backup; reverify current Sites141 artifact/source and GitHub main.
-4. Configure only the separately authorised new Gmail run grant, leaving manual/background disabled. Freeze/package/push source to Sites and publish one combined version after every non-Gmail gate passes.
-5. Execute that NEW bounded live run once. Resolve any uncertain outcome from persisted status without repeating. Enable manual-only sync only after verified success; no background ingestion.
-6. Read-only live responsive/core/privacy/PWA/owner acceptance; rollback the verified prior deployment on a mandatory failure. Public profile stays disabled and integration keys unissued unless distinct exact content/key consent arrives.
-7. Only after production acceptance push exact accepted GitHub source, attach/merge PR, verify main tree and update issues. Preserve Task 5/T15 exclusions. Do not claim Gmail verified before live success.
+1. Preserve frozen source branch t14/tasks-1-2-3-4-6-7 at525effa, accepted GitHub main d1937fb and the separate evidence branch. Reverify actual state before any future work; do not deploy documentation as a new application or reset completed work.
+2. Task3/#55 remains BLOCKED. Continue only redacted fixture/platform transport diagnosis unless separately instructed; neither consumed Gmail acceptance run may be retried. Another live operation/reconnect/credential change requires fresh owner consent. No manual/background sync until authorised persisted successful acceptance.
+3. Public content remains disabled. If the owner requests activation, obtain approval of the exact visitor preview; never publish owner data implicitly during smoke.
+4. API real keys remain unissued. If requested, obtain client/scopes/selected records/fields/expiry confirmation using the existing reviewed controls; no browser-embedded integration secrets.
+5. No outstanding mandatory non-Gmail release or reconciliation action. Keep excluded Task5/T15, broader#50 sharing modes and unrelated enhancements out. Report the actual blocked/awaiting-consent states.
+
+The following checkpoint log is historical; its earlier OPEN/next-deploy statements are superseded by the accepted checkpoint above.
 
 ## Combined implementation checkpoint — 2 October 2026
 
