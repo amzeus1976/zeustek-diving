@@ -38,14 +38,27 @@ export function CollapsibleWorkCard({
 }: CollapsibleWorkCardProps) {
   const regionId = useId();
   const storageKey = useMemo(() => keyFor(id), [id]);
-  const [preference] = useState(() => readPreference(storageKey));
-  const [minimized, setMinimized] = useState(() => preference?.minimized ?? defaultMinimized);
-  const [expanded, setExpanded] = useState(() => preference?.expanded ?? defaultExpanded);
+  // Match the server's first render; device preferences are restored after hydration.
+  const [minimized, setMinimized] = useState(defaultMinimized);
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [restoredKey, setRestoredKey] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (!active) return;
+      const preference = readPreference(storageKey);
+      setMinimized(preference?.minimized ?? defaultMinimized);
+      setExpanded(preference?.expanded ?? defaultExpanded);
+      setRestoredKey(storageKey);
+    });
+    return () => { active = false; };
+  }, [storageKey, defaultMinimized, defaultExpanded]);
   useEffect(()=>{let active=true;if(revealWhenLinked&&new URLSearchParams(window.location.search).get('config')===id)void Promise.resolve().then(()=>{if(active)setMinimized(false);});return()=>{active=false;};},[id,revealWhenLinked]);
 
   useEffect(() => {
+    if (restoredKey !== storageKey) return;
     try { localStorage.setItem(storageKey, JSON.stringify({ minimized, expanded })); } catch { /* Device preference only. */ }
-  }, [storageKey, minimized, expanded]);
+  }, [storageKey, minimized, expanded, restoredKey]);
 
   const canShowMore = rowCount != null && rowCount > previewLimit;
   const content = typeof children === 'function' ? children({ expanded, previewLimit }) : children;

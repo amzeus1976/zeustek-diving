@@ -1,0 +1,128 @@
+{
+  "status": "PASS; specifically accounted concurrent Farne owner edits retained",
+  "at": "2026-10-04T19:19:07.901791+00:00",
+  "application": "1.0.75",
+  "sites": 147,
+  "source": "58edbe397f10b51089836a6b157fa6cdb04979c2",
+  "tree": "9907d067066ada2025fa3ea1234f7a1dd43bc8e5",
+  "deployment": "appgdep_6ac2a2525e4481919e84bc128d24b940",
+  "nativeSourceReverified": true,
+  "environmentRevision": 6,
+  "bindingsPreserved": 17,
+  "tests": 1418,
+  "testFiles": 212,
+  "browser": {
+    "routes": 31,
+    "routeObservations": 186,
+    "featureObservations": 56,
+    "uniqueFeatureScreens": 9,
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "applicationErrors": 0,
+    "pageOverflow": 0,
+    "contentClipping": 0,
+    "brokenVisibleImages": 0,
+    "twoPartialViewportObservationsRetainedBeforeSuccessfulCompleteRepeat": true
+  },
+  "cache": "zeustek-static-v22",
+  "assets": {
+    "navigationByteMatches": 31,
+    "statusIconByteMatches": 2,
+    "serviceWorkerByteMatch": true
+  },
+  "owner": {
+    "beforeAt": "2026-10-04T18:48:11.246Z",
+    "afterAt": "2026-10-04T19:14:10.892Z",
+    "beforeRecords": 6496,
+    "afterRecords": 6499,
+    "added": 5,
+    "removed": 2,
+    "changed": 2,
+    "unchanged": 6492,
+    "addedKinds": {
+      "site": 5
+    },
+    "removedKinds": {
+      "site": 2
+    },
+    "changedKinds": {
+      "site": 1,
+      "trip": 1
+    },
+    "explanation": "Concurrent Farne Site replacement/creation at19:01:29\u201319:01:50UTC and the owner Plan save at19:11:17UTC; the Plan contains the exact supplied screenshot text. Agent acceptance performed no canonical save/delete. Attribution to owner activity is based on those record changes, timestamps and the supplied active-planning screenshot, not a forced return to earlier counts.",
+    "newMissingSiteReferences": 0,
+    "existingMissingSiteReferences": 1,
+    "unchangedKinds": [
+      "dive",
+      "person",
+      "operator",
+      "person-operator-link",
+      "cylinder",
+      "cylinder-fill",
+      "gas-analysis",
+      "equipment",
+      "equipment-event",
+      "skill_evidence",
+      "gmail-news"
+    ],
+    "beforeFingerprint": "8da73a37cbee635d436bd2033a63fbb306ed2701e690f25c61427466b1f0cc23",
+    "afterFingerprint": "7adf5673a0e56e6dbbe02d6affb19832934f1a63807673e1c88f3874ee6018a6",
+    "secretExcluded": true,
+    "encryptedRecoveryVerified": true,
+    "agentCanonicalWrites": 0,
+    "syntheticProductionRecords": 0,
+    "gmailOperations": 0
+  },
+  "protectedHashesUnchanged": 9,
+  "ownerSavedPlanLosslessLiveProof": {
+    "observedOwnerSavedPlan": true,
+    "agentPlanSave": false,
+    "plans": [
+      {
+        "storedRecordCharacters": 51130,
+        "readings": 2221,
+        "completeSnapshotReadBack": true,
+        "ownerEnteredScreenshotTextRetained": true
+      }
+    ],
+    "productionCanonicalWrites": 0
+  },
+  "gmailOperations": 0,
+  "canonicalAcceptanceWrites": 0,
+  "gitHub": {
+    "pr": "https://github.com/amzeus1976/zeustek-diving/pull/91",
+    "main": "9d4ceb05bf0f9b7bc069585378fe8040fdd0400c",
+    "mainTree": "9907d067066ada2025fa3ea1234f7a1dd43bc8e5",
+    "exactFullTreeMatchesPublished": true,
+    "wholeTreeDiffEmpty": true,
+    "review": "Corrected58edbe3 review completed; two earlier findings resolved; no new unresolved findings",
+    "evidenceBranch": "t14/sites147-release-evidence"
+  },
+  "nextRequest": "After this source is reconciled, implement owner-requested full-width collapsible Edit Dive Plan cards and larger text areas on a new tested candidate.",
+  "rollback": {
+    "application": "1.0.73",
+    "sites": 145,
+    "deployment": "appgdep_6ac290249c1c8191a41d26c0a437c7d2",
+    "source": "67c9706171ece312699c2c352fd94d5163137ee5",
+    "version": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_5a6c59007eac8191953b021550c59cc5",
+    "artifactSha256": "11d1766c12a31a52abe1c9139261a6c1dfed44f277e8d4eccb1981a97391ac30",
+    "verifiedRecoverable": true
+  },
+  "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_e9a206766ff48191a8fc3e880c0b6f9b",
+  "artifactSha256": "e50f0592042ca6010e285639811f2491a419cc79576db2e928d0f4ac397c307b",
+  "typecheck": "PASS",
+  "productionBuildPWA": "PASS;422 entries/42678.29KiB",
+  "lint": {
+    "targetedFiles": 232,
+    "newOrChangedFindings": 0,
+    "unchangedBaselineFindings": 92,
+    "rawExit": 1
+  },
+  "privacy": "PASS; compiled credentials/anonymous access/connection-secret exclusion"
+}

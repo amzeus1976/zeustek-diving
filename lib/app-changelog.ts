@@ -1,6 +1,27 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.77',
+    date:'2026-10-04',
+    title:'Roomier Dive Plan editing and remembered-card loading',
+    changes:[
+      'All ten Dive Plan sections use full-width cards with independent Minimise and Expand controls.',
+      'Long-text boxes fill the section, start at a generous editing height and remain vertically resizable.',
+      'Collapsing a Plan section retains text and selected records without discarding changes.',
+      'Remembered card display preferences are restored safely after initial loading, avoiding a page-rendering mismatch.',
+    ],
+  },
+  {
+    version:'1.0.76',
+    date:'2026-10-04',
+    title:'Roomier Dive Plan editing',
+    changes:[
+      'Every Dive Plan editor card spans the full workspace and can be minimised or expanded with the keyboard or pointer.',
+      'Safety, emergency, objectives and notes use larger full-width text boxes with vertical resizing.',
+      'Minimising a card retains its text and selections. Save, Cancel and unsaved-change protection remain available.',
+    ],
+  },
+  {
     version:'1.0.75',
     date:'2026-10-04',
     title:'Full-width weather, buddy awards and daily Dive numbering',

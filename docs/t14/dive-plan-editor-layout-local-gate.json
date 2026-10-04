@@ -1,0 +1,264 @@
+{
+  "status": "LOCAL PASS; publication/acceptance still pending",
+  "version": "1.0.77",
+  "cache": "zeustek-static-v24",
+  "fullRegression": {
+    "tests": 1424,
+    "files": 214,
+    "failed": 0
+  },
+  "focused": {
+    "tests": 12,
+    "files": 4
+  },
+  "typecheck": "PASS",
+  "build": {
+    "status": "PASS",
+    "precacheEntries": 422,
+    "precacheKiB": 42681.39
+  },
+  "lint": {
+    "files": 8,
+    "diagnostics": 0,
+    "exitCode": 0
+  },
+  "privacy": {
+    "checkedAt": "2026-10-04T20:26:12.388Z",
+    "artifactFilesScanned": 1355,
+    "credentialMatches": 0,
+    "anonymous": [
+      {
+        "path": "/api/conditions",
+        "status": 401
+      },
+      {
+        "path": "/api/site-weather",
+        "status": 401
+      },
+      {
+        "path": "/api/weather/providers",
+        "status": 401
+      },
+      {
+        "path": "/api/v1/dives",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/awards",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/equipment",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/equipment-usage",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/dive-plans",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/gas-plans",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/trips",
+        "status": 400
+      }
+    ],
+    "providerStatusRedaction": true,
+    "runtimeIcons": [
+      {
+        "path": "/brand/icons/owner-status/top-buddy.png",
+        "bytes": 22769,
+        "sha256": "f3cdee8f6bcaf666ef199f0c749471b993d7aceef16a5756125fe1660e179be3"
+      },
+      {
+        "path": "/brand/icons/owner-status/favourites.png",
+        "bytes": 17351,
+        "sha256": "f760b15c5903efc83e3b8def41ae8ff14f88951328393aa1f9f9ffdd204d3bce"
+      }
+    ],
+    "mastersNotPublicOrPrecached": true,
+    "cache": "zeustek-static-v24",
+    "productionCalls": 0,
+    "gmailCalls": 0
+  },
+  "protected": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "matches": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "matches": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "matches": true
+    }
+  ],
+  "responsive": {
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "routeObservations": 186,
+    "cards": 10,
+    "textareas": 23,
+    "cssTextareaMinimumPx": 224,
+    "geometrySubpixelRounding": "223.996px observed for a224px computed CSS minimum; geometry check retains0.5px rounding tolerance.",
+    "fullWidth": true,
+    "clipping": 0,
+    "overflow": 0,
+    "visibleBrokenImages": 0,
+    "consoleErrors": 0
+  },
+  "interactions": {
+    "at": "2026-10-04T20:32:01.576Z",
+    "rememberedCollapsedAfterReload": true,
+    "draftCollapseRetainsText": true,
+    "localSaveWhileCollapsedRetainsTextAfterReload": true,
+    "nextKeyboardFocus": "Emergency procedures",
+    "visibleFocus": "solid",
+    "discardDialog": false,
+    "errors": []
+  },
+  "existingEditorControlBindingsMatchAccepted147": true,
+  "freshOwnerBaseline": {
+    "exportedAt": "2026-10-04T20:33:16.771Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6499,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 197,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1680,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 17,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "fingerprint": "7adf5673a0e56e6dbbe02d6affb19832934f1a63807673e1c88f3874ee6018a6",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "recovery": {
+    "app": "1.0.75",
+    "sites": 147,
+    "source": "58edbe397f10b51089836a6b157fa6cdb04979c2",
+    "deployment": "appgdep_6ac2af6894a08191b5a23424e2873a22",
+    "archiveSHA256": "e50f0592042ca6010e285639811f2491a419cc79576db2e928d0f4ac397c307b",
+    "environmentRevision": 6,
+    "bindings": 17
+  },
+  "sourceFileHashes": {
+    "components/dive-planning-centre.tsx": "4d0fcf93acde3de22d122733b835ed8e2c12ae03eea12583b9cabcd2d04c4ee4",
+    "components/dive-planning-centre.module.css": "6a63a86dfab9a019e8a96c0e0d9d55a1b37de87b4c6d6dedd0c8a36ff9ef14a5",
+    "components/planning/plan-editor-section.tsx": "38a3d745063dd005d458ac4e470b2c50ed3c4ee1f13000e13379de4d534951ca",
+    "components/planning/plan-editor-section.module.css": "64c460e90e7e3860de887faeb5525cc09c0acf5949efd8f650ef3c54d3f420cb",
+    "components/workflow/collapsible-work-card.tsx": "37e432693e81fabfaecd23653f01ae14069102a0b984b4832c2bcd6e5616364c",
+    "app/service-worker.ts": "5201d22121cf45b2fa1776e5d66976d3310dd8ac1efddfb2c4dd573b7956311d",
+    "package.json": "fbbb01925b4e283c00ccd2676156bc0c9857e3af82681bfa5a417e496f844be4",
+    "lib/app-changelog.ts": "dea8108ae5bcdbea7b3325e5e1c36453fccd9d990bcc30ccc750b11f823fac13",
+    "tests/work-card-hydration.test.ts": "99e5778424889de9288d579d455a60cc0c5b2f769d6372d0a4c34a6e7f5466cf",
+    "tests/dive-plan-editor-section.test.ts": "5efed85086d2bd32c752c6582ff76edc78594dc31676724df16353b86c6732c0",
+    "tests/t00-release-cache.test.ts": "a393e8a87d19efb31f0e6b2702e7abe38ede55c74e04637481ae77ac28eb6ca2"
+  },
+  "gmailCalls": 0,
+  "canonicalOwnerWrites": 0,
+  "rejectedAttempt": "Sites148/app1.0.76 preserved separately; not accepted or pushed to GitHub"
+}
