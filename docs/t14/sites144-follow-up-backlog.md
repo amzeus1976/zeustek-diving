@@ -1,0 +1,19 @@
+# Sites144 named follow-up backlog
+
+Accepted scope is app1.0.72 / Sites144, publishedc39210be, mergedPR89/maind57e153. This document does not authorise new implementation, provider access, credentials, real publication or another live Gmail run. Earlier requirement rows remain historical and are not silently marked complete.
+
+| Item | Evidence-backed status | Exact next step / boundary |
+| --- | --- | --- |
+| #55 Gmail live restoration | OPEN; two consumed historical FAILED/upstream_failure results retained; redacted diagnostics/local repair tested; live success unverified | Owner uses the fresh one-use Dive News acceptance control once, by5Oct11:33BST. Existing encrypted connection,90days/max100 metadata/snippets only. Review redacted persisted outcome. No agent run/retry/reconnect/rotation/background ingestion. Manual-only sync restores solely after verified success. Expiry is not consent to issue another grant. |
+| #56 Met Office | Unverified/access denied; disabled | Enable only after agreed access requirements and an actual successful server-side provider check; do not research bypasses or claim adapter presence is activation. |
+| #56 Copernicus / SwellCloud | Conditional; disabled | Await agreed access/activation requirements; preserve working current providers/fallbacks. |
+| #60 Feature intake / #61 Bug intake | Standing open portals | Triage concrete new reports; neither portal is itself an unfinished feature or instruction to startT15. |
+| Optional sharing extensions from#50 | Approved first slice complete: snapshot/anyone-with-link Profile and Gas Plan with selected sanitised attachments. Live updates/password/client-encrypted mode and extra record families were excluded from that slice. | Separate reviewed design/security/implementation scope before development; no existing share gains fields/records automatically. |
+| Optional calendar extensions from#83 | Selected ICS delivery complete; feeds/subscriptions/extra reminder mechanisms deferred | Separate reviewed scope; no background subscriptions or calendar uploads inferred. |
+| Original T14Stage9 nonblocking finishing | Owner-authorised deferral remains; current release-blocking responsive/control defects have passed acceptance | Reconcile original issue matrix against preserved accepted evidence before a specifically approved polish pass. Do not mark undelivered original rows complete. |
+| Real client API credentials | Capability and all7 read-only scopes shipped; production keys UNISSUED | Owner chooses exact client/records/fields/expiry and reviews Selected access before issuing a per-client key. Never put keys in browser source, URLs, screenshots, docs, backups or support logs. Existing keys never gain new scope implicitly. |
+| Real snapshot publication/content updates | Existing public profile is owner-enabled and unchanged; no new real shared link/photo published during smoke | Owner reviews the exact preview before publish/update. Public profile URL is https://dive.amzeus.co.uk/public-profile. Publication must not be inferred from feature approval. |
+| Tooling compatibility | Sites1.0.0-b build selector rejects preserved dual locks; established direct prebuild/Vinext build succeeded with existing dependency inputs | This release changes neither stack nor lockfile policy. Any tooling cleanup is a separate bounded task, not grounds to rebuild accepted features. |
+| Existing lint debt |0 new findings;91 exact unchanged baseline findings, rawexit1 retained | No assertions/suppressions were weakened. Unrelated cleanup was outside this scope. |
+
+Do not recreate deleted dummy calendars, reset owner counts, renumber cylinders on read, alter protected calculations, publish partial work, or treat a researched proposal as implemented.

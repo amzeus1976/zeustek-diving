@@ -1,0 +1,350 @@
+{
+  "status": "PUBLISHED AND VERIFIED; Gmail live restoration pending human acceptance",
+  "acceptedAt": "2026-10-04T11:20:32.059806+00:00",
+  "applicationVersion": "1.0.72",
+  "sitesVersion": 144,
+  "branch": "t14/outstanding-requests",
+  "publishedSource": "c39210be47cab1a21d7d6c6ea24b279cf41597bd",
+  "applicationCheckpoint": "849352248487dd3fb3b6b5cfedb6ca74d60c8b9f",
+  "publishedFullTree": "1987f25e393642fb931970281de7b5c8a11801f7",
+  "cache": "zeustek-static-v19",
+  "deployment": "appgdep_6ac22c0bb1a081918ace0a0a0fbc88c0",
+  "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_d70c9b7fbd188191b5f56a1e92c1c6e5",
+  "environmentRevision": 5,
+  "url": "https://dive.amzeus.co.uk",
+  "artifact": {
+    "sha256": "4c051d2ab37ce0d6acef40e5ddae2bf94ec9fe5d409d1ddee739c762bb1dd2de",
+    "sizeBytes": 103045120,
+    "files": 1361,
+    "sedimentFile": "file_00000000be7081f48729afb7cfb4ce6e"
+  },
+  "rollback": {
+    "application": "1.0.71",
+    "sites": 143,
+    "deployment": "appgdep_6abfcc2de2e88191898a82be1dd2cbfc",
+    "source": "525effa2e91eaf0347f86bd9362ed63730e0dfa3",
+    "version": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_dfb390da5abc8191bbb58a13093389e5",
+    "artifactSha256": "bba507732118f3210ad748dd8ce3e5017b1ef57547a7bb648ebb056a27da0562",
+    "verifiedRecoverable": true,
+    "rollbackPerformed": false
+  },
+  "github": {
+    "pr": "https://github.com/amzeus1976/zeustek-diving/pull/89",
+    "main": "d57e1536921bd20d49a6d1c51a381db2adb7234a",
+    "mainTree": "1987f25e393642fb931970281de7b5c8a11801f7",
+    "exactFullTreeMatchesPublished": true,
+    "localGitDiffEmpty": true,
+    "supersededPr72ClosedWithoutMerge": true,
+    "nativeChecks": "No GitHub check runs/statuses configured on the candidate; established complete local gate retained. The combined status pending with zero checks was not called a passing remote CI check."
+  },
+  "gates": {
+    "regression": {
+      "passed": 1302,
+      "failed": 0,
+      "files": 196
+    },
+    "focused": {
+      "passed": 56,
+      "files": 6
+    },
+    "typecheck": "PASS",
+    "buildPWA": {
+      "status": "PASS",
+      "entries": 431,
+      "KiB": 42653.79,
+      "method": "Existing question-set prebuild and Vinext production build; dependencies and both existing lockfiles unchanged. Current Sites build-selector rejects retained dual locks; direct established build succeeded."
+    },
+    "lint": {
+      "files": 182,
+      "newFindings": 0,
+      "unchangedBaselineFindings": 91,
+      "rawExit": 1,
+      "comparison": "PASS; exact unchanged-line/rule/message comparison, no suppression"
+    },
+    "privacy": {
+      "kind": "local checkpoint, not complete release gate",
+      "protectedCalculations": [
+        {
+          "path": "lib/offline/buhlmann-ndl.ts",
+          "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+          "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+          "match": true
+        },
+        {
+          "path": "lib/offline/recreational-gas-planner.ts",
+          "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+          "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+          "match": true
+        },
+        {
+          "path": "lib/offline/recreational-gas-reserve.ts",
+          "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+          "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+          "match": true
+        },
+        {
+          "path": "lib/offline/gas-planning-foundation.ts",
+          "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+          "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+          "match": true
+        },
+        {
+          "path": "lib/offline/planning-pages.ts",
+          "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+          "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+          "match": true
+        },
+        {
+          "path": "lib/offline/loadouts-gas.ts",
+          "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+          "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+          "match": true
+        },
+        {
+          "path": "lib/gas-rates.ts",
+          "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+          "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+          "match": true
+        },
+        {
+          "path": "lib/pressure-group-engine.ts",
+          "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+          "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+          "match": true
+        },
+        {
+          "path": "lib/offline/plan-gas-acceptance.ts",
+          "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+          "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+          "match": true
+        }
+      ],
+      "clientPrivacy": {
+        "credentialValuesChecked": 5,
+        "variantValuesChecked": 15,
+        "filesChecked": 66,
+        "filesContainingCredential": 0,
+        "valuesPrinted": false
+      },
+      "assets": {
+        "navigationPngCount": 31,
+        "completePngCount": 748,
+        "approvedArtworkOrRegistryChanges": [],
+        "navigationMastersInPrecache": false,
+        "exportFontsInPrecache": false
+      },
+      "applicationCommit": "a3f39808616756bd29d31d3e17fc643b53263953",
+      "gmailReleaseControls": {
+        "serverOnlyNamesChecked": 7,
+        "clientMatches": 0,
+        "configuredInProductionByThisTask": false,
+        "liveOperations": 0
+      }
+    },
+    "protectedHashes": [
+      {
+        "path": "lib/offline/buhlmann-ndl.ts",
+        "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "match": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-planner.ts",
+        "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "match": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-reserve.ts",
+        "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "match": true
+      },
+      {
+        "path": "lib/offline/gas-planning-foundation.ts",
+        "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "match": true
+      },
+      {
+        "path": "lib/offline/planning-pages.ts",
+        "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "match": true
+      },
+      {
+        "path": "lib/offline/loadouts-gas.ts",
+        "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "match": true
+      },
+      {
+        "path": "lib/gas-rates.ts",
+        "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "match": true
+      },
+      {
+        "path": "lib/pressure-group-engine.ts",
+        "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "match": true
+      },
+      {
+        "path": "lib/offline/plan-gas-acceptance.ts",
+        "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "match": true
+      }
+    ]
+  },
+  "live": {
+    "routes": 31,
+    "viewports": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "observations": 186,
+    "pageOrHeadingOverflow": 0,
+    "completedBrokenImages": 0,
+    "applicationConsoleErrors": 0,
+    "initialPrivateImagePendingObservations": 12,
+    "settledFollowupFailures": 0,
+    "initialObservationsPreserved": true,
+    "navigationAssetCount": 31,
+    "navigationAssetsByteMatch": true,
+    "serviceWorkerByteMatch": true,
+    "httpSecurityAssetChecks": 45,
+    "humanGuideAt": "https://dive.amzeus.co.uk/api/v1/openapi",
+    "jsonContractAt": "https://dive.amzeus.co.uk/api/v1/openapi?format=json",
+    "apiContractVersion": "1.1.0",
+    "apiScopes": 7,
+    "allSevenAnonymousApiRequestsDenied": true,
+    "apiSelectAllLiveDiveCount": 68,
+    "allFiveSummaryDownloadControlsEnabled": true,
+    "summaryExportEvidence": "Actual five-format production content/viewer/privacy proof from525effa retained for byte-unchanged export/font/backup modules; all relevant regression cases rerun. No new production PDF/DOCX viewer claim is inferred from seeing buttons.",
+    "guideHostingInjection": "Application guide is byte-identical to compiled script-free HTML after identifying only the Cloudflare edge challenge script. Strict default-none/script-denial CSP was not weakened. Browser guide has no warnings/errors."
+  },
+  "ownerData": {
+    "before": "2026-10-04T10:34:31.075Z",
+    "after": "2026-10-04T11:01:26.025Z",
+    "ordinaryRows": 6488,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 197,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1675,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 11,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "fingerprintBefore": "c6aa7bdda4d0c8f178ef4e4d88174e05d3df7bd6c879a4dbde59c4f9286701e9",
+    "fingerprintAfter": "c6aa7bdda4d0c8f178ef4e4d88174e05d3df7bd6c879a4dbde59c4f9286701e9",
+    "comparison": {
+      "before": "2026-10-04T10:34:31.075Z",
+      "after": "2026-10-04T11:01:26.025Z",
+      "added": 0,
+      "removed": 0,
+      "changed": 0,
+      "canonicalIdsIdentical": true,
+      "allOriginalRowsIdentical": true,
+      "connectionSecretExcluded": true
+    },
+    "uniqueIds": true,
+    "missingRelationshipEndpoints": 0,
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationshipCounts": {
+      "person-operator-link": 1
+    },
+    "encryptedRecoveryVerified": true,
+    "sourcePreDeploymentActivity": "Two existing Dive weather/wind edits occurred before the immediate10:34:31 baseline; they were preserved and are not release deltas. Historical counts are not restoration targets.",
+    "privateEvidence": "Complete original rows and per-record fingerprints remain ignored and encrypted with AES-GCM/user DPAPI. No raw owner data or connection secrets copied into tracked documentation."
+  },
+  "publication": {
+    "publicProfileUrl": "https://dive.amzeus.co.uk/public-profile",
+    "existingOwnerPublicSnapshotEnabled": true,
+    "existingSnapshotRows": 1,
+    "snapshotPhotoSelected": false,
+    "existingSnapshotUnchanged": true,
+    "newOwnerSharesPublished": 0,
+    "productionIntegrationKeysIssued": 0
+  },
+  "gmail": {
+    "status": "UNVERIFIED; OWNER-APPROVED RELEASE EXCEPTION",
+    "historicalFailedRuns": 2,
+    "consumedHistoricalRunsRepeated": false,
+    "freshAcceptanceMode": "One separately authorised human-initiated90-day/max100-message metadata/snippet run using existing encrypted connection; no retry/reconnect/credential change/send/delete/read-state change.",
+    "humanButtonVisibleAndEnabled": true,
+    "ordinaryManualSyncDisabled": true,
+    "grantExpires": "2026-10-05T10:33:15.186Z /11:33 BST",
+    "agentLiveRequests": 0,
+    "liveAcceptanceCompleted": false,
+    "manualRestorationRule": "Only after fresh persisted successful completion with zero failed messages and no diagnostic; no scheduled/background ingestion."
+  },
+  "issueCompletion": {
+    "closed": [
+      50,
+      54,
+      83,
+      84
+    ],
+    "retainedOpenFeatureIssues": [
+      55,
+      56
+    ],
+    "standingIntakePortals": [
+      60,
+      61
+    ],
+    "pr72": "Superseded by merged89; closed without a second source merge"
+  },
+  "providers": {
+    "MetOffice": "Unverified/access denied, not activated",
+    "Copernicus": "Conditional access requirements; disabled",
+    "SwellCloud": "Conditional access requirements; disabled",
+    "existingFallbacks": "Preserved"
+  },
+  "followupBacklog": "docs/t14/sites144-follow-up-backlog.md",
+  "completionBoundary": "This selected combined release is accepted. Gmail success, unactivated providers and named optional/nonblocking original-T14 work are not claimed complete. No T15.",
+  "evidencePolicy": "Documentation-only local t14/sites144-release-evidence checkpoint preserves post-release evidence without changing the exact accepted main/Sites source tree. No application edits or second deployment after freeze."
+}

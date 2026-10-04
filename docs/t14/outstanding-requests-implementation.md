@@ -1,5 +1,11 @@
 # Outstanding ZeusTek requests — implementation ledger
 
+## Accepted production checkpoint — 4 October2026 (supersedes historical statuses)
+
+**app1.0.72 / Sites144** is published and verified; exact sourcec39210be/full tree1987f25e, PR89 merged/maind57e153 exact match. See **sites144-release-evidence.json** and **sites144-follow-up-backlog.md**. API usability/7-scope extensions, preserved urgent Dive/sync work, approved Topic/share first slices, calendar/data-review delivery and first-day-only month reminders are live.1302/196 regression/typecheck/build/PWA/privacy/all9 hashes pass;0 new lint.31routes×six widths186 checked, no application errors/overflow, initial image loads settled. Owner records/IDs/content/relationships unchanged against the fresh immediate baseline; secrets excluded.
+
+#50/#54/#83/#84 complete for the expressly approved slices; stalePR72 superseded/closed. #55 remains awaiting the fresh human-only acceptance, not a diagnostics PASS; #56 external provider conditions remain open. #60/#61 standing portals remain. No new real content publication/API key/Gmail sync occurred. Current public profile was already owner-enabled and is preserved. OriginalStage9 and specifically optional extensions stay named as deferred, not deleted. All earlier local/pending-approval entries below are chronological history.
+
 ## Current authority and accepted baseline
 
 On 2 October 2026 the owner expanded the active goal to include Task 5, calendar export and the data-health centre, alongside all genuinely outstanding GitHub feature/bug requests. This supersedes the earlier Task 5 exclusion. Preserve earlier release evidence as history; do not reopen completed architecture.
