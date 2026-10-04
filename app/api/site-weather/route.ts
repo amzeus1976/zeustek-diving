@@ -1,5 +1,9 @@
 import {nasaDailyWeather} from '@/lib/server/nasa-weather';
 import { getChatGPTUser } from '../../chatgpt-auth';
+import { atmosphericFallback, marineFallback, type ConditionsEnvironment } from '@/lib/server/conditions/service';
+import { parseConditionsRequest } from '@/lib/server/conditions/request';
+import { selectConditions, type ConditionsSnapshot } from '@/lib/weather/conditions-model';
+import { boundedBody } from '@/lib/server/conditions/transport';
 
 const weatherDescriptions: Record<number, string> = {
   0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
@@ -35,10 +39,10 @@ async function fetchJson(url:URL):Promise<WeatherPayload> {
 }
 async function fetchUpstream(url: URL) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+  const timeout = setTimeout(() => controller.abort(), 6000);
   try {
-    const response = await fetch(url.toString(), { headers: { accept: 'application/json' }, signal: controller.signal });
-    if (response.ok) return (await response.json()) as WeatherPayload;
+    const response = await fetch(url.toString(), { headers: { accept: 'application/json' }, signal: controller.signal, redirect:'error' });
+    if (response.ok) return JSON.parse(await boundedBody(response)) as WeatherPayload;
     if (response.status === 429) {const raw=response.headers.get('retry-after');const numeric=Number(raw);const dateDelay=raw?Math.ceil((Date.parse(raw)-Date.now())/1000):NaN;const seconds=Math.max(60,raw&&Number.isFinite(numeric)?numeric:Number.isFinite(dateDelay)?dateDelay:60);weatherRetryAt.set(url.hostname,Date.now()+seconds*1000);throw new WeatherRateLimit(seconds);}
     throw new Error(`The weather service returned ${response.status}.`);
   } finally { clearTimeout(timeout); }
@@ -46,7 +50,8 @@ async function fetchUpstream(url: URL) {
 
 const weatherCache = new Map<string, { expires: number; value: Record<string, unknown> }>();
 
-export async function GET(request: Request) {
+/** Existing no-key primary path. The conditions service calls this internal function, never its fallback wrapper. */
+export async function getPrimarySiteWeather(request: Request) {
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Authentication required' }, { status: 401 });
   const url = new URL(request.url);
@@ -87,10 +92,12 @@ export async function GET(request: Request) {
   const marine = url.searchParams.get('marine') === 'true';
   const date = url.searchParams.get('date');
   const time = url.searchParams.get('time') || '12:00';
-  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+  if (!url.searchParams.has('latitude') || !url.searchParams.has('longitude') || !Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
     return Response.json({ error: 'Valid site coordinates are required.' }, { status: 400 });
   }
 
+  if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date+'T12:00:00Z')) || new Date(date+'T12:00:00Z').toISOString().slice(0,10) !== date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))
+    return Response.json({error:'A valid weather date and time are required.'},{status:400});
   const today = new Date().toISOString().slice(0, 10);
   if (url.searchParams.get('planning') === 'seasonal') {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date <= today)
@@ -126,7 +133,7 @@ export async function GET(request: Request) {
     }
   }
   const historical = Boolean(date && date < new Date(Date.now()-5*86400000).toISOString().slice(0,10));
-  const cacheKey = [latitude.toFixed(3), longitude.toFixed(3), marine, date ?? 'forecast', time].join(':');
+  const cacheKey = [latitude.toFixed(3), longitude.toFixed(3), marine, date ?? 'forecast', time, url.searchParams.get('disabled') ?? ''].join(':');
   const cached = weatherCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) return Response.json(cached.value);
   const weatherUrl = new URL(historical ? 'https://archive-api.open-meteo.com/v1/archive' : 'https://api.open-meteo.com/v1/forecast');
@@ -183,10 +190,76 @@ export async function GET(request: Request) {
     weatherCache.set(cacheKey, { expires: Date.now() + (historical ? 7 * 24 * 60 * 60 * 1000 : 20 * 60 * 1000), value: result });
     return Response.json(result);
   } catch (reason) {
-    if(date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date < today) {
+    if(date && date < today && !(url.searchParams.get('disabled') ?? '').split(',').includes('nasa')) {
       try {const fallback=await nasaDailyWeather(latitude,longitude,date);weatherCache.set(cacheKey,{expires:Date.now()+20*60*1000,value:fallback});return Response.json(fallback);}catch {/* Keep the original failure visible if both providers fail. */}
     }
 
     return weatherFailure(reason);
   }
+}
+
+/** Authenticated compatibility entry point. Shared fallbacks cannot call this wrapper recursively. */
+export async function GET(request: Request) {
+  if (!(await getChatGPTUser())) return Response.json({error:'Authentication required'},{status:401});
+  const url = new URL(request.url);
+  if (url.searchParams.get('points')) {
+    const primary = await getPrimarySiteWeather(request);
+    primary.headers.set('Cache-Control','private, no-store');
+    return primary;
+  }
+  let input;
+  try { input = parseConditionsRequest(url); }
+  catch (error) { return Response.json({error:error instanceof Error ? error.message : 'Invalid weather request.'},{status:400}); }
+  const today = new Date().toISOString().slice(0,10);
+  input.mode = url.searchParams.get('planning') === 'seasonal' ? 'seasonal' : input.date < today ? 'historical' : 'forecast';
+  const primaryUrl = new URL(url);
+  primaryUrl.searchParams.set('provider','open-meteo');
+  const primary = await getPrimarySiteWeather(new Request(primaryUrl,request));
+  primary.headers.set('Cache-Control','private, no-store');
+  if (!primary.ok && primary.status < 429 && primary.status !== 409) return primary;
+  if (primary.ok && ['open-meteo','auto'].includes(input.provider)) {
+    if(!input.marine || input.mode==='seasonal')return primary;
+    const body=await primary.clone().json() as Record<string,unknown>;
+    const values=body.logConditions as Record<string,unknown>|undefined;
+    if(typeof values?.waveHeightM==='number')return primary;
+    const primaryZone=(body.weather as Record<string,unknown>|undefined)?.timezone;
+    if(typeof primaryZone==='string')input.timeZone=primaryZone;
+    const runtime=await import('cloudflare:workers').then(module=>module.env as unknown as ConditionsEnvironment).catch(()=>({}));
+    const marine=await marineFallback(input,runtime);
+    const selected=selectConditions(marine.readings,input,new Date().toISOString());
+    if(!selected.length)return primary;
+    const numeric=(metric:string)=>{const value=selected.find(r=>r.metric===metric)?.value;return typeof value==='number'?value:undefined;};
+    const additions={waveHeightM:numeric('wave-height'),surfaceTemperatureC:selected.find(r=>r.metric==='water-temperature'&&r.depth.kind==='surface')?.value,currentDirectionDegrees:numeric('current-direction')};
+    return Response.json({...body,logConditions:{...values,...Object.fromEntries(Object.entries(additions).filter(([key,value])=>value!==undefined&&values?.[key]==null))},
+      marineConditionsV1:{version:1,request:input,retrievedAt:new Date().toISOString(),readings:marine.readings,diagnostics:marine.diagnostics},
+      attribution:(typeof body.attribution==='string'?body.attribution:'')+' · '+[...new Set(selected.map(r=>r.attribution).filter(Boolean))].join(' · ')+' · Marine model readings; SST is surface only.'},
+      {headers:{'Cache-Control':'private, no-store'}});
+  }
+  const environment = await import('cloudflare:workers').then(module=>module.env as unknown as ConditionsEnvironment).catch(()=>({}));
+  const fallback = await atmosphericFallback(input,environment);
+  if (input.marine && !selectConditions(fallback.readings,input,new Date().toISOString()).some(r=>r.metric==='wave-height')) {
+    const attempted=fallback.diagnostics.filter(d=>['xweather-marine','wwo','met-norway-ocean'].includes(d.provider)).map(d=>d.provider.replace(/-marine$|-ocean$/,'') as import('@/lib/weather/conditions-model').ConditionsProvider);
+    const marine=await marineFallback(input,environment,new Date().toISOString(),attempted);
+    fallback.readings.push(...marine.readings);fallback.diagnostics.push(...marine.diagnostics);
+  }
+  const selected = selectConditions(fallback.readings,input,new Date().toISOString());
+  const air = selected.find(r=>r.metric==='air-temperature'), weather = selected.find(r=>r.metric==='weather');
+  if (!air && !weather) return primary;
+  const source = air ?? weather!;
+  const numeric = (metric:string) => {
+    const value=selected.find(r=>r.metric===metric)?.value;
+    return typeof value==='number' ? value : undefined;
+  };
+  const wind = numeric('wind-speed');
+  const conditionsV1:ConditionsSnapshot = {version:1,request:input,retrievedAt:new Date().toISOString(),readings:fallback.readings,diagnostics:fallback.diagnostics};
+  return Response.json({
+    provider:source.label,providerId:source.provider,weatherContext:source.resolution==='monthly climatology'?'seasonal':'forecast',
+    sourceCoordinates:{latitude:source.latitude,longitude:source.longitude},sourceTime:source.validAt,resolution:source.resolution,conditionsV1,
+    attribution:[...new Set(selected.map(r=>r.attribution).filter(Boolean))].join(' · ')+' · '+(source.detail ?? ''),
+    logConditions:{weatherSummary:weather?.value ?? 'Atmospheric model conditions',airTemperatureC:air?.value,
+      ...(wind === undefined ? {} : {windSpeedKnots:wind/0.514444}),
+      windDirectionDegrees:numeric('wind-direction'),waveHeightM:numeric('wave-height'),
+      surfaceTemperatureC:selected.find(r=>r.metric==='water-temperature' && r.depth.kind==='surface')?.value,
+      currentDirectionDegrees:numeric('current-direction')},
+  },{headers:{'Cache-Control':'private, no-store'}});
 }

@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version: '1.0.73',
+    date: '2026-10-04',
+    title: 'More reliable weather and sea conditions',
+    changes: [
+      'Explicit weather retrieval can recover through configured providers and an independent global forecast when the primary service is unavailable.',
+      'Coastal conditions can recover wave, swell, surface-temperature and current readings independently of atmospheric weather.',
+      'Forecast, historical daily models and typical monthly climate retain clear source, date and resolution labels; unavailable sea data remain explicit.',
+      'Dive Log, Sites, Dive Planning and Overview use the shared fallback while preserving saved observations and manual edits.',
+      'Typical climate never becomes an automatic historical Dive backfill; existing records and protected dive calculations remain unchanged.',
+    ],
+  },
+  {
     version: '1.0.72',
     date: '2026-10-03',
     title: 'Readable Dive workspaces and selected snapshot links',

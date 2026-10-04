@@ -5,7 +5,7 @@ import {
   type ConditionsEnvironment,
 } from '@/lib/server/conditions/service';
 import { parseConditionsRequest } from '@/lib/server/conditions/request';
-import { GET as legacyWeather } from '../site-weather/route';
+import { getPrimarySiteWeather as legacyWeather } from '../site-weather/route';
 export async function GET(request: Request) {
   if (!(await getChatGPTUser()))
     return Response.json({ error: 'Authentication required' }, { status: 401 });

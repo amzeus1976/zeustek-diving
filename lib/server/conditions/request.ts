@@ -41,6 +41,11 @@ export function parseConditionsRequest(url: URL): ConditionsRequest {
   )
     throw new Error('A valid date, time and provider are required.');
   const depth = p.has('depth') ? Number(p.get('depth')) : undefined;
+  const timeZone = p.get('timeZone');
+  if (timeZone) {
+    try { new Intl.DateTimeFormat('en', { timeZone }).format(); }
+    catch { throw new Error('A valid destination time zone is required.'); }
+  }
   if (
     depth !== undefined &&
     (!Number.isFinite(depth) || depth < 0 || depth > 1000)
@@ -62,13 +67,14 @@ export function parseConditionsRequest(url: URL): ConditionsRequest {
           ? 'coastal'
           : 'unknown',
     marine: p.get('marine') === 'true',
+    ...(timeZone ? {timeZone} : {}),
     ...(p.get('operatorId')
       ? { operatorId: p.get('operatorId')!.slice(0, 40) }
       : {}),
     ...(depth !== undefined ? { plannedDepthM: depth } : {}),
     disabledProviders: (p.get('disabled') ?? '')
       .split(',')
-      .filter((id) => providers.has(id) || id === 'operator')
+      .filter((id) => providers.has(id) || id === 'operator' || id === 'nasa')
       .slice(0, 12) as ConditionsProvider[],
   };
 }

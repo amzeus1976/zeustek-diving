@@ -158,7 +158,7 @@ export function normalizeOpenMeteo(
     return rows;
   };
   const result = array(hourly.time)
-    .slice(0, 192)
+    .slice(0, 384)
     .flatMap((time, index) =>
       read(
         Object.fromEntries(

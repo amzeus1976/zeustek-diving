@@ -31,6 +31,7 @@ const hosts = new Set([
   'api.tomorrow.io',
   'api.worldweatheronline.com',
   'api.met.no',
+  'power.larc.nasa.gov',
   'www.dive-site.co.uk',
   'www.ellertonpark.com',
   'www.stoneycove.com',
@@ -86,6 +87,7 @@ export async function conditionsFetch(
     headers?: Record<string, string>;
     format?: 'json' | 'text';
     ttlMs?: number;
+    timeoutMs?: number;
     method?: 'GET' | 'POST';
     body?: string;
   } = {},
@@ -118,7 +120,7 @@ export async function conditionsFetch(
     );
   const work = (async () => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    const timeout = setTimeout(() => controller.abort(), Math.min(12000, Math.max(1000, options.timeoutMs ?? 12000)));
     try {
       let current = url;
       let response: Response | null = null;

@@ -7,10 +7,12 @@ vi.mock('../app/chatgpt-auth', () => ({ getChatGPTUser: async () => ({ id: 'test
 afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); });
 
 describe('T12.5C Plan editor corrections', () => {
-  it('uses the seven-day API horizon and keeps seasonal context distinct from forecasts', () => {
+  it('uses the supported sixteen-day API horizon and keeps seasonal context distinct from forecasts', () => {
     expect(planningWeatherRegime('2026-09-17', '2026-09-17')).toBe('forecast');
     expect(planningWeatherRegime('2026-09-23', '2026-09-17')).toBe('forecast');
-    expect(planningWeatherRegime('2026-09-24', '2026-09-17')).toBe('seasonal');
+    expect(planningWeatherRegime('2026-09-24', '2026-09-17')).toBe('forecast');
+    expect(planningWeatherRegime('2026-10-02', '2026-09-17')).toBe('forecast');
+    expect(planningWeatherRegime('2026-10-03', '2026-09-17')).toBe('seasonal');
     expect(planningWeatherRegime('2026-09-16', '2026-09-17')).toBe('past');
     expect(planningWeatherRegime('not-a-date', '2026-09-17')).toBe('invalid');
     const snapshot = plannedWeatherSnapshot({ provider: 'Open-Meteo archive', resolution: 'regional', logConditions: { weatherSummary: 'Historical reference', airTemperatureC: 14, waveHeightM: 3, surfaceTemperatureC: 11 } }, 'seasonal', 'site-one', '2026-10-01', '2026-09-17T12:00:00Z');

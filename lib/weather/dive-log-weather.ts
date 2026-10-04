@@ -1,5 +1,6 @@
 import {weatherDescription} from '../server/conditions/adapters';
-export interface DiveLogWeatherRequest {latitude:number;longitude:number;date:string;time:string;marine:boolean}
+import type {ConditionsProvider,ConditionsSelection} from './conditions-model';
+export interface DiveLogWeatherRequest {latitude:number;longitude:number;date:string;time:string;marine:boolean;provider?:ConditionsSelection;disabledProviders?:ConditionsProvider[];timeZone?:string}
 export interface DiveLogConditions {weatherSummary?:string|undefined;airTemperatureC?:number|null|undefined;windSpeedKnots?:number|null|undefined;windDirectionDegrees?:number|null|undefined;waveHeightM?:number|null|undefined;surfaceTemperatureC?:number|null|undefined;currentDirectionDegrees?:number|null|undefined}
 export interface DiveLogWeatherResult {provider:string;resolution:string;attribution:string;logConditions:DiveLogConditions;directFallback?:boolean}
 const obj=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
@@ -25,11 +26,21 @@ function safeConditions(value:unknown):DiveLogConditions{
  return result;
 }
 const hasConditions=(conditions:DiveLogConditions)=>Boolean(conditions.weatherSummary)||Object.values(conditions).some(value=>typeof value==='number');
+/** Bulk historical backfill must never turn typical climate context into recorded dive-day temperatures. */
+export function historicalWeatherBackfillConditions(value:unknown):DiveLogConditions|null {
+ const body=obj(value);
+ if(body.weatherContext==='seasonal'||typeof body.resolution==='string'&&/seasonal|climatology/i.test(body.resolution))return null;
+ const conditions=safeConditions(body.logConditions);
+ return hasConditions(conditions)?conditions:null;
+}
 const rateMessage='Open-Meteo is temporarily rate-limited. Existing entries were kept. Please try again after its limit resets.';
 /** A single official, no-key browser fallback avoids a shared server-IP quota; no credentials, proxies or automatic retry. */
 export async function fetchDiveLogWeather(request:DiveLogWeatherRequest,signal?:AbortSignal,fetcher:typeof fetch=fetch):Promise<DiveLogWeatherResult>{
- validRequest(request);const timeout=AbortSignal.timeout(20000);const combined=signal?AbortSignal.any([signal,timeout]):timeout;
+ validRequest(request);const timeout=AbortSignal.timeout(45000);const combined=signal?AbortSignal.any([signal,timeout]):timeout;
  const params=new URLSearchParams({latitude:String(request.latitude),longitude:String(request.longitude),date:request.date,time:request.time,marine:String(request.marine)});
+ if(request.provider)params.set('provider',request.provider);
+ if(request.disabledProviders?.length)params.set('disabled',request.disabledProviders.join(','));
+ if(request.timeZone)params.set('timeZone',request.timeZone);
  const response=await fetcher(`/api/site-weather?${params}`,{cache:'no-store',signal:combined});
  if(response.status===401||response.status===403)throw new Error('Sign in again to retrieve weather. Existing entries were kept.');
  const result=await responseBody(response);const conditions=safeConditions(result.logConditions);

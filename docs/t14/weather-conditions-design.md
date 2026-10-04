@@ -1,5 +1,7 @@
 # T14 Stage 5W implementation and source decisions
 
+**4October2026 clarification:** provider access results below are historical Stage5W evidence. [The recovered-credentials review](2026-10-04-provider-credentials-review.md) confirms the owner already supplied all six existing credential values, while current Sites144 production bindings are absent. SwellCloud's supplied reference says awaiting approval and API; no issued key/schema is evidenced there. Do not treat configuration work as missing-owner-credentials work or claim historic checks establish current activation.
+
 Owner addition is preserved in implementation-plan.md after the Dive Planning weather section. Existing owner Plan snapshots are never migrated, recalculated or saved when viewed. All nine frozen calculation files remain outside this change.
 
 ## Domain boundary

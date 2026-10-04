@@ -30,6 +30,7 @@ export async function fetchConditions(
   if (request.disabledProviders?.length)
     params.set('disabled', request.disabledProviders.join(','));
   if (enrichment) params.set('enrichment', 'true');
+  if (request.timeZone) params.set('timeZone',request.timeZone);
   try {
     const response = await fetch(`/api/conditions?${params}`, {
       cache: 'no-store',
