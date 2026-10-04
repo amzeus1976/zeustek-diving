@@ -4,6 +4,7 @@ import { RefreshCw } from 'lucide-react';
 import type { DiveSiteRecord } from '../../lib/offline/dive-planning';
 import type { DiveRecord } from '../../lib/offline/dives';
 import { currentDiveAccount } from '../../lib/offline/dive-store';
+import { planningWeatherRegime } from '../../lib/plan-weather';
 import {WorkflowLink} from '../shared/workflow-link';
 import { readLocalConditionsEvidence } from '../../lib/weather/local-evidence';
 import type { ComputerProfileRecord } from '../../lib/offline/computer-import';
@@ -74,12 +75,8 @@ export function ConditionsWorkspace({
     site.latitude !== undefined &&
     site.longitude !== null &&
     site.longitude !== undefined;
-  const mode =
-    date < clock.slice(0, 10)
-      ? 'historical'
-      : Date.parse(date) - Date.parse(clock) > 6 * 86400000
-        ? 'seasonal'
-        : 'forecast';
+  const regime = planningWeatherRegime(date, clock.slice(0, 10));
+  const mode = regime === 'past' ? 'historical' : regime === 'seasonal' ? 'seasonal' : 'forecast';
   const request: ConditionsRequest = {
     latitude: site.latitude ?? 0,
     longitude: site.longitude ?? 0,

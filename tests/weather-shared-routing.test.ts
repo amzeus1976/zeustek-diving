@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { clearConditionsTransport } from '../lib/server/conditions/transport';
 import {
   conditionsService,
@@ -175,6 +176,15 @@ describe('shared bounded weather retrieval', () => {
   it('extends real forecast planning through day15 and uses seasonal context beyond the supported horizon', () => {
     expect(planningWeatherRegime('2026-10-19', '2026-10-04')).toBe('forecast');
     expect(planningWeatherRegime('2026-10-20', '2026-10-04')).toBe('seasonal');
+  });
+
+  it('uses the same sixteen-day policy in the Sites selector rather than silently requesting typical context for day7', () => {
+    expect(planningWeatherRegime('2026-10-11', '2026-10-04')).toBe('forecast');
+    expect(planningWeatherRegime('2026-10-19', '2026-10-04')).toBe('forecast');
+    expect(planningWeatherRegime('2026-10-20', '2026-10-04')).toBe('seasonal');
+    const workspace = readFileSync('components/weather/conditions-workspace.tsx', 'utf8');
+    expect(workspace).toContain('planningWeatherRegime(date, clock.slice(0, 10))');
+    expect(workspace).not.toContain('> 6 * 86400000');
   });
   it('uses the shared server fallback for Dive Log without recursion, repeated primary requests or source-data writes', async () => {
     vi.useFakeTimers();
