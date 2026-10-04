@@ -1,0 +1,21 @@
+import {describe,it,expect} from 'vitest';
+import {resolveTopBuddy} from '../lib/people/top-buddy';
+import {resolveInsightHeadline} from '../lib/insights/headline-evidence';
+import type {PersonRecord} from '../lib/offline/dive-planning';
+import type {DiveWithId} from '../lib/offline/experience-analytics';
+const person=(entityId:string,name:string,role:PersonRecord['role']='buddy')=>({entityId,name,role,roles:{[role]:true}} as PersonRecord&{entityId:string});
+const owner={...person('owner','Owner'),roles:{ownerProfile:true}};
+const gemma=person('gemma','Gemma Brown'),michael=person('michael','Michael','instructor');
+const people=[owner,gemma,michael];
+const dive=(entityId:string,buddyIds:string[])=>({entityId,buddyIds,date:'2026-10-04',site:'Coast'} as DiveWithId);
+describe('Read-only canonical Top Buddy award',()=>{
+ it('has no invented winner without evidence',()=>expect(resolveTopBuddy(people,[],owner)).toBeNull());
+ it('counts a Person once per Dive and excludes self, owner and unknown references',()=>{expect(resolveTopBuddy(people,[dive('a',['self','owner','unknown','gemma','gemma'])],owner)).toMatchObject({person:gemma,count:1,sourceDiveIds:['a'],source:'logbook'});});
+ it('allows an instructor to be a genuine selected buddy',()=>expect(resolveTopBuddy(people,[dive('a',['michael'])],owner)?.person.entityId).toBe('michael'));
+ it('ranks real buddy links and breaks ties consistently independent of insertion order',()=>{const dives=[dive('a',['gemma']),dive('b',['michael'])];expect(resolveTopBuddy(people,dives,owner)?.person.entityId).toBe('gemma');expect(resolveTopBuddy([...people].reverse(),[...dives].reverse(),owner)?.person.entityId).toBe('gemma');});
+ it('respects an existing owner preference but reports the actual scoped count',()=>expect(resolveTopBuddy(people,[dive('a',['gemma'])],{...owner,preferredTopBuddyPersonId:'michael'})).toMatchObject({person:michael,count:0,source:'owner-selected',sourceDiveIds:[]}));
+ it('never lets an owner/self preference create a second owner buddy',()=>{expect(resolveTopBuddy(people,[dive('a',['gemma'])],{...owner,preferredTopBuddyPersonId:'owner'})?.person.entityId).toBe('gemma');});
+ it('changes ranking with the active scope without modifying records or preferred values',()=>{const dives=[dive('a',['gemma']),dive('b',['michael']),dive('c',['michael'])];const before=JSON.stringify({people,dives,owner});expect(resolveTopBuddy(people,dives,owner)?.person.entityId).toBe('michael');expect(resolveTopBuddy(people,dives.slice(0,1),owner)?.person.entityId).toBe('gemma');expect(JSON.stringify({people,dives,owner})).toBe(before);});
+ it('makes the selectable Insights award resolve its actual Person and supporting Dives',()=>{expect(resolveInsightHeadline('topBuddy',{dives:[dive('a',['gemma'])],owner,people,certifications:[]})).toMatchObject({value:'Gemma Brown',sourceKind:'dive',sourceIds:['a'],personId:'gemma',sourceLabel:'1 Dive together'});});
+ it('does not fall back to all-Dive analytics when no buddy evidence exists',()=>{expect(resolveInsightHeadline('topBuddy',{dives:[dive('a',[])],owner,people,certifications:[]})).toMatchObject({value:'No buddy evidence',sourceIds:[]});});
+});

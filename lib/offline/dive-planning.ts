@@ -740,6 +740,8 @@ export interface PersonRecord extends BaseRecord {
     other?: boolean;
   };
   preferredTopBuddyPersonId?: string;
+  /** Owner-selected private presentation preference; never a derived ranking. */
+  favourite?: boolean;
   highestKnownQualification?: string;
   highestRecreationalCertification?: string;
   highestTechnicalCertification?: string;

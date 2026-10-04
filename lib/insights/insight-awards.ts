@@ -29,6 +29,7 @@ export const INSIGHT_AWARD_DEFINITIONS = [
   ['highestRecCert', 'Highest recreational award', 'certification'],
   ['highestTecCert', 'Highest technical certification', 'certification'],
   ['highestProCert', 'Highest professional certification', 'certification'],
+  ['topBuddy', 'Top Buddy', 'people'],
   ['saltwaterDives', 'Saltwater dives', 'water'],
   ['freshwaterDives', 'Freshwater dives', 'water'],
   ['otherWaterDives', 'Other water dives', 'water'],

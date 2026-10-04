@@ -24,10 +24,13 @@ describe('readable Dive writing workspaces', () => {
     expect(html).toContain('Practise trim');
     expect(html).toContain('Clear signals');
   });
-  it('presents one Add skill action when no evidence is recorded', () => {
+  it('opens the dedicated Skills page once from Debrief without embedding its editor', () => {
     const html = render('debrief');
-    expect(html.match(/> Add skill<\/button>/g)).toHaveLength(1);
-    expect(html).toContain('No skills recorded for this dive yet.');
+    expect(html.match(/>Open Skills practised<\/button>/g)).toHaveLength(1);
+    expect(html).not.toContain('Record multiple skills');
+    const skillsPage=renderToStaticMarkup(createElement(DiveRecordDetail,{...props,initialView:'skills'}));
+    expect(skillsPage.match(/> Record multiple skills<\/button>/g)).toHaveLength(1);
+    expect(skillsPage).toContain('No skills recorded for this dive yet.');
   });
   it('gives the main Story room to write and keeps every reflection and timeline record', () => {
     const html = render('story');

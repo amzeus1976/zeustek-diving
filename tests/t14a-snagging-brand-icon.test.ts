@@ -28,7 +28,8 @@ describe('T14A shared presentation foundations', () => {
   });
 
   it('maps all 131 brand icons and renders an accessible fallback', () => {
-    expect(ZEUSTEK_ICON_DEFINITIONS).toHaveLength(131);
+    expect(ZEUSTEK_ICON_DEFINITIONS.filter(icon=>!['top-buddy','favourites'].includes(icon.key))).toHaveLength(131);
+    expect(ZEUSTEK_ICON_DEFINITIONS).toHaveLength(133);
     expect(findZeusTekIcon('core-logbook-icons-dive-cylinder')?.label).toMatch(/cylinder/i);
     for (const icon of ZEUSTEK_ICON_DEFINITIONS) expect(existsSync(`public${icon.src}`), icon.src).toBe(true);
     const html = renderToStaticMarkup(createElement(ZeusTekAssetIcon, { name: 'missing-icon', label: 'Fallback gear', fallback: createElement('span', null, 'FG') }));

@@ -493,7 +493,7 @@ export function ExperienceAnalytics({ go }: Props) {
   }
 
   const ownerProfile=findOwnerProfile(people);
-  const headlineContext={dives:scopedDives,owner:ownerProfile,certifications};
+  const headlineContext={dives:scopedDives,owner:ownerProfile,certifications,people};
   const sourceProjection=buildExperienceAnalyticsProjection(dives,sites,loadouts,{...scope,excludedDiveIds:[]});
   const sourceContext={...headlineContext,dives:dives.filter(dive=>sourceProjection.includedDiveIds.includes(dive.entityId))};
   const awardValues=Object.fromEntries(INSIGHT_AWARD_DEFINITIONS.map(([id])=>[id,resolveInsightHeadline(id,headlineContext)?.value]));
@@ -565,7 +565,7 @@ export function ExperienceAnalytics({ go }: Props) {
             onClick={() => setHeadlineId(id)}
             aria-label={`${label}: ${value}. Open analysis details.`}
           >
-            <Icon />
+            {id==='topBuddy'?<ZeusTekAssetIcon name="top-buddy" size={40} decorative/>:<Icon />}
             <span>{label}</span>
             <b>{value}</b>
             <small>

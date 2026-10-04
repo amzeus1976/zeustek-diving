@@ -76,8 +76,11 @@ describe('TWEAKS workflow, Insights and Gear acceptance', () => {
   it('keeps Overview at-a-glance without duplicating the Insights awards grid', () => {
     const dashboard = read('app/dashboard-client.tsx');
     expect(dashboard).toContain('NEXT DIVE');
-    expect(dashboard).toContain('MY PROFILE');
-    expect(dashboard).toContain('TOP DIVE BUDDY');
+    const overview=dashboard.slice(dashboard.indexOf('function Overview('),dashboard.indexOf('function StatusRow('));
+    expect(overview).not.toContain('MY PROFILE');
+    expect(overview).not.toContain('TOP DIVE BUDDY');
+    expect(overview).not.toContain('overview-profile-card');
+    expect(overview).not.toContain('overview-buddy-card');
     expect(dashboard).toContain('Equipment status');
     expect(dashboard).toContain('HOME DIVE FORECASTS');
     expect(dashboard).not.toContain('<div className="overview-awards-grid">');

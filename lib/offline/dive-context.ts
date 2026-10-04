@@ -225,7 +225,7 @@ function validateCompetenceLevel(value: SkillEvidenceRecord['competenceLevel']) 
 }
 
 /** One domain path owns both evidence.diveId and Dive.debrief.skillEvidenceIds. */
-export async function saveDiveSkillEvidence(diveId: string, input: DiveSkillEvidenceInput): Promise<{ evidence: SkillEvidenceRecord; evidenceIds: string[] }> {
+export async function saveDiveSkillEvidence(diveId: string, input: DiveSkillEvidenceInput, createWithStableId = false): Promise<{ evidence: SkillEvidenceRecord; evidenceIds: string[] }> {
   const account = currentDiveAccount();
   if (!account) throw new Error('Sign in to record skill evidence.');
   const skills = await listCanonicalSkills();
@@ -234,7 +234,8 @@ export async function saveDiveSkillEvidence(diveId: string, input: DiveSkillEvid
   validateCompetenceLevel(input.competenceLevel);
   validateConfidenceLevel(input.confidenceLevel);
   const existing = input.entityId ? (await listSkillEvidence()).find(item => item.entityId === input.entityId) : undefined;
-  if (input.entityId && !existing) throw new Error('This evidence is no longer available on this device.');
+  if (input.entityId && !existing && !createWithStableId) throw new Error('This evidence is no longer available on this device.');
+  if (input.entityId && !existing && await zeustekDb.entities.get(`dive:${account}:${input.entityId}`)) throw new Error('This record ID is already in use.');
   if (existing?.diveId && existing.diveId !== diveId) throw new Error('This evidence is already linked to another Dive.');
   const entityId = input.entityId || crypto.randomUUID();
   await diveOperation(`skill-evidence:save:${entityId}`, input.entityId ? 'Updating skill evidence locally…' : 'Recording skill evidence locally…', () => saveLocalRecord('skill_evidence', {
@@ -258,6 +259,62 @@ export async function linkSkillEvidenceToDive(diveId: string, evidenceId: string
   const evidence = (await listSkillEvidence()).find(item => item.entityId === evidenceId);
   if (!evidence) throw new Error('This evidence is no longer available on this device.');
   return saveDiveSkillEvidence(diveId, { ...evidence, entityId: evidence.entityId });
+}
+
+export interface DiveSkillBatchResult {
+  saved: SkillEvidenceRecord[];
+  skipped: Array<{ entityId: string; skillKey: string }>;
+  failed: Array<{ entityId: string; skillKey: string; message: string }>;
+  evidenceIds: string[];
+}
+const skillBatchWrites = new Map<string, Promise<unknown>>();
+
+/** Explicit batch action, using canonical evidence and link writers. Stable attempt IDs
+ * recover an interrupted evidence/link save; successful rows are never duplicated.
+ * Partial failures are returned, not silently rolled back or reported as complete. */
+export async function saveDiveSkillBatch(diveId: string, inputs: Array<DiveSkillEvidenceInput & { entityId: string }>): Promise<DiveSkillBatchResult> {
+  const account = currentDiveAccount();
+  if (!account) throw new Error('Sign in to record Skills.');
+  if (!inputs.length || inputs.length > 100) throw new Error('Select between 1 and 100 Skills.');
+  const queueKey = `${account}:${diveId}`;
+  const work = (skillBatchWrites.get(queueKey) ?? Promise.resolve()).catch(() => {}).then(async () => {
+    const assertAccount = () => { if (currentDiveAccount() !== account) throw new Error('Account changed. Reopen this Dive.'); };
+    assertAccount();
+    let ids = await diveEvidenceIds(diveId);
+    const skills = await listCanonicalSkills();
+    const seenSkills = new Set<string>(), seenIds = new Set<string>();
+    for (const input of inputs) {
+      const skill = resolveCanonicalSkillReference(input.skillKey, skills);
+      if (!skill || skill.archived) throw new Error('Choose an active saved canonical Skill.');
+      if (!input.entityId || seenIds.has(input.entityId) || seenSkills.has(skill.entityId)) throw new Error('Select each Skill once. Use its notes for repeated attempts.');
+      if (!input.performedAt || !Number.isFinite(Date.parse(input.performedAt))) throw new Error('Record a valid practice date and time.');
+      validateCompetenceLevel(input.competenceLevel); validateConfidenceLevel(input.confidenceLevel);
+      seenIds.add(input.entityId); seenSkills.add(skill.entityId);
+    }
+    const result: DiveSkillBatchResult = {saved:[],skipped:[],failed:[],evidenceIds:ids};
+    for (const input of inputs) {
+      assertAccount();
+      try {
+        const skill = resolveCanonicalSkillReference(input.skillKey, skills)!;
+        const evidence = await listSkillEvidence();
+        assertAccount();
+        const ownAttempt = evidence.find(item => item.entityId === input.entityId);
+        if (ownAttempt?.diveId && ownAttempt.diveId !== diveId) throw new Error('This evidence belongs to another Dive.');
+        const existing = evidence.find(item => item.entityId !== input.entityId && (item.diveId === diveId || ids.includes(item.entityId)) && resolveCanonicalSkillReference(item.skillKey, skills)?.entityId === skill.entityId);
+        if (existing) { result.skipped.push({entityId:input.entityId,skillKey:input.skillKey}); continue; }
+        const saved = await saveDiveSkillEvidence(diveId, {...input, skillKey:skillRecordKey(skill)}, !ownAttempt);
+        assertAccount();
+        ids = saved.evidenceIds; result.saved.push(saved.evidence);
+      } catch (reason) {
+        assertAccount();
+        result.failed.push({entityId:input.entityId,skillKey:input.skillKey,message:reason instanceof Error ? reason.message : 'This Skill could not be saved. Its draft is retained.'});
+      }
+    }
+    result.evidenceIds = await diveEvidenceIds(diveId);
+    assertAccount(); return result;
+  });
+  skillBatchWrites.set(queueKey,work);
+  try { return await work; } finally { if (skillBatchWrites.get(queueKey) === work) skillBatchWrites.delete(queueKey); }
 }
 
 export async function unlinkSkillEvidenceFromDive(diveId: string, evidenceId: string): Promise<string[]> {

@@ -10,7 +10,8 @@ import {buildCompleteIconPrecache,isCompleteIconPath} from '../lib/brand/icon-ca
 
 describe('T14 icon superset',()=>{
   it('keeps curated resolution and makes every verified complete-library PNG addressable',()=>{
-    expect(ZEUSTEK_ICON_DEFINITIONS).toHaveLength(131);
+    expect(ZEUSTEK_ICON_DEFINITIONS.filter(icon=>!['top-buddy','favourites'].includes(icon.key))).toHaveLength(131);
+    expect(ZEUSTEK_ICON_DEFINITIONS).toHaveLength(133);
     expect(resolveZeusTekIcon('weather')).toEqual(findZeusTekIcon('weather'));
     expect(ZEUSTEK_COMPLETE_ICONS).toHaveLength(748);
     expect(new Set(ZEUSTEK_COMPLETE_ICONS.map(icon=>icon.src)).size).toBe(748);
