@@ -1,5 +1,11 @@
 # T14 resumable handover
 
+## Sites148 rejected; accepted Sites147 restored — 4 October2026
+
+Read **sites148-rejected-attempt.md** first. Preserve application **d4405015d202c35569f5d96c1a347b6af002b50f** on **fix/dive-plan-editor-layout**, its complete bundle/source and local1421/213 gate. The larger text boxes and ten full-width collapsible cards are implemented locally. Sites148/app1.0.76 was deployed but failed settled Brave console smoke with React418 and was **not accepted or pushed to GitHub**. Recovery deployment **appgdep_6ac2af6894a08191b5a23424e2873a22** restored the actual verified **app1.0.75/Sites147/source58edbe3**, environment6, at19:56UTC. Accepted main remains9d4ceb0.
+
+The same text hydration error also appears after settling on restored147, so investigate the specific existing server/client mismatch before attributing it to the layout or republishing. No owner/Gmail write occurred. Refresh the owner comparison and preserve this failed-attempt/recovery evidence. Exact next: bounded cause correction if required, changed-candidate gates/fresh baseline, one publication with settled read-only acceptance, then exact GitHub reconciliation.
+
 ## Dive Plan editor layout — final local gate, 4 October2026
 
 Read **dive-plan-editor-layout-ledger.md** and **dive-plan-editor-layout-local-gate.json**. Preserve branch **fix/dive-plan-editor-layout**, accepted147/application58edbe3, documentation74cb375/requirements0db2bd2 and all subsequent bounded application changes. Candidate **app1.0.76/cachezeustek-static-v23** implements the authorised full-width ten editor cards, independent native minimise/expand and23large full-width multiline boxes. Collapse retains controlled fields without navigation/discard; local-only persisted text survives saving while collapsed and reload. Existing control bindings, save behaviour, stores and9protected files remain unchanged.
