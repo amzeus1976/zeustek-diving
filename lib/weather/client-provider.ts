@@ -60,6 +60,7 @@ export function weatherProvider(id: WeatherProviderId): WeatherProviderAdapter {
         providerId: id,
         provider: primary?.label ?? 'ZeusTek Conditions',
         resolution: primary?.resolution ?? 'source-specific',
+        weatherContext: primary?.resolution === 'monthly climatology' || request.mode === 'seasonal' ? 'seasonal' : 'forecast',
         sourceCoordinates: {
           latitude: primary?.latitude ?? request.latitude,
           longitude: primary?.longitude ?? request.longitude,
@@ -75,7 +76,7 @@ export function weatherProvider(id: WeatherProviderId): WeatherProviderAdapter {
             typeof weather?.value === 'string'
               ? weather.value
               : air
-                ? 'Atmospheric forecast'
+                ? air.classification === 'forecast' ? 'Atmospheric forecast' : 'Historical model conditions'
                 : surface
                   ? 'Water conditions'
                   : 'Conditions retrieved',

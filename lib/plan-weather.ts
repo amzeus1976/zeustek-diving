@@ -1,7 +1,7 @@
 import {retainPartialConditions} from './weather/conditions-retention';
 import type { PlanConditionSnapshot } from './offline/dive-planning-centre';
 
-export const PLAN_FORECAST_DAYS = 7;
+export const PLAN_FORECAST_DAYS = 16;
 export type PlanWeatherMode = 'auto' | 'seasonal' | 'manual' | 'unavailable';
 
 export function planWeatherMode(conditions?: PlanConditionSnapshot): PlanWeatherMode {
@@ -47,7 +47,7 @@ export function ownerConditionMode(conditions: PlanConditionSnapshot | undefined
   };
 }
 
-/** The existing ZeusTek weather endpoint requests seven forecast days, starting today. */
+/** Open-Meteo supports up to sixteen days. Shorter-provider coverage falls back to labelled typical context. */
 export function planningWeatherRegime(plannedDate: string, today: string): 'forecast' | 'seasonal' | 'past' | 'invalid' {
   const planned = Date.parse(`${plannedDate}T00:00:00Z`);
   const start = Date.parse(`${today}T00:00:00Z`);
@@ -58,6 +58,7 @@ export function planningWeatherRegime(plannedDate: string, today: string): 'fore
 }
 
 export interface PlannedWeatherResponse {
+  weatherContext?: 'forecast' | 'seasonal';
   conditionsV1?:import('./weather/conditions-model').ConditionsSnapshot;
   providerId?: import('./weather/provider-contract').WeatherProviderId;
   sourceCoordinates?: {latitude:number;longitude:number};
@@ -79,8 +80,9 @@ export interface PlannedWeatherResponse {
 export function plannedWeatherSnapshot(response: PlannedWeatherResponse, regime: 'forecast' | 'seasonal', siteId: string, date: string, capturedAt: string, previous?: PlanConditionSnapshot): PlanConditionSnapshot {
   const value = response.logConditions;
   if (!value || (!value.weatherSummary && value.airTemperatureC == null)) throw new Error('No usable weather data were returned. Existing conditions were kept.');
+  const actualRegime = response.weatherContext ?? regime;
   return {
-    provenance: regime,
+    provenance: actualRegime,
     weatherAvailability: 'available',
     capturedAt,
     sourceSiteId: siteId,
@@ -89,9 +91,9 @@ export function plannedWeatherSnapshot(response: PlannedWeatherResponse, regime:
     weather: value.weatherSummary || null,
     airTemperatureC: value.airTemperatureC ?? null,
     waterTemperatureC: null,
-    surfaceTemperatureC: regime === 'forecast' ? value.surfaceTemperatureC ?? null : null,
+    surfaceTemperatureC: actualRegime === 'forecast' ? value.surfaceTemperatureC ?? null : null,
     ...(response.conditionsV1?{conditionsV1:retainPartialConditions(response.conditionsV1,previous?.conditionsV1)}:{}),
-    waveHeightM: regime === 'forecast' ? value.waveHeightM ?? null : null,
+    waveHeightM: actualRegime === 'forecast' ? value.waveHeightM ?? null : null,
     currentStrength: null,
     visibilityM: null,
     swellHeightM: null,

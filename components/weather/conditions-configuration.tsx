@@ -103,7 +103,10 @@ export function ConditionsConfiguration() {
       <p>
         Open-Meteo remains the no-key default and fallback. Choose Auto to
         compare available sources by metric, location and freshness. Credential
-        checks contact the selected provider only when you choose Check access.
+        checks run when you choose Check access. An explicit Get weather request
+        may try up to two configured providers if the primary source is unavailable,
+        then MET Norway’s global forecast and NASA POWER’s clearly labelled typical monthly climate.
+        No requests run in the background.
       </p>
       <label>
         Default weather provider
@@ -147,6 +150,10 @@ export function ConditionsConfiguration() {
           }
         />
         Include official operator conditions when the Site matches
+      </label>
+      <label>
+        <input type="checkbox" checked={!settings.disabledProviders.includes('nasa')} onChange={e=>setSettings({...settings,disabledProviders:e.target.checked?settings.disabledProviders.filter(id=>id!=='nasa'):[...settings.disabledProviders,'nasa']})}/>
+        Allow NASA POWER typical monthly climate when date-specific weather is unavailable
       </label>
       <label>
         <input

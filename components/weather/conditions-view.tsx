@@ -62,6 +62,9 @@ export function ConditionTile({
       <small>
         {reading.label} · {reading.classification}
       </small>
+      {reading.provider === 'xweather' && <a href="https://www.xweather.com/" target="_blank" rel="noreferrer">Powered by Vaisala Xweather</a>}
+      {reading.resolution === 'monthly climatology' && <small>{reading.detail}</small>}
+      {reading.resolution === 'UTC-day forecast average' && <small>UTC-day average; requested local-hour conditions unavailable.</small>}
       <small className={freshness === 'stale' ? styles.stale : styles.fresh}>
         {freshness === 'fresh'
           ? 'Recent retrieval / source time'

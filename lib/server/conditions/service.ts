@@ -1,5 +1,6 @@
 import {
   conditionReading,
+  conditionWallTime,
   selectConditions,
   type ConditionsProvider,
   type ConditionsSelection,
@@ -30,6 +31,7 @@ import {
   parseOperatorConditions,
 } from './operators';
 import { diveNumberFacts, pickadiveFacts } from './enrichment';
+import { independentAtmosphere, globalMetAtmosphere, dailyUtcContext } from './atmospheric-fallback';
 
 export interface ConditionsEnvironment {
   DB?: D1Database;
@@ -72,7 +74,7 @@ const definitions: Array<{
   },
   { id: 'tomorrow', label: 'Tomorrow.io', keys: ['TOMORROW_API_KEY'] },
   { id: 'wwo', label: 'World Weather Online Marine', keys: ['WWO_API_KEY'] },
-  { id: 'met-norway', label: 'MET Norway Oceanforecast', keys: [] },
+  { id: 'met-norway', label: 'MET Norway global atmosphere / Nordic ocean', keys: [] },
   {
     id: 'copernicus',
     label: 'Copernicus Marine depth data',
@@ -206,6 +208,16 @@ function withTimeZone(
       )
     : readings;
 }
+/** Keep a bounded window around the requested day, including its adjacent UTC day and seven-day Overview. */
+function forecastWindow(readings: ConditionReading[], request: ConditionsRequest) {
+  const start = Date.parse(request.date+'T12:00:00Z');
+  const first = new Date(start-86400000).toISOString().slice(0,10);
+  const last = new Date(start+7*86400000).toISOString().slice(0,10);
+  return readings.filter(row=>{
+    const day = conditionWallTime(row)?.slice(0,10);
+    return day && day>=first && day<=last;
+  });
+}
 /** Convert the requested wall time to an instant only after a source supplied the site's time zone. */
 export function requestedInstant(request: ConditionsRequest) {
   const wall = Date.parse(`${request.date}T${request.time}:00Z`);
@@ -232,6 +244,27 @@ export function requestedInstant(request: ConditionsRequest) {
   }
   return new Date(result).toISOString();
 }
+function xweatherTimeZone(raw: unknown): string | undefined {
+  const response = object(raw).response;
+  const zone = object(object(Array.isArray(response) ? response[0] : response).profile).tz;
+  if (typeof zone !== 'string') return undefined;
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: zone }).format();
+    return zone;
+  } catch { return undefined; }
+}
+/** Classify documented error codes, never the upstream description or echoed request. */
+function checkXweatherResponse(raw: unknown) {
+  if (object(raw).success !== false) return;
+  const code = object(object(raw).error).code;
+  if (['invalid_client','insufficient_scope','unauthorized_namespace'].includes(String(code)))
+    throw new ConditionsError('denied', 'Xweather access is not authorised for this product. Check the server account permissions.');
+  if (['maxhits','maxhits_daily','maxhits_min'].includes(String(code)))
+    throw new ConditionsError('rate-limited', 'Xweather request limit reached. Wait before trying again.');
+  if (['invalid_coordinate','invalid_id','invalid_location','invalid_query','invalid_request','no_location','not_implemented'].includes(String(code)))
+    throw new ConditionsError('unsupported', 'Xweather does not support the requested place, date or product parameters.');
+  throw new ConditionsError('unavailable', 'Xweather did not return usable conditions for this request. Saved conditions are retained.');
+}
 async function fetchNamedProvider(
   id: ConditionsProvider,
   request: ConditionsRequest,
@@ -257,31 +290,35 @@ async function fetchNamedProvider(
           includeLocationName: 'true',
         },
       ),
-      { headers: { apikey: env.MET_OFFICE_API_KEY! } },
+      { headers: { apikey: env.MET_OFFICE_API_KEY! },timeoutMs:6000 },
     );
     readings = normalizeMetOffice(result.data, context(request, result));
   } else if (id === 'xweather') {
-    const date = requestedInstant(request);
+    let date = requestedInstant(request);
+    const day = Date.parse(`${request.date}T00:00:00Z`);
     const params = {
       client_id: env.XWEATHER_CLIENT_ID!,
       client_secret: env.XWEATHER_CLIENT_SECRET!,
       filter: '1hr',
-      from: date,
-      to: date,
-      plimit: '1',
+      // One bounded product request includes adjacent UTC days so a destination-local hour is available even before its timezone is known.
+      from: new Date(day - 86400000).toISOString(),
+      to: new Date(day + 8 * 86400000).toISOString(),
+      plimit: '168',
     };
     result = await conditionsFetch(
       makeUrl(
         `https://data.api.xweather.com/forecasts/${request.latitude},${request.longitude}`,
         params,
       ),
+      {timeoutMs:6000},
     );
-    if (object(result.data).success === false)
-      throw new ConditionsError(
-        'denied',
-        'Xweather did not authorise or return the requested forecast.',
-      );
+    checkXweatherResponse(result.data);
     readings = normalizeXweather(result.data, context(request, result));
+    const profileZone = xweatherTimeZone(result.data);
+    const localRequest = request.timeZone || !profileZone ? request : {...request,timeZone:profileZone};
+    readings = withTimeZone(readings, localRequest);
+    if (localRequest.timeZone) date = requestedInstant(localRequest);
+    else readings = dailyUtcContext(readings, request);
     if (request.marine) {
       try {
       const marine = await conditionsFetch(
@@ -294,12 +331,14 @@ async function fetchNamedProvider(
             plimit: '1',
           },
         ),
+        {timeoutMs:4000},
       );
-      readings.push(
-        ...normalizeXweather(marine.data, context(request, marine), true),
-      );
+      checkXweatherResponse(marine.data);
+      if (!localRequest.timeZone) throw new ConditionsError('unsupported','The marine source did not supply a valid destination time zone.');
+      const marineRows = withTimeZone(normalizeXweather(marine.data, context(localRequest, marine), true), localRequest);
+      readings.push(...marineRows);
       extraCost = marine.costAccesses;
-      if (!normalizeXweather(marine.data, context(request, marine), true).length) throw new ConditionsError('unsupported', 'Xweather marine returned no supported readings.');
+      if (!marineRows.length) throw new ConditionsError('unsupported', 'Xweather marine returned no supported readings.');
       } catch (error) { diagnostics.push(diagnostic('xweather-marine', error, new Date().toISOString())); }
     }
   } else if (id === 'tomorrow') {
@@ -310,8 +349,9 @@ async function fetchNamedProvider(
         units: 'metric',
         timesteps: '1h',
       }),
+      {timeoutMs:6000},
     );
-    readings = normalizeTomorrow(result.data, context(request, result));
+    readings = dailyUtcContext(withTimeZone(normalizeTomorrow(result.data, context(request, result)), request), request);
   } else if (id === 'wwo') {
     if (!request.marine)
       throw new ConditionsError(
@@ -330,26 +370,21 @@ async function fetchNamedProvider(
           tp: '3',
         },
       ),
+      {timeoutMs:6000},
     );
     if (object(object(result.data).data).error)
       throw new ConditionsError(
-        'denied',
-        'World Weather Online Marine access or date range is unavailable.',
+        'unsupported',
+        'World Weather Online Marine returned no supported data for this request.',
       );
     readings = normalizeWwo(result.data, context(request, result));
   } else if (id === 'met-norway') {
-    if (
-      !request.marine ||
-      request.latitude < 55 ||
-      request.latitude > 82 ||
-      request.longitude < -20 ||
-      request.longitude > 45
-    )
-      throw new ConditionsError(
-        'unsupported',
-        'MET Norway Oceanforecast covers Nordic waters; no value is inferred outside coverage.',
-      );
-    result = await conditionsFetch(
+    const atmosphere = await globalMetAtmosphere(request);
+    result = atmosphere.response;
+    readings = atmosphere.readings;
+    if (request.marine && request.latitude >= 55 && request.latitude <= 82 && request.longitude >= -20 && request.longitude <= 45) {
+    try {
+    const ocean = await conditionsFetch(
       makeUrl('https://api.met.no/weatherapi/oceanforecast/2.0/complete', {
         lat: request.latitude.toFixed(4),
         lon: request.longitude.toFixed(4),
@@ -360,7 +395,9 @@ async function fetchNamedProvider(
         },
       },
     );
-    readings = normalizeMetNorway(result.data, context(request, result));
+    readings.push(...normalizeMetNorway(ocean.data, context(request, ocean)));
+    } catch (error) { diagnostics.push(diagnostic('met-norway-ocean',error,new Date().toISOString())); }
+    }
   } else if (id === 'copernicus') {
     if (!request.marine || !env.COPERNICUS_CONDITIONS)
       throw new ConditionsError(
@@ -570,9 +607,10 @@ export async function conditionsService(
           hourly:
             'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,visibility',
           timezone: 'auto',
-          forecast_days: '7',
+          forecast_days: '16',
           wind_speed_unit: 'ms',
         }),
+        {timeoutMs:6000},
       );
       const timeZone = object(result.data).timezone;
       if (typeof timeZone === 'string') {
@@ -580,7 +618,7 @@ export async function conditionsService(
         snapshot.request = resolved;
       }
       snapshot.readings.push(
-        ...normalizeOpenMeteo(result.data, context(resolved, result)),
+        ...forecastWindow(normalizeOpenMeteo(result.data, context(resolved, result)), resolved),
       );
       snapshot.diagnostics.push({
         provider: 'open-meteo',
@@ -600,12 +638,13 @@ export async function conditionsService(
             hourly:
               'wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl',
             timezone: 'auto',
-            forecast_days: '7',
+            forecast_days: '16',
             cell_selection: 'sea',
           }),
+          {timeoutMs:4000},
         );
         snapshot.readings.push(
-          ...normalizeOpenMeteo(result.data, context(resolved, result), true),
+          ...forecastWindow(normalizeOpenMeteo(result.data, context(resolved, result), true), resolved),
         );
         snapshot.diagnostics.push({
           provider: 'open-meteo-marine',
@@ -647,20 +686,14 @@ export async function conditionsService(
       addError(operator.label, error);
     }
   }
-  const extra =
+  const requestedExtra =
     request.provider === 'auto'
       ? providerStatuses(env)
           .filter(
             (row) =>
               row.enabled &&
               !['auto', 'open-meteo'].includes(row.id) &&
-              !disabled.has(row.id as ConditionsProvider) &&
-              !(
-                row.id === 'met-norway' &&
-                (!request.marine ||
-                  request.latitude < 55 ||
-                  request.longitude < 0)
-              ),
+              !disabled.has(row.id as ConditionsProvider),
           )
           .map((row) => row.id as ConditionsProvider)
       : !['open-meteo', 'operator', 'zeustek', 'nasa'].includes(
@@ -668,6 +701,7 @@ export async function conditionsService(
           )
         ? [request.provider as ConditionsProvider]
         : [];
+  const extra = requestedExtra.filter(id => request.mode === 'forecast' || request.mode === 'historical' && ['wwo','copernicus'].includes(id));
   await Promise.all(
     extra.slice(0, 6).map(async (id) => {
       if (disabled.has(id)) {
@@ -698,10 +732,20 @@ export async function conditionsService(
       } catch (error) {
         const entry = diagnostic(id, error, now);
         snapshot.diagnostics.push(entry);
-        recordCheck(id, env, entry);
+        if (entry.status === 'denied' || entry.status === 'rate-limited') recordCheck(id, env, entry);
       }
     }),
   );
+  if (!selectConditions(snapshot.readings, resolved, now).some(row => ['air-temperature', 'weather'].includes(row.metric))) {
+    const fallback = await atmosphericFallback(resolved, env, now, extra);
+    snapshot.readings.push(...fallback.readings);
+    snapshot.diagnostics.push(...fallback.diagnostics);
+  }
+  if (request.marine && !selectConditions(snapshot.readings,resolved,now).some(row=>row.metric==='wave-height')) {
+    const attemptedMarine = snapshot.diagnostics.filter(row=>['xweather-marine','wwo','met-norway-ocean'].includes(row.provider)).map(row=>row.provider.replace(/-marine$|-ocean$/,'') as ConditionsProvider);
+    const marine = await marineFallback(resolved,env,now,[...extra,...attemptedMarine]);
+    snapshot.readings.push(...marine.readings);snapshot.diagnostics.push(...marine.diagnostics);
+  }
   if (options.enrichment) {
     snapshot.enrichment = [];
     await Promise.all([
@@ -719,4 +763,74 @@ export async function conditionsService(
     ...new Map(snapshot.readings.map((row) => [row.id, row])).values(),
   ].slice(0, 6000);
   return snapshot;
+}
+
+/** Shared explicit-refresh fallback for the workspace and legacy Dive Log route. No retry, credential exposure or canonical record write. */
+export async function atmosphericFallback(request: ConditionsRequest, env: ConditionsEnvironment, now = new Date().toISOString(), attempted: ConditionsProvider[] = []) {
+  const result: {readings:ConditionReading[];diagnostics:ProviderDiagnostic[]} = {readings:[],diagnostics:[]};
+  const disabled = new Set([...(request.disabledProviders ?? []), ...attempted]);
+  const day = (Date.parse(request.date+'T12:00:00Z') - Date.parse(now.slice(0,10)+'T12:00:00Z')) / 86400000;
+  const candidates = [...new Set([request.provider, 'xweather', 'tomorrow', 'met-office', 'wwo'])]
+    .filter((id): id is ConditionsProvider => ['xweather','tomorrow','met-office','wwo'].includes(id) && !disabled.has(id as ConditionsProvider))
+    .filter(id => {
+      const row = providerStatuses(env).find(p => p.id === id);
+      return row?.configured && row.status !== 'denied' && row.status !== 'rate-limited' &&
+        (request.mode === 'forecast' && day >= 0 && day < 16 || id === 'wwo' && request.mode === 'historical') &&
+        (id !== 'wwo' || request.marine);
+    }).slice(0,2);
+  for (const id of candidates) {
+    try {
+      const fallback = await fetchNamedProvider(id, request, env);
+      result.readings.push(...fallback.readings);
+      const entry:ProviderDiagnostic = {provider:id,status:'ok',message:'Independent configured weather received.',retrievedAt:now,...(fallback.costAccesses === undefined ? {} : {costAccesses:fallback.costAccesses})};
+      result.diagnostics.push(entry,...fallback.diagnostics);
+      recordCheck(id,env,entry);
+      if (selectConditions(result.readings,request,now).some(r=>['air-temperature','weather'].includes(r.metric))) return result;
+    } catch (error) { const entry=diagnostic(id,error,now);result.diagnostics.push(entry);if(entry.status==='denied')recordCheck(id,env,entry); }
+  }
+  const free = await independentAtmosphere(request,now);
+  result.readings.push(...free.readings);result.diagnostics.push(...free.diagnostics);
+  return result;
+}
+
+/** Independent marine product only; no repeated atmospheric request, invented underwater value or access outside supported coverage. */
+export async function marineFallback(request: ConditionsRequest, env: ConditionsEnvironment, now = new Date().toISOString(), attempted:ConditionsProvider[] = []) {
+  const result:{readings:ConditionReading[];diagnostics:ProviderDiagnostic[]}={readings:[],diagnostics:[]};
+  if (!request.marine || request.mode==='seasonal') return result;
+  const disabled=new Set([...(request.disabledProviders??[]),...attempted]);
+  const day=(Date.parse(request.date+'T12:00:00Z')-Date.parse(now.slice(0,10)+'T12:00:00Z'))/86400000;
+  const supported=request.mode==='forecast'&&day>=0&&day<16;
+  if (supported && !disabled.has('xweather') && env.XWEATHER_CLIENT_ID && env.XWEATHER_CLIENT_SECRET) {
+    try {
+      const start=Date.parse(request.date+'T00:00:00Z');
+      const response=await conditionsFetch(makeUrl(`https://data.api.xweather.com/maritime/${request.latitude},${request.longitude}`,{
+        client_id:env.XWEATHER_CLIENT_ID,client_secret:env.XWEATHER_CLIENT_SECRET,
+        from:new Date(start-86400000).toISOString(),to:new Date(start+2*86400000).toISOString(),plimit:'72',
+      }),{timeoutMs:4000});
+      checkXweatherResponse(response.data);
+      const profileZone = xweatherTimeZone(response.data);
+      const localRequest = request.timeZone || !profileZone ? request : {...request,timeZone:profileZone};
+      if (!localRequest.timeZone) throw new ConditionsError('unsupported','The marine source did not supply a valid destination time zone.');
+      const rows=withTimeZone(normalizeXweather(response.data,context(localRequest,response),true),localRequest);
+      if(!selectConditions(rows,request,now).some(r=>['wave-height','water-temperature','current-speed'].includes(r.metric)))throw new ConditionsError('unsupported','No supported Xweather sea conditions cover this place and time.');
+      result.readings.push(...rows);result.diagnostics.push({provider:'xweather-marine',status:'ok',message:'Marine model received. Surface temperature is not water at dive depth.',retrievedAt:response.retrievedAt,...(response.costAccesses===undefined?{}:{costAccesses:response.costAccesses})});
+      return result;
+    } catch(error){result.diagnostics.push(diagnostic('xweather-marine',error,now));}
+  }
+  if(!disabled.has('wwo') && env.WWO_API_KEY && (supported || request.mode==='historical')) {
+    try {
+      const response=await fetchNamedProvider('wwo',request,env);
+      result.readings.push(...response.readings.filter(r=>['water-temperature','wave-height','wave-period','wave-direction','swell-height','current-speed','current-direction','sea-level'].includes(r.metric)));
+      result.diagnostics.push({provider:'wwo',status:result.readings.length?'ok':'empty',message:result.readings.length?'Independent marine readings received.':'No supported sea conditions were returned.',retrievedAt:now});
+    }catch(error){result.diagnostics.push(diagnostic('wwo',error,now));}
+  }
+  if(!result.readings.length && supported && !disabled.has('met-norway') && request.latitude>=55 && request.latitude<=82 && request.longitude>=-20 && request.longitude<=45) {
+    try {
+      const response=await conditionsFetch(makeUrl('https://api.met.no/weatherapi/oceanforecast/2.0/complete',{lat:request.latitude.toFixed(4),lon:request.longitude.toFixed(4)}),{headers:{'User-Agent':'ZeusTekConditions/1.0 https://dive.amzeus.co.uk/'},timeoutMs:4000});
+      const rows=withTimeZone(normalizeMetNorway(response.data,context(request,response)),request);
+      if(!selectConditions(rows,request,now).length)throw new ConditionsError('empty','No Nordic ocean readings cover the requested place and date.');
+      result.readings.push(...rows);result.diagnostics.push({provider:'met-norway-ocean',status:'ok',message:'Nordic ocean model received.',retrievedAt:response.retrievedAt});
+    }catch(error){result.diagnostics.push(diagnostic('met-norway-ocean',error,now));}
+  }
+  return result;
 }

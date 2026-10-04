@@ -84,7 +84,8 @@ import {initialElapsedRuntime} from '@/lib/dive-elapsed-runtime';
 import {applyMissingWholeDiveOcrmv,isWholeDiveRmvEstimateCurrent} from '@/lib/whole-dive-oc-rmv';
 import {WholeDiveRmvControls} from '@/components/logbook/whole-dive-rmv-controls';
 import {DiveEntitySelect} from '@/components/logbook/dive-entity-select';
-import {fetchDiveLogWeather,applyDiveLogWeather,weatherInputKey,type DiveLogWeatherRequest} from '@/lib/weather/dive-log-weather';
+import {fetchDiveLogWeather,applyDiveLogWeather,weatherInputKey,historicalWeatherBackfillConditions,type DiveLogWeatherRequest} from '@/lib/weather/dive-log-weather';
+import {readConditionsSettings} from '@/lib/weather/conditions-settings';
 import { diveHeat } from '@/lib/dive-heat';
 import { logTimeRange } from '@/lib/log-time';
 import { EditorSections } from '@/components/editor-sections';
@@ -1104,6 +1105,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
         const response = await fetch(`/api/site-weather?${params}`, { cache: 'no-store' });
         const result = await response.json() as { logConditions?: Partial<DiveRecord> & { weatherSummary?: string }; provider?:string;resolution?:string;attribution?:string };
         if (!response.ok || !result.logConditions) throw new Error('No history');
+        if (!historicalWeatherBackfillConditions(result)) throw new Error('Only typical climate context is available. Recorded dive-day temperatures were kept unchanged.');
         const nextAir = dive.airTemperatureC ?? result.logConditions.airTemperatureC;
         const nextSurface = dive.surfaceTemperatureC ?? result.logConditions.surfaceTemperatureC;
         if (nextAir == null && nextSurface == null) {
@@ -5072,7 +5074,8 @@ function DiveModal({
     setWeatherBusy(true);
     setWeatherStatus('Finding recorded conditions…');
     try {
-      const result=await fetchDiveLogWeather(requested,controller.signal);
+      const preferences=await readConditionsSettings();
+      const result=await fetchDiveLogWeather({...requested,provider:preferences.defaultProvider,disabledProviders:preferences.disabledProviders},controller.signal);
       if(controller.signal.aborted||weatherCurrent.current.key!==key||currentDiveAccount()!==account)return;
       const next=applyDiveLogWeather(before,weatherCurrent.current.fields,result.logConditions,true);
       if(JSON.stringify(next)===JSON.stringify(weatherCurrent.current.fields)){setWeatherStatus('No draft fields were changed. Existing observations or edits made during the request were kept.');return;}
