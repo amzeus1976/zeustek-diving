@@ -1,5 +1,10 @@
 # T14 resumable handover
 
+## Final API usability candidate — 4 October 2026
+
+Read **2026-10-04-api-usability-evidence.md**, **2026-10-04-combined-release-local-gate.json** and **API_USAGE.md** first. App8493522 on **t14/outstanding-requests**, version1.0.72/static-v19. Full **1302/196**, typecheck/build/PWA/privacy/all9 hashes PASS; lint0 new/91 unchanged baseline;31routes×six actual widths186 PASS; compact/expanded API and readable guide PASS. New saved planning scopes retain explicit consent/owner permissions/redaction/no calculation. Preserve fresh09:52 baselinec6aa7b;2 intervening existing Dive weather edits supersede the oldc9c346 snapshot. Existing live public profile is owner-enabled (no photo); do not disable it based on older OFF entries. Keys unissued; both historical Gmail FAILED runs consumed. No deployment/push yet. **Next:** clean source/bundle freeze, fresh human-only grant, one Sites publish, read-only live/PWA/owner acceptance, then exact GitHub PR/main reconciliation and issue updates. No agent Gmail operation, no synthetic owner data, no new public/key activation.
+
+
 ## Final calendar correction and combined release gate — 4 October 2026
 
 Read **2026-10-04-calendar-cleanup-release.md**, **2026-10-04-final-local-gate.json** and **API_USAGE.md** first. Preserve branch **t14/outstanding-requests**, previous application61d787a and documentationd02b0e3 plus this bounded reminder correction. App remains **1.0.72 / zeustek-static-v19**, not yet published. The owner confirmed both downloaded dummy PDF pages open; the returned PNG is correct. The prior human download gate is now PASS, not pending approval. All4 disposable Google calendars are verified absent after the agent removed generic and the owner removed the remaining3; ordinary calendars and London display remain intact.
