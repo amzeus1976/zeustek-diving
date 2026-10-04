@@ -153,7 +153,9 @@ export const ZEUSTEK_ICON_DEFINITIONS = [
   { key: 'logbook-gear-and-technical-misc-sidemount-configuration', label: 'Sidemount Configuration', category: 'technical', src: '/brand/icons/zeustek-single/10_logbook_gear_and_technical_misc/sidemount_configuration.png', archivePath: 'zeustek_single_icons_png/10_logbook_gear_and_technical_misc/sidemount_configuration.png' },
   { key: 'logbook-gear-and-technical-misc-twinset', label: 'Twinset', category: 'technical', src: '/brand/icons/zeustek-single/10_logbook_gear_and_technical_misc/twinset.png', archivePath: 'zeustek_single_icons_png/10_logbook_gear_and_technical_misc/twinset.png' },
   { key: 'logbook-gear-and-technical-misc-verified-log', label: 'Verified Log', category: 'technical', src: '/brand/icons/zeustek-single/10_logbook_gear_and_technical_misc/verified_log.png', archivePath: 'zeustek_single_icons_png/10_logbook_gear_and_technical_misc/verified_log.png' },
- ] as const satisfies readonly ZeusTekIconDefinition[];
+  {key:'top-buddy',label:'Top Buddy',category:'status',src:'/brand/icons/owner-status/top-buddy.png',archivePath:'assets/brand/owner-status/master/top buddy.png'},
+  {key:'favourites',label:'Favourites',category:'status',src:'/brand/icons/owner-status/favourites.png',archivePath:'assets/brand/owner-status/master/favourites.png'},
+] as const satisfies readonly ZeusTekIconDefinition[];
 
 export type ZeusTekIconKey = (typeof ZEUSTEK_ICON_DEFINITIONS)[number]['key'];
 

@@ -13,7 +13,7 @@ describe('Dive segmented-view shell', () => {
   it('renders one shared identity and a fully labelled semantic selector with Overview default', () => {
     const html = renderToStaticMarkup(createElement(DiveRecordDetail, props));
     expect(html).toContain('aria-label="Dive view"');
-    expect(html.match(/role="tab"/g)).toHaveLength(3);
+    expect(html.match(/role="tab"/g)).toHaveLength(4);
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html).toMatch(/aria-selected="true"[^>]*>Overview<\/button>/);
     expect(html.match(/<h1>/g)).toHaveLength(1);
@@ -33,8 +33,8 @@ describe('Dive segmented-view shell', () => {
   it('makes Skills practised actionable and exposes the canonical empty-catalogue creation path',()=>{
     const debrief=renderToStaticMarkup(createElement(DiveRecordDetail,{...props,initialView:'debrief'}));
     expect(debrief).toContain('Skills practised');
-    expect(debrief).toContain('Add skill');
-    expect(debrief).toContain('No skills recorded for this dive yet.');
+    expect(debrief).toContain('Open Skills practised');
+    expect(debrief).toContain('Skills and their individual ratings have their own page.');
     const editor=renderToStaticMarkup(createElement(SkillEvidenceDialog,{dive,skills:[],people:[],equipmentSets:[],evidence:null,close:()=>{},saved:()=>{}}));
     expect(editor).toContain('New skill name');
     expect(editor).toContain('This creates one reusable Skill definition');

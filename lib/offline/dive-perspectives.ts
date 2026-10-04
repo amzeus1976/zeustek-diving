@@ -2,10 +2,10 @@ import { zeustekDb } from './db';
 import { currentDiveAccount, diveOperation, saveLocalRecord } from './dive-store';
 import type { DiveDebrief, DiveRecord, DiveStory } from './dives';
 
-export const DIVE_VIEWS = ['overview', 'debrief', 'story'] as const;
+export const DIVE_VIEWS = ['overview', 'debrief', 'skills', 'story'] as const;
 export type DiveView = typeof DIVE_VIEWS[number];
 export function parseDiveView(value: string | null | undefined): DiveView {
-  return value === 'debrief' || value === 'story' ? value : 'overview';
+  return value === 'debrief' || value === 'skills' || value === 'story' ? value : 'overview';
 }
 
 export type DivePerspectivePatch = { debrief?: Partial<DiveDebrief>; story?: Partial<DiveStory> };

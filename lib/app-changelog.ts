@@ -1,6 +1,21 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.75',
+    date:'2026-10-04',
+    title:'Full-width weather, buddy awards and daily Dive numbering',
+    changes:[
+      'Overview shows all seven available forecast days at full width with temperature ranges, wind, weather and available sea detail; source and retrieval time appear once.',
+      'My Profile and Top Buddy move out of Overview. Top Buddy is selectable in Insights, with its actual Person and supporting Dives.',
+      'People shows the supplied Top Buddy badge and explicit private favourites; Sites and Dive Centres use the supplied favourites artwork.',
+      'Dive of the day begins01 on each exact date and follows saved start times. Cards, detail and editor previews agree without changing lifetime numbers or historical records.',
+      'Skills practised has its own Dive page with batch selection, individual confidence and competence, Environment and Assessment dropdowns, and repeat-attempt notes.',
+      'Personal favourites remain private during household sharing and copying. Skills saved before a partial failure remain visible when the remaining drafts are cancelled.',
+      'Large Dive Plan forecasts are stored losslessly within the existing upload limit. Rejected oversized records stay available for review without blocking other uploads.',
+      'Sync review distinguishes missing Equipment references from sharing permissions. Test-data cleanup opens exact linked records and preserves historical evidence through explicit archival.',
+    ],
+  },
+  {
     version: '1.0.73',
     date: '2026-10-04',
     title: 'More reliable weather and sea conditions',

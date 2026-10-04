@@ -1,6 +1,6 @@
 'use client';
 import {useCallback,useMemo,useState} from 'react';
-import {Building2,ExternalLink,MapPin,Pencil,Plus,Search,Star,Trash2,Users} from 'lucide-react';
+import {Building2,ExternalLink,MapPin,Pencil,Plus,Search,Trash2,Users} from 'lucide-react';
 import {listOperators,saveOperator,deleteOperator,listPeople,listPersonEntityLinks,listEntityRelations,type OperatorRecord,type PersonRecord,type Stored} from '../../lib/offline/dive-planning';
 import {filterDiveCentres,linkedOperatorPeople,normaliseOperatorDraft,OPERATOR_SERVICES,OPERATOR_TYPES,safeOperatorUrl,type OperatorDraft} from '../../lib/operators/dive-centres';
 import {projectPersonEntityLinks,relationshipStatus} from '../../lib/operators/entity-relationships';
@@ -88,7 +88,7 @@ export function DiveCentres({go}:{go:(route:string)=>void}){
         {visible.map(row=><button className={styles.centre} data-selected={selectedId===row.entityId} aria-pressed={selectedId===row.entityId} key={row.entityId} onClick={()=>setSelectedId(row.entityId)}>
           <ZeusTekAssetIcon name="dive-centres" decorative size={44} fallback={<Building2/>}/>
           <span><strong>{row.name}</strong><small>{typeLabel(row)} · {row.location||row.town||'Location not recorded'}</small><small>{(row.agencies??[]).join(' · ')||'Agency not recorded'}</small></span>
-          {row.favourite&&<Star size={16} aria-label="Favourite"/>}{row.active===false&&<small>Inactive</small>}
+          {row.favourite&&<ZeusTekAssetIcon name="favourites" size={28} label="Favourite"/>}{row.active===false&&<small>Inactive</small>}
         </button>)}
       </section>
       <section className={styles.detail} aria-label="Selected Dive Centre">

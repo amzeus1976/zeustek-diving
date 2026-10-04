@@ -179,7 +179,7 @@ describe('P01 People & Operators / owner profile foundation', () => {
     expect(refreshPersonDerivedStats(owner, derived, true).averageSac).toBe(20);
   });
 
-  it('integrates the profile source with Overview and preserves Dive Planning search-and-add', () => {
+  it('keeps the owner profile in People and preserves Dive Planning search-and-add after removing the Overview cards', () => {
     const dashboard = readFileSync('app/dashboard-client.tsx', 'utf8');
     const people = readFileSync('components/people-operators.tsx', 'utf8');
     const planning = readFileSync(
@@ -187,9 +187,10 @@ describe('P01 People & Operators / owner profile foundation', () => {
       'utf8',
     );
     expect(dashboard).toContain('findOwnerProfile(people)');
-    expect(dashboard).toContain(
-      "ownerProfile ? 'Open My Profile' : 'Create My Profile'",
-    );
+    expect(people).toContain("owner ? 'Open My Profile' : 'Create My Profile'");
+    const overview=dashboard.slice(dashboard.indexOf('function Overview('),dashboard.indexOf('function StatusRow('));
+    expect(overview).not.toContain('overview-profile-card');
+    expect(overview).not.toContain('overview-buddy-card');
     expect(people).toContain('Refresh derived stats');
     expect(people).toContain('Instructor profile');
     expect(people).toContain('PersonEntityRelationships');

@@ -3,6 +3,7 @@ import { getChatGPTUser } from '../../chatgpt-auth';
 import { exportableCloudRows } from '@/lib/server/backup-boundary';
 import { DIVE_RECORD_KINDS,recordIdentity } from '@/lib/record-identity';
 import {normaliseEntityRelation} from '@/lib/operators/entity-relationships';
+import {unpackConditionsRecord} from '@/lib/weather/conditions-storage';
 
 async function ensureSchema(){await env.DB.prepare(`CREATE TABLE IF NOT EXISTS dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)`).run();await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_dive_records_user_kind ON dive_records(user_id,kind,updated_at DESC)').run()}
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
   const ids = new Set<string>();
   for (const record of restorable) {
     if (typeof record.id !== 'string' || !record.id || ids.has(record.id) || !(DIVE_RECORD_KINDS as readonly unknown[]).includes(record.kind) || typeof record.dataJson !== 'string' || record.dataJson.length > 200000) return Response.json({error:'Invalid or duplicate backup record. Nothing restored.'},{status:400});
-    try { const data = JSON.parse(record.dataJson); if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error(); } catch { return Response.json({error:'Malformed backup record. Nothing restored.'},{status:400}); }
+    try { const data = JSON.parse(record.dataJson); if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error(); unpackConditionsRecord(String(record.kind),data); } catch { return Response.json({error:'Malformed backup record. Nothing restored.'},{status:400}); }
     ids.add(record.id);
   }
   const byId=new Map(restorable.map(record=>[String(record.id),record]));

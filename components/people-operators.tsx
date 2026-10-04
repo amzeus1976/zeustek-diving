@@ -9,6 +9,8 @@ import {RelationshipSourceContextCard} from './people/relationship-source-contex
 import {resolveRelationshipSourceContext,type RelationshipSourceRequest} from '../lib/operators/relationship-source-context';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { PersonAvatar, ProfilePicture } from './profile-picture';
+import {ZeusTekAssetIcon} from './brand/zeustek-asset-icon';
+import {resolveTopBuddy} from '../lib/people/top-buddy';
 import { useRecordRefresh } from './record-status';
 import {
   deletePerson,
@@ -120,6 +122,8 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
   >([]);
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [favouritesOnly,setFavouritesOnly]=useState(false);
+  const [favouriteBusy,setFavouriteBusy]=useState('');
   const [editing, setEditing] = useState<DraftPerson | null>(null);
   const [viewing, setViewing] = useState<StoredPerson | null>(null);
   const [buddyView,setBuddyView]=useState<StoredPerson|null>(null);
@@ -155,6 +159,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
     if(person){const frame=requestAnimationFrame(()=>{setViewing(person);openedPersonLink.current=true;});return()=>cancelAnimationFrame(frame);}
   },[people]);
   const owner = findOwnerProfile(people);
+  const topBuddy=resolveTopBuddy(people,dives,owner);
   const visible = useMemo(
     () =>
       people.map(person=>refreshPersonDerivedStats(person,derivePersonProfileStats(person,dives,certifications)))
@@ -181,7 +186,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               person,
               roleFilter as keyof NonNullable<PersonRecord['roles']>,
             );
-          return roleMatch && haystack.includes(query.trim().toLowerCase());
+          return roleMatch && (!favouritesOnly||person.favourite) && haystack.includes(query.trim().toLowerCase());
         })
         .sort(
           (a, b) =>
@@ -189,8 +194,18 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               Number(Boolean(a.roles?.ownerProfile)) ||
             personDisplayName(a).localeCompare(personDisplayName(b)),
         ),
-    [people, dives, certifications, query, roleFilter],
+    [people, dives, certifications, query, roleFilter,favouritesOnly],
   );
+
+  async function toggleFavourite(personId:string){
+    // Save the original canonical Person, not the card's refreshed derived presentation.
+    const record=people.find(person=>person.entityId===personId);
+    if(!record||favouriteBusy)return;
+    setFavouriteBusy(personId);setError('');
+    try{await savePerson({...record,favourite:!record.favourite});refresh();}
+    catch{setError('The favourite could not be saved. Your Person details are unchanged; try again.');}
+    finally{setFavouriteBusy('');}
+  }
 
   async function remove(person: StoredPerson) {
     const linked = dives.filter((dive) =>
@@ -284,7 +299,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
           <h2>{owner ? personDisplayName(owner) : 'Create My Profile'}</h2>
           <p>
             {owner
-              ? 'Your owner Person record powers Overview and connected planning views.'
+              ? 'Your owner Person record powers your profile, planning and summaries.'
               : 'No owner profile exists. Nothing is created until you choose to create it.'}
           </p>
         </div>
@@ -321,6 +336,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
             ))}
           </select>
         </label>
+        <label className={styles.favouriteFilter}><input type="checkbox" checked={favouritesOnly} onChange={event=>setFavouritesOnly(event.target.checked)}/><ZeusTekAssetIcon name="favourites" size={28} decorative/>Favourites only</label>
       </section>
       <section
         className={styles.grid}
@@ -347,6 +363,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
                       .join(' · ') || person.role}
               </span>
               <h2>{personDisplayName(person)}</h2>
+              {topBuddy?.person.entityId===person.entityId&&<span className={styles.topBuddy}><ZeusTekAssetIcon name="top-buddy" size={40} decorative/><span>Top Buddy<small>{topBuddy.count} Dive{topBuddy.count===1?'':'s'} together{topBuddy.source==='owner-selected'?' · Owner-selected':''}</small></span></span>}
               <p>
                 {(awards.pro.record && awards.pro.title) || (awards.tec.record && awards.tec.title) || (awards.rec.record && awards.rec.title) || person.highestKnownQualification ||
                   person.highestQualification ||
@@ -354,6 +371,7 @@ export function PeopleOperators({go}:{go?:(route:string)=>void}) {
               </p>
             </div>
             <div className={styles.actions}>
+              <button type="button" aria-pressed={Boolean(person.favourite)} aria-label={`${person.favourite?'Remove':'Add'} ${personDisplayName(person)} ${person.favourite?'from':'to'} favourites`} disabled={Boolean(favouriteBusy)} onClick={()=>void toggleFavourite(person.entityId)}><ZeusTekAssetIcon name="favourites" size={28} decorative/>{person.favourite&&<span className={styles.savedFavourite}>✓</span>}</button>
               <button
                 aria-label={`Edit ${personDisplayName(person)}`}
                 onClick={() => setEditing({ ...person })}

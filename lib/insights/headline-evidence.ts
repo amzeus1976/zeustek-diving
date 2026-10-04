@@ -2,13 +2,20 @@ import {INSIGHT_AWARD_DEFINITIONS} from './insight-awards';
 import {headlineAnalytics, diveRuntimeMinutes, type DiveWithId} from '../offline/experience-analytics';
 import {resolvePersonDisplayAwards} from '../people/certification-evidence';
 import type {CertificationRecord,PersonRecord} from '../offline/dive-planning';
-export type HeadlineContext = {dives:DiveWithId[]; owner:(Partial<PersonRecord>&{entityId?:string})|null; certifications:Array<CertificationRecord&{entityId?:string}>};
-export type InsightHeadline = {id:string;label:string;value:string;sourceKind:'dive'|'certification'|'person';sourceIds:string[];sourceLabel:string;explanation:string};
+import {resolveTopBuddy} from '../people/top-buddy';
+import {personDisplayName} from '../offline/people-profiles';
+export type HeadlineContext = {dives:DiveWithId[]; owner:(Partial<PersonRecord>&{entityId?:string})|null; certifications:Array<CertificationRecord&{entityId?:string}>;people?:Array<PersonRecord&{entityId:string}>};
+export type InsightHeadline = {id:string;label:string;value:string;sourceKind:'dive'|'certification'|'person';sourceIds:string[];sourceLabel:string;explanation:string;personId?:string};
 const number=(value:number|null,unit='')=>value==null?'Not recorded':`${Number(value.toFixed(2))}${unit?' '+unit:''}`;
 export function resolveInsightHeadline(id:string, context:HeadlineContext):InsightHeadline|null {
   const definition=INSIGHT_AWARD_DEFINITIONS.find(item=>item[0]===id);
   if(!definition)return null;
   const result=(value:string,sourceIds:string[],explanation:string,sourceKind:InsightHeadline['sourceKind']='dive'):InsightHeadline=>({id,label:definition[1],value,sourceKind,sourceIds,sourceLabel:sourceKind==='certification'?`${sourceIds.length} source Certification record${sourceIds.length===1?'':'s'}`:sourceKind==='person'?'Owner-entered Person profile':`${sourceIds.length} source Dive${sourceIds.length===1?'':'s'}`,explanation});
+  if(id==='topBuddy'){
+    const buddy=resolveTopBuddy(context.people??[],context.dives,context.owner);
+    if(!buddy)return result('No buddy evidence',[],'No non-owner Person has a saved buddy link in this Dive scope. Team membership alone is not buddy evidence.');
+    return {...result(personDisplayName(buddy.person),buddy.sourceDiveIds,buddy.source==='owner-selected'?'Selected in My Profile. The count and supporting Dives use the active scope; this is not an inferred ranking.':'Most saved buddy links in the active Dive scope, counted once per Dive. Instructors may also be buddies. Equal counts use display name as a stable tie-break.'),personId:buddy.person.entityId,sourceLabel:`${buddy.count} Dive${buddy.count===1?'':'s'} together${buddy.source==='owner-selected'?' · Owner-selected':''}`};
+  }
   if(id.startsWith('highest')){
     const awards=context.owner?resolvePersonDisplayAwards(context.owner,context.certifications):null;
     const award=id==='highestRecCert'?awards?.rec:id==='highestTecCert'?awards?.tec:awards?.pro;

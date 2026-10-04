@@ -22,7 +22,7 @@ export function DiveSyncStatus() {
   return <details className="dive-sync-panel">
     <summary>{accountPending.length} cloud change{accountPending.length===1?'':'s'} pending{conflicts.length ? ` · ${conflicts.length} ${conflicts.length===1?'needs':'need'} review`:''}</summary>
     <div className="dive-sync-panel-body">
-      <div className="dive-sync-panel-heading"><p>Your edits are saved on this device. Review each record separately.</p><button type="button" className="focus-secondary" disabled={busy} onClick={()=>void retry()}>{busy?'Syncing…':'Retry sync'}</button></div>
+      <div className="dive-sync-panel-heading"><p>Your edits are saved on this device. Review each record separately.{conflicts.length>0&&' Records needing review are not retried until you choose a version.'}</p>{accountPending.length>conflicts.length&&<button type="button" className="focus-secondary" disabled={busy} onClick={()=>void retry()}>{busy?'Syncing…':'Retry sync'}</button>}</div>
       {error&&<p role="alert">{error}</p>}
       <div className="dive-sync-review-list">{conflicts.slice(0,visible).map(row=>{const summary=syncReviewSummary(row.value);return <article className="dive-sync-review-record" key={row.key}>
         <div><small>{summary.kind}</small><h3>{summary.title}</h3><p>{summary.message}</p></div>

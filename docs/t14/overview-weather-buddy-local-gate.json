@@ -1,0 +1,207 @@
+{
+  "status": "LOCAL_PASS; native publication, production acceptance and GitHub reconciliation pending",
+  "branch": "t14/overview-weather-buddy",
+  "version": "1.0.74",
+  "cache": "zeustek-static-v21",
+  "tests": {
+    "full": 1388,
+    "files": 206,
+    "focused": 81,
+    "focusedFiles": 10,
+    "assertionsWeakened": false
+  },
+  "typecheck": "PASS",
+  "productionBuild": "PASS",
+  "pwa": {
+    "entries": 422,
+    "kib": 42675.01,
+    "masterNavigationOrStatusImagesPrecached": false
+  },
+  "targetedLint": {
+    "files": 218,
+    "newOrChanged": 0,
+    "unchangedBaselineFindings": 92,
+    "rawExit": 1,
+    "baseline": "dc1d453"
+  },
+  "protectedCalculations": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "browser": {
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "routes": 31,
+    "routeObservations": 186,
+    "featureObservations": 54,
+    "applicationErrors": 0,
+    "brokenVisibleImages": 0,
+    "pageOverflow": 0,
+    "contentClipping": 0,
+    "legacySummaryAlias": "Data & Backups / selected Diver summary",
+    "notes": "Unopened/offscreen lazy icons were not mistaken for broken assets; actual visible artwork was inspected."
+  },
+  "privacy": {
+    "compiledFilesScanned": 1344,
+    "secretMatches": 0,
+    "sharingReadChecks": 12,
+    "weatherApiAuthChecks": 10,
+    "providerStatusRedacted": true
+  },
+  "artwork": {
+    "navigation": 31,
+    "superset": 748,
+    "originalCuratedPreserved": 131,
+    "newOwnerStatus": 2,
+    "runtimeSize": 128,
+    "runtimeBytes": 40120,
+    "masterByteHashesPreserved": true
+  },
+  "ownerBefore": {
+    "exportedAt": "2026-10-04T16:49:50.727Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6494,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 197,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1675,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 17,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "fingerprint": "6f9c3549c8f3416abfe02769854ee9d25eb50e7d40ad3ee7a7757fb083de8acc",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "verifiedRollback": {
+    "version": 145,
+    "app": "1.0.73",
+    "deployment": "appgdep_6ac25ecb496081918583c186304346b9",
+    "versionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_5a6c59007eac8191953b021550c59cc5",
+    "source": "67c9706171ece312699c2c352fd94d5163137ee5",
+    "archiveSha256": "11d1766c12a31a52abe1c9139261a6c1dfed44f277e8d4eccb1981a97391ac30"
+  },
+  "environment": {
+    "revision": 6,
+    "bindings": 17,
+    "changed": false
+  },
+  "sideEffects": {
+    "localDummySkillSave": true,
+    "productionCanonicalWrites": 0,
+    "gmailCalls": 0,
+    "apiKeyIssuance": 0,
+    "publicSnapshotUpdates": 0
+  },
+  "rawEvidence": "work/overview-weather-buddy (ignored; private records encrypted with Windows-user DPAPI protected key; credentials never printed)",
+  "retainedEarlierAttempts": [
+    "Concurrent test-runner STACK_TRACE_ERROR in unchanged Calendar suite; final maxWorkers2 all pass",
+    "Windows preview lock/CLI build attempts; final unlocked production build passes"
+  ],
+  "next": "Freeze exact clean source; native source helper/package/save/deploy once; read-only production/source/PWA/owner acceptance; only then exact GitHub PR/main match."
+}

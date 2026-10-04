@@ -18,6 +18,7 @@ import {
   recordDestination,
   recommendedRecordAction,
   referenceCanUnlink,
+  resolveReviewReference,
   unlinkTargetFromRecord,
   type CleanupReport,
   type CanonicalRecordSnapshot,
@@ -26,6 +27,7 @@ import {
   type RecordReference,
 } from '../../lib/workflow/synthetic-fixtures';
 import { useRecordRefresh } from '../record-status';
+import {reviewRecordSnapshot} from '../../lib/offline/sync-review';
 import styles from './synthetic-fixture-review.module.css';
 
 type ManagedRow = {
@@ -88,10 +90,11 @@ function RecordMeta({ row }: { row: ManagedRow }) {
   </dl>;
 }
 
-function ReferenceList({ references }: { references: RecordReference[] }) {
+export function ReferenceList({ references,review }: { references: RecordReference[];review?:(reference:RecordReference)=>void }) {
   if (!references.length) return <p>No other loaded canonical record references this item.</p>;
   return <ul className={styles.references}>{references.map((reference) => <li key={`${reference.sourceKind}:${reference.sourceId}:${reference.path}`}>
-    <b>{reference.sourceTitle}</b><span>{reference.sourceKind} · {reference.path} · {reference.synthetic ? 'synthetic reference' : 'owner/unknown reference'}</span>
+    <b>{reference.sourceTitle}</b><span>{reference.sourceKind} · {reference.path} · {reference.synthetic ? 'synthetic reference' : 'owner/unknown reference'}{reference.archived?' · explicitly archived':''}</span>
+    {review&&<button type="button" className="focus-secondary" onClick={()=>review(reference)}>Review {recordDestination(reference.sourceKind).label} record</button>}
   </li>)}</ul>;
 }
 
@@ -182,13 +185,15 @@ function ActionDialog({ pending, close, complete }: { pending: PendingAction; cl
   </AccessibleDialog>;
 }
 
-function RecordDetail({ row, candidate, go, close, edit, manage }: { row: ManagedRow; candidate: FixtureCandidate | undefined; go: (route: string) => void; close: () => void; edit: () => void; manage: (action: PendingAction['action']) => void }) {
+function RecordDetail({ row, candidate, go, close, edit, manage,reviewReference,back }: { row: ManagedRow; candidate: FixtureCandidate | undefined; go: (route: string) => void; close: () => void; edit: () => void; manage: (action: PendingAction['action']) => void;reviewReference:(reference:RecordReference)=>void;back:(()=>void)|undefined }) {
   const record = row.snapshot.record;
   return <AccessibleDialog label={`${row.title} record details`} className={`focus-modal ${styles.dialog}`} close={close}>
     <header><div><span className="focus-eyebrow">USER DATA</span><h2>{row.title}</h2><p>{row.destinationLabel}</p></div><button className="focus-icon" data-dialog-close aria-label="Close record details" onClick={close}><X/></button></header>
+    {back&&<button type="button" className="focus-secondary" onClick={back}>Back to previous record</button>}
     <RecordMeta row={row}/>
     {candidate && <section><h3>{candidate.confidence === 'high' ? 'High-confidence synthetic' : 'Possible synthetic · owner review needed'}</h3><p>Matched evidence:</p><ul>{candidate.matches.map((match) => <li key={`${match.field}:${match.term}`}><b>{match.field}</b>: {match.value} ({match.term}, {match.confidence})</li>)}</ul></section>}
-    <section><h3>Inbound dependencies</h3><ReferenceList references={row.references}/></section>
+    <section><h3>Linked records to review</h3><ReferenceList references={row.references} review={reviewReference}/>{row.action==='manual-review'&&<p>Open each linked record before acting. If it is test evidence, explicitly archive it after review, then scan again. Historical records are retained with their links; active owner evidence continues to block cleanup.</p>}</section>
+    <details><summary>Saved record fields</summary><pre className={styles.recordJson}>{JSON.stringify(reviewRecordSnapshot(record),null,2)}</pre></details>
     {candidate && <section><h3>Outbound references</h3>{candidate.outboundReferences.length ? <ul className={styles.references}>{candidate.outboundReferences.map((ref) => <li key={`${ref.targetKind}:${ref.targetId}:${ref.path}`}><b>{ref.targetKind} · {ref.targetId}</b><span>{ref.path} · target remains unchanged if this record is removed</span></li>)}</ul> : <p>No linked canonical targets.</p>}</section>}
     <section className={styles.actionReason}><h3>Available safe action</h3><b>{actionLabel(row.action)}</b><p>{recordActionReason(row.snapshot.kind, row.references)}</p></section>
     {Boolean(record.archived || record.suppressedFromUse) && <p className="focus-notice">This record is marked archived/suppressed and retained for history.</p>}
@@ -207,6 +212,7 @@ export function SyntheticFixtureReview({ go }: { go: (route: string) => void }) 
   const [kind, setKind] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [detail, setDetail] = useState<ManagedRow | null>(null);
+  const [detailHistory,setDetailHistory]=useState<ManagedRow[]>([]);
   const [editing, setEditing] = useState<ManagedRow | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
@@ -305,6 +311,7 @@ export function SyntheticFixtureReview({ go }: { go: (route: string) => void }) 
   }
 
   function rescan() {
+    setDetail(null);setDetailHistory([]);
     initialScan.current = false;
     setScanComplete(false);
     refresh();
@@ -319,6 +326,7 @@ export function SyntheticFixtureReview({ go }: { go: (route: string) => void }) 
       {fixtures.length ? <div className={styles.fixtureList}>{fixtures.slice(0, showAll ? fixtures.length : 25).map((item) => <article key={`${item.kind}:${item.entityId}`}>
         <div className={styles.select}><input type="checkbox" aria-label={`Select fixture ${item.title}`} checked={selected.includes(item.entityId)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, item.entityId] : current.filter((id) => id !== item.entityId))}/><button type="button" className={styles.titleButton} aria-label={`Review ${item.title}`} onClick={() => { const row = rowForFixture(item); if (row) setDetail(row); }}><span><b>{item.title}</b><small>{item.kind} · {item.destinationLabel}</small></span></button></div>
          <dl><div><dt>Matched field/value</dt><dd>{item.matches.map((match) => `${match.field}: “${match.value}” (${match.confidence})`).join(' · ')}</dd></div><div><dt>Appears in</dt><dd>{item.destinationLabel}</dd></div><div><dt>Created / modified</dt><dd>{item.createdAt ? new Date(item.createdAt).toLocaleString('en-GB') : 'Created not recorded'} · {item.modifiedAt ? new Date(item.modifiedAt).toLocaleString('en-GB') : 'Modified not recorded'}</dd></div><div><dt>References</dt><dd>{item.references.length} inbound; {item.outboundReferences.length} outbound. {item.dependencyStatus}</dd></div><div><dt>Action plan</dt><dd>{actionLabel(item.recommendedAction)} · {item.actionReason}</dd></div></dl>
+         <button type="button" className="focus-secondary" onClick={()=>{const row=rowForFixture(item);if(row){setDetailHistory([]);setDetail(row);}}}>{item.references.length?'Review linked records':'Review record and available action'}</button>
       </article>)}</div> : <p>No obvious synthetic, test or acceptance labels were found across the loaded record kinds.</p>}
       {fixtures.length > 25 && <button className="focus-secondary" aria-expanded={showAll} onClick={() => setShowAll((current) => !current)}>{showAll ? 'Show less' : `Show ${fixtures.length - 25} more`}</button>}
       <section className={styles.selectionSummary} aria-labelledby="fixture-action-summary"><h3 id="fixture-action-summary">Selected action summary</h3><p>{selectedFixtures.length} selected · {deletionPlan.deleteIds.length} safe to delete together (no outside references) · {deletionPlan.archiveIds.length} protected to archive · {deletionPlan.unlinkThenDeleteIds.length} require individual unlink review · {deletionPlan.blocked.length} blocked.</p>
@@ -343,7 +351,9 @@ export function SyntheticFixtureReview({ go }: { go: (route: string) => void }) 
         row={detail}
         candidate={allCandidates.find((item) => item.kind === detail.snapshot.kind && item.entityId === detail.snapshot.record.entityId)}
         go={go}
-        close={() => setDetail(null)}
+        close={() => {setDetail(null);setDetailHistory([]);}}
+        reviewReference={reference=>{const snapshot=resolveReviewReference(reference,records);const next=snapshot&&rows.find(row=>row.snapshot===snapshot);if(next){setDetailHistory(history=>[...history,detail]);setDetail(next);}else setMessage('This linked record is no longer loaded. Scan again before acting.');}}
+        back={detailHistory.length?()=>{const previous=detailHistory.at(-1)!;setDetailHistory(history=>history.slice(0,-1));setDetail(previous);}:undefined}
         edit={() => { setEditing(detail); setDetail(null); }}
         manage={(action) => { if (scanComplete) { setPending({ action, row: detail }); setDetail(null); } }}
       />

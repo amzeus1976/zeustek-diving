@@ -88,6 +88,7 @@ import {fetchDiveLogWeather,applyDiveLogWeather,weatherInputKey,historicalWeathe
 import {readConditionsSettings} from '@/lib/weather/conditions-settings';
 import { diveHeat } from '@/lib/dive-heat';
 import { logTimeRange } from '@/lib/log-time';
+import {deriveDiveDayNumbers,previewDiveOfDay} from '@/lib/logbook/dive-of-day';
 import { EditorSections } from '@/components/editor-sections';
 import { SiteCoordinateAudit } from '@/components/site-coordinate-audit';
 import { DiveSettingActivity } from '@/components/dive-setting-activity';
@@ -105,9 +106,8 @@ import { ConservationPage } from '@/components/conservation-page';
 import { SiteOverheadSection } from '@/components/site-overhead-profile';
 import { ProfilePicture } from '@/components/profile-picture';
 import { PeopleOperators } from '@/components/people-operators';
-import { findOwnerProfile, hasPersonRole, personDisplayName, sourceLabel } from '@/lib/offline/people-profiles';
+import { findOwnerProfile, personDisplayName } from '@/lib/offline/people-profiles';
 import {diveTeamCandidates,normaliseDiveTeamIdentity} from '@/lib/people/dive-team-identity';
-import {resolvePersonDisplayAwards} from '@/lib/people/certification-evidence';
 import { renderSummaryCard } from '@/lib/exports/summary-card';
 import { DiveSyncStatus } from '@/components/dive-sync-status';
 import { EquipmentMaintenanceLog } from '@/components/equipment-maintenance-log';
@@ -792,8 +792,6 @@ function Overview({
   );
   const [trips, setTrips] = useState<Array<Stored<DiveTripRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
-  const [certifications, setCertifications] = useState<Array<Stored<CertificationRecord>>>([]);
-  const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [awardSettings, setAwardSettings] = useState<DashboardSettingsRecord | null>(null);
   const [weatherPickerOpen, setWeatherPickerOpen] = useState(false);
   const [weatherSelectionSaving, setWeatherSelectionSaving] = useState(false);
@@ -802,21 +800,11 @@ function Overview({
     void listEquipment().then(setEquipment);
     void listDiveTrips().then(setTrips);
     void listDiveSites().then(setSites);
-    void listCertifications().then(setCertifications);
-    void listPeople().then(setPeople);
     void listDashboardSettings()
       .then((nextAwardSettings) => setAwardSettings(nextAwardSettings[0] ?? null))
       .catch(() => setAwardSettings(null));
   }, []);
   useRecordRefresh(refreshOverview);
-  const buddyCounts = new Map<string, number>();
-  dives.forEach((dive) => (dive.buddyIds ?? []).forEach((id) => buddyCounts.set(id, (buddyCounts.get(id) ?? 0) + 1)));
-  const ownerProfile = findOwnerProfile(people);
-  const displayAwards = ownerProfile ? resolvePersonDisplayAwards(ownerProfile, certifications) : null;
-  const derivedTopBuddy = [...people]
-    .filter((person) => hasPersonRole(person, 'buddy') && buddyCounts.has(person.entityId))
-    .sort((a, b) => (buddyCounts.get(b.entityId) ?? 0) - (buddyCounts.get(a.entityId) ?? 0) || a.name.localeCompare(b.name))[0] ?? null;
-  const topBuddy = people.find((person) => person.entityId === ownerProfile?.preferredTopBuddyPersonId) ?? derivedTopBuddy;
   const nextTrip = selectUpcomingTrip(trips);
   const nextSite = nextTrip
     ? sites.find((site) => site.entityId === nextTrip.siteId) ??
@@ -909,8 +897,6 @@ function Overview({
             Open dive plans <ChevronRight size={15} />
           </button>
         </div>
-        <Card className="overview-profile-card"><span className="focus-eyebrow">MY PROFILE</span><h2>{ownerProfile ? personDisplayName(ownerProfile) : 'Set up My Profile'}</h2>{ownerProfile ? <dl><div><dt>Highest recreational award</dt><dd>{displayAwards?.rec.title || 'Unknown'}</dd></div><div><dt>Highest technical</dt><dd>{displayAwards?.tec.title || 'Unknown'}</dd></div><div><dt>Highest professional</dt><dd>{displayAwards?.pro.title || 'Unknown'}</dd></div><div><dt>Profile source</dt><dd>{sourceLabel(displayAwards?.rec.source)}</dd></div></dl> : <p className="focus-copy">Create one owner Person profile to power Overview, planning and summaries. Nothing is created automatically.</p>}<button className="focus-link" onClick={() => go('People')}>{ownerProfile ? 'Open My Profile' : 'Create My Profile'}</button></Card>
-        <Card className="overview-buddy-card"><span className="focus-eyebrow">TOP DIVE BUDDY</span><h2>{topBuddy ? personDisplayName(topBuddy) : 'No buddy evidence yet'}</h2>{topBuddy ? <dl><div><dt>Dives together</dt><dd>{buddyCounts.get(topBuddy.entityId) ?? topBuddy.totalLinkedDives ?? 0}</dd></div><div><dt>Highest qualification</dt><dd>{topBuddy.highestRecreationalCertification || topBuddy.highestTechnicalCertification || topBuddy.highestProfessionalCertification || topBuddy.highestQualification || 'Unknown'}</dd></div><div><dt>Last dived together</dt><dd>{topBuddy.lastDivedTogether || 'Unknown'}</dd></div>{Boolean(topBuddy.contactVisibility && topBuddy.contactVisibility !== 'private') && <div><dt>Contact</dt><dd>{topBuddy.email || topBuddy.phone || 'Not recorded'}</dd></div>}</dl> : <p className="focus-copy">Buddy rankings are derived from canonical Dive links, unless My Profile chooses a preferred buddy.</p>}<button className="focus-link" onClick={() => go('People')}>Open People</button></Card>
       </div>
       <div className="focus-grid">
         <CollapsibleWorkCard id="overview-equipment-status" title="Equipment status" eyebrow="KIT STATUS" status={`${serviceWarningCount} item${serviceWarningCount===1?'':'s'} need attention`} alert={serviceWarningCount?'Service review required':undefined} rowCount={serviceOverviewItems.length} previewLimit={5} onOpenDetail={()=>go('Equipment')}>
@@ -939,7 +925,7 @@ function Overview({
         <div className="focus-card-head"><div><span className="focus-eyebrow">HOME DIVE FORECASTS</span><h2>Seven-day conditions</h2><p className="focus-copy">Choose up to six saved sites, or show no forecast cards.</p></div><button className="focus-secondary" aria-expanded={weatherPickerOpen} onClick={() => setWeatherPickerOpen((current) => !current)}>{weatherPickerOpen ? 'Close selector' : 'Choose sites'}</button></div>
         {weatherPickerOpen && <Card className="home-weather-picker"><div className="home-weather-picker-head"><div><h3>Forecast sites</h3><p className="focus-copy">Selections save automatically and sync across devices.</p></div><label><input type="checkbox" checked={selectedHomeWeatherSiteIds.length === 0} disabled={weatherSelectionSaving} onChange={(event) => { if (event.target.checked) void saveHomeWeatherSelection([]); }} /> Don’t show any</label></div><div className="home-weather-options">{weatherCandidateSites.map((site) => { const checked = selectedHomeWeatherSiteIds.includes(site.entityId); return <label key={site.entityId}><input type="checkbox" checked={checked} disabled={weatherSelectionSaving || (!checked && selectedHomeWeatherSiteIds.length >= 6)} onChange={(event) => void saveHomeWeatherSelection(event.target.checked ? [...selectedHomeWeatherSiteIds, site.entityId] : selectedHomeWeatherSiteIds.filter((siteId) => siteId !== site.entityId))} /><span><b>{site.name}</b><small>{site.location || site.country || 'Location not recorded'}</small></span></label>; })}</div><small className="home-weather-picker-status">{weatherSelectionSaving ? 'Saving selection…' : `${selectedHomeWeatherSiteIds.length} of 6 selected`}</small></Card>}
         <button className="focus-secondary" disabled={forecastBusy||!forecastSites.length} onClick={()=>void refreshForecasts()}>{forecastBusy?'Getting conditions…':'Get weather'}</button>
-        {featuredSites.length ? <div className="home-weather-grid">{featuredSites.map((site) => <SevenDayForecastCard key={site.entityId} site={site} forecast={forecasts[site.entityId]} compact />)}</div> : <Card className="focus-empty"><CloudSun size={30}/><h2>No forecast sites selected</h2><p>Open the selector and tick up to six sites whenever you want forecasts here.</p><button className="focus-primary" onClick={() => setWeatherPickerOpen(true)}>Choose forecast sites</button></Card>}
+        {featuredSites.length ? <div className="home-weather-grid">{featuredSites.map((site) => <SevenDayForecastCard key={site.entityId} site={site} forecast={forecasts[site.entityId]} />)}</div> : <Card className="focus-empty"><CloudSun size={30}/><h2>No forecast sites selected</h2><p>Open the selector and tick up to six sites whenever you want forecasts here.</p><button className="focus-primary" onClick={() => setWeatherPickerOpen(true)}>Choose forecast sites</button></Card>}
         {forecastError && <div className="focus-notice"><CloudRain size={15}/>{forecastError}</div>}
       </section>
       </div>
@@ -1009,6 +995,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
   const [modeFilter, setModeFilter] = useState('all');
   const [toolsOpen,setToolsOpen]=useState(false);
   const [sort, setSort] = useState('newest');
+  const diveDayNumbers=useMemo(()=>deriveDiveDayNumbers(dives),[dives]);
   const refresh = useCallback(() => {
     void Promise.all([listDives(), listEquipment(), listPeople(), listDiveSites()]).then(
       ([nextDives, nextEquipment, nextPeople, nextSites]) => {
@@ -1151,6 +1138,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
     <DiveRecordDetail
           key={viewing.entityId}
           dive={viewing}
+          daySequence={diveDayNumbers.get(viewing.entityId)}
           initialView={initialDiveView}
           title={viewing.site}
           eyebrow={`${viewing.source} dive`}
@@ -1164,6 +1152,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
           remove={() => void remove(viewing)}
           rows={[
             ['Dive number', viewing.diveNumber ? `#${viewing.diveNumber}` : 'Not recorded'],
+            ['Dive of the day', `${diveDayNumbers.get(viewing.entityId)?.label??'—'}${diveDayNumbers.get(viewing.entityId)?.provisional?' · provisional ordering':''}`],
             ['Mode', viewing.diveMode === 'technical-training' ? 'Technical training' : viewing.diveMode === 'recreational-training' ? 'Recreational training' : viewing.isTechnicalDive || viewing.diveMode === 'technical' ? 'Technical' : 'Recreational'],
             ['Date', viewing.date],
             ['Time in / out', [viewing.timeIn, viewing.timeOut].filter(Boolean).join(' – ') || 'Not recorded'],
@@ -1263,6 +1252,7 @@ function Logbook({ openLog, go }: { openLog: () => void; go: (next: string) => v
                 <p>{dive.notes || 'Manual dive log'}</p>
                 <div className="log-metrics">
                   <span className="log-metric" title="Dive number"><Hash size={17}/>{dive.diveNumber ?? '—'}</span>
+                  <span className="log-metric" aria-label={`Dive of the day ${diveDayNumbers.get(dive.entityId)?.label??'unknown'}`} title={diveDayNumbers.get(dive.entityId)?.provisional?'Provisional: missing or equal start times; ties use lifetime number.':'Ordered by start time on this date'}>Day {diveDayNumbers.get(dive.entityId)?.label??'—'}{diveDayNumbers.get(dive.entityId)?.provisional?'*':''}</span>
                   <span className="log-metric" title="Maximum depth"><ZeusTekIcon id="deep-dive" size={22}/>{dive.maxDepthM ?? '—'} m</span>
                   <span className="log-metric" title="Bottom time"><ZeusTekIcon id="timed-dive" size={22}/>{dive.bottomTimeMin ?? '—'} min</span>
                   <span className="log-metric" title="Breathing gas"><ZeusTekIcon id="gas-mix" size={22}/>{dive.gas || '—'}</span><span className="log-metric" title="Surface water temperature"><ZeusTekIcon id="water-temperature" size={22}/>{dive.surfaceTemperatureC ?? '—'}°C</span><span className="log-metric" title="Visibility"><ZeusTekIcon id="visibility" size={22}/>{dive.visibilityM ?? '—'} m vis</span>
@@ -2952,7 +2942,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
                   <h2 className="icon-title"><ZeusTekIcon id={resolveZeusTekIconId(item.siteType ?? item.waterType ?? item.location, 'dive-site')} size={30}/><span>{item.name}</span></h2>
                 </div>
                 <div className="record-actions">
-                  <button className={item.favourite ? 'active' : ''} onClick={() => void toggleFavourite(item)} aria-label={`${item.favourite ? 'Remove' : 'Add'} ${item.name} ${item.favourite ? 'from' : 'to'} favourites`}><Star size={15} fill={item.favourite ? 'currentColor' : 'none'} /></button>
+                  <button className={item.favourite ? 'active' : ''} onClick={() => void toggleFavourite(item)} aria-pressed={Boolean(item.favourite)} aria-label={`${item.favourite ? 'Remove' : 'Add'} ${item.name} ${item.favourite ? 'from' : 'to'} favourites`}><ZeusTekAssetIcon name="favourites" size={28} decorative/></button>
                   <button
                     onClick={() => {
                       setEditing(item);
@@ -4962,6 +4952,7 @@ function DiveModal({
     .filter((dive) => dive.entityId !== item?.entityId && dive.date <= date)
     .reduce((total, dive) => total + (dive.totalElapsedMin ?? dive.bottomTimeMin ?? 0), 0);
   const thisDiveTime = optionalNumber(elapsedTime) ?? optionalNumber(time) ?? 0;
+  const diveOfDay=previewDiveOfDay({entityId:item?.entityId,date,timeIn,diveNumber:Number(diveNumber)||undefined},dives);
   const currentDiveKey = `${date}T${timeIn || '23:59'}`;
   const previousDive = [...dives]
     .filter(
@@ -5285,6 +5276,7 @@ function DiveModal({
               Dive number · automatic
               <input type="number" min="1" value={diveNumber} readOnly />
             </label>
+            <label>Dive of the day · automatic<input aria-label="Dive of the day" value={diveOfDay.label} readOnly/><small>{diveOfDay.provisional?'Provisional until start times are known; equal times use the lifetime number.':'Starts01 for each date, ordered by start time.'}</small></label>
             <label>
               Mode
               <select value={diveMode} onChange={(event) => setDiveMode(event.target.value as typeof diveMode)}>

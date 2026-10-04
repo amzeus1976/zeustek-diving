@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "icons": [
+    {
+      "key": "top-buddy",
+      "master": "assets/brand/owner-status/master/top buddy.png",
+      "masterSha256": "e634a9b88de9f07f9ada702cd2fb35ccecd63e5e49074f12d0c24a3208190489",
+      "masterDimensions": [
+        1254,
+        1254
+      ],
+      "src": "/brand/icons/owner-status/top-buddy.png",
+      "runtimeSha256": "f3cdee8f6bcaf666ef199f0c749471b993d7aceef16a5756125fe1660e179be3",
+      "runtimeDimensions": [
+        128,
+        128
+      ],
+      "runtimeBytes": 22769
+    },
+    {
+      "key": "favourites",
+      "master": "assets/brand/owner-status/master/favourites.png",
+      "masterSha256": "c5c0a33ff11cb10db0e788122c41f72896a1e1d0cca297a8d49bc53039f38d1e",
+      "masterDimensions": [
+        1254,
+        1254
+      ],
+      "src": "/brand/icons/owner-status/favourites.png",
+      "runtimeSha256": "f760b15c5903efc83e3b8def41ae8ff14f88951328393aa1f9f9ffdd204d3bce",
+      "runtimeDimensions": [
+        128,
+        128
+      ],
+      "runtimeBytes": 17351
+    }
+  ]
+}
