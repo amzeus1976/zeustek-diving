@@ -21,6 +21,19 @@
 .sharing-options { display: grid; gap: 8px; min-width: 0; }
 .sharing-resource,.integration-record-choices { display: grid; gap: 12px; min-width: 0; }
 .sharing-resource { padding-block: 16px; border-top: 1px solid var(--zt-border); }
+.integration-consent-picker,.integration-resource-body { display: grid; gap: 16px; min-width: 0; }
+.integration-resource-body[hidden] { display: none; }
+.integration-resource-header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px 16px; min-width: 0; }
+.integration-resource-header > span { grid-column: 1; color: var(--zt-text-muted); font-size: .85rem; overflow-wrap: anywhere; }
+.integration-resource-header > button { grid-column: 2; grid-row: 1 / 3; }
+.integration-field-options { grid-template-columns: repeat(auto-fit,minmax(min(100%,180px),1fr)); }
+.integration-choice-list { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid var(--zt-border); border-radius: var(--zt-radius-md); }
+.integration-choice-list:focus-visible { outline: 2px solid var(--brand-secondary); outline-offset: 3px; }
+.integration-choice-list label { flex-wrap: nowrap; align-items: start; }
+.integration-selection-help { margin: 0; color: var(--zt-text-muted); font-size: .85rem; }
+.public-profile-address { display: grid; gap: 12px; min-width: 0; padding: 16px; border: 1px solid var(--zt-border); border-radius: var(--zt-radius-md); }
+.public-profile-address code { overflow-wrap: anywhere; word-break: break-word; }
+@media(max-width:430px) { .integration-resource-header { grid-template-columns: minmax(0,1fr); } .integration-resource-header > button { grid-column: 1; grid-row: auto; justify-self: start; } }
 .sharing-settings .record-actions { flex-wrap: wrap; gap: 10px; }
 .sharing-settings button,.sharing-settings a.focus-secondary,.public-profile-view a.focus-primary { min-height: 44px; min-width: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .sharing-visitor-preview { border: 2px solid var(--brand-secondary); border-radius: var(--zt-radius-lg); min-width: 0; }

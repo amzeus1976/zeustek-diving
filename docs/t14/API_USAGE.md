@@ -4,14 +4,14 @@ This guide describes the implemented version 1 API. The owner enables access by 
 
 Production origin: `https://dive.amzeus.co.uk`
 
-Machine-readable contract: [OpenAPI 3.1](https://dive.amzeus.co.uk/api/v1/openapi). Use the contract from the accepted deployment; this guide accompanies app 1.0.72.
+Human-readable guide: [API usage guide](https://dive.amzeus.co.uk/api/v1/openapi). Browsers receive a readable page. Machine-readable contract: [OpenAPI 3.1 JSON](https://dive.amzeus.co.uk/api/v1/openapi?format=json); API clients requesting `application/json` also receive JSON from the original URL. Use the contract from the accepted deployment; this guide accompanies app1.0.72 and additive contract1.1.0, under the same version1 endpoints.
 
 ## Enable a client
 
 1. Sign in as the owner and open **Site Configuration → Read-only API integrations**.
 2. Choose **AMZeus** or **ZeusTek**. Use a separate key for each client.
 3. Set an expiry in the future, within one year.
-4. Select the required scopes, then the exact saved cloud records and fields. Nothing is selected automatically. Search and paging preserve selections; each scope supports at most 1,000 selected records.
+4. Enable the required scopes, then select the exact saved cloud records and fields. Each section has independent Minimise/Maximise controls, a selection count and a bounded list. **Select all matching** explicitly selects current matching saved records across pages, preserving prior choices up to1000. Cancel/error/overflow retains the prior selection. **Select all fields** is a separate choice. Nothing is selected automatically; newly saved records never join an existing key.
 5. Review **Selected access**, confirm the displayed client/records/fields/expiry, then create the key.
 6. Copy the newly displayed key once into that client's server-side secret manager. The server stores a verifier, not the recoverable secret. Do not put the key in this guide, browser JavaScript, a public repository, a URL, logs, screenshots or support exports.
 
@@ -40,16 +40,28 @@ Only `GET` and `HEAD` are supported. The only query parameters are `limit` and `
 | `/api/v1/awards` / `awards` | Selected owner Certification/award records | `title`, `agency`, `date`, `track` |
 | `/api/v1/equipment` / `equipment` | Selected owner equipment | `name`, `category`, `maker`, `model` |
 | `/api/v1/equipment-usage` / `equipment-usage` | Saved equipment evidence for selected owner Dives | No optional detail fields; references are separately consented |
+| `/api/v1/gas-plans` / `gas-plans` | Selected canonical saved Gas Plans | `name`, `status`, `depth`, `duration`, `rmv`, `supplies` |
+| `/api/v1/dive-plans` / `dive-plans` | Selected saved Dive Plan/calendar records | `name`, `status`, `start`, `end`, `site`, `depth`, `duration` |
+| `/api/v1/trips` / `trips` | Selected Trips & Expeditions | `name`, `status`, `start`, `end`, `destination`, `itinerary` |
 
 The `depth` selection produces `depthM`; `duration` produces `durationMin`. Fields not consented, or without a supported saved value, are omitted. Every result has an opaque `id`. IDs are scoped to the issued key/resource and are not private canonical, account or import IDs. Do not compare IDs between independent keys or assume stability across rotation.
 
-The API excludes certification numbers, cylinder serial numbers, private contacts, emergency/medical information, private notes, plans/trips, other people's records and unrestricted backup JSON. Selected `site` text is disclosed when that field is enabled: review it before granting access. Plain text must be escaped by consumers when displayed as HTML.
+The API excludes certification numbers, cylinder serial numbers, private contacts, emergency/medical information, private notes, teams/guests, booking references/payments, private attachments, other people's records and unrestricted backup JSON. Planning/trip access requires its own exact scope/record/field consent; existing keys gain no additional access. Selected site/location/destination or itinerary titles are disclosed when enabled: review them before granting access. Plain text must be escaped by consumers when displayed as HTML.
+
+### Saved planning inputs
+
+Planning endpoints read saved inputs only; they never call a gas/depth engine or assess readiness. A saved `ready` status is the recorded lifecycle value, not a new safety assertion. Dates retain their original precision. Gas Plan `depth`/`duration` are saved planned depth/bottom time; Dive Plan duration follows saved planned runtime, duration, maximum duration, then legacy bottom time. `rmv` produces `rmvLitresMin`.
+
+`supplies` contains at most100 saved cylinder-input summaries: `role`, `gas`, `oxygenFraction`, `heliumFraction`, `volumeLitres`, `startPressureBar`, `reservePressureBar` where explicitly saved. Volume is the saved override only; inventory-only references do not invent volume or gas composition. Canonical cylinder/fill/analysis IDs, serials, notes and full calculation snapshots are excluded. `omittedSupplyCount` reports additional saved entries.
+
+Trip `itinerary` contains at most100 redacted entries with only saved `kind`, `title`, `start`, `end`, `location`; `omittedItineraryCount` reports additional entries. No segment IDs, booking references, costs, attachments, guests or private notes are returned. Missing saved values are omitted, never inferred.
 
 ### Units and provenance
 
 - `depthM`: saved maximum depth, in metres.
 - `durationMin`: saved total elapsed runtime, in minutes; saved bottom time is used only if elapsed runtime is absent.
 - Dates retain their saved precision, including month-only values. Do not invent a day or timezone.
+- Gas Plan RMV is litres/minute, supply pressure is bar, and saved volume override is litres. No shared-cylinder accessibility or per-cylinder reserve sufficiency is inferred by this API.
 - Award `track` is `recreational-display`, `technical-display`, `professional-display` or `unclassified`. Master Scuba Diver can be a recreational display award. Display ranking grants no depth limit, permission, professional capability or physiological clearance.
 - The API reads currently accessible canonical records within the key's explicit consent. A deleted or no-longer-accessible record is not returned. It is not a historical frozen public snapshot.
 
@@ -158,3 +170,7 @@ Errors use a redacted JSON `error` message. Responses use private/no-store cache
 ## Owner acceptance checklist
 
 Verify the client label, selected records/fields and expiry before issuance. With a dummy key, verify permitted reads, out-of-scope denial, pagination, expiry/revocation, historical equipment provenance and safe error handling. Production issuance and actual client configuration are distinct from deploying the API capability; report their actual state separately. This API has no Gmail sync, public-profile publish or record-write operation.
+
+## Public-profile address
+
+The human visitor page is [https://dive.amzeus.co.uk/public-profile](https://dive.amzeus.co.uk/public-profile). Anonymous visitors also see the approved landing snapshot at the site root. When publication is disabled, visitors receive the generic welcome. The signed-in owner's Site Configuration → Public profile card displays this exact current-site URL and links to it. Publication remains a separate explicit visitor-preview/publish/update/revoke action; an API key never publishes the profile.

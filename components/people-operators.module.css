@@ -92,6 +92,7 @@
 }
 .personCard h2 {
   margin: 0.2rem 0;
+  overflow-wrap: anywhere;
 }
 .cardHit {
   position: absolute;

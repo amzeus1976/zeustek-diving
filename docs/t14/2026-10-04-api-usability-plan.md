@@ -1,0 +1,22 @@
+# API usability and selected planning resources
+
+## Owner direction and release boundary
+
+The owner requested readable API documentation, Select all controls, compact collapsible resource sections, Gas Planning/Dive Plans/Trip access and an explicit public-profile URL before the combined release. Preserve the clean reminder checkpoint **a3f39808616756bd29d31d3e17fc643b53263953**. No deployment has begun. This is a bounded addition to the same candidate; existing local verification remains evidence for unchanged source, not the new API code.
+
+## Reviewed contract and security boundary
+
+- Keep `/api/v1/openapi` JSON for machine clients. Normal browser HTML requests receive a readable, script-free usage reference; `?format=json` explicitly retrieves the unchanged machine format. Include endpoint/field, selection, units, provenance, pagination, safe dummy request and error guidance. No live API tester or browser key input.
+- Each enabled resource has a44px minimise/maximise control, persisted draft selections and a compact selection count. Collapse/expand all enabled sections. Bound record-list height. Select all matching records explicitly traverses owner-only saved cloud choices, atomically adds at most1000 unique choices, supports cancellation and retains prior choices on failure. Select all fields is separate and explicit. Filtering/paging never implies selecting unreviewed records; the final existing exact-consent confirmation still precedes key issuance.
+- Add version1 scopes/endpoints `gas-plans`, `dive-plans`, `trips` to the existing per-client key/object architecture. Existing keys gain no scope, record or field. Reuse HTTPS/authentication, owner/kind/deleted-object checks, opaque per-key IDs, atomic rate bounds, signed cursors, no-store/no-CORS and rotation/revocation controls.
+- Gas Plans use canonical `gas-plan`: optional name/status/planned depth/bottom time/RMV and selected saved cylinder-input summaries. Supply projection permits role/gas fractions/volume override/start/reserve pressure only. It omits cylinder/fill/analysis references, serials, notes, identities and full engine snapshots. No recalculation or physiological/readiness assurance.
+- Dive Plans use canonical `trip`: optional name/saved status/start/end/site/planned depth/duration. Omit team, contacts, emergency/medical details, notes and linked canonical IDs.
+- Trips & Expeditions use canonical `dive-trip`: optional name/status/start/end/destination and up to100 explicitly selected itinerary entries containing only kind/title/start/end/location. Exclude itinerary IDs, booking references/payments, guests, attachments, contacts, medical/emergency/insurance/private notes and links. Report additional omitted itinerary count rather than silently claiming complete coverage.
+- Nested allowlists are constructed field-by-field; never spread a canonical record. Current data remains owner-private except the explicitly selected authenticated client projection. Public profile/share allowlists remain unchanged. No new canonical stores, migration, production keys, real public publication or frozen-calculation change.
+- Public-profile controls prominently link **`/public-profile`**, explain that anonymous visitors also see the selected published landing page at `/`, and that disabled publication shows the generic welcome. Display the actual current-origin URL; do not publish merely to demonstrate it.
+
+## Focused tests and acceptance
+
+Write tests before code for three resource projections, nested leaks, missing/foreign/deleted/reassigned objects, legacy keys denied new scopes, empty/unknown/private fields, saved values/no source mutation, pagination/cursor isolation, read-only/cache/auth boundaries, matching-selection cancellation/overflow/repeated cursor, preserved multi-page selection, readable HTML/JSON negotiation and exact profile link. Preserve all existing API/privacy/public-profile tests.
+
+Run focused API/security tests, full regression, typecheck, fresh build/PWA, targeted lint comparison, privacy/client credentials and all9 approved hashes. Verify compact UI, selection/minimise/keyboard/focus and documentation at320/390/430/820/1024/1440 with dummy local records and keys only. Refresh owner baseline, freeze one clean candidate, deploy once and perform read-only production acceptance before exact GitHub reconciliation. Gmail remains human-only; no consumed run replay or new agent request.

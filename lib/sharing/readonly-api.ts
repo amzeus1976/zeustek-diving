@@ -1,7 +1,9 @@
 import {strictObject} from './public-profile';
-export const API_RESOURCES=['dives','awards','equipment','equipment-usage'] as const;
+export const API_RESOURCES=['dives','awards','equipment','equipment-usage','gas-plans','dive-plans','trips'] as const;
 export type ApiResource=typeof API_RESOURCES[number];
-export const API_FIELDS={dives:['date','site','depth','duration','mode'],awards:['title','agency','date','track'],equipment:['name','category','maker','model'],'equipment-usage':[]} as const;
+export const API_FIELDS={dives:['date','site','depth','duration','mode'],awards:['title','agency','date','track'],equipment:['name','category','maker','model'],'equipment-usage':[],'gas-plans':['name','status','depth','duration','rmv','supplies'],'dive-plans':['name','status','start','end','site','depth','duration'],trips:['name','status','start','end','destination','itinerary']} as const;
+export const API_LABELS:Record<ApiResource,string>={dives:'Dives',awards:'Awards',equipment:'Equipment','equipment-usage':'Equipment usage','gas-plans':'Gas Plans','dive-plans':'Dive Plans',trips:'Trips & Expeditions'};
+export const API_RECORD_KINDS:Record<ApiResource,string>={dives:'dive',awards:'certification',equipment:'equipment','equipment-usage':'dive','gas-plans':'gas-plan','dive-plans':'trip',trips:'dive-trip'};
 export type ApiConsent=Partial<Record<ApiResource,{ids:string[];fields:string[]}>>;
 export type ApiKeyInput={client:'AMZeus'|'ZeusTek';expiresAt:string;scopes:ApiResource[];selection:ApiConsent};
 export type ApiKeyMetadata={id:string;client:'AMZeus'|'ZeusTek';scopes:ApiResource[];createdAt:string;expiresAt:string;revoked:boolean;lastUsedAt:string|null;selectedCounts:Partial<Record<ApiResource,number>>};
