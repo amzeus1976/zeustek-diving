@@ -1,0 +1,966 @@
+{
+  "status": "PUBLISHED AND VERIFIED; conditional provider exceptions remain explicit",
+  "acceptedAt": "2026-10-04T14:42:14.336414+00:00",
+  "applicationVersion": "1.0.73",
+  "sitesVersion": 145,
+  "branch": "t14/weather-reliability",
+  "publishedSource": "67c9706171ece312699c2c352fd94d5163137ee5",
+  "applicationCheckpoint": "cff4d6a286ea8b513f7d2ae11364b0cb5c79d719",
+  "publishedFullTree": "b5302252395a6394a875502f3bf1630703de6243",
+  "candidateCleanAtFreeze": true,
+  "postFreezeApplicationEdits": 0,
+  "cache": "zeustek-static-v20",
+  "project": "appgprj_6a91926878b48191a80d70f1681ef135",
+  "deployment": "appgdep_6ac25ecb496081918583c186304346b9",
+  "deploymentSucceededAt": "2026-10-04T14:12:53.932161Z",
+  "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_5a6c59007eac8191953b021550c59cc5",
+  "environmentRevision": 6,
+  "url": "https://dive.amzeus.co.uk",
+  "audience": "public; unchanged",
+  "artifact": {
+    "sha256": "11d1766c12a31a52abe1c9139261a6c1dfed44f277e8d4eccb1981a97391ac30",
+    "sizeBytes": 102922240,
+    "files": 1342,
+    "sedimentFile": "file_00000000e2288210820b3234b1a317b5",
+    "localArchive": {
+      "archiveSha256": "e9d8be24227f2d5498b9012f070c28d35bf70c7a1a594e6c071de0529b419a36",
+      "sizeBytes": 88838850,
+      "files": 1342,
+      "credentialMatches": 0,
+      "privateQaFilesIncluded": false
+    },
+    "normalisation": "Native saved tar and helper local gzip-tar retain the same 1342 packaged files; native hash identifies the accepted artifact."
+  },
+  "rollback": {
+    "application": "1.0.72",
+    "sites": 144,
+    "deployment": "appgdep_6ac22c0bb1a081918ace0a0a0fbc88c0",
+    "source": "c39210be47cab1a21d7d6c6ea24b279cf41597bd",
+    "version": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_d70c9b7fbd188191b5f56a1e92c1c6e5",
+    "artifactSha256": "4c051d2ab37ce0d6acef40e5ddae2bf94ec9fe5d409d1ddee739c762bb1dd2de",
+    "sizeBytes": 103045120,
+    "files": 1361,
+    "sedimentFile": "file_00000000be7081f48729afb7cfb4ce6e",
+    "verifiedRecoverable": true,
+    "rollbackPerformed": false,
+    "environmentRecovery": "Preserve all eleven prior bindings. If recovery requires accepted environment5 semantics, remove only the six added weather bindings through native secret controls; environment revisions are monotonic."
+  },
+  "github": {
+    "pr": "https://github.com/amzeus1976/zeustek-diving/pull/90",
+    "main": "4df0df63cea1e45c4b6159276def8c51127c987b",
+    "mainTree": "b5302252395a6394a875502f3bf1630703de6243",
+    "exactFullTreeMatchesPublished": true,
+    "localGitDiffEmpty": true,
+    "remoteChecks": "No commit statuses or pull-request workflow runs configured. Local full gate and live acceptance are retained; empty remote checks are not claimed as passing CI.",
+    "evidenceBranch": "t14/sites145-release-evidence",
+    "evidenceBoundary": "Later documentation only; not deployed or merged over the exact accepted main tree."
+  },
+  "gates": {
+    "regression": {
+      "passed": 1340,
+      "failed": 0,
+      "skipped": 0,
+      "files": 200
+    },
+    "focused": {
+      "passed": 107,
+      "failed": 0,
+      "files": 14
+    },
+    "typecheck": "PASS",
+    "buildPWA": {
+      "status": "PASS",
+      "entries": 420,
+      "KiB": 42611.34,
+      "dependenciesUnchanged": true,
+      "bothExistingLocksPreserved": true
+    },
+    "lint": {
+      "files": 201,
+      "newOrChangedFindings": 0,
+      "unchangedBaselineFindings": 92,
+      "rawExit": 1,
+      "comparison": "PASS; no suppression or assertion weakening"
+    },
+    "privacy": {
+      "clientTextFiles": 69,
+      "suppliedCredentialValuesChecked": 6,
+      "credentialMatches": 0,
+      "completeArchiveCredentialMatches": 0,
+      "privateQaFilesPackaged": false,
+      "connectionSecretKindExcludedFromOwnerBackup": true
+    },
+    "protectedCalculations": [
+      {
+        "path": "lib/offline/buhlmann-ndl.ts",
+        "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-planner.ts",
+        "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-reserve.ts",
+        "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/gas-planning-foundation.ts",
+        "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/planning-pages.ts",
+        "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/loadouts-gas.ts",
+        "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "matches": true
+      },
+      {
+        "path": "lib/gas-rates.ts",
+        "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "matches": true
+      },
+      {
+        "path": "lib/pressure-group-engine.ts",
+        "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/plan-gas-acceptance.ts",
+        "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "matches": true
+      }
+    ],
+    "calculationTouchpoint": "NONE; all nine files byte-identical to approved manifest",
+    "compiledHttp": {
+      "checkedAt": "2026-10-04T13:53:55.511Z",
+      "anonymous": [
+        {
+          "path": "/api/conditions",
+          "status": 401,
+          "gate": "Authentication required"
+        },
+        {
+          "path": "/api/site-weather",
+          "status": 401,
+          "gate": "Authentication required"
+        },
+        {
+          "path": "/api/weather/providers",
+          "status": 401,
+          "gate": "Authentication required"
+        },
+        {
+          "path": "/api/v1/dives",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        },
+        {
+          "path": "/api/v1/awards",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        },
+        {
+          "path": "/api/v1/equipment",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        },
+        {
+          "path": "/api/v1/equipment-usage",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        },
+        {
+          "path": "/api/v1/dive-plans",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        },
+        {
+          "path": "/api/v1/gas-plans",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        },
+        {
+          "path": "/api/v1/trips",
+          "status": 400,
+          "gate": "Production API HTTPS enforcement"
+        }
+      ],
+      "requests": [
+        {
+          "name": "coastal-today",
+          "status": 200,
+          "cache": "private, no-store",
+          "readings": 3072,
+          "metrics": [
+            "air-temperature",
+            "feels-like",
+            "wind-speed",
+            "wind-gust",
+            "wind-direction",
+            "rain",
+            "air-visibility",
+            "weather",
+            "water-temperature",
+            "wave-height",
+            "wave-period",
+            "wave-direction",
+            "swell-height",
+            "current-speed",
+            "current-direction",
+            "sea-level"
+          ],
+          "sources": [
+            "open-meteo"
+          ],
+          "diagnostics": [
+            {
+              "provider": "open-meteo",
+              "status": "ok"
+            },
+            {
+              "provider": "open-meteo-marine",
+              "status": "ok"
+            }
+          ]
+        },
+        {
+          "name": "inland-today",
+          "status": 200,
+          "cache": "private, no-store",
+          "readings": 1536,
+          "metrics": [
+            "air-temperature",
+            "feels-like",
+            "wind-speed",
+            "wind-gust",
+            "wind-direction",
+            "rain",
+            "air-visibility",
+            "weather"
+          ],
+          "sources": [
+            "open-meteo"
+          ],
+          "diagnostics": [
+            {
+              "provider": "open-meteo",
+              "status": "ok"
+            }
+          ]
+        },
+        {
+          "name": "late-supported-forecast",
+          "status": 200,
+          "cache": "private, no-store",
+          "readings": 561,
+          "metrics": [
+            "air-temperature",
+            "feels-like",
+            "wind-speed",
+            "wind-gust",
+            "wind-direction",
+            "rain",
+            "air-visibility",
+            "weather"
+          ],
+          "sources": [
+            "open-meteo",
+            "xweather"
+          ],
+          "diagnostics": [
+            {
+              "provider": "open-meteo",
+              "status": "ok"
+            },
+            {
+              "provider": "xweather",
+              "status": "ok"
+            }
+          ]
+        },
+        {
+          "name": "future-monthly-context",
+          "status": 200,
+          "cache": "private, no-store",
+          "readings": 3,
+          "metrics": [
+            "air-temperature",
+            "wind-speed",
+            "weather"
+          ],
+          "sources": [
+            "nasa"
+          ],
+          "diagnostics": [
+            {
+              "provider": "open-meteo",
+              "status": "unavailable"
+            },
+            {
+              "provider": "nasa",
+              "status": "ok"
+            }
+          ]
+        },
+        {
+          "name": "historical",
+          "status": 200,
+          "cache": "private, no-store",
+          "readings": 38,
+          "metrics": [
+            "air-temperature",
+            "weather",
+            "water-temperature",
+            "swell-height",
+            "wave-height",
+            "wave-period",
+            "sea-level"
+          ],
+          "sources": [
+            "nasa",
+            "wwo"
+          ],
+          "diagnostics": [
+            {
+              "provider": "open-meteo",
+              "status": "ok"
+            },
+            {
+              "provider": "wwo",
+              "status": "ok"
+            }
+          ]
+        }
+      ],
+      "protected": [
+        {
+          "path": "lib/offline/buhlmann-ndl.ts",
+          "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+          "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+          "match": true
+        },
+        {
+          "path": "lib/offline/recreational-gas-planner.ts",
+          "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+          "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+          "match": true
+        },
+        {
+          "path": "lib/offline/recreational-gas-reserve.ts",
+          "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+          "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+          "match": true
+        },
+        {
+          "path": "lib/offline/gas-planning-foundation.ts",
+          "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+          "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+          "match": true
+        },
+        {
+          "path": "lib/offline/planning-pages.ts",
+          "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+          "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+          "match": true
+        },
+        {
+          "path": "lib/offline/loadouts-gas.ts",
+          "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+          "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+          "match": true
+        },
+        {
+          "path": "lib/gas-rates.ts",
+          "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+          "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+          "match": true
+        },
+        {
+          "path": "lib/pressure-group-engine.ts",
+          "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+          "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+          "match": true
+        },
+        {
+          "path": "lib/offline/plan-gas-acceptance.ts",
+          "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+          "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+          "match": true
+        }
+      ],
+      "providers": [
+        {
+          "id": "auto",
+          "configured": true,
+          "enabled": true,
+          "status": "ok"
+        },
+        {
+          "id": "open-meteo",
+          "configured": true,
+          "enabled": true,
+          "status": "ok"
+        },
+        {
+          "id": "met-office",
+          "configured": true,
+          "enabled": false,
+          "status": "unverified"
+        },
+        {
+          "id": "xweather",
+          "configured": true,
+          "enabled": false,
+          "status": "unverified"
+        },
+        {
+          "id": "tomorrow",
+          "configured": true,
+          "enabled": false,
+          "status": "unverified"
+        },
+        {
+          "id": "wwo",
+          "configured": true,
+          "enabled": false,
+          "status": "unverified"
+        },
+        {
+          "id": "met-norway",
+          "configured": true,
+          "enabled": true,
+          "status": "ok"
+        },
+        {
+          "id": "copernicus",
+          "configured": false,
+          "enabled": false,
+          "status": "unconfigured"
+        },
+        {
+          "id": "swellcloud",
+          "configured": false,
+          "enabled": false,
+          "status": "disabled"
+        }
+      ]
+    },
+    "livePublicHttp": {
+      "at": "2026-10-04T14:17:14.638Z",
+      "assets": [
+        {
+          "route": "Overview",
+          "path": "/brand/icons/navigation/overview.png",
+          "match": true,
+          "sha256": "a7349792f5bea669b9dd551d064ed11a5aac7d9dc4b1845011faa055690ac7de"
+        },
+        {
+          "route": "Insights",
+          "path": "/brand/icons/navigation/insights.png",
+          "match": true,
+          "sha256": "c09ae3e56b8447293ed9ab8413bb0d449178f761a7d5fe6758c5ef8f426747f1"
+        },
+        {
+          "route": "Cylinders & Gas",
+          "path": "/brand/icons/navigation/cylinders_and_gas.png",
+          "match": true,
+          "sha256": "013db2e42f2f421ac7617c62e775340e671413df99b2e3b5494df5d1c3a022ea"
+        },
+        {
+          "route": "Gear Wishlist",
+          "path": "/brand/icons/navigation/gear_wishlist.png",
+          "match": true,
+          "sha256": "30c7e88173e5ab29482dffaa3ea7b767e4a43ab5e58793ae80197d92ad57a5a1"
+        },
+        {
+          "route": "Equipment",
+          "path": "/brand/icons/navigation/equipment.png",
+          "match": true,
+          "sha256": "e4210498b880c71dc40b0e23fc5c16fd649e01f7b2679dabc4842ed346086bde"
+        },
+        {
+          "route": "Loadouts & Gas",
+          "path": "/brand/icons/navigation/loadouts.png",
+          "match": true,
+          "sha256": "072e3e8dfaa8a9e240ac0683feef950fdd5dcfa7d2f043e0c793359fedba74c5"
+        },
+        {
+          "route": "Logbook",
+          "path": "/brand/icons/navigation/logbook.png",
+          "match": true,
+          "sha256": "a0b1f1505012f490ecd2af5967723a8445d13792b67ba426b7e7e41513dd087f"
+        },
+        {
+          "route": "People",
+          "path": "/brand/icons/navigation/people.png",
+          "match": true,
+          "sha256": "072e3e8dfaa8a9e240ac0683feef950fdd5dcfa7d2f043e0c793359fedba74c5"
+        },
+        {
+          "route": "Dive Site Map",
+          "path": "/brand/icons/navigation/dive_location_map.png",
+          "match": true,
+          "sha256": "902a8827e7d9a58a621f13053661b5de6393f7e79b9f57545036ccfd9eaec94b"
+        },
+        {
+          "route": "Dive Computer Imports",
+          "path": "/brand/icons/navigation/dive_computer_imports.png",
+          "match": true,
+          "sha256": "e5475b446a8fbec8da1a0074a961db7fe1049494efaa9f2ec818727c9aa590ed"
+        },
+        {
+          "route": "Dive Centres",
+          "path": "/brand/icons/navigation/dive_centres.png",
+          "match": true,
+          "sha256": "cac967e1bf5f3f3662ef74b4674d957598e3e4cfb3ddee6f946c586621ee18e5"
+        },
+        {
+          "route": "Sites",
+          "path": "/brand/icons/navigation/sites.png",
+          "match": true,
+          "sha256": "36704040112597ae1207cf7bbc4a8338841a841dfdd1596a142ade74854a6aed"
+        },
+        {
+          "route": "Albums",
+          "path": "/brand/icons/navigation/albums.png",
+          "match": true,
+          "sha256": "a8eb6fd2f9d9ddf8b6c17ee30a8e905bfa36de1b5b4ea587c5251715284b53d6"
+        },
+        {
+          "route": "Dive Bucket List",
+          "path": "/brand/icons/navigation/bucket_list.png",
+          "match": true,
+          "sha256": "bbe00e9fbf9847e1f23d56f3311df40e04d760687b2e50c54e1b57343d89cb05"
+        },
+        {
+          "route": "Trips",
+          "path": "/brand/icons/navigation/trips_and_expeditions.png",
+          "match": true,
+          "sha256": "08a7bb465c304609431fd931adc0b49bd8cf10dfe8f933cd6c8ea79563083fe8"
+        },
+        {
+          "route": "Dive Plans",
+          "path": "/brand/icons/navigation/dive_planning_centre.png",
+          "match": true,
+          "sha256": "b454814892823bd5acb8d9e925f872bcde8282bb7590faaaa1ee548130b41b7c"
+        },
+        {
+          "route": "Gas Planning",
+          "path": "/brand/icons/navigation/gas_planning.png",
+          "match": true,
+          "sha256": "7ef08df95cc705bfe34a31c164ed4d658e89ca2650f942e6de3863b3faa4a078"
+        },
+        {
+          "route": "Diving Calendar & Bookings",
+          "path": "/brand/icons/navigation/diving_calendar_and_bookings.png",
+          "match": true,
+          "sha256": "14ba0c3c3688ac7a967076d4d049ec628b845d5293f0f4d4f7b9e432b833cbee"
+        },
+        {
+          "route": "Training",
+          "path": "/brand/icons/navigation/certifications.png",
+          "match": true,
+          "sha256": "3e7479b062307d0586c1bf5dd3d7ad07981fdc8af4eb731443500875eb840fab"
+        },
+        {
+          "route": "Conservation & AWARE",
+          "path": "/brand/icons/navigation/conservation_and_aware.png",
+          "match": true,
+          "sha256": "f67839b70668feb65cf6c9a63db6c21b1accee45af886ab44568c8bb5e87e71e"
+        },
+        {
+          "route": "Technical Diving",
+          "path": "/brand/icons/navigation/technical_diving.png",
+          "match": true,
+          "sha256": "003c2abf94bf1f586abd0b8187191035038b6c29805d047db8f8a61d8144e4fc"
+        },
+        {
+          "route": "Skills & Currency",
+          "path": "/brand/icons/navigation/dive_skills.png",
+          "match": true,
+          "sha256": "fc6ded6f1dfe92bcd60301a1f61cb3a67396ff31c6fd1e45c53e4e64d025edf5"
+        },
+        {
+          "route": "Dive Knowledge",
+          "path": "/brand/icons/navigation/dive_knowledge.png",
+          "match": true,
+          "sha256": "5440c9ff3be943ba0eb1cdc08143a2a0fc2235d4086ac33f23ae0a29e3208add"
+        },
+        {
+          "route": "Course Map",
+          "path": "/brand/icons/navigation/planned_training.png",
+          "match": true,
+          "sha256": "0a192acfcbfd35eea4267c5f32d95cc6ccc504ffd19f6255b3063d1edd14b5ce"
+        },
+        {
+          "route": "Dive Media",
+          "path": "/brand/icons/navigation/dive_bibliography.png",
+          "match": true,
+          "sha256": "07f591ce243fc2710744a09b8f74327ee1b0e49bce9ae2f88b8be30f9966bb85"
+        },
+        {
+          "route": "Professional Development",
+          "path": "/brand/icons/navigation/professional_development.png",
+          "match": true,
+          "sha256": "b700508c7c9bba6c48ffaee5cd1c3b600fc31c3c6dafe1032e4a1d1b2d1ad1e8"
+        },
+        {
+          "route": "Settings",
+          "path": "/brand/icons/navigation/site_configuration.png",
+          "match": true,
+          "sha256": "4412262527bf123af49268d1eb07382fc2e34b22ea9e08c80cc3706676375857"
+        },
+        {
+          "route": "Admin",
+          "path": "/brand/icons/navigation/site_logs.png",
+          "match": true,
+          "sha256": "48920c7ff32d19fba3eac61a0be33d20bdff46057e47f8f729ef0c035a56ffcb"
+        },
+        {
+          "route": "Data & Backups",
+          "path": "/brand/icons/navigation/data_and_backups.png",
+          "match": true,
+          "sha256": "b72f6f8c8024aba449193debe0e973b569eaf6cc1fda9f89f78bfd1e768910d6"
+        },
+        {
+          "route": "Dive News",
+          "path": "/brand/icons/navigation/dive_news.png",
+          "match": true,
+          "sha256": "a088bc9eb3dc81b13786552aa6bd0eb8302441ff968326c94a3077ee427880d6"
+        },
+        {
+          "route": "Diver Summary Export",
+          "path": "/brand/icons/navigation/diver_summary_export.png",
+          "match": true,
+          "sha256": "645cdde4833ed4a5e5d0cb262afc4826ca9e584345fc8415371eb363f983bd2b"
+        }
+      ],
+      "api": [
+        {
+          "path": "/api/conditions",
+          "status": 401,
+          "cache": null
+        },
+        {
+          "path": "/api/site-weather",
+          "status": 401,
+          "cache": null
+        },
+        {
+          "path": "/api/weather/providers",
+          "status": 401,
+          "cache": null
+        },
+        {
+          "path": "/api/v1/dives",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/awards",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/equipment",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/equipment-usage",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/dive-plans",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/gas-plans",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/trips",
+          "status": 401,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/openapi",
+          "status": 200,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/api/v1/openapi?format=json",
+          "status": 200,
+          "cache": "private, no-store"
+        },
+        {
+          "path": "/public-profile",
+          "status": 200,
+          "cache": "private, no-store"
+        }
+      ],
+      "worker": {
+        "match": true,
+        "cache": "zeustek-static-v20",
+        "sha256": "572c9c6580f328237ff9bcb05bebfc0b70495248efb6eb8e1e308bf800f3358a"
+      }
+    },
+    "responsive": {
+      "widths": [
+        320,
+        390,
+        430,
+        820,
+        1024,
+        1440
+      ],
+      "localRouteObservations": 186,
+      "liveRouteObservations": 186,
+      "routes": 31,
+      "applicationConsoleErrors": 0,
+      "visibleBrokenImages": 0,
+      "pageOverflow": 0,
+      "headingOverflow": 0,
+      "populatedCoastalTilesClipped": 0,
+      "keyboardFocus": "Live marine source link and Source & freshness focus observed; focus ring visible"
+    },
+    "liveAssetIntegrity": "All31 approved navigation PNGs and service-worker bytes match the frozen artifact; zeustek-static-v20 confirmed",
+    "workerLogReview": "Recent five-minute settled-use error query returned zero events. Earlier rapid route navigation yielded canceled GET /api/dive-data invocations and Network connection lost messages at14:22; retained as canceled-request observations, not misreported as zero worker logs.",
+    "retainedAttempts": [
+      "Concurrent Vitest STACK_TRACE_ERROR on an unchanged retained test, followed by focused19/19 and full1340/1340 success",
+      "Windows dist lock before worker shutdown and successful final build",
+      "Incorrect initial service-worker probe path corrected from observed deployment assets; final byte comparison passed",
+      "Transient SSR/default headings and lazy private-image loading preserved; all pending visible images settled before final acceptance"
+    ]
+  },
+  "ownerData": {
+    "fingerprintMatch": true,
+    "canonicalIDsMatch": true,
+    "changedRecords": 0,
+    "addedRecords": 0,
+    "removedRecords": 0,
+    "countsMatch": true,
+    "missingEndpoints": 0,
+    "pre": {
+      "exportedAt": "2026-10-04T13:57:56.077Z",
+      "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+      "records": 6488,
+      "kindCounts": {
+        "album": 2,
+        "bucket-list": 13,
+        "catalog-option": 62,
+        "certification": 13,
+        "computer-import": 1,
+        "computer-profile": 63,
+        "conservation_activity": 2,
+        "currency-policy": 2,
+        "cylinder": 9,
+        "cylinder-fill": 21,
+        "dashboard-settings": 1,
+        "dive": 68,
+        "dive-media": 57,
+        "dive-trip": 1,
+        "equipment": 52,
+        "equipment-event": 6,
+        "equipment-set": 6,
+        "gas-analysis": 17,
+        "gear-wishlist": 5,
+        "gear-wishlist-group": 5,
+        "gmail-news": 20,
+        "import-resolution": 46,
+        "learning-ai-checkpoint": 1,
+        "news-article": 197,
+        "news-preferences": 1,
+        "news-source": 7,
+        "operator": 5,
+        "person": 12,
+        "person-operator-link": 1,
+        "price-store": 4,
+        "price-store-settings": 1,
+        "professional-evidence": 10,
+        "professional-pathway": 2,
+        "question-review-state": 1,
+        "question-set": 141,
+        "reference-requirement-set": 6,
+        "site": 1675,
+        "site-overhead-profile": 2,
+        "skill": 3874,
+        "skill_evidence": 11,
+        "test-attempt": 14,
+        "training-progress": 44,
+        "trip": 7
+      },
+      "fingerprint": "c6aa7bdda4d0c8f178ef4e4d88174e05d3df7bd6c879a4dbde59c4f9286701e9",
+      "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+      "legacyPersonEntityPairs": 8,
+      "explicitRelationships": {
+        "person-operator-link": 1
+      },
+      "missingRelationshipEndpoints": 0,
+      "secretKindExcluded": true,
+      "uniqueCanonicalIDs": true,
+      "encryptedRecoveryVerified": true,
+      "keyProtection": "Windows user DPAPI; key not printed",
+      "dataWrites": 0,
+      "priorAuditCountsAreNotTargets": true
+    },
+    "post": {
+      "exportedAt": "2026-10-04T14:30:53.908Z",
+      "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+      "records": 6488,
+      "kindCounts": {
+        "album": 2,
+        "bucket-list": 13,
+        "catalog-option": 62,
+        "certification": 13,
+        "computer-import": 1,
+        "computer-profile": 63,
+        "conservation_activity": 2,
+        "currency-policy": 2,
+        "cylinder": 9,
+        "cylinder-fill": 21,
+        "dashboard-settings": 1,
+        "dive": 68,
+        "dive-media": 57,
+        "dive-trip": 1,
+        "equipment": 52,
+        "equipment-event": 6,
+        "equipment-set": 6,
+        "gas-analysis": 17,
+        "gear-wishlist": 5,
+        "gear-wishlist-group": 5,
+        "gmail-news": 20,
+        "import-resolution": 46,
+        "learning-ai-checkpoint": 1,
+        "news-article": 197,
+        "news-preferences": 1,
+        "news-source": 7,
+        "operator": 5,
+        "person": 12,
+        "person-operator-link": 1,
+        "price-store": 4,
+        "price-store-settings": 1,
+        "professional-evidence": 10,
+        "professional-pathway": 2,
+        "question-review-state": 1,
+        "question-set": 141,
+        "reference-requirement-set": 6,
+        "site": 1675,
+        "site-overhead-profile": 2,
+        "skill": 3874,
+        "skill_evidence": 11,
+        "test-attempt": 14,
+        "training-progress": 44,
+        "trip": 7
+      },
+      "fingerprint": "c6aa7bdda4d0c8f178ef4e4d88174e05d3df7bd6c879a4dbde59c4f9286701e9",
+      "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+      "legacyPersonEntityPairs": 8,
+      "explicitRelationships": {
+        "person-operator-link": 1
+      },
+      "missingRelationshipEndpoints": 0,
+      "secretKindExcluded": true,
+      "uniqueCanonicalIDs": true,
+      "encryptedRecoveryVerified": true,
+      "keyProtection": "Windows user DPAPI; key not printed",
+      "dataWrites": 0,
+      "priorAuditCountsAreNotTargets": true
+    },
+    "expectedNonCanonicalChanges": "Four explicit weather provider access checks update weather_provider_checks outside dive_records. Weather retrieval updates weather cache only. No Gmail, profile publication or key issuance."
+  },
+  "weatherAcceptance": {
+    "surfaces": [
+      "Overview",
+      "Sites",
+      "Dive Planning",
+      "Dive Log"
+    ],
+    "localDrafts": "Actual Planning and Dive Log explicit retrieval succeeded; both discarded without a canonical save.",
+    "liveOverview": "All six existing selected site cards returned source-attributed forecasts; selections unchanged.",
+    "liveSite": "Beadnell Point, explicit Get weather,2026-10-04 12:00; status confirms no Site or Dive changes.",
+    "seaReadingsObserved": [
+      "surface temperature",
+      "wave height",
+      "wave period",
+      "wave direction",
+      "swell height",
+      "current speed",
+      "current direction",
+      "sea level / tide"
+    ],
+    "provenance": "Actual Xweather atmosphere and Maritime forecast with source/freshness; datum-unknown sea level labelled; old Dive observation remains dated/stale separately.",
+    "noInferences": [
+      "water temperature at depth",
+      "underwater visibility",
+      "dive physiological readiness"
+    ],
+    "freeFallbacks": [
+      "MET global forecast",
+      "NASA monthly typical climate"
+    ],
+    "datePolicy": "Shared16-day Open-Meteo request policy; each provider keeps its actual horizon. Historical, UTC-day average, typical monthly context and saved observations remain distinct.",
+    "retrievalSafety": "Explicit only; bounded provider recovery; server secrets, private/no-store responses; no canonical record writes.",
+    "completeOutage": "Preserve genuine saved observations with original dates. If all sources and cache are unavailable, report absence rather than invent conditions."
+  },
+  "providerStatus": {
+    "serverSecretBindingsRestored": 6,
+    "preExistingBindingsPreserved": 11,
+    "xweather": {
+      "status": "ok",
+      "check": "Explicit signed-in production check",
+      "checkedAt": "2026-10-04T14:14:39.888Z"
+    },
+    "tomorrow": {
+      "status": "ok",
+      "check": "Explicit production access check",
+      "checkedAt": "2026-10-04T14:15:40.491Z"
+    },
+    "wwoMarine": {
+      "status": "ok",
+      "check": "Explicit production access check",
+      "checkedAt": "2026-10-04T14:17:33.567Z"
+    },
+    "diveNumber": {
+      "status": "configured",
+      "check": "Current bounded local provider request200; zero nearby-site results valid; no automatic catalogue import"
+    },
+    "metOffice": {
+      "status": "denied",
+      "check": "Explicit production access check",
+      "checkedAt": "2026-10-04T14:18:19.132Z"
+    },
+    "copernicusDepth": "Conditional; compatible subset bridge/binding absent. Existing Open-Meteo Copernicus-derived surface data preserved.",
+    "swellCloud": "Disabled; approved access/API contract remains pending; original reference does not prove an access application was submitted.",
+    "issue56": "OPEN with accepted release evidence and the three remaining exceptions"
+  },
+  "gmail": {
+    "agentLiveSyncRuns": 0,
+    "reconnects": 0,
+    "credentialChanges": 0,
+    "backgroundSyncEnabled": false,
+    "historicalFailures": "Both consumed FAILED/upstream_failure records retained; live repair success unverified; existing human-only one-use grant unchanged"
+  },
+  "publicationAndKeys": {
+    "existingPublicProfile": "Owner-enabled; unchanged",
+    "newPublication": false,
+    "productionApiCredentials": "UNISSUED"
+  },
+  "deferred": [
+    "#56 Met Office entitlement, direct Copernicus depth subset, SwellCloud access/contract",
+    "#55 owner human acceptance; no agent run/replay",
+    "Original owner-deferred nonblockingStage9 finishing",
+    "Previously excluded optional sharing/calendar extensions; no new scope",
+    "Owner selection/preview before any real new publication or client key issuance"
+  ]
+}
