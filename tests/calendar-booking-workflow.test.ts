@@ -10,6 +10,12 @@ const event=(extra={})=>({entityId:'booking-a',name:'Farne weekend',startDate:'2
 const trip=(extra={})=>({entityId:'trip-a',name:'Existing holiday',destination:'Existing destination',startsOn:'2026-10-01',endsOn:'2026-10-20',status:'planned',teamPersonIds:['human-b'],siteIds:['site-b'],planIds:[],itinerary:[],bookings:[],packingEquipmentSetIds:[],packingItems:[],gasLogistics:[],documentAttachmentIds:[],notes:'Owner notes',createdAt:at,modifiedAt:at,...extra} as Stored<DiveExpeditionTripRecord>);
 
 describe('Calendar event / canonical Trip workflow',()=>{
+ it('does not follow an explicit Trip ID when additional conversion evidence conflicts with it',()=>{
+  const source=event({linkedTripId:'converted-a'});
+  const a=trip({...tripDraftFromBooking(source),entityId:'converted-a'});
+  const b=trip({...tripDraftFromBooking(source),entityId:'converted-b'});
+  for(const order of [[a,b],[b,a]])expect(linkedCalendarTripId(source,order)).toBeNull();
+ });
  it('marks duplicate conversions for review even with an explicit legacy link or missing inverse provenance',()=>{
   for(const legacy of [undefined,'converted-a']){
    const source=event({linkedTripId:legacy});

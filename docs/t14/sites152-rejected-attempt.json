@@ -1,0 +1,64 @@
+{
+  "source": {
+    "commit": "1a3c331f777df94e27bb06d286c675a2f48c8fb9",
+    "tree": "93f393e619f2b8c5cbf5ec90156565ba4136dae7",
+    "version": "1.0.80",
+    "cache": "zeustek-static-v27",
+    "branch": "fix/calendar-booking-trip-links"
+  },
+  "site": {
+    "id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_ecff391aa5f88191b3bab31b0a0efdac",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "version_number": 152,
+    "source": {
+      "commit_sha": "1a3c331f777df94e27bb06d286c675a2f48c8fb9"
+    },
+    "archive_storage": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_00000000649c81f4aad3309902a7f11d",
+      "content_hash": "sha256:1bc52da047221b185d4d9f9ff843b9be55a3670f4493c578c54e59c289b350e9",
+      "size_bytes": 103075840,
+      "file_count": 1346
+    },
+    "screenshot_url": null,
+    "deployment_id": null
+  },
+  "deployment": {
+    "id": "appgdep_6ac308faf844819199fb2603319e125a",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_ecff391aa5f88191b3bab31b0a0efdac",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T02:19:00.615397+00:00"
+  },
+  "recovery": {
+    "id": "appgdep_6ac30b528b748191a794432dd43d8d74",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_fe20c558256c8191b8d11cac84ee6bf2",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T02:28:53.514315+00:00"
+  },
+  "reason": "Current-head review: explicit Trip link bypasses conflict detection; stale event status action targets source after conversion; missing linked Trip consumes source endpoint.",
+  "acceptedMainMerged": false,
+  "liveRecovery": {
+    "version": "1.0.77",
+    "sitesVersion": 149,
+    "verifiedInBrowser": true
+  },
+  "redTests": 6
+}

@@ -1,4 +1,10 @@
-## Calendar / bookings / Trips — final corrected local gate
+## Sites152 rejected; verified Sites149 restored — current checkpoint
+
+Preserve source1a3c331 /app1.0.80/Sites152 and its valid1471-test, privacy, six-width and unchanged6501-owner-row evidence. Final PR93 review identified three further edge cases: explicit Trip ID bypasses ambiguous conversion review, a stale Calendar action targets the original booking after another tab converts it, and a missing linked Trip consumes its source endpoint before successful navigation. Acceptance is withdrawn; main remains unmerged. Recoveryappgdep_6ac30b528b748191a794432dd43d8d74 restores verified149/source9b1c0af/archive87e4e8f5; live1.0.77 verified after cache refresh. No owner data, credentials, Gmail or Google changes.
+
+New focused RED tests precede bounded fixes. Complete shared association checks before any navigation or status mutation; reject stale associations, and retain failed source endpoints until successful navigation. Then review the corrected PR before another publication, rerun release gates, capture a fresh baseline and publish/verify/reconcile exact accepted source. Preserve rejected150/151/152 and all evidence; do not merge failed source.
+
+## Calendar / bookings / Trips — historical final corrected local gate
 
 Read **calendar-booking-trip-links-final-local-gate.json** and the Calendar ledger first. Preserve branchfix/calendar-booking-trip-links, RED/recovery checkpointc555bce and all subsequent valid work. App1.0.80/cachev27 passes1471tests/219files, focused50/6, typecheck/build/PWA422entries/42699.54KiB, privacy1346files/0credential matches,18populated six-width browser checks and9approved hashes. Targetedlint19files/0new-or-changed/11exact unchanged accepted149 baseline; rawexit1 retained. Six new RED assertions preceded the ambiguity/retry fixes. Rejected150/151/source/artifacts and original evidence remain recoverable; never claim either accepted.
 
