@@ -1,5 +1,5 @@
 {
-  "status": "WITHDRAWN — PR94 found stale copied technical fill/analysis evidence and permit confirmation; verified153 restored",
+  "status": "WITHDRAWN — PR94 review found copied technical fill/analysis and permit confirmations",
   "appVersion": "1.0.85",
   "sitesVersion": 157,
   "source": "a630f0cd0c4687dec960f6b31869ef31dda0bf53",
@@ -33,7 +33,7 @@
       "size_bytes": 103075840,
       "file_count": 1346
     },
-    "lastVerifiedRecovery": "appgdep_6ac38d91a3688191a08cc1bd574690dc"
+    "lastVerifiedRecovery": "appgdep_6ac393433f8081918f77addd9a0c1626"
   },
   "tests": {
     "full": 1551,
@@ -103,15 +103,26 @@
   },
   "github": {
     "pr": 94,
-    "url": "https://github.com/amzeus1976/zeustek-diving/pull/94",
     "head": "a630f0cd0c4687dec960f6b31869ef31dda0bf53",
-    "review": "pending",
-    "main": "not yet reconciled"
+    "merged": false,
+    "findings": [
+      {
+        "comment": 4183778981,
+        "priority": "P1",
+        "reason": "Copied technical cylinder fill/analysis evidence references must be cleared."
+      },
+      {
+        "comment": 4183778990,
+        "priority": "P2",
+        "reason": "Permit confirmation must reset for the new planned Dive."
+      }
+    ]
   },
   "historicalAttempts": [
     154,
     155,
     156
   ],
-  "next": "Complete exact-head review, merge PR94 if no blockers, verify full main tree match, publish final evidence separately from product tree."
+  "next": "Complete exact-head review, merge PR94 if no blockers, verify full main tree match, publish final evidence separately from product tree.",
+  "sourceAndInitialEvidencePreserved": true
 }
