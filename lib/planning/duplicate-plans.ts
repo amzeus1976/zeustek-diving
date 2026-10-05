@@ -5,7 +5,8 @@ import type {AllocatedGasPlan} from '../gas-allocation/integration';
 export function duplicateDivePlanDraft(source:StoredEnrichedDivePlan):Omit<EnrichedDivePlan,'createdAt'|'modifiedAt'>{
  const data=structuredClone(source) as unknown as EnrichedDivePlan&Record<string,unknown>;
  for(const key of ['entityId','createdAt','modifiedAt','tripId','linkedGasPlanId','linkedDivePlanId','linkedTripId','linkedDiveIds','originCalendarBookingId','calendarSource','bookingStatus','completedAt','archivedAt','deletedAt'])delete data[key];
- return{...data,name:`${source.name} (copy)`,status:'planned',lifecycleStatus:'draft',tripId:null,gasPlanLinks:[],conditions:{},equipmentReadiness:{},checklist:(source.checklist??[]).map(row=>({...row,completed:false}))};
+ if(data.cylinderAssignments)data.cylinderAssignments=data.cylinderAssignments.map(row=>({...row,fillId:null,analysisId:null}));
+ return{...data,name:`${source.name} (copy)`,status:'planned',lifecycleStatus:'draft',tripId:null,gasPlanLinks:[],conditions:{},equipmentReadiness:{},permitConfirmed:false,checklist:(source.checklist??[]).map(row=>({...row,completed:false}))};
 }
 export function duplicateGasPlanDraft(source:StoredGasPlanRecord):AllocatedGasPlan{
  const data=structuredClone(source) as AllocatedGasPlan&Record<string,unknown>;

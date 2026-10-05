@@ -50,3 +50,7 @@ Sites155 is withdrawn on the canonical dive-trip link guard omission; verified15
 ## Owner-reported Home address correction
 
 Sites156 withdrawn on telephone-only canonical address being routed as Home. Recovery153/deployment6ac38d91 succeeded; sources and48responsive PASS observations preserved as historical. Three RED failures preceded the pure Home read correction. Stored Person address/contact is unchanged; postcode and location remain road-origin evidence. Four added regressions preserve real numbered/Unicode streets and null Home when no road evidence exists. App85/cache32 passes1551/229, focused47/7, typecheck,5latest-file lint0 and9unchanged hashes. Native build/privacy and exact publish/GitHub pending.
+
+## Technical evidence and permit reset correction
+
+Sites157 withdrawn on PR94 P1/P2 old copied confirmations; recovery153/deployment6ac39343 succeeded. RED2failures preceded source-preserving copied assignment null fill/analysis references and permit confirmation reset. Existing readiness now warns until fresh evidence selected even after all checklist items checked. Permit requirement and numbered/Unicode Home routing remain intact. Full1553/229, focused49/7, typecheck/latest5-filelint0 and9hashes pass. Native clean build/privacy/compiled editor, fresh baseline, publication and exact GitHub reconciliation pending.
