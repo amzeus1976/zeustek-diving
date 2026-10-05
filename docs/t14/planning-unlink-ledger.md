@@ -32,3 +32,6 @@ Final160 review correction: REDec40ab5 reproduces six valid deselection/inverse-
 
 
 Final161 review correction: REDdc6f173 reproduces canonical Plan Calendar action mislabelling. Canonical Plan lifecycle is routed to exact Dive Plans; ordinary event lifecycle remains distinct and guarded. Five rendered regressions preserve Plan/event/Trip boundaries and input data. New90/cache37 candidate requires full gates and saved responsive measurements.
+
+
+Final162 acceptance correction: REDc28fb16 reproduces exact known Calendar link being routed as a Plan. Detail uses all preserved planning sources, keeps the true title and opens Calendar for bookings. Canonical Plan picker remains filtered; no source transformation. Four semantic/rendered tests verify source ownership, exact ID, missing endpoint visibility and unchanged input. New91/cache38 gates remain.

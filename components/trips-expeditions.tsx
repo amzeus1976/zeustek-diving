@@ -271,7 +271,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     {!visible.length && !adding && <Card className="focus-empty"><ShipWheel size={32}/><h2>{items.length ? 'No matching trips' : 'No trips yet'}</h2><p>Create a UK day trip, liveaboard, holiday or expedition and link the records you already have.</p></Card>}
 
     {deleting&&<DeletePlanningRecordDialog record={deleting} label="trip" close={()=>setDeleting(null)} changed={refresh} deleted={async()=>{await cleanupTripMedia(deleting.entityId,deleting.itinerary.map(segment=>segment.id));refresh();}}/>}
-    {viewing && <TripDetail item={{...viewing,planIds:linkedPlanIdsForTrip(viewing,plans)}} plans={plans} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
+    {viewing && <TripDetail item={{...viewing,planIds:linkedPlanIdsForTrip(viewing,plans)}} plans={planningSources} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
       close={() => setViewing(null)} edit={() => { setEditing(viewing); setViewing(null); setAdding(true); }}
       remove={() => void remove(viewing)} togglePacked={(id) => void togglePacked(viewing, id)}
       addDocuments={(ids) => changeDocuments(viewing, ids)} removeDocument={(id) => changeDocuments(viewing, [], id)} changed={refresh} />}
@@ -303,7 +303,7 @@ export function TripDetail({ item, plans, sites, people, equipment, equipmentSet
     <TripSection title="Readiness · advisory"><div className={styles.readiness}><div><strong>{readiness.percent}%</strong><span>{readiness.state.replace('-', ' ')}</span></div><progress value={readiness.percent} max="100" aria-label="Trip logistics readiness"/><div className={styles.checks}>{readiness.checks.map((check) => <span key={check.id} className={check.complete ? styles.complete : ''}>{check.complete ? <Check size={14}/> : <span aria-hidden="true">○</span>}<b>{check.label}</b><small>{check.detail}</small></span>)}</div></div></TripSection>
 
     <a className="focus-secondary" href={'/?section=Dive%20Plans&newPlanForTrip='+encodeURIComponent(item.entityId)}>Create Dive Plan for this Trip</a>
-    <TripSection title="Linked Plans & Linked Sites"><div className={styles.linkColumns}><div><h3>Linked Plans</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); return <a className="focus-link" key={id} href={recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
+    <TripSection title="Linked planning records & Linked Sites"><div className={styles.linkColumns}><div><h3>Linked Plans / Calendar events</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); const isEvent=Boolean(plan&&'bookingKind' in plan);return <a className="focus-link" key={id} href={isEvent?recordHref('Diving Calendar & Bookings','bookingId',id):recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}{isEvent?' · Calendar event':''}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
       <TripLinkedSites siteIds={item.siteIds} sites={sites}/></div></TripSection>
 
     <TripSection title="Team">

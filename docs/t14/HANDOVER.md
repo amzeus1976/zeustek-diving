@@ -1,3 +1,7 @@
+## Legacy Trip Calendar links corrected — app1.0.91/cachev38 candidate
+
+Sites162 withdrawn after real Trip acceptance exposed a known event as Plan unavailable. Verified153/app1.0.81 restored by appgdep_6ac3cfb7a98c8191a997182f863d217d; separate evidence/planning-sites162-2026-10-05 preserves all prior gates. REDc28fb16 proves the semantic wrong-workspace link. Trip detail now receives all canonical planning sources and routes known bookings to their exact Calendar record; filtered Plan picker remains unchanged. No owner edits or frozen changes. Full exact-source gates, complete compiled/live six-width capture, fresh owner baseline, publication, final review and main reconciliation remain.
+
 ## Calendar canonical ownership corrected — app1.0.90/cachev37 candidate
 
 Sites161 withdrawn after valid review4186096549; verified153/app1.0.81 restored by appgdep_6ac3cb42e160819189787d2858dd1979. Preserve separate evidence/planning-sites161-2026-10-05 and native archive/sourcec43. REDdc6f173 reproduces two meaningful rendered failures. Canonical Plans now open their exact planning workspace for lifecycle actions; no misleading event editor/deletion/status controls. Ordinary events retain their own guarded controls and linked Plan records remain independent. No owner-data or protected-byte change. Full exact-source gates, complete responsive evidence, fresh owner baseline, native publication, final review and exact main reconciliation remain.
