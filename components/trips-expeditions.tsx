@@ -13,19 +13,29 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { TripResources, TripLinksEditor } from './trip-resources';
 import { TripLinkedSites } from './trip-linked-sites';
+import {PlanningDiveCentres} from './planning/planning-dive-centres';
+import { TripGettingThere } from './trip-getting-there';
+import {tripArrivalDraft,tripDestinationDraft,tripSiteChoiceLabel} from '../lib/planning/trip-destination';
+import {findOwnerProfile,personDisplayName} from '../lib/offline/people-profiles';
+import {PlanningConnections} from './planning/planning-connections';
+import {PlanningWorkflow} from './planning/planning-workflow';
+import {DeletePlanningRecordDialog} from './planning/delete-planning-record-dialog';
+import {linkedPlanIdsForTrip} from '../lib/planning/planning-start-context';
 import { TripNote, TripSection } from './trip-disclosure';
 import { WorkflowContextStrip } from './workflow/workflow-context-strip';
 import { resolveZeusTekIconId } from '../lib/zeustek-icons';
 import { cleanupTripMedia } from '../lib/offline/trip-attachments';
 import { useRecordRefresh } from './record-status';
 import {
+  listOperators,
+  type OperatorRecord,
   listDiveSites,
   listDiveTrips,
   listEquipment,
@@ -39,8 +49,8 @@ import {
   type Stored,
 } from '../lib/offline/dive-planning';
 import { currentDiveAccount } from '../lib/offline/dive-store';
+import { refreshDiveRecords } from '../lib/offline/dive-store';
 import {
-  deleteDiveExpeditionTrip,
   editableDiveExpeditionTrip,
   listDiveExpeditionTrips,
   normaliseTripGuestParticipants,
@@ -101,6 +111,11 @@ function recordHref(section: string, key: string, id: string) {
   return `/?${query.toString()}`;
 }
 
+function tripPersonPresentation(person:Stored<PersonRecord>,people:Array<Stored<PersonRecord>>){
+ const owner=people.filter(row=>row.roles?.ownerProfile).length===1?findOwnerProfile(people):null;
+ return person.entityId===owner?.entityId?{name:'Me',role:'Self'}:{name:personDisplayName(person),role:person.role};
+}
+
 function dateLabel(value?: string | null) {
   if (!value) return 'Not set';
   return new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
@@ -141,8 +156,10 @@ const emptyTrip = (): DiveExpeditionTripInput => ({
 
 export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const currentUserId = currentDiveAccount();
+  const [centres,setCentres]=useState<Array<Stored<OperatorRecord>>>([]);
   const [items, setItems] = useState<Array<Stored<DiveExpeditionTripRecord>>>([]);
   const [plans, setPlans] = useState<Array<Stored<DiveTripRecord>>>([]);
+  const [planningSources,setPlanningSources]=useState<Array<Stored<DiveTripRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [equipment, setEquipment] = useState<Array<Stored<EquipmentRecord>>>([]);
@@ -152,6 +169,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const [sort, setSort] = useState('soonest');
   const [editing, setEditing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
   const [viewing, setViewing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
+  const [deleting,setDeleting]=useState<Stored<DiveExpeditionTripRecord>|null>(null);
   const [adding, setAdding] = useState(false);
   const [sourceBooking,setSourceBooking]=useState<StoredDivingCalendarBooking|null>(null);
   const [sourceMessage,setSourceMessage]=useState('');
@@ -167,7 +185,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   useEffect(()=>{
     const id=new URLSearchParams(window.location.search).get('fromEventId');
     if(!id||!loaded||openedSource.current===id)return;
-    const row=plans.find(plan=>plan.entityId===id);
+    const row=planningSources.find(plan=>plan.entityId===id);
     const frame=requestAnimationFrame(()=>{
       if(!row){setSourceMessage('The exact source event is unavailable. No replacement event or Trip has been selected.');return;}
       const booking=normaliseBooking(row as StoredDivingCalendarBooking);
@@ -177,14 +195,14 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       openedSource.current=id;setSourceMessage('');
       setSourceBooking(booking);setEditing(null);setAdding(true);
     });return()=>cancelAnimationFrame(frame);
-  },[loaded,plans,items]);
+  },[loaded,planningSources,items]);
 
   const refresh = useCallback(() => {
     void Promise.all([
-      listDiveExpeditionTrips(), listDiveTrips(), listDiveSites(), listPeople(), listEquipment(), listEquipmentSets(),
-    ]).then(([nextTrips, nextPlans, nextSites, nextPeople, nextEquipment, nextSets]) => {
-      setItems(nextTrips); setPlans(nextPlans); setSites(nextSites); setPeople(nextPeople);
-      setEquipment(nextEquipment); setEquipmentSets(nextSets);
+      listDiveExpeditionTrips(), listDiveTrips(), listDiveSites(), listPeople(), listEquipment(), listEquipmentSets(), listOperators(),
+    ]).then(([nextTrips, nextPlans, nextSites, nextPeople, nextEquipment, nextSets, nextCentres]) => {
+      setItems(nextTrips); setPlanningSources(nextPlans); setPlans(nextPlans.filter(plan=>!('bookingKind' in plan))); setSites(nextSites); setPeople(nextPeople);
+      setCentres(nextCentres);setEquipment(nextEquipment); setEquipmentSets(nextSets);
       setViewing((current) => current ? nextTrips.find((item) => item.entityId === current.entityId) ?? null : null);
       setSourceMessage('');
       setLoaded(true);
@@ -203,12 +221,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     return (a.startsOn ?? '9999').localeCompare(b.startsOn ?? '9999') || a.name.localeCompare(b.name);
   }), [items, search, status, sort]);
 
-  async function remove(item: Stored<DiveExpeditionTripRecord>) {
-    if (!window.confirm(`Delete ${item.name}? Linked Plans, Sites, People and Equipment will not be deleted.`)) return;
-    await deleteDiveExpeditionTrip(item.entityId);
-    await cleanupTripMedia(item.entityId,item.itinerary.map(segment => segment.id));
-    setViewing(null); refresh();
-  }
+  function remove(item: Stored<DiveExpeditionTripRecord>) {setViewing(null);setDeleting(item);}
 
   async function togglePacked(item: Stored<DiveExpeditionTripRecord>, packingId: string) {
     const packingItems = item.packingItems.map((packing) => packing.id === packingId
@@ -228,7 +241,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
 
   if (adding) return <TripEditor
     key={editing?.entityId ?? 'new-trip'}
-    item={editing} items={items} plans={plans} sites={sites} people={people}
+    item={editing} items={items} plans={plans} sites={sites} people={people} centres={centres}
     equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
     sourceBooking={sourceBooking}
     close={() => { setAdding(false); setEditing(null); setSourceBooking(null); }} saved={refresh}
@@ -240,7 +253,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       <button className="focus-primary" onClick={() => { setSourceBooking(null); setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
     </header>
     <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
-    {sourceMessage&&<div role="alert"><p>{sourceMessage}</p><button type="button" className="focus-secondary" onClick={refresh}>Refresh Trip records</button></div>}
+    {sourceMessage&&<div role="alert"><p>{sourceMessage}</p><button type="button" className="focus-secondary" onClick={async()=>{await Promise.all([refreshDiveRecords('trip',true),refreshDiveRecords('dive-trip',true)]);refresh();}}>Refresh Trip records</button></div>}
 
     <Card className={styles.toolbar}>
       <label>Search<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Trip or destination"/></label>
@@ -250,7 +263,8 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
 
     <div className={styles.grid}>
       {visible.map((item) => {
-        const readiness = tripReadiness(item);
+        const planIds=linkedPlanIdsForTrip(item,plans);
+        const readiness = tripReadiness({...item,planIds});
         const participantCount = item.teamPersonIds.length + (item.guestParticipants?.filter((guest) => guest.name.trim()).length ?? 0);
         return <Card key={item.entityId} className={`${styles.tripCard} clickable-card`}>
           <button className="card-hit" aria-label={`Open ${item.name}`} onClick={() => setViewing(item)}/>
@@ -262,22 +276,23 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
           <p>{item.destination || 'Destination not recorded'}</p>
           <div className={styles.dates}><CalendarDays size={15}/><span>{dateLabel(item.startsOn)} → {dateLabel(item.endsOn)}</span></div>
           <div className={styles.readinessMini}><span>Readiness</span><strong>{readiness.percent}%</strong><progress value={readiness.percent} max="100" aria-label={`${readiness.percent}% trip readiness`}/></div>
-          <div className={styles.chips}><span>{item.planIds.length} plans</span><span>{item.siteIds.length} sites</span><span>{participantCount} people</span></div>
+          <div className={styles.chips}><span>{planIds.length} plans</span><span>{item.siteIds.length} sites</span><span>{participantCount} people</span></div>
         </Card>;
       })}
     </div>
     {!visible.length && !adding && <Card className="focus-empty"><ShipWheel size={32}/><h2>{items.length ? 'No matching trips' : 'No trips yet'}</h2><p>Create a UK day trip, liveaboard, holiday or expedition and link the records you already have.</p></Card>}
 
-    {viewing && <TripDetail item={viewing} plans={plans} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
+    {deleting&&<DeletePlanningRecordDialog record={deleting} label="trip" close={()=>setDeleting(null)} changed={refresh} deleted={async()=>{await cleanupTripMedia(deleting.entityId,deleting.itinerary.map(segment=>segment.id));refresh();}}/>}
+    {viewing && <TripDetail item={{...viewing,planIds:linkedPlanIdsForTrip(viewing,plans)}} plans={planningSources} sites={sites} people={people} centres={centres} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
       close={() => setViewing(null)} edit={() => { setEditing(viewing); setViewing(null); setAdding(true); }}
       remove={() => void remove(viewing)} togglePacked={(id) => void togglePacked(viewing, id)}
       addDocuments={(ids) => changeDocuments(viewing, ids)} removeDocument={(id) => changeDocuments(viewing, [], id)} changed={refresh} />}
   </>;
 }
 
-function TripDetail({ item, plans, sites, people, equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument, changed }: {
+export function TripDetail({ item, plans, sites, people, centres=[], equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument, changed }: {
   item: Stored<DiveExpeditionTripRecord>;
-  plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>; people: Array<Stored<PersonRecord>>;
+  plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>; people: Array<Stored<PersonRecord>>; centres?:Array<Stored<OperatorRecord>>;
   equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
   close: () => void; edit: () => void; remove: () => void; togglePacked: (id: string) => void;
   addDocuments: (ids: string[]) => Promise<void>; removeDocument: (id: string) => Promise<void>;
@@ -294,14 +309,19 @@ function TripDetail({ item, plans, sites, people, equipment, equipmentSets, curr
 
     <TripSection title="Upcoming itinerary">{item.itinerary.length ? <div className={styles.stack}>{[...item.itinerary].sort((a,b)=>(a.startsAt??'').localeCompare(b.startsAt??'')).map((segment) => <article key={segment.id}><small className={styles.itineraryKind}>{itineraryKindLabel(segment.kind)}</small><details><summary>{segment.title || itineraryKindLabel(segment.kind)} · {segment.attachments?.filter(asset => asset.contentType.startsWith('image/')).length ?? 0} images · {segment.attachments?.filter(asset => asset.contentType.startsWith('video/')).length ?? 0} videos · {segment.attachments?.filter(asset => !asset.contentType.startsWith('image/') && !asset.contentType.startsWith('video/')).length ?? 0} documents · {segment.links?.length ?? 0} links</summary><span>{[segment.startsAt && new Date(segment.startsAt).toLocaleString('en-GB'), segment.location].filter(Boolean).join(' · ')}</span>{segment.notes && <TripNote text={segment.notes} label="itinerary notes"/>}<TripResources tripId={item.entityId} itineraryId={segment.id} attachments={segment.attachments} links={segment.links} changed={changed} pendingChanged={pending => pendingChanged(segment.id,pending)}/></details></article>)}</div> : <p className="focus-copy">No itinerary segments yet.</p>}</TripSection>
 
+    <PlanningWorkflow/><PlanningConnections recordId={item.entityId} changed={changed}/>
+    <TripGettingThere siteIds={item.siteIds} sites={sites} people={people} arrivalPoint={item.travelArrivalPoint??''}/>
+
     <TripSection title="Readiness · advisory"><div className={styles.readiness}><div><strong>{readiness.percent}%</strong><span>{readiness.state.replace('-', ' ')}</span></div><progress value={readiness.percent} max="100" aria-label="Trip logistics readiness"/><div className={styles.checks}>{readiness.checks.map((check) => <span key={check.id} className={check.complete ? styles.complete : ''}>{check.complete ? <Check size={14}/> : <span aria-hidden="true">○</span>}<b>{check.label}</b><small>{check.detail}</small></span>)}</div></div></TripSection>
 
-    <TripSection title="Linked Plans & Linked Sites"><div className={styles.linkColumns}><div><h3>Linked Plans</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); return <a className="focus-link" key={id} href={recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
+    <a className="focus-secondary" href={'/?section=Dive%20Plans&newPlanForTrip='+encodeURIComponent(item.entityId)}>Create Dive Plan for this Trip</a>
+    <TripSection title="Linked Plans & Linked Sites"><div className={styles.linkColumns}><div><h3>Linked Plans / Calendar events</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); const isEvent=Boolean(plan&&'bookingKind' in plan);return <a className="focus-link" key={id} href={isEvent?recordHref('Diving Calendar & Bookings','eventId',id):recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}{isEvent?' · Calendar event':''}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
       <TripLinkedSites siteIds={item.siteIds} sites={sites}/></div></TripSection>
 
+    <TripSection title="Dive Centre contacts"><PlanningDiveCentres ids={item.diveCentreIds??[]} centres={centres}/></TripSection>
     <TripSection title="Team">
       {(item.organiserUserId || organiser) && <p><b>Organiser:</b> {organiserIsCurrentUser ? 'Me (this account)' : organiser ? <a className="focus-link" href={recordHref('People','personId',organiser.entityId)}>{organiser.name}</a> : 'Account organiser'}</p>}
-      {!!item.teamPersonIds.length && <><h4>Diving team</h4><div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person?.name ?? 'Person unavailable'}</a>;})}</div></>}
+      {!!item.teamPersonIds.length && <><h4>Diving team</h4><div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person ? tripPersonPresentation(person,people).name : 'Person unavailable'}</a>;})}</div></>}
       {!!guests.length && <><h4>Non-diving participants</h4><div className={styles.guestList}>{guests.map((guest)=><article key={guest.id}><b>{guest.name}</b><small>{guestRoleLabel(guest.role)}</small>{guest.notes&&<TripNote text={guest.notes} label="participant notes"/>}</article>)}</div></>}
       {!item.teamPersonIds.length&&!guests.length&&<p className="focus-copy">No team members or guests linked.</p>}
     </TripSection>
@@ -322,15 +342,17 @@ function TripDetail({ item, plans, sites, people, equipment, equipmentSets, curr
   </AccessibleDialog>;
 }
 
-function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
+export function TripEditor({ item, items, plans, sites, people, centres=[], equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
   item: Stored<DiveExpeditionTripRecord> | null;
   items: Array<Stored<DiveExpeditionTripRecord>>; plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>;
-  people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
+  centres?:Array<Stored<OperatorRecord>>; people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
   sourceBooking: StoredDivingCalendarBooking|null;
   close: () => void; saved: () => void;
 }) {
   const initial = item ? editableDiveExpeditionTrip(item) : sourceBooking?tripDraftFromBooking(sourceBooking):emptyTrip();
   const [value, setValue] = useState(initial);
+  const destinationList=useId();
+  const [destinationQuery,setDestinationQuery]=useState(initial.destination??'');
   const dirty = JSON.stringify(value) !== JSON.stringify(initial);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -338,6 +360,7 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
   const toggle = (key: 'teamPersonIds'|'siteIds'|'planIds'|'packingEquipmentSetIds', id: string, checked: boolean) => set(key, checked ? [...new Set([...value[key],id])] : value[key].filter((entry)=>entry!==id));
   const guests = value.guestParticipants ?? [];
   const organiserValue = value.organiserUserId && value.organiserUserId === currentUserId ? '__current_user__' : value.organiserPersonId ?? '';
+  function destinationChanged(query:string){setDestinationQuery(query);setValue(current=>tripDestinationDraft(current,query,sites).value);}
 
   async function submit() {
     if (!value.name.trim() || busy) return;
@@ -362,9 +385,12 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
 
   return <RecordEditorWorkspace label={item?'Edit trip':'New trip'} close={close} value={value} dirty={dirty} trackInteractions={false} busy={busy} save={submit} saveLabel="Save trip" saveDisabled={!value.name.trim()} contentClassName={`record-form ${styles.editor}`}>
     <div className="record-form-head"><div><span className="focus-eyebrow">{item?'EDIT TRIP':'NEW TRIP'}</span><h3>{item?'Update trip logistics':'Create trip or expedition'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X/></button></div>
-    <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input value={value.destination??''} onChange={(e)=>set('destination',e.target.value)}/></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={organiserValue} onChange={(e)=>{const next=e.target.value;const selection=next==='__current_user__'?{kind:'account' as const,id:currentUserId}:next?{kind:'person' as const,id:next}:{kind:'none' as const};setValue((current)=>({...current,...tripOrganiserReferences(selection)}));}}><option value="">Not recorded</option>{currentUserId&&<option value="__current_user__">Me (this account)</option>}{people.map((person)=><option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
+    <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input type="search" list={destinationList} value={destinationQuery} onChange={e=>destinationChanged(e.target.value)} placeholder="Type a Site name, location or postcode"/><datalist id={destinationList}>{sites.map(site=><option key={site.entityId} value={tripSiteChoiceLabel(site)}>{[site.name,site.location,site.postcode].filter(Boolean).join(' · ')}</option>)}</datalist><small>Select a saved Site to link it and fill its road arrival address/postcode, or type a destination.</small></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={organiserValue} onChange={(e)=>{const next=e.target.value;const selection=next==='__current_user__'?{kind:'account' as const,id:currentUserId}:next?{kind:'person' as const,id:next}:{kind:'none' as const};setValue((current)=>({...current,...tripOrganiserReferences(selection)}));}}><option value="">Not recorded</option>{currentUserId&&<option value="__current_user__">Me (this account)</option>}{people.map((person)=><option key={person.entityId} value={person.entityId}>{tripPersonPresentation(person,people).name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
 
-    <EditorChoices title="Diving team" icon={<Users size={17}/>} empty="Add People first if the diving team is not listed.">{people.map((person)=><label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{person.name}</b><small>{person.role}</small></span></label>)}</EditorChoices>
+    <TripGettingThere siteIds={value.siteIds} sites={sites} people={people} arrivalPoint={value.travelArrivalPoint??''} arrivalSource={value.travelArrivalSource??'owner'} onArrivalChange={(next,source='owner')=>setValue(current=>tripArrivalDraft(current,next,source))}/>
+
+    <TripSection title="Dive Centre contacts" className="focus-card"><PlanningDiveCentres ids={value.diveCentreIds??[]} centres={centres} change={ids=>set('diveCentreIds',ids)}/></TripSection>
+    <EditorChoices title="Diving team" icon={<Users size={17}/>} empty="Add People first if the diving team is not listed.">{people.map((person)=>{const display=tripPersonPresentation(person,people);return <label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{display.name}</b><small>{display.role}</small></span></label>;})}</EditorChoices>
 
     <RepeatSection title="Non-diving participants" addLabel="Add non-diver" add={()=>set('guestParticipants',[...guests,newGuest()])}>{guests.map((guest,index)=><div className={styles.repeatRow} key={guest.id}><label>Name<input value={guest.name} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,name:e.target.value}:row))} placeholder="Guest name"/></label><label>Role<select value={guest.role} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,role:e.target.value as TripGuestParticipant['role']}:row))}>{guestRoles.map(([role,label])=><option key={role} value={role}>{label}</option>)}</select></label><label className="record-wide">Notes<textarea value={guest.notes??''} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,notes:e.target.value}:row))} placeholder="Relationship, surface-support role, travel notes…"/></label><button className="focus-secondary danger" onClick={()=>set('guestParticipants',guests.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
 
@@ -372,7 +398,7 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
     <EditorChoices title="Linked Dive Plans" icon={<CalendarDays size={17}/>} empty="Plans stay canonical on Dive Plans.">{plans.map((plan)=><label key={plan.entityId}><input type="checkbox" checked={value.planIds.includes(plan.entityId)} onChange={(e)=>toggle('planIds',plan.entityId,e.target.checked)}/><span><b>{plan.name}</b><small>{plan.startDate} · {plan.siteName}</small></span></label>)}</EditorChoices>
     <EditorChoices title="Reusable loadouts" icon={<Wrench size={17}/>} empty="Create Equipment Sets first if useful.">{equipmentSets.map((setRecord)=><label key={setRecord.entityId}><input type="checkbox" checked={value.packingEquipmentSetIds.includes(setRecord.entityId)} onChange={(e)=>toggle('packingEquipmentSetIds',setRecord.entityId,e.target.checked)}/><span><b>{setRecord.name}</b><small>{setRecord.equipmentIds.length} items</small></span></label>)}</EditorChoices>
 
-    <RepeatSection title="Itinerary" addLabel="Add itinerary event" add={()=>set('itinerary',[...value.itinerary,newItinerary()])}>{value.itinerary.map((segment,index)=><div className={styles.repeatRow} key={segment.id}>
+    <RepeatSection title="Itinerary" addLabel="Add itinerary event" add={()=>set('itinerary',[...value.itinerary,newItinerary()])}>{value.itinerary.map((segment,index)=><details className={styles.itineraryEditor} key={segment.id} open={initial.itinerary.some(row=>row.id===segment.id)?undefined:true}><summary><span>{itineraryKindLabel(segment.kind)} · {segment.title||'Untitled itinerary item'}</span><small>{segment.startsAt?segment.startsAt.replace('T',' · '):'Date / time not set'}</small></summary><div className={styles.repeatRow}>
       <label>Type<select value={segment.kind} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,kind:e.target.value as TripItinerarySegment['kind']}:row))}>{itineraryKinds.map(([kind,label])=><option key={kind} value={kind}>{label}</option>)}</select></label>
       {segment.kind==='travel'&&<label>Travel mode<select value={segment.travelMode??''} onChange={e=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,travelMode:e.target.value as NonNullable<TripItinerarySegment['travelMode']>}:row))}><option value="">Not specified</option><option value="flight">Flight</option><option value="rail">Rail</option><option value="road">Road</option><option value="sea">Sea</option><option value="other">Other</option></select></label>}
       <label>Title<input value={segment.title} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,title:e.target.value}:row))} placeholder="e.g. Desert camel safari"/></label>
@@ -383,7 +409,7 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
       <label className="record-wide">Notes<textarea value={segment.notes??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label>
       <div className="record-wide"><TripLinksEditor links={segment.links ?? []} change={links => set('itinerary',value.itinerary.map(row => row.id === segment.id ? {...row,links} : row))}/><small>Save the itinerary item before adding original files in its detail view.</small></div>
       <button className="focus-secondary danger" onClick={()=>{if(confirm('Remove this itinerary item and its own attachments? Trip-level files, other items and linked records remain.'))set('itinerary',value.itinerary.filter((_,i)=>i!==index));}}><Trash2 size={14}/> Remove</button>
-    </div>)}</RepeatSection>
+    </div></details>)}</RepeatSection>
     <TripSection title="Trip documents & links" className="focus-card"><TripLinksEditor links={value.links ?? []} change={links => set('links',links)}/></TripSection>
 
     <RepeatSection title="Bookings & payments" addLabel="Add booking" add={()=>set('bookings',[...value.bookings,newBooking()])}>{value.bookings.map((booking,index)=><div className={styles.repeatRow} key={booking.id}><label>Type<select value={booking.kind} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,kind:e.target.value as TripBooking['kind']}:row))}><option value="travel">Travel</option><option value="accommodation">Accommodation</option><option value="operator">Operator</option><option value="dive">Dive</option><option value="other">Other</option></select></label><label>Provider<input value={booking.provider} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,provider:e.target.value}:row))}/></label><label>Reference<input value={booking.reference??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,reference:e.target.value}:row))}/></label><label>Amount<input type="number" min="0" step="0.01" value={booking.amount??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,amount:e.target.value===''?null:Number(e.target.value)}:row))}/></label><label>Currency<input value={booking.currency??'GBP'} maxLength={3} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,currency:e.target.value.toUpperCase()}:row))}/></label><label>Due<input type="date" value={booking.dueOn??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,dueOn:e.target.value}:row))}/></label><label className="record-check"><input type="checkbox" checked={booking.paid??false} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,paid:e.target.checked}:row))}/>Paid</label><label className="record-wide">Notes<textarea value={booking.notes??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label><button className="focus-secondary danger" onClick={()=>set('bookings',value.bookings.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>

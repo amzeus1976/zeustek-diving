@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import {duplicateGasPlanDraft} from '../../lib/planning/duplicate-plans';
 import { reviewAllocationEvidence } from '../../lib/gas-allocation/evidence-review';
 import { RecordEditorWorkspace } from '../shared/record-editor-workspace';
 import { AccessibleDialog } from '../accessible-dialog';
@@ -34,7 +35,6 @@ import {
   previousDiveContext,
 } from '../../lib/offline/plan-context-checks';
 import {
-  emptyAllocation,
   allocationEngineInput,
   allocationReadiness,
   gasPlanWithAllocation,
@@ -44,12 +44,14 @@ import {
 } from '../../lib/gas-allocation/integration';
 import {
   initialRecreationalInput,
+  initialGasAllocation,
   upgradeAllocation,
 } from '../../lib/gas-allocation/editor-input';
 import styles from './gas-allocation-panel.module.css';
 
 type Props = {
   item: StoredGasPlanRecord | null;
+  copyFrom?: StoredGasPlanRecord | null;
   newGasPlanFor: string | null;
   divePlans: StoredEnrichedDivePlan[];
   equipment: Stored<CylinderEquipmentRecord>[];
@@ -89,6 +91,7 @@ function newDraft(
 }
 export function T14GasPlanEditor({
   item,
+  copyFrom,
   newGasPlanFor,
   divePlans,
   equipment,
@@ -104,7 +107,7 @@ export function T14GasPlanEditor({
   const [draft, setDraft] = useState<AllocatedGasPlan>(() =>
     item
       ? structuredClone(item)
-      : newDraft(
+      : copyFrom ? duplicateGasPlanDraft(copyFrom) : newDraft(
           divePlans.find((row) => row.entityId === newGasPlanFor),
           rmvBaseline,
         ),
@@ -113,11 +116,7 @@ export function T14GasPlanEditor({
     initialRecreationalInput(draft, rmvBaseline),
   );
   const [allocation, setAllocation] = useState<AllocationMetadata | null>(() =>
-    (item as AllocatedGasPlan | null)?.allocationV1
-      ? structuredClone((item as AllocatedGasPlan).allocationV1!)
-      : item
-        ? null
-        : emptyAllocation(),
+    initialGasAllocation(draft, !item && !copyFrom),
   );
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),

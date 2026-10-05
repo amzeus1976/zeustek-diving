@@ -18,7 +18,7 @@ export function DiveSyncStatus() {
     try{const payload=conflictExportPayload(value);const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='zeustek-local-record-review.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
     catch{setError('This review download could not be created safely. Your original device record is retained.');}
   }
-  if (!accountPending.length) return <span className="dive-sync-state" title="No edits on this device are waiting to upload. Other devices refresh when opened.">{error||'Cloud sync enabled'}</span>;
+  if (!accountPending.length) return error ? <p className="dive-sync-state" role="alert">{error}</p> : null;
   return <details className="dive-sync-panel">
     <summary>{accountPending.length} cloud change{accountPending.length===1?'':'s'} pending{conflicts.length ? ` · ${conflicts.length} ${conflicts.length===1?'needs':'need'} review`:''}</summary>
     <div className="dive-sync-panel-body">

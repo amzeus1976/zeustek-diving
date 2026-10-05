@@ -1,0 +1,10 @@
+.panel { width: 100%; min-width: 0; box-sizing: border-box; }
+.panel p { overflow-wrap: anywhere; }
+.controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.controls label { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.controls input, .controls select { width: 100%; max-width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 10px; border: 1px solid var(--brand-cyan, #00dcff); border-radius: 10px; background: #10191d; color: #f3f5f7; }
+.controls small, .notice { color: #b4c8d0; overflow-wrap: anywhere; }
+.wide { grid-column: 1 / -1; }
+.route { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; max-width: 100%; box-sizing: border-box; padding: 12px 16px; white-space: normal; text-align: center; overflow-wrap: anywhere; }
+.panel :is(input, select, a):focus-visible { outline: 3px solid #00dcff; outline-offset: 3px; }
+@media (min-width: 700px) { .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

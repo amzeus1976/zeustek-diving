@@ -1,0 +1,17 @@
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {describe,expect,it} from 'vitest';
+import {TripGettingThere} from '../components/trip-getting-there';
+import type {DiveSiteRecord,PersonRecord,Stored} from '../lib/offline/dive-planning';
+const sites=[{entityId:'site-a',name:'Same name',address:'Pier Road',postcode:'AA1 1AA'},{entityId:'site-b',name:'Same name',postcode:'BB2 2BB'}] as Array<Stored<DiveSiteRecord>>;
+const people=[{entityId:'owner-person',name:'Owner',roles:{ownerProfile:true},address:'PRIVATE HOME',postcode:'XX1 1XX'}] as Array<Stored<PersonRecord>>;
+const render=(props:Partial<Parameters<typeof TripGettingThere>[0]>={})=>renderToStaticMarkup(createElement(TripGettingThere,{siteIds:['site-a'],sites,people,...props}));
+describe('Getting there card boundaries',()=>{
+ it('the Trip editor exposes a saved arrival field for the selected Site road evidence',()=>{const html=render({arrivalPoint:'Pier Road, AA1 1AA',onArrivalChange:()=>{}});expect(html).toContain('Saved harbour / meeting point / arrival address');expect(html).toContain('value="Pier Road, AA1 1AA"');});
+ it('uses an accessible native disclosure and separate labelled origins/destinations',()=>{const html=render();expect(html).toContain('<h3>Getting there</h3>');expect(html).toContain('Starting point');expect(html).toContain('Driving destination');expect(html).toContain('Current location');expect(html).toContain('Address / postcode');expect(html).toContain('target="_blank"');expect(html).toContain('rel="noopener noreferrer"');expect(html).not.toContain('PRIVATE HOME');expect(html).not.toContain('origin=');});
+ it('requires explicit selection for multiple Sites and uses canonical IDs despite duplicate names',()=>{const html=render({siteIds:['site-a','site-b']});expect(html).toContain('value="site-a"');expect(html).toContain('value="site-b"');expect(html).not.toContain('https://www.google.com/maps/dir/');expect(html).toContain('Choose an arrival point');});
+ it('does not infer road destinations from underwater coordinates or unlinked Sites',()=>{const html=render({siteIds:['offshore'],sites:[...sites,{entityId:'offshore',name:'Wreck',location:'Sea',latitude:55,longitude:-1} as Stored<DiveSiteRecord>]});expect(html).not.toContain('https://www.google.com/maps/dir/');expect(html).toContain('Road address not recorded');expect(html).not.toContain('Pier Road');});
+ it('renders a saved harbour override without copying it or the owner address into another record',()=>{const before=JSON.stringify({sites,people});const html=render({arrivalPoint:'Harbour AB1 2CD'});expect(html).toContain('destination=Harbour+AB1+2CD');expect(html).toContain('Temporary arrival address');expect(html).not.toContain('PRIVATE HOME');expect(JSON.stringify({sites,people})).toBe(before);});
+ it('keeps missing Home unavailable and links the exact owner profile rather than another human',()=>{const html=render({people:[{...people[0]!,address:'',postcode:''}]});expect(html).toContain('disabled=""');expect(html).toContain('personId=owner-person');expect(html).toContain('Edit your owner profile');});
+ it('distinguishes normal Trip Save from the temporary detail-view controls',()=>{expect(render({arrivalPoint:'Pier',onArrivalChange:()=>{}})).toContain('Saved with this Trip only when you choose Save trip.');expect(render({arrivalPoint:'Pier'})).toContain('For this journey only.');});
+});

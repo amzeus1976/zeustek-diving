@@ -1,4 +1,5 @@
 import { recordHash } from './canonical';
+import Dexie from 'dexie';
 import { zeustekDb } from './db';
 import type { EntityRow, EventRow, JsonValue, Operation } from './types';
 import { uuidv7 } from './uuidv7';
@@ -29,7 +30,8 @@ export async function mutateEntity(input: {
   const entityId = input.entityId ?? uuidv7();
   const eventId = uuidv7();
   const createdAt = new Date().toISOString();
-  const hash = await recordHash(input.record);
+  // Keep an enclosing canonical multi-record transaction alive during Web Crypto.
+  const hash = await (Dexie.currentTransaction ? Dexie.waitFor(recordHash(input.record)) : recordHash(input.record));
   let parents: string[] = [];
   const event: EventRow = {
     protocolVersion: 1,

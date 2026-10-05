@@ -1,0 +1,37 @@
+{
+  "status": "BLOCKED_DEPLOYMENT; Sites154 acceptance withdrawn",
+  "date": "2026-10-05",
+  "candidate": "dcf93f33def920979cad2acd6152b43b63ee9fef",
+  "app": "1.0.82",
+  "Sites": 154,
+  "reviewFindings": [
+    {
+      "priority": "P1",
+      "path": "components/planning/t14-gas-plan-editor.tsx",
+      "issue": "Duplicated allocationV1 ignored by separate allocation state; immediate save can drop cloned cylinders."
+    },
+    {
+      "priority": "P2",
+      "path": "lib/planning/plan-deletion.ts",
+      "issue": "Target event linkedDiveIds need outgoing dependency guard locally and in atomic cloud deletion."
+    }
+  ],
+  "rollback": {
+    "id": "appgdep_6ac37f46eee88191aeac97f5577e2df2",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T10:43:42.140620+00:00"
+  },
+  "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+  "ownerData": "No reset. Preserve authorised Dive67 video link and every row. No production copies/deletions.",
+  "github": "PR94 remains unmerged; main unchanged. Preserve product candidate and all initial acceptance observations as historical evidence."
+}

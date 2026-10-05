@@ -46,7 +46,7 @@
 
 .hero h1 {
   margin: 0.1rem 0;
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
 }
 
 .hero p {
@@ -662,3 +662,13 @@
 .calendarGrid i{background:var(--brand-secondary)}
 .eventList em,.editorCylinderList legend,.formulaResults strong,.tableReference legend{color:var(--brand-primary)}
 .formulaResults small,.emptyPane svg{color:var(--brand-secondary)}
+
+/* Calendar selection owns the wider column; downloads follow the workspace. */
+.calendarPage .shell{grid-template-columns:minmax(0,3fr) minmax(0,7fr)}
+.calendarPage .toolbar{grid-template-columns:minmax(0,1fr)}
+.calendarFilters{border:1px solid var(--zt-border);border-radius:12px;background:var(--zt-surface);padding:12px;min-width:0}
+.calendarFilters summary{width:100%;min-height:44px;cursor:pointer;font-weight:700}
+.calendarFilters button{min-height:44px;display:flex;align-items:center;gap:8px;width:100%;text-align:left;margin-top:6px;border:1px solid var(--zt-border);border-radius:8px;padding:8px;background:var(--zt-surface-2)}
+.calendarGridViewport{overflow-x:auto;min-width:0;max-width:100%}
+.calendarPage .calendarGrid{grid-template-columns:repeat(7,minmax(44px,1fr))}
+@media(max-width:900px){.calendarPage .shell{grid-template-columns:minmax(0,1fr)}}

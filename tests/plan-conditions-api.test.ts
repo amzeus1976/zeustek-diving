@@ -14,6 +14,15 @@ type PlanResponse={items:Array<typeof plan&{id:string}>};
 const request=(data:unknown)=>new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-plan',kind:'trip',data,localMutation:true,baseModifiedAt:null})});
 beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)');fixture.db=database();});afterEach(()=>sqlite.close());
 describe('Actual Plan API and backup boundaries for packed conditions',()=>{
+ it.each(['trip','dive-trip'])('checks actual %s contact writes and both operator deletion paths',async kind=>{
+  sqlite.prepare('INSERT INTO dive_records VALUES (?,?,?,?,?,?,NULL)').run('centre','fixture-owner','operator',JSON.stringify({name:'Fixture Centre',phone:'+44 12345'}),100,100);
+  sqlite.prepare('INSERT INTO dive_records VALUES (?,?,?,?,?,?,NULL)').run('private-centre','different-owner','operator','{}',100,100);
+  const write=(id:string,ids:string[])=>POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id,kind,data:{name:'Fixture Plan',diveCentreIds:ids},localMutation:true,baseModifiedAt:null})}));
+  expect((await write('bad',['private-centre'])).status).toBe(409);expect((await write('valid',['centre'])).status).toBe(200);
+  const {DELETE}=await import('../app/api/dive-data/route');expect((await DELETE(new Request('https://fixture/api/dive-data?id=centre',{method:'DELETE'}))).status).toBe(409);
+  expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'centre',kind:'operator',data:null,localMutation:true,baseModifiedAt:new Date(100).toISOString()})}))).status).toBe(409);
+  expect(sqlite.prepare('SELECT deleted_at AS deleted FROM dive_records WHERE id=?').get('centre')?.deleted).toBeNull();
+ });
  it('saves the complete oversized forecast and returns every original field through the owner API',async()=>{
   expect(JSON.stringify(plan).length).toBeGreaterThan(200000);expect((await POST(request(plan))).status).toBe(200);
   const stored=sqlite.prepare('SELECT id,data_json AS dataJson FROM dive_records').get();expect(stored?.id).toBe('fixture-plan');expect(String(stored?.dataJson).length).toBeLessThan(200000);

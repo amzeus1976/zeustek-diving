@@ -1,5 +1,6 @@
 import { cacheCloudRecords } from './cache-cloud-records';
 import { zeustekDb } from './db';
+import Dexie from 'dexie';
 import { mutateEntity } from './mutations';
 import type { JsonValue } from './types';
 import { recordIdentity } from '../record-identity';
@@ -7,13 +8,16 @@ import { prepareCardImages } from './dive-images';
 import { flushComputerEvidenceAttachments } from './evidence-attachments';
 import { personReferencesOperator } from '../operators/operator-dependencies';
 import {diveReferencesOperator} from '../operators/dive-log-selection';
+import {planningCentreIds} from '../operators/dive-log-write-boundary';
 import {recordHash} from './canonical';
+import {referencesPlanningRecord,planningRecordHasConnections,planningRecordDeletionGuarded} from '../planning/plan-deletion';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
+import {beginCloudSyncEvidence,cancelCloudSyncEvidence,finishCloudSyncEvidence,resetCloudSyncEvidence} from './cloud-sync-evidence';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
 const checked = new Map<string, number>();
-export function configureDiveStore(userId: string) { account = userId; }
+export function configureDiveStore(userId: string) { if(account!==userId)resetCloudSyncEvidence(userId);account = userId; }
 export function currentDiveAccount() { return account; }
 const moduleName = () => { if (!account) throw new Error('Sign in to access local dive records.'); return `dive:${account}`; };
 function changed() { window.dispatchEvent(new Event('zeustek-records-updated')); }
@@ -26,6 +30,7 @@ export async function refreshDiveRecords(kind: string, force = false) {
   if (inflight.has(key)) return inflight.get(key);
   if (!navigator.onLine || (!force && Date.now() - (checked.get(key) ?? 0) < 30_000)) return;
   checked.set(key, Date.now());
+  const evidence=beginCloudSyncEvidence(account,`read:${kind}`);
   const work = (async () => {
     const started = performance.now();
     const snapshotStartedAt = new Date().toISOString();
@@ -38,8 +43,11 @@ export async function refreshDiveRecords(kind: string, force = false) {
     await cacheCloudRecords(module, kind, rows, snapshotStartedAt);
     await zeustekDb.settings.put({ key: `cached:${key}`, value: true });
     await diagnostic(`DIVE_NETWORK_${kind}`, started);
+    finishCloudSyncEvidence(evidence,true);
     changed();
   })().catch((error) => {
+    finishCloudSyncEvidence(evidence,false);
+    if(account!==evidence.owner)return;
     window.dispatchEvent(new CustomEvent('zeustek-operation', { detail: { state: 'error', message: /bulkPut|UnknownError|transaction/i.test(String(error)) ? 'Cloud download could not be saved on this device. Your existing records and unsent edits are retained. Reopen the app to retry.' : error instanceof Error ? error.message : 'Cloud refresh failed.' } }));
   }).finally(() => inflight.delete(key));
   inflight.set(key, work);
@@ -49,8 +57,7 @@ export async function listLocalDiveRecords<T>(kind: string, options: { includeSu
   const started = performance.now();
   const module = moduleName();
   const rows = await zeustekDb.entities.where('[module+entityType]').equals([module, kind]).toArray();
-  void diagnostic(`DIVE_LOCAL_${kind}`, started);
-  void refreshDiveRecords(kind);
+  if(!Dexie.currentTransaction){void diagnostic(`DIVE_LOCAL_${kind}`, started);void refreshDiveRecords(kind);}
   return rows.filter(row => !row.deleted && row.record && (options.includeSuppressed || !(row.record as Record<string, unknown>).suppressedFromUse))
     .map(row => row.record as unknown as T & { entityId: string });
 }
@@ -139,20 +146,36 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
     const parent=await zeustekDb.entities.get(`${module}:${reference}`);
     if(!parent||parent.deleted||parent.entityType!=='operator')throw new Error('The selected Dive Entity is unavailable. Refresh the list or keep the historical entry.');
   }
+  if(kind==='trip'||kind==='dive-trip')for(const reference of planningCentreIds(data.diveCentreIds)){
+    if(planningCentreIds(prior?.diveCentreIds).includes(reference))continue;
+    const parent=await zeustekDb.entities.get(`${module}:${reference}`);
+    if(!parent||parent.deleted||parent.entityType!=='operator')throw new Error('The selected Dive Centre is unavailable. Refresh the list or retain the historical association.');
+  }
   const queued = (await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending | undefined;
   const now = new Date().toISOString();
   const record = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
   const pending: Pending = {id,kind,record,baseModifiedAt:queued ? queued.baseModifiedAt : typeof prior?.modifiedAt === 'string' ? prior.modifiedAt : null,token:crypto.randomUUID(),state:'pending'};
   await mutateEntity({entityId:localId,module,entityType:kind,schemaVersion:1,operation:old ? 'update':'create',record,pendingSync:{key:`pending:${localId}`,value:pending as unknown as JsonValue}});
-  changed(); void flushDiveChanges(); return {id};
+  // Enclosing multi-record edits must finish before exposing changes or sending their outbox.
+  const transaction=Dexie.currentTransaction;
+  if(transaction)transaction.on('complete',()=>{changed();void flushDiveChanges();});
+  else{changed();void flushDiveChanges();}
+  return {id};
 }
 export async function deleteLocalRecord(id: string) {
   return sequentialWrite(`${moduleName()}:${id}`,()=>deleteLocalRecordInternal(id));
 }
 async function deleteLocalRecordInternal(id:string){
   const module=moduleName();const localId=`${module}:${id}`;const old=await zeustekDb.entities.get(localId);
-  if (!old) throw new Error('Load this record before deleting it.');
+    if (!old) throw new Error('Load this record before deleting it.');
+    if(planningRecordDeletionGuarded(old.entityType)){
+      if(planningRecordHasConnections(old.entityType,old.record))throw new Error('This record has planning links. Unlink them before deleting. Your record is retained.');
+      const rows=await zeustekDb.entities.where('module').equals(module).toArray();
+      if(rows.some(row=>row.entityId!==localId&&!row.deleted&&referencesPlanningRecord(row.entityType,row.record,id)))throw new Error('This plan or event has linked records. Unlink it from Dives, Trips, Gas Plans or skill evidence before deleting. Your record is retained.');
+    }
   if(old.entityType==='operator'){
+    const planning=await zeustekDb.entities.where('module').equals(module).toArray();
+    if(planning.some(row=>!row.deleted&&['trip','dive-trip'].includes(row.entityType)&&planningCentreIds((row.record as Record<string,JsonValue>)?.diveCentreIds).includes(id)))throw new Error('This Dive Centre is linked to a Plan or Trip. Remove its contact association there before deleting.');
     const dives=await zeustekDb.entities.where('[module+entityType]').equals([module,'dive']).toArray();
     if(dives.some(row=>!row.deleted&&diveReferencesOperator(row.record,id)))throw new Error('This Dive Entity is linked to a Dive record. Unlink the association before deleting.');
     const people=await zeustekDb.entities.where('[module+entityType]').equals([module,'person']).toArray();
@@ -228,12 +251,14 @@ export async function flushDiveChanges() {
   const isCurrent = () => account === startingAccount;
   flushing=(async () => {
     let recordsChanged = false;
+    let evidence:ReturnType<typeof beginCloudSyncEvidence>|undefined;
     try {
       const changes=sortPendingDiveChanges((await pendingDiveChanges()).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
       for (const change of changes) {
         if (!isCurrent()) return;
         const pending=change.value as unknown as Pending;
         if (pending.state === 'conflict') continue;
+        evidence=beginCloudSyncEvidence(startingAccount,`write:${pending.id}`);
         const prepared=pending.record?await prepareCardImages(pending.record,startingAccount,isCurrent):null;
         if (!isCurrent()) return;
         const response=await fetch('/api/dive-data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:pending.id,kind:pending.kind,data:prepared,localMutation:true,baseModifiedAt:pending.baseModifiedAt}),signal:AbortSignal.timeout(20_000)});
@@ -251,6 +276,7 @@ export async function flushDiveChanges() {
               return true;
             });
             if (conflictChanged && isCurrent()) changed();
+            finishCloudSyncEvidence(evidence,false);evidence=undefined;
             continue;
           }
           throw new Error(result.error ?? 'Changes are saved on this device. Cloud sync will retry.');
@@ -275,11 +301,20 @@ export async function flushDiveChanges() {
           return false;
         });
         recordsChanged ||= acknowledged;
+        finishCloudSyncEvidence(evidence,true);evidence=undefined;
       }
       if (!isCurrent()) return;
+      evidence=beginCloudSyncEvidence(startingAccount,'attachments');
       const uploaded = await flushComputerEvidenceAttachments(startingAccount, isCurrent);
       recordsChanged ||= uploaded > 0;
+      if(uploaded>0)finishCloudSyncEvidence(evidence,true);else cancelCloudSyncEvidence(evidence);
+      evidence=undefined;
+    } catch(error) {
+      if(isCurrent())finishCloudSyncEvidence(evidence??beginCloudSyncEvidence(startingAccount,'attachments'),false);
+      evidence=undefined;
+      throw error;
     } finally {
+      if(evidence)finishCloudSyncEvidence(evidence,false);
       if (recordsChanged && isCurrent()) changed();
     }
   })().catch(error => { if (isCurrent()) window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); }).finally(()=>{flushing=null;});

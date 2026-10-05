@@ -25,7 +25,7 @@
   overflow: hidden;
 }
 .hero h1 {
-  font-size: clamp(30px, 4vw, 48px);
+  font-size: clamp(1.875rem, 3.2vw, 3rem);
   line-height: 1;
   margin: 4px 0 6px;
 }
@@ -112,7 +112,7 @@
   color: #f0f3f4;
 }
 .kpi b {
-  font-size: 24px;
+  font-size: 1.5rem;
   line-height: 1.1;
   white-space: normal;
 }
@@ -166,7 +166,7 @@
   letter-spacing: 0;
 }
 .card > header b {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 400;
 }
 .chart {
@@ -606,7 +606,7 @@
     border-radius: 9px;
     background: #091216;
   }
-  .kpi b { font-size: 19px; }
+  .kpi b { font-size: 1.1875rem; }
   .kpi span { font-size: 1rem; }
   .grid {
     grid-template-columns: 1fr;
@@ -658,7 +658,7 @@
     flex-direction: column;
   }
   .kpi b {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
 }
 

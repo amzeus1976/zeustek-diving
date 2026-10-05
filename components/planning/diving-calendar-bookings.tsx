@@ -32,6 +32,10 @@ import type {DiveRecord} from '../../lib/offline/dives';
 import {workflowDestinationUrl} from '../../lib/workflow/workflow-destination';
 import {CalendarEventText} from './calendar-event-text';
 import {CalendarDiveLinks} from './calendar-dive-links';
+import {DeletePlanningRecordDialog} from './delete-planning-record-dialog';
+import {PlanningConnections} from './planning-connections';
+import {PlanningWorkflow} from './planning-workflow';
+import {calendarPlanDestination,calendarGasDestination} from '../../lib/planning/planning-start-context';
 
 type Props = { go?: (route: string) => void };
 type CalendarView = 'calendar' | 'list' | 'bookings';
@@ -121,9 +125,14 @@ export function selectCalendarBooking<T extends { entityId: string }>(
   return selectedId === null ? visibleItems[0] ?? null : items.find(item => item.entityId === selectedId) ?? null;
 }
 
+export function calendarListEntries<T extends {bookingStatus?: string}>(items: readonly T[], showArchived: boolean): T[] {
+  return items.filter(item => showArchived || item.bookingStatus !== 'archived');
+}
+
 export function DivingCalendarBookings({ go }: Props) {
   const [items, setItems] = useState<CalendarBooking[]>([]);
   const [bookings,setBookings]=useState<StoredDivingCalendarBooking[]>([]);
+  const [canonicalPlanIds,setCanonicalPlanIds]=useState<string[]>([]);
   const [trips,setTrips]=useState<Stored<DiveExpeditionTripRecord>[]>([]);
   const [dives,setDives]=useState<Array<DiveRecord&{entityId:string}>>([]);
   const [loadError,setLoadError]=useState('');
@@ -132,6 +141,7 @@ export function DivingCalendarBookings({ go }: Props) {
   const [month, setMonth] = useState(localIsoDate().slice(0, 7));
   const [filter, setFilter] = useState<BookingKind | 'all'>('all');
   const [query, setQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(requestedId);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState<
@@ -139,7 +149,7 @@ export function DivingCalendarBookings({ go }: Props) {
   >(undefined);
 
   const refresh = useCallback(
-    async () => {try{const source=await readCalendarSources();setItems(source.entries);setBookings(source.bookings);setTrips(source.trips);setDives(source.dives);setLoadError('');}catch{setLoadError('Calendar records could not be loaded. Existing records are retained; try reopening this workspace.');}finally{setLoaded(true);}},
+    async () => {try{const source=await readCalendarSources();setItems(source.entries);setBookings(source.bookings);setCanonicalPlanIds(source.canonicalPlanIds);setTrips(source.trips);setDives(source.dives);setLoadError('');}catch{setLoadError('Calendar records could not be loaded. Existing records are retained; try reopening this workspace.');}finally{setLoaded(true);}},
     [],
   );
   useRecordRefresh(refresh);
@@ -172,8 +182,8 @@ export function DivingCalendarBookings({ go }: Props) {
             item.bookingStatus ?? 'planned',
           ),
       );
-    return filtered;
-  }, [activeTab, filtered]);
+    return calendarListEntries(filtered, showArchived);
+  }, [activeTab, filtered, showArchived]);
   const selected = selectCalendarBooking(items, visibleItems, selectedId);
   const days = monthDays(`${month}-01`);
 
@@ -190,7 +200,7 @@ export function DivingCalendarBookings({ go }: Props) {
     saved={async () => { setEditing(undefined); await refresh(); }}
   />;
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.calendarPage}`}>
       <header className={styles.hero}>
         <div className={styles.heroTitle}>
           <ZeusTekIcon id="dive-flag" size="hero" />
@@ -208,11 +218,13 @@ export function DivingCalendarBookings({ go }: Props) {
         </button>
       </header>
 
-      <CalendarDownloadWorkspace go={go}/>
       {loadError&&<p role="alert">{loadError}</p>}
       <div className={styles.shell}>
-        <aside className={styles.sideRail}>
-          <h2>Event types</h2>
+
+
+        <section className={styles.workArea}>
+        <details className={styles.calendarFilters}>
+          <summary>Event types</summary>
           <button
             className={filter === 'all' ? styles.activePill : ''}
             onClick={() => setFilter('all')}
@@ -233,9 +245,7 @@ export function DivingCalendarBookings({ go }: Props) {
             Events remain lightweight until you link or convert them into a
             Trip, Dive Plan, Gas Plan or training record.
           </div>
-        </aside>
-
-        <section className={styles.workArea}>
+        </details>
           <div
             className={styles.tabs}
             role="tablist"
@@ -281,6 +291,7 @@ export function DivingCalendarBookings({ go }: Props) {
                 </option>
               ))}
             </select>
+            {activeTab === 'list' && <label style={{display:'flex',alignItems:'center',gap:8,minHeight:44}}><input type="checkbox" checked={showArchived} onChange={event => {setShowArchived(event.target.checked);if(!event.target.checked && selected?.bookingStatus==='archived')setSelectedId(null);}}/>Show archived</label>}
           </div>
 
           {activeTab === 'calendar' ? (
@@ -316,7 +327,7 @@ export function DivingCalendarBookings({ go }: Props) {
                   ›
                 </button>
               </div>
-              <div className={styles.calendarGrid}>
+              <section className={styles.calendarGridViewport} aria-label="Calendar days"><div className={styles.calendarGrid}>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(
                   (day) => (
                     <strong key={day}>{day}</strong>
@@ -351,7 +362,7 @@ export function DivingCalendarBookings({ go }: Props) {
                     </button>
                   );
                 })}
-              </div>
+              </div></section>
             </CollapsibleWorkCard>
           ) : null}
 
@@ -421,6 +432,8 @@ export function DivingCalendarBookings({ go }: Props) {
             <BookingDetail
               key={selected.entityId}
               item={selected}
+              isCanonicalPlan={canonicalPlanIds.includes(selected.entityId)}
+              canonicalPlanIds={canonicalPlanIds}
               trips={trips}
               dives={dives}
               go={go}
@@ -436,13 +449,15 @@ export function DivingCalendarBookings({ go }: Props) {
           )}
         </aside>
       </div>
-
+      <CalendarDownloadWorkspace go={go}/>
     </main>
   );
 }
 
-function BookingDetail({
+export function BookingDetail({
   item,
+  isCanonicalPlan,
+  canonicalPlanIds=[],
   trips,
   dives,
   go,
@@ -450,6 +465,8 @@ function BookingDetail({
   refresh,
 }: {
   item: CalendarBooking;
+  isCanonicalPlan:boolean;
+  canonicalPlanIds?:string[];
   trips: Stored<DiveExpeditionTripRecord>[];
   dives: Array<DiveRecord&{entityId:string}>;
   go?: Props['go'];
@@ -457,7 +474,8 @@ function BookingDetail({
   refresh: () => Promise<void>;
 }) {
   const isTraining = ['course', 'assessment'].includes(item.bookingKind ?? '');
-  const [tripId,setTripId]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const gasDestination=calendarGasDestination(item,isCanonicalPlan,canonicalPlanIds);
+  const [tripId,setTripId]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [deleting,setDeleting]=useState(false);
   const updateStatus = async (status: BookingStatus) => {
     if(busy)return;setBusy(true);setError('');try{await setCalendarEntryStatus(item,status);await refresh();}catch(reason){setError(reason instanceof Error?reason.message:'Event status could not be saved.');}finally{setBusy(false);}
   };
@@ -492,22 +510,18 @@ function BookingDetail({
           <dd><CalendarEventText text={item.notes || item.quickNotes || 'No notes yet.'} label="event notes"/></dd>
         </div>
       </dl>
+      <PlanningWorkflow/><PlanningConnections recordId={item.entityId} changed={refresh}/>
       <CalendarDiveLinks item={item} dives={dives} refresh={refresh} go={go}/>
       {bookingRecordLinks(item).length>0&&<><h3>Linked records</h3><div className={styles.linkRows}>
         {bookingRecordLinks(item).map(link=><a className="focus-secondary" key={link.label} href={link.href} onClick={go?event=>{event.preventDefault();go(link.destination);}:undefined}>{link.label}<ChevronRight size={14}/></a>)}
       </div></>}
       <h3>Quick actions</h3>
       <div className={styles.actionGrid}>
-        <button className="focus-secondary" onClick={() => go?.('Dive Plans')}>
+        <button className="focus-secondary" onClick={() => go?.(calendarPlanDestination(item,isCanonicalPlan))}>
           <Link2 size={14} /> Create/link Dive Plan
         </button>
-        <button
-          className="focus-secondary"
-          onClick={() => go?.('Gas Planning')}
-        >
-          <Link2 size={14} /> Create/link Gas Plan
-        </button>
-        {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> Open linked Trip</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
+        {gasDestination?<a className="focus-secondary" href={gasDestination} onClick={go?event=>{event.preventDefault();go(gasDestination);}:undefined}><Link2 size={14}/> Plan gas from this Dive Plan</a>:<><button className="focus-secondary" disabled><Link2 size={14}/> Plan gas from this Dive Plan</button><p>{item.linkedDivePlanId?'Linked Dive Plan unavailable. Open or refresh the exact Plan before planning gas.':'Create or link a Dive Plan before planning gas.'}</p></>}
+        {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> {item.calendarSource==='dive-trip'?'Open Trip to edit / delete':'Open linked Trip'}</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
         {isTraining ? (
           <button
             className="focus-secondary"
@@ -516,10 +530,10 @@ function BookingDetail({
             <Link2 size={14} /> Open Planned Training
           </button>
         ) : null}
-        <button className="focus-secondary" onClick={edit}>
-          <Pencil size={14} /> {item.calendarSource==='dive-trip'?'Edit in Trips':'Edit event'}
+        <button className="focus-secondary" onClick={isCanonicalPlan?()=>go?.(workflowDestinationUrl({route:'Dive Plans',recordId:item.entityId})):edit}>
+          <Pencil size={14} /> {isCanonicalPlan?'Open Dive Plan to edit / delete':item.calendarSource==='dive-trip'?'Edit in Trips':'Edit event'}
         </button>
-        <button
+        {!isCanonicalPlan&&<><button
           className="focus-secondary"
           disabled={busy||item.calendarLinkConflict||item.bookingStatus === 'completed'}
           onClick={() => void updateStatus('completed')}
@@ -540,10 +554,12 @@ function BookingDetail({
         >
           <Archive size={14} /> Archive event
         </button>}
+        {item.calendarSource!=='dive-trip'&&<button type="button" className="focus-secondary danger" disabled={busy} onClick={()=>setDeleting(true)}>Delete event</button>}</>}
       </div>
       {item.calendarLinkConflict&&<p role="alert">Multiple Trip associations need review. No new Trip will be created automatically.</p>}
       {!item.linkedTripId&&!item.calendarLinkConflict&&<details className={styles.existingTripLink}><summary>Link an existing Trip</summary><p>Import this event into its itinerary and fill blank Trip summary fields. Existing Trip text and dates are retained.</p><label>Trip<select value={tripId} onChange={e=>setTripId(e.target.value)}><option value="">Choose a Trip</option>{trips.map(trip=><option key={trip.entityId} value={trip.entityId}>{trip.name} · {trip.startsOn||'Undated'}</option>)}</select></label><button type="button" className="focus-secondary" disabled={!tripId||busy} onClick={()=>void linkTrip()}>Link Trip and import event details</button></details>}
       {error&&<p role="alert">{error}</p>}
+      {deleting&&!isCanonicalPlan&&item.calendarSource!=='dive-trip'&&<DeletePlanningRecordDialog record={item} label="event" close={()=>setDeleting(false)} deleted={refresh}/>}
     </section>
   );
 }

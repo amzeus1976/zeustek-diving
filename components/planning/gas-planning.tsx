@@ -2,6 +2,9 @@
 import {saveAllocationNotesToDivePlan} from '../../lib/gas-allocation/plan-readiness';
 import {reviewAllocationEvidence} from '../../lib/gas-allocation/evidence-review';
 import {T14GasPlanEditor} from './t14-gas-plan-editor';
+import {PlanningConnections} from './planning-connections';
+import {PlanningWorkflow} from './planning-workflow';
+import {DeletePlanningRecordDialog} from './delete-planning-record-dialog';
 import {readPlanningSources} from '../../lib/planning/read-planning-sources';
 import {AllocationResults} from './gas-allocation-panel';
 import {allocationReadiness,type AllocatedGasPlan} from '../../lib/gas-allocation/integration';
@@ -33,7 +36,6 @@ import {
   type GasAnalysisRecord,
 } from '../../lib/offline/loadouts-gas';
 import {
-  deleteGasPlan,
   fractionLabel,
 
   projectGasCylinder,
@@ -113,6 +115,8 @@ export function GasPlanning({ go }: Props) {
     diveIds: [],
   });
   const [selectedId, setSelectedId] = useState('');
+  const [copyFrom,setCopyFrom]=useState<StoredGasPlanRecord|null>(null);
+  const [deleting,setDeleting]=useState<StoredGasPlanRecord|null>(null);
   const [editing, setEditing] = useState<
     StoredGasPlanRecord | null | undefined
   >(undefined);
@@ -202,6 +206,7 @@ export function GasPlanning({ go }: Props) {
 
   if (editing !== undefined) return <T14GasPlanEditor
           item={editing}
+          copyFrom={copyFrom}
           newGasPlanFor={newGasPlanFor}
           divePlans={divePlans}
           equipment={equipment}
@@ -211,9 +216,9 @@ export function GasPlanning({ go }: Props) {
           trips={trips}
           sites={sites}
           rmvBaseline={rmvBaseline}
-          close={() => setEditing(undefined)}
+          close={() => {setEditing(undefined);setCopyFrom(null);}}
           saved={async () => {
-            setEditing(undefined);
+            setEditing(undefined);setCopyFrom(null);
             await refresh();
           }}
         />;
@@ -514,18 +519,10 @@ export function GasPlanning({ go }: Props) {
               plan={selected}
               divePlan={selectedDivePlan}
               edit={() => setEditing(selected)}
+              changed={refresh}
+              duplicate={() => {setCopyFrom(selected);setNewGasPlanFor(null);setEditing(null);}}
               {...(go?{share:()=>go(`Settings&config=shared-links-settings&gasPlanId=${encodeURIComponent(selected.entityId)}`)}:{})}
-              remove={async () => {
-                if (
-                  !window.confirm(
-                    `Delete “${selected.name}”? The linked Dive Plan and cylinder records will not be deleted.`,
-                  )
-                )
-                  return;
-                await deleteGasPlan(selected.entityId);
-                setSelectedId('');
-                await refresh();
-              }}
+              remove={() => setDeleting(selected)}
               saveToPlan={async () => {
                 if (selectedDivePlan)
                   if(allocationResult)await saveAllocationNotesToDivePlan(selectedDivePlan,selected,allocationResult);else await saveGasPlanNotesToDivePlan(selectedDivePlan, selected);
@@ -542,6 +539,7 @@ export function GasPlanning({ go }: Props) {
         </aside>
       </div>
 
+      {deleting&&<DeletePlanningRecordDialog record={deleting} label="gas plan" close={()=>setDeleting(null)} changed={refresh} deleted={async()=>{setSelectedId('');await refresh();}}/>}
       {warningsOpen && selected ? <AccessibleDialog label="Gas planning warnings" close={() => setWarningsOpen(false)} className="focus-modal">
         <header><h2>Gas planning warnings</h2><button type="button" className="focus-icon" aria-label="Close warnings" data-dialog-close onClick={() => setWarningsOpen(false)}><X /></button></header>
         <p>{GAS_PLANNING_CAUTION}</p>
@@ -556,6 +554,8 @@ function GasDetail({
   plan,
   divePlan,
   edit,
+  duplicate,
+  changed,
   remove,
   saveToPlan,
   share,
@@ -563,6 +563,8 @@ function GasDetail({
   plan: StoredGasPlanRecord;
   divePlan: StoredEnrichedDivePlan | null | undefined;
   edit: () => void;
+  duplicate: () => void;
+  changed: () => Promise<void>;
   remove: () => void;
   saveToPlan: () => Promise<void>;
   share?: () => void;
@@ -611,11 +613,13 @@ function GasDetail({
           <dd>{plan.notes || 'No notes yet.'}</dd>
         </div>
       </dl>
+      <PlanningWorkflow/><PlanningConnections recordId={plan.entityId} changed={changed}/>
       <div className={styles.actionGrid}>
         {share&&<button type="button" className="focus-secondary" onClick={share}>Share selected Gas Plan</button>}
         <button className="focus-secondary" onClick={edit}>
           <Pencil size={14} /> Edit gas plan
         </button>
+        <button className="focus-secondary" onClick={duplicate}>Duplicate gas plan</button>
         <button
           className="focus-secondary"
           disabled={!divePlan}

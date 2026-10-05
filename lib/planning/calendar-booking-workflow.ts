@@ -52,9 +52,9 @@ export function tripDraftFromBooking(booking:CalendarBooking):DiveExpeditionTrip
 }
 export async function readCalendarSources(){
  const account=currentDiveAccount();
- const [bookings,trips,dives]=await Promise.all([listDivingCalendarBookings(),listDiveExpeditionTrips(),listDives()]);
+ const [bookings,trips,dives,rawPlans]=await Promise.all([listDivingCalendarBookings(),listDiveExpeditionTrips(),listDives(),listRecords<CalendarBooking>('trip')]);
  sameAccount(account);
- return {entries:calendarEntries(bookings,trips),bookings,trips,dives};
+ return {entries:calendarEntries(bookings,trips),bookings,trips,dives,canonicalPlanIds:rawPlans.filter(row=>!('bookingKind' in row)).map(row=>row.entityId)};
 }
 function sameAccount(account:string){if(currentDiveAccount()!==account)throw new Error('The account changed. Reopen this event before saving links.');}
 export async function saveCalendarDiveLinks(entry:CalendarBooking,ids:readonly string[]){

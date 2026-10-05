@@ -16,6 +16,10 @@ export interface PlanTeamMember {
   specialties?: string | null;
 }
 export interface PlanConditionSnapshot {
+  /** Unlabelled summary values are removed on owner-mode changes only when supplied by weather. */
+  weatherValueOrigins?: Partial<Record<'weather'|'airTemperatureC'|'surfaceTemperatureC','weather'|'owner'>>;
+  /** Exact reading for a field filled by Get Weather; a manual edit removes only this entry. */
+  weatherFieldSources?: Partial<Record<'waterTemperatureC'|'visibilityM'|'waveHeightM'|'swellHeightM'|'currentStrength',import('../weather/conditions-model').ConditionReading>>;
   conditionsV1?:import('../weather/conditions-model').ConditionsSnapshot;
   surfaceTemperatureC?:number|null;
   providerId?: import('../weather/provider-contract').WeatherProviderId;
@@ -100,6 +104,8 @@ export interface PlanGasReference {
   };
 }
 export interface EnrichedDivePlanExtension {
+  /** Private canonical non-human contact references; never copied into the People team. */
+  diveCentreIds?: string[];
   weatherProvider?: import('../weather/provider-contract').WeatherProviderId;
   lifecycleStatus?: PlanLifecycleStatus;
   tripId?: string | null;

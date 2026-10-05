@@ -1,4 +1,5 @@
 'use client';
+import {LinkedTrainingRecord} from '../components/linked-training-record';
 import {selectUpcomingTrip} from '@/lib/planning/upcoming-trip';
 import {useSiteForecasts,SevenDayForecastCard} from '../components/weather/overview-conditions';
 import {ConditionsWorkspace} from '../components/weather/conditions-workspace';
@@ -3525,11 +3526,13 @@ function courseArtwork(title:string,stage:string) {
 }
 
 function CourseMapPage({ go }: { go: (next: string) => void }) {
+  const [trainingLink,setTrainingLink]=useState<{id:string;record:Stored<TrainingProgressRecord>|null}|null>(null);
   const [certifications, setCertifications] = useState<Array<Stored<CertificationRecord>>>([]);
   const [progress, setProgress] = useState<Array<Stored<TrainingProgressRecord>>>([]);
   const [dives, setDives] = useState<Array<DiveRecord & { entityId: string }>>([]);
   const refresh = useCallback(async () => {
     const [nextCertifications, rawProgress, nextDives] = await Promise.all([listCertifications(), listTrainingProgress(), listDives()]);
+    const requested=new URLSearchParams(window.location.search).get('trainingId');setTrainingLink(requested?{id:requested,record:rawProgress.find(row=>row.entityId===requested)??null}:null);
     const statusPriority: Record<TrainingProgressRecord['status'], number> = { completed: 4, 'in-progress': 3, planned: 2, ignored: 1 };
     const groups = new Map<string, Array<Stored<TrainingProgressRecord>>>();
     rawProgress.forEach((item) => groups.set(item.courseId, [...(groups.get(item.courseId) ?? []), item]));
@@ -3553,6 +3556,7 @@ function CourseMapPage({ go }: { go: (next: string) => void }) {
       <div><span className="focus-eyebrow">PADI · TDI · PREREQUISITES</span><h1>Interactive course maps</h1></div>
       <div className="course-summary-strip"><span><b>{certifications.length}</b> recorded qualifications</span><span><b>{qualifyingPadiSpecialties(certifications)}</b> qualifying PADI specialties</span><span><b>{dives.length}</b> logged dives</span></div>
     </div>
+    {trainingLink&&<LinkedTrainingRecord record={trainingLink.record}/> }
     <CoursePlanner certifications={certifications} progress={progress} diveCount={dives.length} refresh={refresh} go={go} />
   </>;
 }

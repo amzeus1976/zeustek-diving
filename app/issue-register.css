@@ -120,7 +120,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media(max-width: 650px) { .record-operation { bottom: 5rem; } .record-fields, .detail-grid { grid-template-columns: minmax(0, 1fr); } .record-wide { grid-column: 1 !important; } .map-toolbar { grid-template-columns: 1fr; } .course-lane[data-stage="Specialties"] { flex-basis: 350px; } .course-lane[data-stage="Specialties"] .course-map { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .interactive-google-map .zeustek-map-marker { display:grid; place-items:center; background:transparent; border:0; }
 .zeustek-map-marker .site-marker-dot { display:block; box-sizing:border-box; width:14px; height:14px; border:2px solid white; border-radius:50%; background:#0798bf; box-shadow:0 1px 5px #000b; }
-.zeustek-map-marker .bucket-marker { color:#ffad42; font-size:30px; text-shadow:0 0 2px #000,0 0 4px #000; }
+.zeustek-map-marker .bucket-marker { color:#ffad42; font-size:1.875rem; text-shadow:0 0 2px #000,0 0 4px #000; }
 .zeustek-map-marker:focus-visible { outline:3px solid #fff; outline-offset:-5px; }
 .map-access-controls { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin:1rem 0; }
 .map-access-controls label { display:flex; flex-wrap:wrap; align-items:center; gap:.7rem; }
