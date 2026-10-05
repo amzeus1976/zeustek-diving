@@ -453,7 +453,7 @@ export function DivingCalendarBookings({ go }: Props) {
   );
 }
 
-function BookingDetail({
+export function BookingDetail({
   item,
   isCanonicalPlan,
   trips,
