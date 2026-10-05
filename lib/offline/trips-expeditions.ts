@@ -81,6 +81,8 @@ export interface TripGasLogisticsItem {
 }
 
 export interface DiveExpeditionTripRecord {
+  /** Private road arrival override; never an origin or captured device location. */
+  travelArrivalPoint?: string;
   calendarBookingIds?: string[];
   originCalendarBookingId?: string;
   linkedDiveIds?: string[];

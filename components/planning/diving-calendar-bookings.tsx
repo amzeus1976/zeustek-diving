@@ -121,6 +121,10 @@ export function selectCalendarBooking<T extends { entityId: string }>(
   return selectedId === null ? visibleItems[0] ?? null : items.find(item => item.entityId === selectedId) ?? null;
 }
 
+export function calendarListEntries<T extends {bookingStatus?: string}>(items: readonly T[], showArchived: boolean): T[] {
+  return items.filter(item => showArchived || item.bookingStatus !== 'archived');
+}
+
 export function DivingCalendarBookings({ go }: Props) {
   const [items, setItems] = useState<CalendarBooking[]>([]);
   const [bookings,setBookings]=useState<StoredDivingCalendarBooking[]>([]);
@@ -132,6 +136,7 @@ export function DivingCalendarBookings({ go }: Props) {
   const [month, setMonth] = useState(localIsoDate().slice(0, 7));
   const [filter, setFilter] = useState<BookingKind | 'all'>('all');
   const [query, setQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(requestedId);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState<
@@ -172,8 +177,8 @@ export function DivingCalendarBookings({ go }: Props) {
             item.bookingStatus ?? 'planned',
           ),
       );
-    return filtered;
-  }, [activeTab, filtered]);
+    return calendarListEntries(filtered, showArchived);
+  }, [activeTab, filtered, showArchived]);
   const selected = selectCalendarBooking(items, visibleItems, selectedId);
   const days = monthDays(`${month}-01`);
 
@@ -281,6 +286,7 @@ export function DivingCalendarBookings({ go }: Props) {
                 </option>
               ))}
             </select>
+            {activeTab === 'list' && <label style={{display:'flex',alignItems:'center',gap:8,minHeight:44}}><input type="checkbox" checked={showArchived} onChange={event => {setShowArchived(event.target.checked);if(!event.target.checked && selected?.bookingStatus==='archived')setSelectedId(null);}}/>Show archived</label>}
           </div>
 
           {activeTab === 'calendar' ? (

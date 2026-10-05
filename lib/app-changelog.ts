@@ -1,6 +1,10 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.82',date:'2026-10-05',title:'Trip driving directions',
+    changes:['Getting there: choose current location, owner-profile Home or a temporary address/postcode.','Review a linked Site road address or save a Trip harbour/meeting point, then open Google Maps for travel time and directions.','No paid routing API, stored starting-point history or automatic location request.','Calendar List hides archived events unless Show archived is ticked.'],
+  },
+  {
     version:'1.0.81',date:'2026-10-05',title:'Calendar events, multiple Dives and safe Trip links',
     changes:[
       'Selected event notes expand with More; each event can link multiple logged Dives.',

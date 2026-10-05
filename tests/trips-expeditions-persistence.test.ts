@@ -9,6 +9,17 @@ beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('na
 afterEach(()=>vi.unstubAllGlobals());
 const base=():DiveExpeditionTripInput=>({name:'UK day trip',status:'draft',startsOn:'2026-10-01',endsOn:'2026-10-01',teamPersonIds:[],siteIds:[],planIds:[],packingEquipmentSetIds:[],documentAttachmentIds:[],itinerary:[],bookings:[],packingItems:[],gasLogistics:[]});
 describe('T04 canonical offline persistence',()=>{
+  it('round-trips a private Trip arrival point without changing Home, IDs or legacy Trips',async()=>{
+    await saveLocalRecord('person',{entityId:'owner',name:'Owner',roles:{ownerProfile:true},address:'PRIVATE HOME',postcode:'AA1 1AA'});
+    const people=await listLocalDiveRecords('person');
+    const saved=await saveDiveExpeditionTrip({...base(),travelArrivalPoint:'Harbour AB1 2CD'});
+    zeustekDb.close();await zeustekDb.open();expect((await listDiveExpeditionTrips())[0]).toMatchObject({entityId:saved.id,travelArrivalPoint:'Harbour AB1 2CD'});
+    const backup=await localBackupPayload();for(const table of zeustekDb.tables)await table.clear();await restoreLocalPayload(backup);
+    expect((await listDiveExpeditionTrips())[0]).toMatchObject({entityId:saved.id,travelArrivalPoint:'Harbour AB1 2CD'});
+    expect(await listLocalDiveRecords('person')).toEqual(people);
+    const legacy=await saveDiveExpeditionTrip(base());expect((await listDiveExpeditionTrips()).find(row=>row.entityId===legacy.id)).not.toHaveProperty('travelArrivalPoint');
+    expect((await listDiveExpeditionTrips())[0]).not.toHaveProperty('origin');expect((await listDiveExpeditionTrips())[0]).not.toHaveProperty('homeAddress');
+  });
   it('creates and edits offline through immutable events/outbox without persisting derived readiness',async()=>{
     const saved=await saveDiveExpeditionTrip(base());const trip=(await listDiveExpeditionTrips())[0]!;
     tripReadiness(trip);await saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),destination:'Lancashire'});
