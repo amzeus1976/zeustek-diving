@@ -1,3 +1,7 @@
+## Sites168 withdrawn — exact event and Plan retry correction
+
+Complete-head review4188075736 found existing event/Plan retry buttons still use throttled background reads. Verified Sites153/app1.0.81 restored by succeeded deploymentappgdep_6ac3ff66590c8191b365b1a90048c10b. Preserve1fe5143, native artifact,1670/245 gates,36 compiled+36 live observations and6540 identical owner rows in sites168-rejected-attempt.json and separate evidence/planning-sites168-2026-10-05. PR94 remains unmerged. Next: meaningful RED for all affected exact-source retry controls, force/await only relevant canonical reads, full fresh app1.0.97/cache44 gates, combined publication, latest complete-head review and exact main reconciliation. No owner reset, frozen change or Gmail operation.
+
 ## Exact Trip source correction — app1.0.96/cachev43 candidate
 
 Sites167/source5a000787 withdrawn after valid review4187837867; succeeded recoveryappgdep_6ac3f891bb808191ab4fc670c564be1b restores accepted153/app1.0.81. Preserve separate167 evidence/archive/6540row comparison and layout/weather/contact/copy acceptance. RED28c16f0 reproduces2 exact missing/failed Trip source failures. The requested newPlanForTrip identity now blocks unrelated workbench fallback, retains its URL and retry, handles failed load and opens only the recovered exact source. No frozen or owner change. All fresh exact candidate gates/native compiled source-retry/publication/PR94 final review/main equality remain.

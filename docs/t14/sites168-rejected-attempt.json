@@ -1,0 +1,1972 @@
+{
+  "source": "1fe5143701d220dfafeed7fe3cec4167405b34ed",
+  "tree": "c0156e819789f68ac8f4960dad73f8fb7d1c8551",
+  "saved": {
+    "id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_b9259835c7208191bc8f5556709b46b6",
+    "version": 168,
+    "archive": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_00000000b4d08210bc7622a746705417",
+      "content_hash": "sha256:cfcfb92739326af4b39f591fa05784fe5c4175d67b8f6ee4fd69555e0e64d52d",
+      "size_bytes": 103198720,
+      "file_count": 1346
+    }
+  },
+  "deployment": {
+    "id": "appgdep_6ac3fd3bada48191b7637ca5ada5a220",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_b9259835c7208191bc8f5556709b46b6",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T19:41:08.861355+00:00"
+  },
+  "withdrawn": true,
+  "reviewComment": 4188075736,
+  "restore": {
+    "id": "appgdep_6ac3ff66590c8191b365b1a90048c10b",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T19:50:21.385294+00:00"
+  },
+  "gates": {
+    "tests": 1670,
+    "files": 245,
+    "typecheck": "PASS",
+    "nativeBuild": "PASS",
+    "pwaEntries": 422,
+    "protectedHashes": 9,
+    "newLintFindings": 0,
+    "retainedLint": 101
+  },
+  "compiledResponsive": [
+    {
+      "workspace": "Compiled Plan workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 305,
+      "width": 320,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 1579.1080322265625
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 2127.245361328125
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 2512.70703125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 2937.07568359375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 3158.5576171875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 3618.96728515625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 279.30462646484375,
+          "x": 12.996688842773438,
+          "y": 4097.9306640625
+        }
+      ]
+    },
+    {
+      "workspace": "Compiled Plan workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 375,
+      "width": 390,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 1302.835205078125
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 1794.6708984375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 2180.13232421875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 2604.501220703125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 2825.98291015625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 3286.392822265625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 348.841064453125,
+          "x": 12.996688842773438,
+          "y": 3746.802490234375
+        }
+      ]
+    },
+    {
+      "workspace": "Compiled Plan workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 415,
+      "width": 430,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 1302.835205078125
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 1776.1175537109375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 2161.5791015625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 2585.94775390625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 2788.234619140625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 3248.64453125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 389.2384033203125,
+          "x": 12.996688842773438,
+          "y": 3709.05419921875
+        }
+      ]
+    },
+    {
+      "workspace": "Compiled Plan workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 805,
+      "width": 820,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 239.1038818359375,
+          "x": 33.99213409423828,
+          "y": 903.9114379882812
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 239.1038818359375,
+          "x": 283.0918884277344,
+          "y": 903.9114379882812
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 239.11424255371097,
+          "x": 532.191650390625,
+          "y": 903.9114379882812
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 737.313720703125,
+          "x": 33.99213409423828,
+          "y": 1470.6021728515625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 737.313720703125,
+          "x": 33.99213409423828,
+          "y": 1672.8890380859375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 737.313720703125,
+          "x": 33.99213409423828,
+          "y": 2133.298828125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 737.313720703125,
+          "x": 33.99213409423828,
+          "y": 2593.70849609375
+        }
+      ]
+    },
+    {
+      "workspace": "Compiled Plan workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1009,
+      "width": 1024,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 227.76283264160156,
+          "x": 271.98883056640625,
+          "y": 917.052978515625
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 227.76283264160156,
+          "x": 509.7475280761719,
+          "y": 917.052978515625
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 227.7731781005859,
+          "x": 747.5062255859375,
+          "y": 917.052978515625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 703.2905883789062,
+          "x": 271.98883056640625,
+          "y": 1521.4920654296875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 703.2905883789062,
+          "x": 271.98883056640625,
+          "y": 1723.7789306640625
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 703.2905883789062,
+          "x": 271.98883056640625,
+          "y": 2184.188720703125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 703.2905883789062,
+          "x": 271.98883056640625,
+          "y": 2644.598388671875
+        }
+      ]
+    },
+    {
+      "workspace": "Compiled Plan workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1425,
+      "width": 1440,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 366.3907165527344,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 366.4010620117187,
+          "x": 648.3754272460938,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 366.4010620117187,
+          "x": 1024.7723388671875,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 1119.1845703125,
+          "x": 271.98883056640625,
+          "y": 1251.24169921875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 1119.1845703125,
+          "x": 271.98883056640625,
+          "y": 1453.528564453125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 1119.1845703125,
+          "x": 271.98883056640625,
+          "y": 1913.9383544921875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 1119.1845703125,
+          "x": 271.98883056640625,
+          "y": 2374.34814453125
+        }
+      ]
+    },
+    {
+      "workspace": "Compiled Duplicate draft weather/contact fields",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 305,
+      "width": 320,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Duplicate draft weather/contact fields",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 375,
+      "width": 390,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Duplicate draft weather/contact fields",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 415,
+      "width": 430,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Duplicate draft weather/contact fields",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 805,
+      "width": 820,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Duplicate draft weather/contact fields",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1009,
+      "width": 1024,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Duplicate draft weather/contact fields",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1425,
+      "width": 1440,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 320,
+      "width": 320,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 390,
+      "width": 390,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 430,
+      "width": 430,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 820,
+      "width": 820,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1024,
+      "width": 1024,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1440,
+      "width": 1440,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 305,
+      "width": 320,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 375,
+      "width": 390,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 415,
+      "width": 430,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 805,
+      "width": 820,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1009,
+      "width": 1024,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1425,
+      "width": 1440,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled unavailable exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 320,
+      "width": 320,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled unavailable exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 390,
+      "width": 390,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled unavailable exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 430,
+      "width": 430,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled unavailable exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 820,
+      "width": 820,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled unavailable exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1024,
+      "width": 1024,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled unavailable exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1440,
+      "width": 1440,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled exact recovered Trip draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 305,
+      "width": 320,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled exact recovered Trip draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 375,
+      "width": 390,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled exact recovered Trip draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 415,
+      "width": 430,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled exact recovered Trip draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 805,
+      "width": 820,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled exact recovered Trip draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1009,
+      "width": 1024,
+      "workbench": []
+    },
+    {
+      "workspace": "Compiled exact recovered Trip draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1425,
+      "width": 1440,
+      "workbench": []
+    }
+  ],
+  "liveResponsive": [
+    {
+      "workspace": "Live workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1206.146484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1356.4569091796875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1506.767333984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1657.0777587890625
+        }
+      ]
+    },
+    {
+      "workspace": "Live workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1206.146484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1356.4569091796875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1506.767333984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1657.0777587890625
+        }
+      ]
+    },
+    {
+      "workspace": "Live workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1206.146484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1356.4569091796875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1506.767333984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1657.0777587890625
+        }
+      ]
+    },
+    {
+      "workspace": "Live workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1206.146484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1356.4569091796875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1506.767333984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1657.0777587890625
+        }
+      ]
+    },
+    {
+      "workspace": "Live workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1206.146484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1356.4569091796875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1506.767333984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1657.0777587890625
+        }
+      ]
+    },
+    {
+      "workspace": "Live workbench",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": 759.4060668945312
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1206.146484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1356.4569091796875
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1506.767333984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 1657.0777587890625
+        }
+      ]
+    },
+    {
+      "workspace": "Live expanded workbench content",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -762.7276611328125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -560.4407958984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 85.50289916992188
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 545.9126586914062
+        }
+      ]
+    },
+    {
+      "workspace": "Live expanded workbench content",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -762.7276611328125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -560.4407958984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 85.50289916992188
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 545.9126586914062
+        }
+      ]
+    },
+    {
+      "workspace": "Live expanded workbench content",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -762.7276611328125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -560.4407958984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 85.50289916992188
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 545.9126586914062
+        }
+      ]
+    },
+    {
+      "workspace": "Live expanded workbench content",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -762.7276611328125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -560.4407958984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 85.50289916992188
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 545.9126586914062
+        }
+      ]
+    },
+    {
+      "workspace": "Live expanded workbench content",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -762.7276611328125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -560.4407958984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 85.50289916992188
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 545.9126586914062
+        }
+      ]
+    },
+    {
+      "workspace": "Live expanded workbench content",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": [
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-site-conditions",
+          "width": 312.9759826660156,
+          "x": 271.98883056640625,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-equipment-readiness",
+          "width": 312.9759826660156,
+          "x": 594.960693359375,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "auto",
+          "id": "dive-plan-team-roles",
+          "width": 312.9759826660156,
+          "x": 917.9325561523438,
+          "y": -1209.4681396484375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-linked-gas-plans",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -762.7276611328125
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-safety-hf-integrated-",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": -560.4407958984375
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-emergency-checklists",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 85.50289916992188
+        },
+        {
+          "gridColumn": "1 / -1",
+          "id": "dive-plan-plan-notes",
+          "width": 958.919677734375,
+          "x": 271.98883056640625,
+          "y": 545.9126586914062
+        }
+      ]
+    },
+    {
+      "workspace": "Live Duplicate Plan draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Duplicate Plan draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Duplicate Plan draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Duplicate Plan draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Duplicate Plan draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Duplicate Plan draft",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "New Dive Plan"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip details and contacts",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Trips & expeditions"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live Trip editor and itinerary",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Edit trip"
+      ],
+      "overflow": false,
+      "pageWidth": 1265,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live missing exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live missing exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live missing exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live missing exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live missing exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    },
+    {
+      "workspace": "Live missing exact Trip",
+      "brokenImages": 0,
+      "clippedCards": [],
+      "clippedControls": [],
+      "heading": [
+        "Dive Planning Centre"
+      ],
+      "overflow": false,
+      "pageWidth": 1280,
+      "width": 1280,
+      "workbench": []
+    }
+  ],
+  "ownerComparison": {
+    "before": "2026-10-05T19:36:10.805Z",
+    "after": "2026-10-05T19:42:54.951Z",
+    "records": 6540,
+    "sameCanonicalIDs": true,
+    "added": 0,
+    "deleted": 0,
+    "changed": 0,
+    "preFingerprint": "a9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8",
+    "postFingerprint": "a9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8",
+    "allOriginalRowsByteEquivalent": true,
+    "agentProductionWrites": 0,
+    "profileAddressUntouched": true,
+    "priorActivityAccountedSeparately": true
+  },
+  "privacy": {
+    "artifactFilesScanned": 1346,
+    "credentialMatches": 0,
+    "navigationIcons": 31,
+    "mastersUnchangedAndNotPrecached": true,
+    "cache": "zeustek-static-v43",
+    "nativeBuildPwa": "PASS",
+    "entries": 422,
+    "gmailOperations": 0,
+    "ownerWrites": 0
+  },
+  "integrations": {
+    "gmail": {
+      "configured": true,
+      "connected": true,
+      "syncMode": "disabled",
+      "reconnectRequired": true,
+      "acceptanceAvailable": false,
+      "lastRun": {
+        "status": "failed",
+        "startedAt": "2026-10-04T23:55:07.415Z",
+        "completedAt": "2026-10-04T23:55:07.928Z",
+        "imported": 0,
+        "failed": 1,
+        "diagnostic": {
+          "code": "reconnect_required",
+          "message": "Stored Gmail access is unavailable, expired or revoked.",
+          "remedy": "Reconnect the dedicated mailbox to renew offline read-only access.",
+          "reconnect": true,
+          "evidence": {
+            "version": 2,
+            "phase": "token_refresh",
+            "kind": "http",
+            "httpStatus": 400,
+            "requestStage": "response_body"
+          }
+        }
+      }
+    },
+    "api": {
+      "keyCount": 0,
+      "activeKeys": 0,
+      "error": null
+    },
+    "publicProfile": {
+      "enabled": true,
+      "updatedAt": "2026-10-04T09:43:27.911Z",
+      "error": null
+    }
+  },
+  "localArchive": {
+    "bytes": 88942602,
+    "sha256": "bc815781972c813cfa6a91cf8561b94e9a930a030ca39a089d349a9c7c527f40",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  },
+  "fixtureCorrection": "Two hand-created loopback recovery Trips omitted required arrays. Corrected only dummy fixtures; rejected observations/logs retained. Final actual Trip measurements passed."
+}
