@@ -1,4 +1,10 @@
-## Calendar / booking / Trip correction — final local gate
+## Sites151 rejected; accepted Sites149 restored — current recovery checkpoint
+
+Read **sites151-rejected-attempt.json** and the Calendar ledger first. Preserve published source32cd32d, app1.0.79/Sites151 and its valid1465-test/six-width/privacy/owner evidence. Current-head PR93 review proved concurrent offline duplicate conversions fall back to active source status and a failed initial load consumes its exact source deep link. Sites151 acceptance is withdrawn; it is not accepted GitHub main. Verified149 recovery appgdep_6ac304923af08191a2920ec002d4e370 succeeded; live1.0.77/source9b1c0af restored without resetting owner data or credentials.
+
+New RED tests cover duplicate conversions across bookings/Trips/itinerary selections, both inclusion flags and insertion order, ambiguity-safe status actions and successful exact-source retry. Finish these bounded corrections, final gates/new version/cache/fresh baseline, publication/read-only acceptance and exact PR93/main reconciliation. Do not relabel rejected150/151 PASS or remove their evidence. No protected byte change, Google/Gmail operation or product-scope expansion.
+
+## Calendar / booking / Trip correction — historical local gate
 
 Read **calendar-booking-trip-links-corrected-local-gate.json** and **calendar-booking-trip-links-ledger.md** first. Preserve branchfix/calendar-booking-trip-links, RED/recovery checkpoint0c36b6b and the corrected product commit containing this entry. App1.0.79/cachezeustek-static-v26:1465/218 full,44/5 focused, typecheck/build/PWA/privacy/six-width populated browser and9hashes PASS;18-file lint0new/11unchanged baseline. Sites150 stays rejected; original recovery evidence below is retained. Production is restored verified app1.0.77/Sites149/recoveryappgdep_6ac2f788f3448191bce35a9ef8cfdb0b; GitHubmain33efa4271a75beb4363f031bea6e71362f62dbf0 unchanged, PR93 open.
 

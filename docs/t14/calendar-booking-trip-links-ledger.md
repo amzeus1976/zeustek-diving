@@ -59,3 +59,9 @@ Fresh owner baseline **2026-10-05T01:34:12.426Z**,6501ordinary rows, fingerprint
 Exact next: freeze clean corrected source/bundle, package exact already-verified build with fresh native credential; save/deploy new actual version, read-only real acceptance/fresh owner comparison, then push exact accepted source to existing attachedPR93, resolve valid review and verify merged main entire tree. Preserve149 recovery and rejected150 evidence. Gmail/public-profile/API/provider/access states unchanged; no owner save, Gmail operation or Google write.
 
 Final runner audit found the new .test.tsx component file outside the .test.ts glob. The additive include covers both extensions; all3 component tests, full1465/218, focused44/5 and typecheck pass. No assertion or existing coverage was removed.
+
+## Current-head review and recovery — Sites151
+
+Published source32cd32d/app1.0.79/Sites151 passes1465/218 and initial read-only smoke/6501 unchanged owner rows, but final automated review reproduced two additional defects: duplicate offline conversions reuse source active status, and failed initial Trip load consumes fromEventId before data exists. Acceptance withdrawn, main unmerged. Verified149/source9b1c0af restored with recoveryappgdep_6ac304923af08191a2920ec002d4e370 and live1.0.77 footer. Source/artifact/owner evidence retained; no canonical rollback or credentials/Gmail/Google operations.
+
+RED tests precede bounded fixes: ambiguous identities omitted from every ICS selection even if cancelled/history opt-in, clear review state and no ambiguous status mutation, failed-load retry opens the exact original event and clears stale error. Continue gates and a new actual version; preserve all rejected evidence.

@@ -14,6 +14,14 @@ async function seed(){
  return (await readCalendarSources()).entries[0]!;
 }
 describe('Canonical calendar / Dive / Trip persistence',()=>{
+ it('blocks ambiguous calendar status actions without selecting or rewriting either offline conversion',async()=>{
+  const original=await seed();const draft=tripDraftFromBooking(original);
+  await saveDiveExpeditionTrip({...draft,entityId:'duplicate-a',status:'cancelled'});
+  await saveDiveExpeditionTrip({...draft,entityId:'duplicate-b',status:'completed'});
+  const entry=(await readCalendarSources()).entries[0]!;const before=await localBackupPayload();
+  await expect(setCalendarEntryStatus(entry,'cancelled')).rejects.toThrow('Multiple Trip associations');
+  expect(await localBackupPayload()).toEqual(before);
+ });
  it('changes converted Trip status through its calendar event without rewriting original booking evidence',async()=>{
   const original=await seed();await saveDiveExpeditionTrip(tripDraftFromBooking(original));const before=await listLocalDiveRecords('trip');
   await setCalendarEntryStatus((await readCalendarSources()).entries[0]!,'cancelled');

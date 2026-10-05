@@ -10,6 +10,16 @@ const event=(extra={})=>({entityId:'booking-a',name:'Farne weekend',startDate:'2
 const trip=(extra={})=>({entityId:'trip-a',name:'Existing holiday',destination:'Existing destination',startsOn:'2026-10-01',endsOn:'2026-10-20',status:'planned',teamPersonIds:['human-b'],siteIds:['site-b'],planIds:[],itinerary:[],bookings:[],packingEquipmentSetIds:[],packingItems:[],gasLogistics:[],documentAttachmentIds:[],notes:'Owner notes',createdAt:at,modifiedAt:at,...extra} as Stored<DiveExpeditionTripRecord>);
 
 describe('Calendar event / canonical Trip workflow',()=>{
+ it('marks duplicate conversions for review even with an explicit legacy link or missing inverse provenance',()=>{
+  for(const legacy of [undefined,'converted-a']){
+   const source=event({linkedTripId:legacy});
+   const a=trip({...tripDraftFromBooking(source),entityId:'converted-a',status:'cancelled',calendarBookingIds:[]});
+   const b=trip({...tripDraftFromBooking(source),entityId:'converted-b',status:'completed',calendarBookingIds:[]});
+   const before=structuredClone([source,a,b]);const entries=calendarEntries([source],[a,b]);
+   expect(entries[0]?.calendarLinkConflict).toBe(true);expect(entries[0]?.calendarStatusTripId).toBeUndefined();
+   expect([source,a,b]).toEqual(before);
+  }
+ });
  it.each(['cancelled','completed','draft','active'] as const)('shows the canonical converted Trip status %s without changing source records',status=>{
   const source=event({bookingStatus:'confirmed',status:'confirmed'});const converted=trip({...tripDraftFromBooking(source),entityId:'converted',status});const before=structuredClone([source,converted]);
   const entry=calendarEntries([source],[converted])[0]!;

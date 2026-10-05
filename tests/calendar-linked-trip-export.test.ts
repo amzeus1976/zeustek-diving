@@ -5,6 +5,18 @@ const booking={kind:'trip',id:'event-a',data:{name:'Original 🐬 event',booking
 const converted={kind:'dive-trip',id:'trip-a',data:{name:'Original 🐬 event',startsOn:'2026-10-10',endsOn:'2026-10-10',status:'confirmed',originCalendarBookingId:'event-a',calendarBookingIds:['event-a'],itinerary:[{id:'calendar-event:event-a',calendarBookingId:'event-a',kind:'dive',title:'Original 🐬 event',startsAt:'2026-10-10T08:30',endsAt:'2026-10-10T16:00'}]}};
 const snapshot=(records:CalendarSourceRecord[]=[booking,converted])=>({accountId:'dummy-owner',snapshotAt:'2026-10-04T12:00:00Z',records,completeKinds:['trip','dive-trip','equipment','cylinder','certification']});
 describe('Google-compatible booking / Trip export',()=>{
+ it.each(['bookings','trips','itinerary'] as const)('omits ambiguous concurrent conversions from %s for explicit review, regardless of inclusion flags or insertion order',async category=>{
+  for(const status of ['cancelled','completed','confirmed']){
+   const a={...converted,data:{...converted.data,status}},b={...converted,id:'offline-second-trip',data:{...converted.data,status}};
+   for(const records of [[booking,a,b],[b,booking,a]])for(const include of [false,true]){
+    const before=structuredClone(records);
+    const preview=await buildCalendarPreview(snapshot(records),{...DEFAULT_CALENDAR_OPTIONS,categories:[category],includeCancelled:include,includeHistory:include});
+    expect(preview.events).toHaveLength(0);
+    expect(preview.omissions.some(row=>row.code==='invalid-identity'&&row.explanation.includes('Multiple converted Trips'))).toBe(true);
+    expect(records).toEqual(before);
+   }
+  }
+ });
  it.each(['bookings','trips','itinerary'] as const)('applies canonical cancellation to %s selection while retaining original UID and time',async category=>{
   const cancelled={...converted,data:{...converted.data,status:'cancelled'}};
   const options={...DEFAULT_CALENDAR_OPTIONS,categories:[category]};
