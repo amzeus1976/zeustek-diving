@@ -278,7 +278,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   </>;
 }
 
-function TripDetail({ item, plans, sites, people, equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument, changed }: {
+export function TripDetail({ item, plans, sites, people, equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument, changed }: {
   item: Stored<DiveExpeditionTripRecord>;
   plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>; people: Array<Stored<PersonRecord>>;
   equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
