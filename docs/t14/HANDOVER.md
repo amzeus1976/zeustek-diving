@@ -1,3 +1,7 @@
+## Repeated Plan loadout evidence corrected — app1.0.92/cachev39 candidate
+
+Sites163 withdrawn after valid exact-head review4186555178. Verified153/app1.0.81 restored by appgdep_6ac3d6b99f908191bd69342ca21cc325; separate evidence/planning-sites163-2026-10-05 preserves all source/gates/owner baseline. REDffd0c42 reproduces copied stale applications. Duplicate draft now clears equipmentSetApplications while retaining selected loadout/equipment/source so normal Save applies current slots afresh. No owner or frozen-file changes. Full exact-source gates, compiled copy/Save/reload, fresh owner baseline, native publication, responsive acceptance and exact PR94/main reconciliation remain.
+
 ## Legacy Trip Calendar links corrected — app1.0.91/cachev38 candidate
 
 Sites162 withdrawn after real Trip acceptance exposed a known event as Plan unavailable. Verified153/app1.0.81 restored by appgdep_6ac3cfb7a98c8191a997182f863d217d; separate evidence/planning-sites162-2026-10-05 preserves all prior gates. REDc28fb16 proves the semantic wrong-workspace link. Trip detail now receives all canonical planning sources and routes known bookings to their exact Calendar record; filtered Plan picker remains unchanged. No owner edits or frozen changes. Full exact-source gates, complete compiled/live six-width capture, fresh owner baseline, publication, final review and main reconciliation remain.

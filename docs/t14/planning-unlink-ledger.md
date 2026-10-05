@@ -35,3 +35,6 @@ Final161 review correction: REDdc6f173 reproduces canonical Plan Calendar action
 
 
 Final162 acceptance correction: REDc28fb16 reproduces exact known Calendar link being routed as a Plan. Detail uses all preserved planning sources, keeps the true title and opens Calendar for bookings. Canonical Plan picker remains filtered; no source transformation. Four semantic/rendered tests verify source ownership, exact ID, missing endpoint visibility and unchanged input. New91/cache38 gates remain.
+
+
+Final163 review correction: REDffd0c42 reproduces retained loadout application snapshots in repeated Dive Plans. New draft clears those application snapshots without changing original equipment/selected loadout/source/history; normal Save applies current loadout slots. New92/cache39 requires full gates and actual compiled changed-loadout copy acceptance before release. No frozen change or owner write.
