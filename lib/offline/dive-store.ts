@@ -8,6 +8,7 @@ import { prepareCardImages } from './dive-images';
 import { flushComputerEvidenceAttachments } from './evidence-attachments';
 import { personReferencesOperator } from '../operators/operator-dependencies';
 import {diveReferencesOperator} from '../operators/dive-log-selection';
+import {planningCentreIds} from '../operators/dive-log-write-boundary';
 import {recordHash} from './canonical';
 import {referencesPlanningRecord,planningRecordHasConnections,planningRecordDeletionGuarded} from '../planning/plan-deletion';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
@@ -145,6 +146,11 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
     const parent=await zeustekDb.entities.get(`${module}:${reference}`);
     if(!parent||parent.deleted||parent.entityType!=='operator')throw new Error('The selected Dive Entity is unavailable. Refresh the list or keep the historical entry.');
   }
+  if(kind==='trip'||kind==='dive-trip')for(const reference of planningCentreIds(data.diveCentreIds)){
+    if(planningCentreIds(prior?.diveCentreIds).includes(reference))continue;
+    const parent=await zeustekDb.entities.get(`${module}:${reference}`);
+    if(!parent||parent.deleted||parent.entityType!=='operator')throw new Error('The selected Dive Centre is unavailable. Refresh the list or retain the historical association.');
+  }
   const queued = (await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending | undefined;
   const now = new Date().toISOString();
   const record = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
@@ -168,6 +174,8 @@ async function deleteLocalRecordInternal(id:string){
       if(rows.some(row=>row.entityId!==localId&&!row.deleted&&referencesPlanningRecord(row.entityType,row.record,id)))throw new Error('This plan or event has linked records. Unlink it from Dives, Trips, Gas Plans or skill evidence before deleting. Your record is retained.');
     }
   if(old.entityType==='operator'){
+    const planning=await zeustekDb.entities.where('module').equals(module).toArray();
+    if(planning.some(row=>!row.deleted&&['trip','dive-trip'].includes(row.entityType)&&planningCentreIds((row.record as Record<string,JsonValue>)?.diveCentreIds).includes(id)))throw new Error('This Dive Centre is linked to a Plan or Trip. Remove its contact association there before deleting.');
     const dives=await zeustekDb.entities.where('[module+entityType]').equals([module,'dive']).toArray();
     if(dives.some(row=>!row.deleted&&diveReferencesOperator(row.record,id)))throw new Error('This Dive Entity is linked to a Dive record. Unlink the association before deleting.');
     const people=await zeustekDb.entities.where('[module+entityType]').equals([module,'person']).toArray();

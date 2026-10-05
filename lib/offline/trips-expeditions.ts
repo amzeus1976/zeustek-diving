@@ -81,6 +81,8 @@ export interface TripGasLogisticsItem {
 }
 
 export interface DiveExpeditionTripRecord {
+  /** Private canonical Dive Entity contacts, separate from the human diving team. */
+  diveCentreIds?: string[];
   /** Private road arrival override; never an origin or captured device location. */
   travelArrivalPoint?: string;
   calendarBookingIds?: string[];

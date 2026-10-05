@@ -20,6 +20,7 @@ import { ZeusTekIcon } from './zeustek-icon';
 import { MediaGallery } from './media-gallery';
 import { TripResources, TripLinksEditor } from './trip-resources';
 import { TripLinkedSites } from './trip-linked-sites';
+import {PlanningDiveCentres} from './planning/planning-dive-centres';
 import { TripGettingThere } from './trip-getting-there';
 import {tripDestinationDraft,tripSiteChoiceLabel} from '../lib/planning/trip-destination';
 import {findOwnerProfile,personDisplayName} from '../lib/offline/people-profiles';
@@ -33,6 +34,8 @@ import { resolveZeusTekIconId } from '../lib/zeustek-icons';
 import { cleanupTripMedia } from '../lib/offline/trip-attachments';
 import { useRecordRefresh } from './record-status';
 import {
+  listOperators,
+  type OperatorRecord,
   listDiveSites,
   listDiveTrips,
   listEquipment,
@@ -152,6 +155,7 @@ const emptyTrip = (): DiveExpeditionTripInput => ({
 
 export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const currentUserId = currentDiveAccount();
+  const [centres,setCentres]=useState<Array<Stored<OperatorRecord>>>([]);
   const [items, setItems] = useState<Array<Stored<DiveExpeditionTripRecord>>>([]);
   const [plans, setPlans] = useState<Array<Stored<DiveTripRecord>>>([]);
   const [planningSources,setPlanningSources]=useState<Array<Stored<DiveTripRecord>>>([]);
@@ -194,10 +198,10 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
 
   const refresh = useCallback(() => {
     void Promise.all([
-      listDiveExpeditionTrips(), listDiveTrips(), listDiveSites(), listPeople(), listEquipment(), listEquipmentSets(),
-    ]).then(([nextTrips, nextPlans, nextSites, nextPeople, nextEquipment, nextSets]) => {
+      listDiveExpeditionTrips(), listDiveTrips(), listDiveSites(), listPeople(), listEquipment(), listEquipmentSets(), listOperators(),
+    ]).then(([nextTrips, nextPlans, nextSites, nextPeople, nextEquipment, nextSets, nextCentres]) => {
       setItems(nextTrips); setPlanningSources(nextPlans); setPlans(nextPlans.filter(plan=>!('bookingKind' in plan))); setSites(nextSites); setPeople(nextPeople);
-      setEquipment(nextEquipment); setEquipmentSets(nextSets);
+      setCentres(nextCentres);setEquipment(nextEquipment); setEquipmentSets(nextSets);
       setViewing((current) => current ? nextTrips.find((item) => item.entityId === current.entityId) ?? null : null);
       setSourceMessage('');
       setLoaded(true);
@@ -236,7 +240,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
 
   if (adding) return <TripEditor
     key={editing?.entityId ?? 'new-trip'}
-    item={editing} items={items} plans={plans} sites={sites} people={people}
+    item={editing} items={items} plans={plans} sites={sites} people={people} centres={centres}
     equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
     sourceBooking={sourceBooking}
     close={() => { setAdding(false); setEditing(null); setSourceBooking(null); }} saved={refresh}
@@ -278,16 +282,16 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     {!visible.length && !adding && <Card className="focus-empty"><ShipWheel size={32}/><h2>{items.length ? 'No matching trips' : 'No trips yet'}</h2><p>Create a UK day trip, liveaboard, holiday or expedition and link the records you already have.</p></Card>}
 
     {deleting&&<DeletePlanningRecordDialog record={deleting} label="trip" close={()=>setDeleting(null)} changed={refresh} deleted={async()=>{await cleanupTripMedia(deleting.entityId,deleting.itinerary.map(segment=>segment.id));refresh();}}/>}
-    {viewing && <TripDetail item={{...viewing,planIds:linkedPlanIdsForTrip(viewing,plans)}} plans={planningSources} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
+    {viewing && <TripDetail item={{...viewing,planIds:linkedPlanIdsForTrip(viewing,plans)}} plans={planningSources} sites={sites} people={people} centres={centres} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
       close={() => setViewing(null)} edit={() => { setEditing(viewing); setViewing(null); setAdding(true); }}
       remove={() => void remove(viewing)} togglePacked={(id) => void togglePacked(viewing, id)}
       addDocuments={(ids) => changeDocuments(viewing, ids)} removeDocument={(id) => changeDocuments(viewing, [], id)} changed={refresh} />}
   </>;
 }
 
-export function TripDetail({ item, plans, sites, people, equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument, changed }: {
+export function TripDetail({ item, plans, sites, people, centres=[], equipment, equipmentSets, currentUserId, close, edit, remove, togglePacked, addDocuments, removeDocument, changed }: {
   item: Stored<DiveExpeditionTripRecord>;
-  plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>; people: Array<Stored<PersonRecord>>;
+  plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>; people: Array<Stored<PersonRecord>>; centres?:Array<Stored<OperatorRecord>>;
   equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
   close: () => void; edit: () => void; remove: () => void; togglePacked: (id: string) => void;
   addDocuments: (ids: string[]) => Promise<void>; removeDocument: (id: string) => Promise<void>;
@@ -313,6 +317,7 @@ export function TripDetail({ item, plans, sites, people, equipment, equipmentSet
     <TripSection title="Linked Plans & Linked Sites"><div className={styles.linkColumns}><div><h3>Linked Plans / Calendar events</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); const isEvent=Boolean(plan&&'bookingKind' in plan);return <a className="focus-link" key={id} href={isEvent?recordHref('Diving Calendar & Bookings','eventId',id):recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}{isEvent?' · Calendar event':''}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
       <TripLinkedSites siteIds={item.siteIds} sites={sites}/></div></TripSection>
 
+    <TripSection title="Dive Centre contacts"><PlanningDiveCentres ids={item.diveCentreIds??[]} centres={centres}/></TripSection>
     <TripSection title="Team">
       {(item.organiserUserId || organiser) && <p><b>Organiser:</b> {organiserIsCurrentUser ? 'Me (this account)' : organiser ? <a className="focus-link" href={recordHref('People','personId',organiser.entityId)}>{organiser.name}</a> : 'Account organiser'}</p>}
       {!!item.teamPersonIds.length && <><h4>Diving team</h4><div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person ? tripPersonPresentation(person,people).name : 'Person unavailable'}</a>;})}</div></>}
@@ -336,10 +341,10 @@ export function TripDetail({ item, plans, sites, people, equipment, equipmentSet
   </AccessibleDialog>;
 }
 
-export function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
+export function TripEditor({ item, items, plans, sites, people, centres=[], equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
   item: Stored<DiveExpeditionTripRecord> | null;
   items: Array<Stored<DiveExpeditionTripRecord>>; plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>;
-  people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
+  centres?:Array<Stored<OperatorRecord>>; people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
   sourceBooking: StoredDivingCalendarBooking|null;
   close: () => void; saved: () => void;
 }) {
@@ -384,6 +389,7 @@ export function TripEditor({ item, items, plans, sites, people, equipment, equip
 
     <TripGettingThere siteIds={value.siteIds} sites={sites} people={people} arrivalPoint={value.travelArrivalPoint??''} onArrivalChange={next=>set('travelArrivalPoint',next)}/>
 
+    <TripSection title="Dive Centre contacts" className="focus-card"><PlanningDiveCentres ids={value.diveCentreIds??[]} centres={centres} change={ids=>set('diveCentreIds',ids)}/></TripSection>
     <EditorChoices title="Diving team" icon={<Users size={17}/>} empty="Add People first if the diving team is not listed.">{people.map((person)=>{const display=tripPersonPresentation(person,people);return <label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{display.name}</b><small>{display.role}</small></span></label>;})}</EditorChoices>
 
     <RepeatSection title="Non-diving participants" addLabel="Add non-diver" add={()=>set('guestParticipants',[...guests,newGuest()])}>{guests.map((guest,index)=><div className={styles.repeatRow} key={guest.id}><label>Name<input value={guest.name} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,name:e.target.value}:row))} placeholder="Guest name"/></label><label>Role<select value={guest.role} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,role:e.target.value as TripGuestParticipant['role']}:row))}>{guestRoles.map(([role,label])=><option key={role} value={role}>{label}</option>)}</select></label><label className="record-wide">Notes<textarea value={guest.notes??''} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,notes:e.target.value}:row))} placeholder="Relationship, surface-support role, travel notes…"/></label><button className="focus-secondary danger" onClick={()=>set('guestParticipants',guests.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
