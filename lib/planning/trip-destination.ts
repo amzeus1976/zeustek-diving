@@ -7,6 +7,7 @@ export function tripSiteChoiceLabel(site:Stored<DiveSiteRecord>){return `${siteC
 export function tripDestinationDraft(draft:DiveExpeditionTripInput,query:string,sites:Array<Stored<DiveSiteRecord>>,previousAutoArrival=draft.travelArrivalSource==='site'?draft.travelArrivalPoint??'':''){
  const site=sites.find(row=>tripSiteChoiceLabel(row).toLocaleLowerCase('en-GB')===query.trim().toLocaleLowerCase('en-GB'))??matchSiteChoice(sites,query),road=siteRoadArrival(site);
  const mayFill=!draft.travelArrivalPoint?.trim()||Boolean(previousAutoArrival&&draft.travelArrivalPoint===previousAutoArrival);
- const value={...draft,destination:site?.name??query,...(site?{siteIds:[...new Set([...draft.siteIds,site.entityId])]}:{}),...(mayFill&&(road||previousAutoArrival)?{travelArrivalPoint:road||'',travelArrivalSource:road?'site' as const:'owner' as const}:{})};
+ const value:DiveExpeditionTripInput={...draft,destination:site?.name??query,...(site?{siteIds:[...new Set([...draft.siteIds,site.entityId])]}:{})};
+ if(mayFill&&(road||previousAutoArrival)){value.travelArrivalPoint=road||'';value.travelArrivalSource=road?'site':'owner';}
  return{value,autoArrival:mayFill?road||'':previousAutoArrival};
 }
