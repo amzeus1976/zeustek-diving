@@ -61,3 +61,7 @@ Owner approved Dive Centre selector in both Plan and Trip. W01 empty-only weathe
 ### W04 — owner-corrected workbench width
 
 Top row: Site & Conditions, Equipment Readiness, Team & Roles (including canonical Centre contacts). Lower four cards each span the full three-column width, independently collapsible. RED workbench regression preserves the exact selected-source Duplicate action and owner data. Pre-layout a65e076 archive/tests remain recoverable; final source gates, six widths, copy/Save/reload, current owner comparison, Sites publication and exact PR94 reconciliation still required.
+
+### G10 — exact Trip-backed source availability
+
+Valid final review4187837867 withdrew167; verified153 restored. RED28c16f0 proves unavailable source was replaced by unrelated Plan. New URL-derived exact guard retains missing/failed identity, offers explicit retry and shows preparation rather than unrelated Plan while valid context opens. Retry consumes URL only after the exact Trip exists. Prior owner/evidence/candidate preserved. App1.0.96/cache43 requires complete fresh gates and source-retry acceptance before publication/main reconciliation.

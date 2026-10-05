@@ -1,3 +1,7 @@
+## Exact Trip source correction — app1.0.96/cachev43 candidate
+
+Sites167/source5a000787 withdrawn after valid review4187837867; succeeded recoveryappgdep_6ac3f891bb808191ab4fc670c564be1b restores accepted153/app1.0.81. Preserve separate167 evidence/archive/6540row comparison and layout/weather/contact/copy acceptance. RED28c16f0 reproduces2 exact missing/failed Trip source failures. The requested newPlanForTrip identity now blocks unrelated workbench fallback, retains its URL and retry, handles failed load and opens only the recovered exact source. No frozen or owner change. All fresh exact candidate gates/native compiled source-retry/publication/PR94 final review/main equality remain.
+
 ## Owner workbench correction — combined app1.0.95/cachev42
 
 The owner corrected the lower layout: four individual full-width cards spanning all three columns, NOT a two-by-two block. Top order is Site, Equipment, Team; canonical Centre contacts sit inside Team. Preserve the a65e076 native archive and1664-test evidence as pre-layout evidence. RED workbench test precedes the bounded presentation change; the existing visible Duplicate action opens a new source-based editor. Final changed-source gates, compiled copy/Save/reload and publication remain pending; Sites153/app1.0.81 is still accepted.
