@@ -1,3 +1,7 @@
+## App1.0.102/cache49 final deletion corrections
+
+Saved app101/Sites173/sourcebd81a642 remains undeployed after valid complete-head review4188994883/4188994906. RED372d1ad:5 failures/32 passes. Guard both ends of Calendar/Trip links to logged Dives across device/direct cloud/offline sync. Separate committed tombstone success from follow-up cleanup/refresh failure; close the dialog with an accurate redacted notice.55focused PASS. Fresh final gates, compiled deletion checks, clear complete-head review, owner comparison, publication and exact PR94/main reconciliation remain. No protected calculation changes or production writes.
+
 ## App1.0.101 final selector correction — review before publication
 
 Review4188917037 found the controlled Site selector lost its exact selection after filling the arrival prop. Actual compiled reproduction and RED2fcfdfb preserve two failures/two passes. Snapshot the new road value with its selected Site ID; retain View Site context while keeping external arrival edits and manual overrides safe. 27focused tests pass. Source173 was never packaged or deployed; accepted153 remains live. Refreshed final gates, complete-head review, owner comparison, publication and exact main reconciliation remain.

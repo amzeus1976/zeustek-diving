@@ -23,7 +23,7 @@ registerRoute(({request,url})=>request.mode==='navigate'&&/^\/(?:signin-with-cha
   return fetch(request);
 });
 registerRoute(new NavigationRoute(new NetworkOnly()));
-registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v48' }));
+registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v49' }));
 registerRoute(({ url }) => url.pathname.startsWith('/api/'), new NetworkOnly());
 registerRoute(({url})=>url.origin===self.location.origin&&isCompleteIconPath(url.pathname),new CacheFirst({
   cacheName:'zeustek-complete-icons-v1',

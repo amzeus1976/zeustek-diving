@@ -91,3 +91,7 @@ Review4188075736 withdrew168;153 restored. REDc12afa5 six failures precede match
 ### G16 — controlled Site choice retained
 
 Review4188917037 plus actual compiled selector reproduction: arrival filled correctly but selected option reset to custom and View Site disappeared. RED2fcfdfb has2failures/2passes; selected Site now snapshots its new road value in the same handler. Manual overrides and external arrival changes remain safe. App101/cache48 is still undeployed; refreshed full/typecheck/build/lint/hash/privacy/actual-width gates and clear complete-head review precede publication, owner comparison and exact PR94/main reconciliation. No frozen file or production record changes.
+
+### G17 — linked Dive endpoints and committed deletion outcomes
+
+Sites173/app101 was saved but never deployed: valid review4188994883/4188994906 identifies inbound logged-Dive guard omission and false retained status after committed deletion. RED372d1ad5failures/32passes; same shared predicate now guards dive locally/direct cloud/sync, preserving associations until explicitly unlinked. Follow-up cleanup failure cannot invite repeat deletion; persistent generic notice confirms removal and asks for refresh.55focused PASS. App102/cache49 requires refreshed release gates, compiled dummy-only acceptance, clear complete-head review, fresh owner comparison, publication and exact main reconciliation. Protected hashes unchanged.
