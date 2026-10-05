@@ -1,0 +1,141 @@
+{
+  "appVersion": "1.0.87",
+  "sitesVersion": 159,
+  "source": "9e3040fda4473fb9ec356f951795bf4b6546199a",
+  "tree": "8f4e26756cfa349bb0725933adb4a651fa2469ea",
+  "branch": "feat/trip-getting-there",
+  "workingTree": "clean",
+  "deployment": {
+    "id": "appgdep_6ac3b825cbd48191ae9bb561d2a7889e",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_d4fbc9190ac48191994c54d6317defd9",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T14:46:35.029005+00:00"
+  },
+  "savedVersion": {
+    "id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_d4fbc9190ac48191994c54d6317defd9",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "version_number": 159,
+    "source": {
+      "commit_sha": "9e3040fda4473fb9ec356f951795bf4b6546199a"
+    },
+    "archive_storage": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_00000000037c81f4b96853a4e8124e17",
+      "content_hash": "sha256:4df1355a02835fb9941febac72cce963185a0098cea0e9a3f9c4884b48ea26c6",
+      "size_bytes": 103147520,
+      "file_count": 1346
+    },
+    "screenshot_url": null,
+    "deployment_id": null
+  },
+  "rollback": {
+    "version": 153,
+    "app": "1.0.81",
+    "versionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+    "verifiedRecoveryDeployment": "appgdep_6ac3aa9740ac81918bda322fb29b95ca"
+  },
+  "checks": {
+    "tests": 1593,
+    "testFiles": 233,
+    "typecheck": "PASS",
+    "productionBuild": "PASS",
+    "pwaEntries": 422,
+    "cache": "zeustek-static-v34",
+    "targetedLint": {
+      "files": 52,
+      "new": 0,
+      "unchangedAcceptedDiagnostics": 25,
+      "rawExit": 1
+    },
+    "privacy": "PASS",
+    "protectedCalculationHashes": {
+      "unchanged": 9
+    },
+    "navigationIcons": {
+      "byteMatched": 31
+    },
+    "anonymousPrivateEndpoints": "401",
+    "environment": {
+      "revision": 6,
+      "entries": 17,
+      "unchanged": true
+    },
+    "ownerData": {
+      "rows": 6539,
+      "changes": 0,
+      "sameIDs": true,
+      "fingerprint": "3b136f8785f5bd8d8e1be5550504b86c921a8bcd4308f00a7a56963720de0dc3",
+      "encryptedRecoveryVerified": true
+    },
+    "viewports": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "consoleErrors": 0,
+    "settledPageOverflow": 0
+  },
+  "acceptanceActions": {
+    "production": "Read only; no Save/unlink/delete/key/profile/Gmail/Google operations",
+    "local": "Dummy loopback-only save event→distinct Plan, unlink both ends→Gas delete, fresh copy evidence→Ready rejection/Draft Save"
+  },
+  "github": {
+    "pr": "https://github.com/amzeus1976/zeustek-diving/pull/94",
+    "mainUnchanged": true,
+    "merged": false
+  },
+  "status": "WITHDRAWN_AFTER_FINAL_REVIEW",
+  "evidenceFiles": [
+    "compiled159-responsive.json",
+    "production159-responsive.json",
+    "final159-local-actions.json",
+    "owner159-comparison.json",
+    "owner159-pre-summary.json",
+    "protected159.json",
+    "lint159-comparison.json",
+    "privacy159.json",
+    "archive159-evidence.json",
+    "full159.json",
+    "production159-planning.png"
+  ],
+  "findings": [
+    {
+      "id": 4185464066,
+      "priority": "P1",
+      "problem": "Stale Trip spread after Plan save can replace newer Trip data."
+    },
+    {
+      "id": 4185464075,
+      "priority": "P2",
+      "problem": "Training/certification Calendar links missing from deletion graph."
+    }
+  ],
+  "restored": {
+    "id": "appgdep_6ac3bbdf2fe88191838e24f05c796285",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T15:02:17.806216+00:00"
+  }
+}
