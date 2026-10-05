@@ -3,7 +3,7 @@ import { deriveCylinderInspectionSchedule, isCylinderEquipment, type CylinderEqu
 import { equipmentServiceStatus } from '../offline/equipment-usage';
 import type { EquipmentRecord, Stored } from '../offline/dive-planning';
 import { workflowDestinationUrl } from '../workflow/workflow-destination';
-import { sameConvertedCalendarDates, convertedCalendarBookingStatus } from '../planning/calendar-link-identity';
+import { sameConvertedCalendarDates, convertedCalendarBookingStatus, calendarTripLinkState } from '../planning/calendar-link-identity';
 import { addCalendarDays, calendarMonthRange, calendarUtcStamp, resolveCalendarDateTime, validCalendarDay, type CalendarDateTimeResult, type CalendarFoldChoice } from './calendar-dates';
 
 export const CALENDAR_CATEGORIES = [
@@ -104,6 +104,7 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
   }
   const records = snapshot.records.filter(row => row.id && object(row.data) && belongsToOwner(row, snapshot.accountId));
   const bookingSources = new Map(records.filter(row => row.kind === 'trip').map(row => [row.id, row]));
+  const tripAssociations=records.filter(row=>row.kind==='dive-trip').map(row=>({entityId:row.id,calendarBookingIds:row.data.calendarBookingIds,originCalendarBookingId:row.data.originCalendarBookingId}));
   const convertedTrips = new Map<string,CalendarSourceRecord[]>();
   for(const record of records.filter(row=>row.kind==='dive-trip')){
     const origin=bookingSources.get(text(record.data.originCalendarBookingId));
@@ -191,11 +192,11 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
       }
       if (endAt && !startAt) { preview.totalCandidates++; omit(category, 'conflicting-date', 'An end time exists without a start time. No start was invented.', record); return; }
       const matches=convertedTrips.get(record.id)??[];
-      if(matches.length>1){
+      if(calendarTripLinkState(record.id,data.linkedTripId,tripAssociations).conflict){
         const key=`${category}:${record.id}`;
         if(!ambiguousBookingsReported.has(key)){
           ambiguousBookingsReported.add(key);preview.totalCandidates++;
-          omit(category,'invalid-identity','Multiple converted Trips share this event identity. Review the canonical Trips before exporting; no source status was substituted.',record);
+          omit(category,'invalid-identity','Multiple converted Trips or conflicting Trip associations share this event identity. Review the canonical Trips before exporting; no source status was substituted.',record);
         }
         return;
       }

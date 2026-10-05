@@ -1,4 +1,10 @@
 /** Explicit conversion provenance only. Similar names never establish identity. */
+export function calendarTripLinkState(bookingId:string,explicitTripId:unknown,trips:readonly {entityId:string;calendarBookingIds?:unknown;originCalendarBookingId?:unknown}[]){
+ const linked=typeof explicitTripId==='string'?explicitTripId.trim():'';
+ const ids=new Set([linked,...trips.filter(trip=>(Array.isArray(trip.calendarBookingIds)&&trip.calendarBookingIds.includes(bookingId))||trip.originCalendarBookingId===bookingId).map(trip=>trip.entityId)].filter(Boolean));
+ return {linkedTripId:ids.size===1?[...ids][0]!:null,conflict:ids.size>1};
+}
+
 export function sameConvertedCalendarDates(trip:Record<string,unknown>,booking:Record<string,unknown>):boolean {
  const start=typeof booking.startDate==='string'&&booking.startDate?booking.startDate:typeof booking.startAt==='string'?booking.startAt.slice(0,10):'';
  const end=typeof booking.endDate==='string'&&booking.endDate?booking.endDate:typeof booking.endAt==='string'&&booking.endAt?booking.endAt.slice(0,10):start;

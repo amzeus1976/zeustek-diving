@@ -16,6 +16,10 @@ describe('Calendar event / canonical Trip workflow',()=>{
   const b=trip({...tripDraftFromBooking(source),entityId:'converted-b'});
   for(const order of [[a,b],[b,a]])expect(linkedCalendarTripId(source,order)).toBeNull();
  });
+ it('requires review when an explicit link conflicts with a different-date inverse association',()=>{
+  const source=event({linkedTripId:'legacy-trip'}),inverse=trip({calendarBookingIds:['booking-a']});
+  expect(calendarEntries([source],[inverse]).find(row=>row.entityId==='booking-a')).toMatchObject({calendarLinkConflict:true,linkedTripId:null});
+ });
  it('marks duplicate conversions for review even with an explicit legacy link or missing inverse provenance',()=>{
   for(const legacy of [undefined,'converted-a']){
    const source=event({linkedTripId:legacy});

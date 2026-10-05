@@ -58,7 +58,7 @@ import {
   type TripPackingItem,
 } from '../lib/offline/trips-expeditions';
 import styles from './trips-expeditions.module.css';
-import {linkedCalendarTripId,tripDraftFromBooking} from '../lib/planning/calendar-booking-workflow';
+import {calendarTripAssociation,tripDraftFromBooking} from '../lib/planning/calendar-booking-workflow';
 import {listDivingCalendarBookings,normaliseBooking,type StoredDivingCalendarBooking} from '../lib/offline/planning-pages';
 
 const statuses: Array<[DiveExpeditionTripStatus, string]> = [
@@ -170,11 +170,11 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     const row=plans.find(plan=>plan.entityId===id);
     const frame=requestAnimationFrame(()=>{
       if(!row){setSourceMessage('The exact source event is unavailable. No replacement event or Trip has been selected.');return;}
-      openedSource.current=id;
       const booking=normaliseBooking(row as StoredDivingCalendarBooking);
-      const linked=linkedCalendarTripId(booking,items);
-      if(linked){const existing=items.find(trip=>trip.entityId===linked);if(existing)setViewing(existing);else setSourceMessage('The linked Trip is unavailable. The original event is retained.');return;}
-      if(items.filter(trip=>trip.calendarBookingIds?.includes(id)||trip.originCalendarBookingId===id).length>1){setSourceMessage('Multiple Trip associations need review before creating another Trip.');return;}
+      const {linkedTripId:linked,conflict}=calendarTripAssociation(booking,items);
+      if(conflict){setSourceMessage('Multiple Trip associations need review before creating another Trip.');return;}
+      if(linked){const existing=items.find(trip=>trip.entityId===linked);if(existing){openedSource.current=id;setSourceMessage('');setViewing(existing);}else setSourceMessage('The linked Trip is unavailable. The original event is retained.');return;}
+      openedSource.current=id;setSourceMessage('');
       setSourceBooking(booking);setEditing(null);setAdding(true);
     });return()=>cancelAnimationFrame(frame);
   },[loaded,plans,items]);
@@ -348,8 +348,10 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
     try {
       if(!item&&sourceBooking){
         const [currentBookings,currentTrips]=await Promise.all([listDivingCalendarBookings(),listDiveExpeditionTrips()]);
-        if(currentDiveAccount()!==currentUserId||!currentBookings.some(row=>row.entityId===sourceBooking.entityId&&row.modifiedAt===sourceBooking.modifiedAt))throw new Error('The source event changed or is unavailable. Reopen it before creating this Trip.');
-        if(currentTrips.some(row=>row.calendarBookingIds?.includes(sourceBooking.entityId)))throw new Error('This event already has a Trip. Reopen the Calendar to review that Trip.');
+        const currentBooking=currentBookings.find(row=>row.entityId===sourceBooking.entityId&&row.modifiedAt===sourceBooking.modifiedAt);
+        if(currentDiveAccount()!==currentUserId||!currentBooking)throw new Error('The source event changed or is unavailable. Reopen it before creating this Trip.');
+        const association=calendarTripAssociation(currentBooking,currentTrips);
+        if(association.conflict||association.linkedTripId)throw new Error('This event already has a Trip association. Reopen the Calendar to review it.');
       }
       await saveDiveExpeditionTrip({ ...value, guestParticipants: normaliseTripGuestParticipants(guests), name:value.name.trim(), destination:value.destination?.trim()||'', accommodation:value.accommodation?.trim()||'', emergencyNotes:value.emergencyNotes?.trim()||'', insuranceNotes:value.insuranceNotes?.trim()||'', medicalNotes:value.medicalNotes?.trim()||'', notes:value.notes?.trim()||'' });
       if (item) await cleanupTripMedia(item.entityId,item.itinerary.filter(segment => !value.itinerary.some(next => next.id === segment.id)).map(segment => segment.id),false);

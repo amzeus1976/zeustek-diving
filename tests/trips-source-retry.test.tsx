@@ -26,20 +26,26 @@ function initialise(fail=false){
  return ()=>{harness.cursor=0;const output=TripsExpeditions({});for(const effect of harness.effects.splice(0))effect();return output;};
 }
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+function itemInTree(node:unknown):{entityId:string}|undefined{
+ if(Array.isArray(node)){for(const child of node){const found=itemInTree(child);if(found)return found;}return;}
+ if(!node||typeof node!=='object'||!('props' in node))return;
+ const props=(node as {props:{item?:{entityId:string};children?:unknown}}).props;
+ return props.item??itemInTree(props.children);
+}
 const fixtureTrip=(entityId:string)=>({entityId,name:'Existing dummy Trip',status:'planned',startsOn:'2026-10-10',endsOn:'2026-10-10',originCalendarBookingId:'exact-booking',calendarBookingIds:['exact-booking'],teamPersonIds:[],siteIds:[],planIds:[],itinerary:[],bookings:[],packingEquipmentSetIds:[],packingItems:[],gasLogistics:[],documentAttachmentIds:[],createdAt:'2026-10-05T00:00:00Z',modifiedAt:'2026-10-05T00:00:00Z'});
 describe('Exact event conversion after a failed initial Trip load',()=>{
  it('reports conflicting conversions before opening an explicitly linked Trip',async()=>{
   const render=initialise();harness.bookingExtra={linkedTripId:'trip-a'};harness.trips=[fixtureTrip('trip-a'),fixtureTrip('trip-b')];
   render();await tick();render();const output=render();
   expect(harness.slots).toContain('Multiple Trip associations need review before creating another Trip.');
-  expect(output.props.item).toBeUndefined();expect(output.props.sourceBooking).toBeUndefined();
+  expect(itemInTree(output)).toBeUndefined();expect(output.props.sourceBooking).toBeUndefined();
  });
  it('retries the exact endpoint when a linked Trip was initially absent from a successful source load',async()=>{
   const render=initialise();harness.bookingExtra={linkedTripId:'trip-a'};
   render();await tick();render();render();
   expect(harness.slots).toContain('The linked Trip is unavailable. The original event is retained.');
   harness.trips=[fixtureTrip('trip-a')];harness.refresh!();await tick();render();const output=render();
-  expect(output.props.item?.entityId).toBe('trip-a');
+  expect(itemInTree(output)?.entityId).toBe('trip-a');
   expect(harness.slots).not.toContain('The linked Trip is unavailable. The original event is retained.');
  });
  it('retains the valid source endpoint for a successful retry and clears the failed-load message',async()=>{

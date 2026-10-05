@@ -3,7 +3,7 @@ import {listDives} from '../offline/dives';
 import {currentDiveAccount} from '../offline/dive-store';
 import {listDivingCalendarBookings,setDivingCalendarBookingStatus,type BookingStatus,type StoredDivingCalendarBooking} from '../offline/planning-pages';
 import {editableDiveExpeditionTrip,listDiveExpeditionTrips,saveDiveExpeditionTrip,type DiveExpeditionTripInput,type DiveExpeditionTripRecord} from '../offline/trips-expeditions';
-import {sameConvertedCalendarDates,convertedCalendarBookingStatus} from './calendar-link-identity';
+import {sameConvertedCalendarDates,convertedCalendarBookingStatus,calendarTripLinkState} from './calendar-link-identity';
 
 export type CalendarBooking = StoredDivingCalendarBooking & {linkedDiveIds?:string[];calendarSource?:'trip'|'dive-trip';calendarLinkConflict?:boolean;calendarStatusTripId?:string;calendarStatusTripModifiedAt?:string};
 export const normaliseCalendarDiveIds=(ids:readonly string[])=>[...new Set(ids.filter(id=>typeof id==='string'&&id.trim()).map(id=>id.trim()))];
@@ -14,17 +14,17 @@ export function eventTextPreview(text:string){
  const preview=Array.from(lines.slice(0,6).join('\n')).slice(0,320).join('');
  return {preview,truncated:characters.length>320||lines.length>6};
 }
+export function calendarTripAssociation(booking:StoredDivingCalendarBooking,trips:readonly Stored<DiveExpeditionTripRecord>[]){
+ return calendarTripLinkState(booking.entityId,booking.linkedTripId,trips);
+}
 export function linkedCalendarTripId(booking:StoredDivingCalendarBooking,trips:readonly Stored<DiveExpeditionTripRecord>[]){
- if(booking.linkedTripId?.trim())return booking.linkedTripId.trim();
- const matches=trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)||trip.originCalendarBookingId===booking.entityId);
- return matches.length===1?matches[0]!.entityId:null;
+ return calendarTripAssociation(booking,trips).linkedTripId;
 }
 export function calendarEntries(bookings:readonly CalendarBooking[],trips:readonly Stored<DiveExpeditionTripRecord>[]):CalendarBooking[]{
  const sources=new Map(bookings.map(booking=>[booking.entityId,booking]));
  const rows:CalendarBooking[]=bookings.map<CalendarBooking>(booking=>{
-  const linkedTripId=linkedCalendarTripId(booking,trips);
+  const {linkedTripId,conflict:calendarLinkConflict}=calendarTripAssociation(booking,trips);
   const matches=trips.filter(trip=>trip.originCalendarBookingId===booking.entityId&&sameConvertedCalendarDates(trip as unknown as Record<string,unknown>,booking as unknown as Record<string,unknown>));
-  const calendarLinkConflict=matches.length>1||(matches.length===1&&linkedTripId!==matches[0]!.entityId)||(!booking.linkedTripId&&trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)||trip.originCalendarBookingId===booking.entityId).length>1);
   const converted=!calendarLinkConflict&&matches.length===1?matches[0]:undefined;
   const bookingStatus=converted?convertedCalendarBookingStatus(converted.status,booking.bookingStatus):booking.bookingStatus??'planned';
   return {...booking,calendarSource:'trip',linkedTripId:calendarLinkConflict?null:linkedTripId,bookingStatus,...(converted?{calendarStatusTripId:converted.entityId,calendarStatusTripModifiedAt:converted.modifiedAt}:{}),calendarLinkConflict};
@@ -80,7 +80,8 @@ export async function setCalendarEntryStatus(entry:CalendarBooking,status:Bookin
  const account=currentDiveAccount();
  const currentEntry=(await readCalendarSources()).entries.find(row=>row.entityId===entry.entityId&&row.calendarSource===entry.calendarSource);sameAccount(account);
  if(currentEntry?.calendarLinkConflict)throw new Error('Multiple Trip associations need review before changing this event status.');
- const tripId=entry.calendarStatusTripId??(entry.calendarSource==='dive-trip'?entry.entityId:null);
+ if(!currentEntry||currentEntry.modifiedAt!==entry.modifiedAt||currentEntry.linkedTripId!==entry.linkedTripId||currentEntry.calendarStatusTripId!==entry.calendarStatusTripId||currentEntry.calendarStatusTripModifiedAt!==entry.calendarStatusTripModifiedAt)throw new Error('This event or its Trip association changed. Reopen it before changing its status.');
+ const tripId=currentEntry.calendarStatusTripId??(currentEntry.calendarSource==='dive-trip'?currentEntry.entityId:null);
  if(tripId&&!(entry.calendarSource==='trip'&&status==='archived')){
   if(status!=='completed'&&status!=='cancelled')throw new Error('Edit this Trip in Trips & Expeditions.');
   const trip=(await listDiveExpeditionTrips()).find(row=>row.entityId===tripId);sameAccount(account);
