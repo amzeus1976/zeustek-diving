@@ -1,3 +1,7 @@
+## App1.0.100/cache47 candidate — saved arrival provenance and exact Gas availability
+
+App99/Sites171 saved but never deployed: complete-head review4188637481/4188637496 found reopen provenance and unavailable linked Gas parent cases. RED05d394a:2 failures/21 passes. Add private site/owner arrival provenance, retain legacy/manual values, and disable Gas action unless the exact canonical Plan is available. App99 passed1689 tests, build and48 actual-width compiled observations; this new candidate requires fresh full gates, saved Trip reopen acceptance, six-width checks and production owner comparison before exact PR94 reconciliation. Production remains verified153/app81. No protected file change.
+
 ## App1.0.99/cache46 candidate — fresh Trip arrival and corrected responsive checks
 
 Sites170 was withdrawn after valid review4188518214 found stale automatic Trip road arrivals; verified153 restored at20:41:49UTC. Its source/evidence is preserved separately. Three RED regressions precede clearing previous auto-filled addresses while retaining manual overrides. Reused-tab viewport reports are rejected as six-width evidence; fresh tabs apply actual widths and every new measurement must assert requested=effective. Remaining: fresh full gates/build, all six actual widths, owner comparison, native combined publication and exact PR94 review/main reconciliation.

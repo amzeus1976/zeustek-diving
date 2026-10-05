@@ -433,6 +433,7 @@ export function DivingCalendarBookings({ go }: Props) {
               key={selected.entityId}
               item={selected}
               isCanonicalPlan={canonicalPlanIds.includes(selected.entityId)}
+              canonicalPlanIds={canonicalPlanIds}
               trips={trips}
               dives={dives}
               go={go}
@@ -456,6 +457,7 @@ export function DivingCalendarBookings({ go }: Props) {
 export function BookingDetail({
   item,
   isCanonicalPlan,
+  canonicalPlanIds=[],
   trips,
   dives,
   go,
@@ -464,6 +466,7 @@ export function BookingDetail({
 }: {
   item: CalendarBooking;
   isCanonicalPlan:boolean;
+  canonicalPlanIds?:string[];
   trips: Stored<DiveExpeditionTripRecord>[];
   dives: Array<DiveRecord&{entityId:string}>;
   go?: Props['go'];
@@ -471,7 +474,7 @@ export function BookingDetail({
   refresh: () => Promise<void>;
 }) {
   const isTraining = ['course', 'assessment'].includes(item.bookingKind ?? '');
-  const gasDestination=calendarGasDestination(item,isCanonicalPlan);
+  const gasDestination=calendarGasDestination(item,isCanonicalPlan,canonicalPlanIds);
   const [tripId,setTripId]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [deleting,setDeleting]=useState(false);
   const updateStatus = async (status: BookingStatus) => {
     if(busy)return;setBusy(true);setError('');try{await setCalendarEntryStatus(item,status);await refresh();}catch(reason){setError(reason instanceof Error?reason.message:'Event status could not be saved.');}finally{setBusy(false);}
@@ -517,7 +520,7 @@ export function BookingDetail({
         <button className="focus-secondary" onClick={() => go?.(calendarPlanDestination(item,isCanonicalPlan))}>
           <Link2 size={14} /> Create/link Dive Plan
         </button>
-        {gasDestination?<a className="focus-secondary" href={gasDestination} onClick={go?event=>{event.preventDefault();go(gasDestination);}:undefined}><Link2 size={14}/> Plan gas from this Dive Plan</a>:<><button className="focus-secondary" disabled><Link2 size={14}/> Plan gas from this Dive Plan</button><p>Create or link a Dive Plan before planning gas.</p></>}
+        {gasDestination?<a className="focus-secondary" href={gasDestination} onClick={go?event=>{event.preventDefault();go(gasDestination);}:undefined}><Link2 size={14}/> Plan gas from this Dive Plan</a>:<><button className="focus-secondary" disabled><Link2 size={14}/> Plan gas from this Dive Plan</button><p>{item.linkedDivePlanId?'Linked Dive Plan unavailable. Open or refresh the exact Plan before planning gas.':'Create or link a Dive Plan before planning gas.'}</p></>}
         {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> {item.calendarSource==='dive-trip'?'Open Trip to edit / delete':'Open linked Trip'}</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
         {isTraining ? (
           <button

@@ -85,6 +85,8 @@ export interface DiveExpeditionTripRecord {
   diveCentreIds?: string[];
   /** Private road arrival override; never an origin or captured device location. */
   travelArrivalPoint?: string;
+  /** Private editor provenance; absent legacy values remain owner-entered. */
+  travelArrivalSource?: 'site' | 'owner';
   calendarBookingIds?: string[];
   originCalendarBookingId?: string;
   linkedDiveIds?: string[];

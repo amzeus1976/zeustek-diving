@@ -9,9 +9,9 @@ export function calendarPlanDestination(entry:Pick<CalendarBooking,'entityId'|'l
  return workflowDestinationUrl({route:'Dive Plans',params:{newPlanForBooking:entry.entityId}});
 }
 /** Gas creation requires an exact Plan; an event or whole Trip is not a gas-planning parent. */
-export function calendarGasDestination(entry:Pick<CalendarBooking,'entityId'|'linkedDivePlanId'|'calendarSource'|'bookingKind'>,isCanonicalPlan=!entry.bookingKind){
+export function calendarGasDestination(entry:Pick<CalendarBooking,'entityId'|'linkedDivePlanId'|'calendarSource'|'bookingKind'>,isCanonicalPlan=!entry.bookingKind,availablePlanIds:ReadonlyArray<string>=[]){
  const planId=entry.linkedDivePlanId||(isCanonicalPlan&&entry.calendarSource!=='dive-trip'?entry.entityId:null);
- return planId?workflowDestinationUrl({route:'Gas Planning',params:{newGasPlanFor:planId}}):null;
+ return planId&&(availablePlanIds.includes(planId)||(isCanonicalPlan&&entry.calendarSource!=='dive-trip'&&planId===entry.entityId))?workflowDestinationUrl({route:'Gas Planning',params:{newGasPlanFor:planId}}):null;
 }
 export function planDraftForBooking(draft:Omit<EnrichedDivePlan,'createdAt'|'modifiedAt'>,entry:CalendarBooking){
  return {...draft,name:`${entry.name} — Dive Plan`,startDate:entry.startDate||draft.startDate,endDate:entry.endDate||entry.startDate||draft.endDate,startAt:entry.startAt??'',siteId:entry.siteId??'',siteName:entry.siteName??'',tripId:entry.linkedTripId??null};
