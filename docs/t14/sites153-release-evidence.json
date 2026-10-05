@@ -1,0 +1,245 @@
+{
+  "status": "PUBLISHED AND VERIFIED; exact accepted GitHub source reconciled",
+  "at": "2026-10-05T03:05:49.180Z",
+  "application": "1.0.81",
+  "sites": 153,
+  "cache": "zeustek-static-v28",
+  "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+  "tree": "488d37678078b594daae4e9808574b8d8675ac04",
+  "branch": "fix/calendar-booking-trip-links",
+  "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+  "deployment": {
+    "id": "appgdep_6ac310a6c2b4819192fdf2153ec17b61",
+    "status": "succeeded",
+    "updatedAt": "2026-10-05T02:51:43.915416+00:00",
+    "environmentRevision": 6
+  },
+  "officialArchive": {
+    "archive_format": "tar",
+    "sediment_file_id": "file_00000000586c820ab7bf1760fc9a1fe4",
+    "content_hash": "sha256:8153a7a5990b7d7a17b1fae76b6de6fe9b946e0ae5f709e4cdd7b9bbe9c1809d",
+    "size_bytes": 103075840,
+    "file_count": 1346
+  },
+  "localArchive": {
+    "bytes": 88910764,
+    "sha256": "33515e9013fa93ab5250a7348fe19d91eaba6d4453379c55d6b8b81bb9d050e6",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  },
+  "recoverableBundleSha256": "8cca5d4482174d30600a81bd07350e01fbec59341b7f0ea0c644af2ad8babb82",
+  "requirements": {
+    "C01": "PASS; 320-code-point/six-line selected-event summary, accessible More/Less and unchanged saved text",
+    "C02": "PASS; zero/one/many canonical logged-Dive links on bookings and Trip entries; exact navigation and unlink without deleting endpoints",
+    "C03": "PASS; reviewed conversion prefills event details; existing-Trip linking imports one identified itinerary entry and retains existing owner values",
+    "C04": "PASS; canonical Trip creation is projected immediately into Calendar; no duplicate event store",
+    "C05": "PASS; exact legacy/source navigation, original UID/times, canonical status, shared conflict checks and retryable missing endpoints",
+    "C06": "PASS existing reviewed Google-compatible download/import workflow; bookings/Trips included without duplicate converted identities. Automatic Google sync remains off; no Google transmission",
+    "C07": "PASS; all 6501 original owner rows/IDs/fingerprints, relationship integrity and nine protected hashes preserved; no owner/Gmail/Google writes",
+    "C08": "PASS; exact source tests, production/privacy/cache/six-width acceptance, current-head review and entire GitHub main tree match"
+  },
+  "tests": {
+    "tests": 1481,
+    "files": 219,
+    "failed": 0,
+    "focused": 64,
+    "focusedFiles": 6
+  },
+  "typecheck": "PASS",
+  "buildPWA": {
+    "status": "PASS",
+    "entries": 422,
+    "KiB": 42700.52
+  },
+  "lint": {
+    "files": 19,
+    "newOrChanged": 0,
+    "unchangedAcceptedBaseline": 11,
+    "rawExit": 1,
+    "baselineSource": "9b1c0af4192779ce2dbb15f2c16253b5eddb0e59",
+    "note": "Eleven existing diagnostics retained; zero new/changed, without suppression or assertion removal"
+  },
+  "privacy": {
+    "artifactFiles": 1346,
+    "credentialMatches": 0,
+    "anonymousPrivateRouteDenials": 10,
+    "ownerSnapshotAndRuntimeStateExcluded": true,
+    "exportSecretExclusionPreserved": true
+  },
+  "browser": {
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "compiledObservations": 24,
+    "liveObservations": 18,
+    "applicationErrors": 0,
+    "pageOverflow": 0,
+    "testedClippedControls": 0,
+    "visibleBrokenImages": 0,
+    "keyboardFocus": "PASS"
+  },
+  "navigation": {
+    "runtimeAssets": 31,
+    "allMatchFrozenBuild": true,
+    "masterArtworkUnchangedAndNotPrecached": true
+  },
+  "worker": {
+    "match": true,
+    "cache": "zeustek-static-v28",
+    "sha256": "c18e9bb29f0dbdcc97492aea77aa71f15077d75402a7c94b30696239b3e2b223"
+  },
+  "actualDownload": {
+    "bytes": 599,
+    "events": 1,
+    "sha256": "8e71dd1c3dd537795ac1350593c8eeebfdad4d2c8fc063e1706e742b801c03f1",
+    "matchesExactPreDownloadPreview": true,
+    "ambiguousEventExcluded": true,
+    "googleOperations": 0
+  },
+  "liveCalendarPreview": {
+    "events": 43,
+    "uniqueUids": 43,
+    "farneDateIncluded": true,
+    "privateNotesPresent": false,
+    "googleWrites": 0
+  },
+  "owner": {
+    "beforeAt": "2026-10-05T02:46:51.910Z",
+    "afterAt": "2026-10-05T02:55:15.480Z",
+    "beforeRecords": 6501,
+    "afterRecords": 6501,
+    "added": 0,
+    "removed": 0,
+    "changed": 0,
+    "exactCanonicalIdsMatch": true,
+    "allOriginalRowsMatch": true,
+    "agentCanonicalDataWrites": 0,
+    "gmailCalls": 0,
+    "expectedNoncanonicalWrites": "Read-only Calendar/Trip views, link dialogs cancelled, preview only; no canonical owner write, Gmail operation or calendar transmission.",
+    "fingerprintBefore": "237c64bb0b059c0c796bb6e031c22a42c98ae548e7542b5a38683411bed0fdd9",
+    "fingerprintAfter": "237c64bb0b059c0c796bb6e031c22a42c98ae548e7542b5a38683411bed0fdd9",
+    "uniqueCanonicalIds": true,
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "encryptedRecoveryVerified": true,
+    "countsAreObservationsNotTargets": true
+  },
+  "protectedHashes": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "environment": {
+    "revision": 6,
+    "bindings": 17,
+    "secretBindings": 11,
+    "unchanged": true,
+    "audienceUnchanged": true
+  },
+  "github": {
+    "pr": 93,
+    "url": "https://github.com/amzeus1976/zeustek-diving/pull/93",
+    "head": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+    "main": "5193651f5b7001abb2b25b6e38c3e6e6cf80518a",
+    "tree": "488d37678078b594daae4e9808574b8d8675ac04",
+    "completeSourceMatch": true,
+    "review": {
+      "status": "Completed; no findings",
+      "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+      "completedAt": "2026-10-05T03:02:13.578435Z",
+      "requestComment": 5987314468,
+      "resultComment": 5987354182,
+      "summaryComment": 5986315620,
+      "resolvedPriorThreads": 6,
+      "unresolvedThreads": 0,
+      "evidence": "Current-head completed summary and no-major-issues comment; six prior valid findings corrected with RED/GREEN coverage"
+    },
+    "actions": "No configured workflow runs; no CI pass claimed"
+  },
+  "rollback": {
+    "version": "1.0.77",
+    "sites": 149,
+    "source": "9b1c0af4192779ce2dbb15f2c16253b5eddb0e59",
+    "recoveryDeployment": "appgdep_6ac30b528b748191a794432dd43d8d74",
+    "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_fe20c558256c8191b8d11cac84ee6bf2",
+    "archiveHash": "sha256:87e4e8f5e7201af91bdff935879e1dacc147b11bd786870f4bc0aedde0c01360",
+    "artifactBytes": 103239680,
+    "artifactFiles": 1356,
+    "recoveredAndLiveVerified": true
+  },
+  "rejectedAttempts": [
+    150,
+    151,
+    152
+  ],
+  "gmail": "Deferred/unverified; no operation",
+  "google": "Reviewed file import; automatic sync off; no Google operation",
+  "preservedExceptions": [
+    "Met Office access denied/unverified",
+    "Direct Copernicus conditional",
+    "SwellCloud requires agreed access",
+    "Existing Gmail deferred/unverified; no sync/reconnect/retry"
+  ],
+  "unchangedBoundaries": [
+    "People/Dive Entity canonical separation and relationships",
+    "Owner self identity and circular crop",
+    "Existing public profile and API credentials/publication",
+    "Protected calculations and canonical owner data"
+  ],
+  "measurementCaveats": [
+    "Initial full regression 1480/1 failed exact version/cache assertion; explicitly updated to81/v28 then1481 passed",
+    "Native download notification timeout; actual filesystem bytes matched pre-download preview",
+    "Hidden/lazy images and collapsed-only selectors rejected as measurements; visible/expanded elements inspected",
+    "All rejected release/recovery evidence retained; no failed candidate accepted as main"
+  ]
+}
