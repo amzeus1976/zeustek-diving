@@ -1,5 +1,6 @@
 import { cacheCloudRecords } from './cache-cloud-records';
 import { zeustekDb } from './db';
+import Dexie from 'dexie';
 import { mutateEntity } from './mutations';
 import type { JsonValue } from './types';
 import { recordIdentity } from '../record-identity';
@@ -50,8 +51,7 @@ export async function listLocalDiveRecords<T>(kind: string, options: { includeSu
   const started = performance.now();
   const module = moduleName();
   const rows = await zeustekDb.entities.where('[module+entityType]').equals([module, kind]).toArray();
-  void diagnostic(`DIVE_LOCAL_${kind}`, started);
-  void refreshDiveRecords(kind);
+  if(!Dexie.currentTransaction){void diagnostic(`DIVE_LOCAL_${kind}`, started);void refreshDiveRecords(kind);}
   return rows.filter(row => !row.deleted && row.record && (options.includeSuppressed || !(row.record as Record<string, unknown>).suppressedFromUse))
     .map(row => row.record as unknown as T & { entityId: string });
 }
@@ -145,7 +145,11 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
   const record = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
   const pending: Pending = {id,kind,record,baseModifiedAt:queued ? queued.baseModifiedAt : typeof prior?.modifiedAt === 'string' ? prior.modifiedAt : null,token:crypto.randomUUID(),state:'pending'};
   await mutateEntity({entityId:localId,module,entityType:kind,schemaVersion:1,operation:old ? 'update':'create',record,pendingSync:{key:`pending:${localId}`,value:pending as unknown as JsonValue}});
-  changed(); void flushDiveChanges(); return {id};
+  // Enclosing multi-record edits must finish before exposing changes or sending their outbox.
+  const transaction=Dexie.currentTransaction;
+  if(transaction)transaction.on('complete',()=>{changed();void flushDiveChanges();});
+  else{changed();void flushDiveChanges();}
+  return {id};
 }
 export async function deleteLocalRecord(id: string) {
   return sequentialWrite(`${moduleName()}:${id}`,()=>deleteLocalRecordInternal(id));

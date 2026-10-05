@@ -17,3 +17,8 @@ The current canonical architecture uses `trip` for Calendar bookings/Dive Plans,
 No bulk owner-data edit, relationship-store migration, protected calculation edit, Gmail operation or Google Calendar mutation. Unlink never deletes records. A failed cloud update remains reviewable; do not bypass dependency guards. Final evidence belongs on a separate documentation branch after exact product freeze.
 
 RED checkpoint874ef8f preserved missing-module failure and five real atomic API guard failures before implementation. New11 unlink tests cover mirrored references, isolation, stale/account conflicts, recoverable backup/history and atomic failure. Four context tests cover exact workflow and reviewed Trip drafts. Server/local shared14-field guards include both incoming and outgoing relationships and Gas Plans; no protected calculation changed.
+
+
+## Final-review corrections — app1.0.87 candidate
+
+Preserve withdrawn Sites158/e0978 and RED f46fc12 /6ae308f. Review regressions now cover allocated/legacy Gas copy evidence resets, a real bookingKind event opening a reviewed new Plan, atomic Plan/event/Gas saves, abort without network or exposed partial update, conflict/stale source protection, and canonical legacy workspace links. 1592tests/233files PASS;61focused/7files PASS; typecheck PASS; nine protected hashes unchanged. No new store, owner migration or protected byte edit. App1.0.87/cachev34 compiled responsive/native packaging/privacy/fresh owner baseline and publication/exact PR94/main acceptance remain required. Source Calendar text/history remain unchanged apart from an explicit normal Save association.

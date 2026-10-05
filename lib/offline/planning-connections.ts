@@ -14,7 +14,7 @@ const text=(value:unknown,fallback='')=>typeof value==='string'||typeof value===
 const kinds=[...new Set(PLANNING_LINK_FIELDS.map(spec=>spec.kind))];
 function endpoint(kind:string,id:string,row?:EntityRow):Endpoint{
  const data=(row?.record??{}) as Record<string,unknown>;
- const route=kind==='gas-plan'?'Gas Planning':kind==='dive-trip'?'Trips':kind==='dive'?'Logbook':kind==='skill_evidence'?'Skills & Currency':data.lifecycleStatus||data.planTeam||data.technicalMode?'Dive Plans':'Diving Calendar & Bookings';
+ const route=kind==='gas-plan'?'Gas Planning':kind==='dive-trip'?'Trips':kind==='dive'?'Logbook':kind==='skill_evidence'?'Skills & Currency':!('bookingKind' in data)?'Dive Plans':'Diving Calendar & Bookings';
  const type=kind==='gas-plan'?'Gas Plan':kind==='dive-trip'?'Trip':kind==='dive'?'Logged Dive':kind==='skill_evidence'?'Skill evidence':'Dive Plan / event';
  const name=text(data.name)||text(data.title)||(kind==='dive'?`${text(data.date)} · ${text(data.site,'Dive')}`:type);
  return{id,kind,name:row?`${type} · ${name}`:`Unavailable ${type}`,available:Boolean(row),href:'/'+workflowDestinationUrl({route,recordId:kind==='skill_evidence'?(text(data.skillId)||text(data.skillKey)||id):id,...(kind==='skill_evidence'?{params:{evidenceId:id}}:{})})};

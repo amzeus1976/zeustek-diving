@@ -36,7 +36,7 @@ describe('Actual copied Gas Plan editor allocation',()=>{
   const input=initialRecreationalInput(draft,baseline);
   const saved=gasPlanWithAllocation(draft,input,buildRecreationalGasSnapshot(input),state);
   expect(saved.cylinders.map(row=>row.id)).toEqual(['first','second']);
-  expect(saved.allocationV1?.cylinders).toEqual(allocation.cylinders);
+  expect(saved.allocationV1?.cylinders).toMatchObject(allocation.cylinders.map(row=>({id:row.id,label:row.label,waterVolumeL:row.waterVolumeL,plannedStartPressureBar:row.plannedStartPressureBar,gas:row.gas,currentPressureBar:null,analysisConfirmed:false,conditionConfirmed:false})));
   expect(saved).not.toHaveProperty('entityId');
   state.cylinders[0]!.label='Edited copy';
   expect(source).toEqual(before);

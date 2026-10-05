@@ -132,6 +132,7 @@ export function calendarListEntries<T extends {bookingStatus?: string}>(items: r
 export function DivingCalendarBookings({ go }: Props) {
   const [items, setItems] = useState<CalendarBooking[]>([]);
   const [bookings,setBookings]=useState<StoredDivingCalendarBooking[]>([]);
+  const [canonicalPlanIds,setCanonicalPlanIds]=useState<string[]>([]);
   const [trips,setTrips]=useState<Stored<DiveExpeditionTripRecord>[]>([]);
   const [dives,setDives]=useState<Array<DiveRecord&{entityId:string}>>([]);
   const [loadError,setLoadError]=useState('');
@@ -148,7 +149,7 @@ export function DivingCalendarBookings({ go }: Props) {
   >(undefined);
 
   const refresh = useCallback(
-    async () => {try{const source=await readCalendarSources();setItems(source.entries);setBookings(source.bookings);setTrips(source.trips);setDives(source.dives);setLoadError('');}catch{setLoadError('Calendar records could not be loaded. Existing records are retained; try reopening this workspace.');}finally{setLoaded(true);}},
+    async () => {try{const source=await readCalendarSources();setItems(source.entries);setBookings(source.bookings);setCanonicalPlanIds(source.canonicalPlanIds);setTrips(source.trips);setDives(source.dives);setLoadError('');}catch{setLoadError('Calendar records could not be loaded. Existing records are retained; try reopening this workspace.');}finally{setLoaded(true);}},
     [],
   );
   useRecordRefresh(refresh);
@@ -431,6 +432,7 @@ export function DivingCalendarBookings({ go }: Props) {
             <BookingDetail
               key={selected.entityId}
               item={selected}
+              isCanonicalPlan={canonicalPlanIds.includes(selected.entityId)}
               trips={trips}
               dives={dives}
               go={go}
@@ -453,6 +455,7 @@ export function DivingCalendarBookings({ go }: Props) {
 
 function BookingDetail({
   item,
+  isCanonicalPlan,
   trips,
   dives,
   go,
@@ -460,6 +463,7 @@ function BookingDetail({
   refresh,
 }: {
   item: CalendarBooking;
+  isCanonicalPlan:boolean;
   trips: Stored<DiveExpeditionTripRecord>[];
   dives: Array<DiveRecord&{entityId:string}>;
   go?: Props['go'];
@@ -509,12 +513,12 @@ function BookingDetail({
       </div></>}
       <h3>Quick actions</h3>
       <div className={styles.actionGrid}>
-        <button className="focus-secondary" onClick={() => go?.(calendarPlanDestination(item))}>
+        <button className="focus-secondary" onClick={() => go?.(calendarPlanDestination(item,isCanonicalPlan))}>
           <Link2 size={14} /> Create/link Dive Plan
         </button>
         <button
           className="focus-secondary"
-          onClick={() => go?.(calendarPlanDestination(item))}
+          onClick={() => go?.(calendarPlanDestination(item,isCanonicalPlan))}
         >
           <Link2 size={14} /> Plan gas from this Dive Plan
         </button>
