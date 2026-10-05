@@ -1,10 +1,12 @@
 import {describe,it,expect} from 'vitest';
-import {calendarPlanDestination,planDraftForTrip,linkedPlanIdsForTrip} from '../lib/planning/planning-start-context';
+import {calendarPlanDestination,planDraftForTrip,linkedPlanIdsForTrip,resolvePlanSelection} from '../lib/planning/planning-start-context';
 import {parseWorkflowDestination} from '../lib/workflow/workflow-destination';
 import type {Stored} from '../lib/offline/dive-planning';
 import type {DiveExpeditionTripRecord} from '../lib/offline/trips-expeditions';
 import type {EnrichedDivePlan} from '../lib/offline/dive-planning-centre';
 describe('Canonical planning workflow context',()=>{
+ it('retains a missing requested Plan until its exact record arrives rather than selecting the first cached Plan',()=>{expect(resolvePlanSelection([{entityId:'first'}],'','requested',false)).toEqual({id:'',consumed:false});expect(resolvePlanSelection([{entityId:'first'},{entityId:'requested'}],'first','requested',false)).toEqual({id:'requested',consumed:true});});
+ it('preserves an intentional later selection after the initial exact link has been consumed',()=>{expect(resolvePlanSelection([{entityId:'first'},{entityId:'requested'}],'first','requested',true)).toEqual({id:'first',consumed:true});});
  it('counts explicit and inverse Plan references once without changing either source',()=>{const trip={entityId:'holiday',planIds:['explicit','both','missing']};const plans=[{entityId:'both',tripId:'holiday'},{entityId:'new',tripId:'holiday'},{entityId:'elsewhere',tripId:'other'}];const before=structuredClone({trip,plans});expect(linkedPlanIdsForTrip(trip,plans)).toEqual(['explicit','both','missing','new']);expect({trip,plans}).toEqual(before);});
  it('shows a newly saved Trip draft through its canonical inverse reference without a second Trip save',()=>{expect(linkedPlanIdsForTrip({entityId:'holiday',planIds:[]},[{entityId:'new-plan',tripId:'holiday'}])).toEqual(['new-plan']);});
  it('opens the exact canonical event Plan or explicitly linked Plan',()=>{expect(parseWorkflowDestination(calendarPlanDestination({entityId:'event'}))).toMatchObject({route:'Dive Plans',recordId:'event'});expect(parseWorkflowDestination(calendarPlanDestination({entityId:'event',linkedDivePlanId:'specific'}))).toMatchObject({recordId:'specific'});});
