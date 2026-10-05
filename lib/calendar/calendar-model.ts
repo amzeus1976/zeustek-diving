@@ -3,6 +3,7 @@ import { deriveCylinderInspectionSchedule, isCylinderEquipment, type CylinderEqu
 import { equipmentServiceStatus } from '../offline/equipment-usage';
 import type { EquipmentRecord, Stored } from '../offline/dive-planning';
 import { workflowDestinationUrl } from '../workflow/workflow-destination';
+import { sameConvertedCalendarDates, convertedCalendarBookingStatus, calendarTripLinkState } from '../planning/calendar-link-identity';
 import { addCalendarDays, calendarMonthRange, calendarUtcStamp, resolveCalendarDateTime, validCalendarDay, type CalendarDateTimeResult, type CalendarFoldChoice } from './calendar-dates';
 
 export const CALENDAR_CATEGORIES = [
@@ -102,6 +103,13 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
     return preview;
   }
   const records = snapshot.records.filter(row => row.id && object(row.data) && belongsToOwner(row, snapshot.accountId));
+  const bookingSources = new Map(records.filter(row => row.kind === 'trip').map(row => [row.id, row]));
+  const tripAssociations=records.filter(row=>row.kind==='dive-trip').map(row=>({entityId:row.id,calendarBookingIds:row.data.calendarBookingIds,originCalendarBookingId:row.data.originCalendarBookingId}));
+  const convertedTrips = new Map<string,CalendarSourceRecord[]>();
+  for(const record of records.filter(row=>row.kind==='dive-trip')){
+    const origin=bookingSources.get(text(record.data.originCalendarBookingId));
+    if(origin&&sameConvertedCalendarDates(record.data,origin.data))convertedTrips.set(origin.id,[...(convertedTrips.get(origin.id)??[]),record]);
+  }
   const ownerPeople = records.filter(row => row.kind === 'person' && object(row.data.roles)?.ownerProfile === true);
   const omit = (category: CalendarCategory, code: CalendarOmission['code'], explanation: string, record?: CalendarSourceRecord, resolutionKey?: string) => {
     preview.omissions.push({ category, code, explanation, ...(record ? { reviewDestination: destination(record) } : {}), ...(resolutionKey ? { resolutionKey } : {}) });
@@ -174,19 +182,36 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
     if (options.fields?.sourceLink) { const url = sourceLink(options.sourceOrigin, destination(record)); if (url) event.url = url; }
     preview.events.push(event);
   };
-  for (const record of records) {
-    const data = record.data;
-    if (record.kind === 'trip' && categories.has('bookings')) {
+  const ambiguousBookingsReported = new Set<string>();
+  const projectBooking = async (record: CalendarSourceRecord, category: 'bookings' | 'trips' | 'itinerary') => {
+      const data = record.data;
       const booking = normaliseBooking({ ...data, entityId: record.id } as unknown as StoredDivingCalendarBooking);
       const startAt = text(data.startAt), endAt = text(data.endAt);
       if ((startAt && text(data.startDate) && startAt.slice(0, 10) !== text(data.startDate)) || (endAt && text(data.endDate) && endAt.slice(0, 10) !== text(data.endDate))) {
-        preview.totalCandidates++; omit('bookings', 'conflicting-date', 'Saved date and time fields disagree. Open the source record to review them.', record); continue;
+        preview.totalCandidates++; omit(category, 'conflicting-date', 'Saved date and time fields disagree. Open the source record to review them.', record); return;
       }
-      if (endAt && !startAt) { preview.totalCandidates++; omit('bookings', 'conflicting-date', 'An end time exists without a start time. No start was invented.', record); continue; }
-      await project({ record, category: 'bookings', discriminator: 'booking', label: 'Diving booking', title: text(data.name), location: text(booking.locationName), start: startAt || data.startDate, end: startAt ? endAt : data.endDate, timed: Boolean(startAt), provenance: 'Recorded calendar/plan dates.', status: data.bookingStatus ?? data.status ?? booking.bookingStatus });
-    }
+      if (endAt && !startAt) { preview.totalCandidates++; omit(category, 'conflicting-date', 'An end time exists without a start time. No start was invented.', record); return; }
+      const matches=convertedTrips.get(record.id)??[];
+      if(calendarTripLinkState(record.id,data.linkedTripId,tripAssociations).conflict){
+        const key=`${category}:${record.id}`;
+        if(!ambiguousBookingsReported.has(key)){
+          ambiguousBookingsReported.add(key);preview.totalCandidates++;
+          omit(category,'invalid-identity','Multiple converted Trips or conflicting Trip associations share this event identity. Review the canonical Trips before exporting; no source status was substituted.',record);
+        }
+        return;
+      }
+      const status=matches.length===1?convertedCalendarBookingStatus(matches[0]!.data.status,data.bookingStatus??data.status):data.bookingStatus??data.status??booking.bookingStatus;
+      await project({ record, category, discriminator: 'booking', label: 'Diving booking', title: text(data.name), location: text(booking.locationName), start: startAt || data.startDate, end: startAt ? endAt : data.endDate, timed: Boolean(startAt), provenance: 'Recorded calendar/plan dates.', status });
+  };
+  for (const record of records) {
+    const data = record.data;
+    if (record.kind === 'trip' && categories.has('bookings')) await projectBooking(record, 'bookings');
     if (record.kind === 'dive-trip') {
-      await project({ record, category: 'trips', discriminator: 'trip', label: 'Diving trip', title: text(data.name), location: text(data.destination), start: data.startsOn, end: data.endsOn, provenance: 'Recorded Trip dates.', status: data.status });
+      const origin = bookingSources.get(text(data.originCalendarBookingId));
+      const converted = origin && sameConvertedCalendarDates(data, origin.data);
+      if (converted) {
+        if (!categories.has('bookings')) await projectBooking(origin, 'trips');
+      } else await project({ record, category: 'trips', discriminator: 'trip', label: 'Diving trip', title: text(data.name), location: text(data.destination), start: data.startsOn, end: data.endsOn, provenance: 'Recorded Trip dates.', status: data.status });
       for (const [category, field] of [['itinerary', 'itinerary'], ['booking-deadlines', 'bookings']] as const) {
         if (!categories.has(category)) continue;
         const savedRows = data[field];
@@ -200,6 +225,12 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
         for (const row of rows) {
           const id = text(row.id);
           if (!id || counts.get(id) !== 1) { preview.totalCandidates++; omit(category, 'invalid-identity', 'An itinerary/booking item has a missing or duplicate stable identity and needs review.', record); continue; }
+          const source = category === 'itinerary' ? bookingSources.get(text(row.calendarBookingId)) : undefined;
+          if (source && text(row.startsAt) === (text(source.data.startAt) || text(source.data.startDate)) && text(row.endsAt) === (text(source.data.endAt) || text(source.data.endDate))) {
+            // One explicit imported event has one stable identity across selected categories.
+            if (!categories.has('bookings') && !(converted && categories.has('trips') && origin.id === source.id)) await projectBooking(source, 'itinerary');
+            continue;
+          }
           await project({ record, category, discriminator: `${field}:${id}`, label: category === 'itinerary' ? 'Trip itinerary event' : 'Trip booking payment reminder', title: text(category === 'itinerary' ? row.title : row.provider), location: text(row.location), start: category === 'itinerary' ? row.startsAt : row.dueOn, end: category === 'itinerary' ? row.endsAt : undefined, timed: category === 'itinerary' && text(row.startsAt).includes('T'), provenance: category === 'itinerary' ? 'Recorded itinerary date/time.' : 'Recorded booking payment due date.', status: data.status, paid: row.paid === true });
         }
       }
@@ -238,6 +269,7 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
       await project({ record, category: 'qualification-expiry', discriminator: 'expiry', label: 'Qualification expiry reminder', title: text(data.certification) || text(data.level), start: data.expiresAt, provenance: 'Recorded qualification expiry date.' });
     }
   }
+  preview.events = preview.events.filter((event, index, events) => events.findIndex(other => other.uid === event.uid) === index);
   preview.events.sort((a, b) => a.start.value.localeCompare(b.start.value) || a.uid.localeCompare(b.uid));
   return preview;
 }

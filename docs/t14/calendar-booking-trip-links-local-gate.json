@@ -1,0 +1,199 @@
+{
+  "candidateVersion": "1.0.78",
+  "cache": "zeustek-static-v25",
+  "branch": "fix/calendar-booking-trip-links",
+  "previousAcceptedSource": "9b1c0af4192779ce2dbb15f2c16253b5eddb0e59",
+  "tests": 1449,
+  "testFiles": 217,
+  "typecheck": "PASS",
+  "productionBuild": "PASS",
+  "pwa": {
+    "entries": 422,
+    "sizeKiB": 42696.36
+  },
+  "lint": {
+    "newOrChanged": 0,
+    "unchangedAcceptedBaseline": 11,
+    "rawExit": 1
+  },
+  "protected": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "privacy": {
+    "checkedAt": "2026-10-05T00:23:12.788Z",
+    "artifactFilesScanned": 1356,
+    "credentialMatches": 0,
+    "anonymous": [
+      {
+        "path": "/api/dive-data?kind=trip",
+        "status": 401
+      },
+      {
+        "path": "/api/dive-data?kind=dive-trip",
+        "status": 401
+      },
+      {
+        "path": "/api/dive-backup",
+        "status": 401
+      },
+      {
+        "path": "/api/v1/dives",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/trips",
+        "status": 400
+      },
+      {
+        "path": "/api/gmail/status",
+        "status": 401
+      }
+    ],
+    "navigationIcons": 31,
+    "mastersUnchangedAndNotPrecached": true,
+    "cache": "zeustek-static-v25",
+    "gmailCalls": 0,
+    "productionCalls": 0
+  },
+  "browser": {
+    "actualWidths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "featureObservations": 18,
+    "pageOverflow": 0,
+    "testedClipping": 0,
+    "brokenImages": 0,
+    "applicationErrors": 0,
+    "visibleKeyboardFocus": true,
+    "allChecksPassed": true
+  },
+  "calendarDownload": {
+    "sha256": "4b54f1f32058a1a794c368a628fd82ac227d96030323d47e76b1d7fe78ebf11f",
+    "bytes": 1079,
+    "events": 2,
+    "uniqueUids": true,
+    "previewMatch": true,
+    "convertedEventOnce": true,
+    "savedLondonTimesPreserved": true,
+    "inclusiveTripEndCorrect": true,
+    "privateSourceDetailsExcluded": true,
+    "googleWrites": 0,
+    "delivery": "Browser download event notification timed out; actual filesystem delivery verified afterward."
+  },
+  "ownerBaseline": {
+    "exportedAt": "2026-10-05T00:29:39.404Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6501,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 198,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1680,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 17,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 8
+    },
+    "fingerprint": "237c64bb0b059c0c796bb6e031c22a42c98ae548e7542b5a38683411bed0fdd9",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "releaseStatus": "Local verified; production publication/acceptance and GitHub reconciliation pending",
+  "noProductionRecordWrites": true,
+  "gmailOperations": 0,
+  "googleWrites": 0
+}

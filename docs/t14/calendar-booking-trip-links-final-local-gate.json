@@ -1,0 +1,554 @@
+{
+  "status": "Final local gate PASS; publication and accepted GitHub reconciliation pending",
+  "application": "1.0.80",
+  "cache": "zeustek-static-v27",
+  "branch": "fix/calendar-booking-trip-links",
+  "recovery": "Sites149/app1.0.77/source9b1c0af; deploymentappgdep_6ac304923af08191a2920ec002d4e370",
+  "rejectedAttempts": [
+    150,
+    151
+  ],
+  "tests": 1471,
+  "testFiles": 219,
+  "focusedTests": 50,
+  "focusedFiles": 6,
+  "typecheck": "PASS",
+  "buildPWA": {
+    "status": "PASS",
+    "entries": 422,
+    "KiB": 42699.54
+  },
+  "lint": {
+    "baseline": "9b1c0af",
+    "files": 19,
+    "newOrChanged": 0,
+    "unchanged": [
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 20,
+        "baselineLine": 20,
+        "rule": "eslint(no-unused-vars)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 278,
+        "baselineLine": 254,
+        "rule": "eslint(no-unused-vars)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 278,
+        "baselineLine": 254,
+        "rule": "eslint(no-unused-vars)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 309,
+        "baselineLine": 285,
+        "rule": "next(no-html-link-for-pages)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 310,
+        "baselineLine": 286,
+        "rule": "jsx-a11y(label-has-associated-control)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 365,
+        "baselineLine": 335,
+        "rule": "jsx-a11y(label-has-associated-control)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 369,
+        "baselineLine": 339,
+        "rule": "jsx-a11y(label-has-associated-control)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 370,
+        "baselineLine": 340,
+        "rule": "jsx-a11y(label-has-associated-control)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 371,
+        "baselineLine": 341,
+        "rule": "jsx-a11y(label-has-associated-control)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 395,
+        "baselineLine": 365,
+        "rule": "jsx-a11y(prefer-tag-over-role)"
+      },
+      {
+        "file": "components/trips-expeditions.tsx",
+        "line": 407,
+        "baselineLine": 377,
+        "rule": "typescript(no-base-to-string)"
+      }
+    ],
+    "rawExit": 1
+  },
+  "privacy": {
+    "checkedAt": "2026-10-05T02:08:04.710Z",
+    "artifactFilesScanned": 1346,
+    "credentialMatches": 0,
+    "anonymous": [
+      {
+        "path": "/api/dive-data?kind=trip",
+        "status": 401
+      },
+      {
+        "path": "/api/dive-data?kind=dive-trip",
+        "status": 401
+      },
+      {
+        "path": "/api/dive-backup",
+        "status": 401
+      },
+      {
+        "path": "/api/v1/dives",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/trips",
+        "status": 400
+      },
+      {
+        "path": "/api/gmail/status",
+        "status": 401
+      }
+    ],
+    "navigationIcons": 31,
+    "mastersUnchangedAndNotPrecached": true,
+    "cache": "zeustek-static-v27",
+    "gmailCalls": 0,
+    "productionCalls": 0
+  },
+  "browser": [
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 12,
+      "linkedDives": 2,
+      "morePresent": true,
+      "notesCharacters": 320,
+      "pageOverflow": false,
+      "width": 320,
+      "feature": "Selected event",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 12,
+      "linkedDives": 2,
+      "morePresent": true,
+      "notesCharacters": 320,
+      "pageOverflow": false,
+      "width": 390,
+      "feature": "Selected event",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 12,
+      "linkedDives": 2,
+      "morePresent": true,
+      "notesCharacters": 320,
+      "pageOverflow": false,
+      "width": 430,
+      "feature": "Selected event",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 12,
+      "linkedDives": 2,
+      "morePresent": true,
+      "notesCharacters": 320,
+      "pageOverflow": false,
+      "width": 820,
+      "feature": "Selected event",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 12,
+      "linkedDives": 2,
+      "morePresent": true,
+      "notesCharacters": 320,
+      "pageOverflow": false,
+      "width": 1024,
+      "feature": "Selected event",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 12,
+      "linkedDives": 2,
+      "morePresent": true,
+      "notesCharacters": 320,
+      "pageOverflow": false,
+      "width": 1440,
+      "feature": "Selected event",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 5,
+      "linkedDives": 0,
+      "morePresent": false,
+      "notesCharacters": null,
+      "pageOverflow": false,
+      "width": 320,
+      "feature": "Multi-Dive review dialog",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 5,
+      "linkedDives": 0,
+      "morePresent": false,
+      "notesCharacters": null,
+      "pageOverflow": false,
+      "width": 390,
+      "feature": "Multi-Dive review dialog",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 5,
+      "linkedDives": 0,
+      "morePresent": false,
+      "notesCharacters": null,
+      "pageOverflow": false,
+      "width": 430,
+      "feature": "Multi-Dive review dialog",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 5,
+      "linkedDives": 0,
+      "morePresent": false,
+      "notesCharacters": null,
+      "pageOverflow": false,
+      "width": 820,
+      "feature": "Multi-Dive review dialog",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 5,
+      "linkedDives": 0,
+      "morePresent": false,
+      "notesCharacters": null,
+      "pageOverflow": false,
+      "width": 1024,
+      "feature": "Multi-Dive review dialog",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clipped": [],
+      "controls": 5,
+      "linkedDives": 0,
+      "morePresent": false,
+      "notesCharacters": null,
+      "pageOverflow": false,
+      "width": 1440,
+      "feature": "Multi-Dive review dialog",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clippedButtonLabels": [],
+      "clippedControls": [],
+      "fieldCount": 25,
+      "notes": [
+        0,
+        1008,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1007
+      ],
+      "pageOverflow": false,
+      "timeValues": [
+        "2026-10-10T08:30",
+        "2026-10-10T16:00"
+      ],
+      "width": 320,
+      "feature": "Converted Trip editor",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clippedButtonLabels": [],
+      "clippedControls": [],
+      "fieldCount": 25,
+      "notes": [
+        0,
+        1008,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1007
+      ],
+      "pageOverflow": false,
+      "timeValues": [
+        "2026-10-10T08:30",
+        "2026-10-10T16:00"
+      ],
+      "width": 390,
+      "feature": "Converted Trip editor",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clippedButtonLabels": [],
+      "clippedControls": [],
+      "fieldCount": 25,
+      "notes": [
+        0,
+        1008,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1007
+      ],
+      "pageOverflow": false,
+      "timeValues": [
+        "2026-10-10T08:30",
+        "2026-10-10T16:00"
+      ],
+      "width": 430,
+      "feature": "Converted Trip editor",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clippedButtonLabels": [],
+      "clippedControls": [],
+      "fieldCount": 25,
+      "notes": [
+        0,
+        1008,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1007
+      ],
+      "pageOverflow": false,
+      "timeValues": [
+        "2026-10-10T08:30",
+        "2026-10-10T16:00"
+      ],
+      "width": 820,
+      "feature": "Converted Trip editor",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clippedButtonLabels": [],
+      "clippedControls": [],
+      "fieldCount": 25,
+      "notes": [
+        0,
+        1008,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1007
+      ],
+      "pageOverflow": false,
+      "timeValues": [
+        "2026-10-10T08:30",
+        "2026-10-10T16:00"
+      ],
+      "width": 1024,
+      "feature": "Converted Trip editor",
+      "pass": true
+    },
+    {
+      "brokenImages": 0,
+      "clippedButtonLabels": [],
+      "clippedControls": [],
+      "fieldCount": 25,
+      "notes": [
+        0,
+        1008,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1007
+      ],
+      "pageOverflow": false,
+      "timeValues": [
+        "2026-10-10T08:30",
+        "2026-10-10T16:00"
+      ],
+      "width": 1440,
+      "feature": "Converted Trip editor",
+      "pass": true
+    }
+  ],
+  "download": {
+    "events": 1,
+    "bytes": 599,
+    "sha256": "6f6a472a105e41022a7ab7bd7a6438a3cbd7cadde77b8bab969319e26848dd76",
+    "previewByteMatch": true,
+    "ambiguousIdentityOmittedEvenWhenHistoryAndCancelledIncluded": true,
+    "productionCalls": 0,
+    "googleWrites": 0
+  },
+  "protected": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "match": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "match": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "match": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "match": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "match": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "match": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "match": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "match": true
+    }
+  ],
+  "owner": {
+    "exportedAt": "2026-10-05T02:14:16.813Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6501,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 198,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1680,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 17,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 8
+    },
+    "fingerprint": "237c64bb0b059c0c796bb6e031c22a42c98ae548e7542b5a38683411bed0fdd9",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "reviewFixes": [
+    "Ambiguous concurrent conversions omitted from all export selections and displayed Needs review; status mutations and further automatic conversion blocked",
+    "Initial failed load leaves exact source endpoint available; refresh opens original source and clears failed-load message"
+  ],
+  "notes": [
+    "Six RED assertions preceded bounded fixes; original Sites150/151 evidence preserved",
+    "A UTF16 length measurement was rejected and replaced with Unicode code-point counts; single-line input text scroll is native editable behaviour, actual control boxes and button labels tested for containment",
+    "Brave file delivery was not verified; IAB actual599-byte delivery exactly matches captured pre-download preview",
+    "Owner JSON DOM returned truncated data in one call; complete100k-character rendered chunks validated before encrypted recovery capture"
+  ],
+  "canonicalOwnerWrites": 0,
+  "gmailCalls": 0,
+  "googleWrites": 0,
+  "googleWorkflow": "Existing reviewed .ics download/import; automatic synchronisation off"
+}

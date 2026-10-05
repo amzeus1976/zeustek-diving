@@ -1,0 +1,16 @@
+{
+  "status": "Sites150 REJECTED after review; Sites149 restored",
+  "reason": "Converted Trip current cancelled/completed status was not applied to its original-identity calendar projection; valid P1 review PR93 discussion_r4180034299",
+  "rejectedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_504c14b553c08191a54e521e59ca2bfd",
+  "rejectedSource": "a84903bd8aa1a0a618a659d854b05526cfad76e6",
+  "rejectedDeployment": "appgdep_6ac2f455fe2c81919f79a94f1b4fedc9",
+  "recovery": {
+    "id": "appgdep_6ac2f788f3448191bce35a9ef8cfdb0b",
+    "status": "succeeded",
+    "version": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_fe20c558256c8191b8d11cac84ee6bf2",
+    "environment": 6
+  },
+  "githubMainNotMerged": true,
+  "ownerDataNotRolledBack": true,
+  "requiredNext": "RED tests for canonical converted Trip status in UI and ICS; bounded shared projection fix, changed version/cache, final gates/fresh baseline, new publication and exact GitHub reconciliation."
+}

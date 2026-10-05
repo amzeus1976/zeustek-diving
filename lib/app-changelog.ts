@@ -1,6 +1,45 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.81',date:'2026-10-05',title:'Calendar events, multiple Dives and safe Trip links',
+    changes:[
+      'Selected event notes expand with More; each event can link multiple logged Dives.',
+      'Event-to-Trip review retains source details, and new Trips appear in the Calendar.',
+      'Conflicting Trip associations require review before navigation, changes or Google-compatible downloads.',
+      'Refreshing retries missing linked Trips; outdated status actions safely request reopening the event.',
+    ],
+  },
+  {
+    version:'1.0.80',date:'2026-10-05',title:'Calendar event links and reliable Trip conversion',
+    changes:[
+      'Selected event notes expand with More; each event can link multiple logged Dives.',
+      'Event-to-Trip review retains original details, and new Trips appear in the Calendar.',
+      'Ambiguous offline conversions require review rather than exporting a misleading active event.',
+      'Exact event conversion can retry after a failed load; Google-compatible downloads preserve original event identity, status and privacy.',
+    ],
+  },
+  {
+    version:'1.0.79',date:'2026-10-05',title:'Calendar Trips with current status and original event identity',
+    changes:[
+      'Compact event notes, multiple logged-Dive links and reviewable event-to-Trip details are available together.',
+      'New Trips appear in Calendar from their canonical record, without creating a second store.',
+      'Converted events retain their original calendar identity and saved times while reflecting the current Trip status.',
+      'Cancelled and completed converted Trips are excluded from downloads unless explicitly selected; existing privacy and Google-compatible file import remain intact.',
+    ],
+  },
+  {
+    version:'1.0.78',
+    date:'2026-10-05',
+    title:'Calendar bookings, multiple Dives and connected Trips',
+    changes:[
+      'Selected-event notes have a compact preview with More and Less controls.',
+      'Bookings and Trip calendar entries can link several existing logged Dives without duplicating them.',
+      'Create a Trip from event details, or import the event into an existing Trip while keeping its saved details.',
+      'New Trips appear in Diving Calendar & Bookings automatically from the same canonical record.',
+      'Reviewed Google-compatible calendar downloads include Trips and bookings while keeping converted event identities and times.',
+    ],
+  },
+  {
     version:'1.0.77',
     date:'2026-10-04',
     title:'Roomier Dive Plan editing and remembered-card loading',

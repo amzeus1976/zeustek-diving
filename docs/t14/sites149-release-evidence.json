@@ -1,0 +1,229 @@
+{
+  "status": "PUBLISHED AND VERIFIED; exact accepted GitHub source reconciled",
+  "at": "2026-10-04T20:58:26.017735+00:00",
+  "application": "1.0.77",
+  "sites": 149,
+  "cache": "zeustek-static-v24",
+  "source": "9b1c0af4192779ce2dbb15f2c16253b5eddb0e59",
+  "tree": "4a716c407cc46d8afbb53fbe03650bab04203d24",
+  "branch": "fix/dive-plan-editor-layout",
+  "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_fe20c558256c8191b8d11cac84ee6bf2",
+  "deployment": {
+    "id": "appgdep_6ac2b97e47b48191a30d260f49d2bac0",
+    "status": "succeeded",
+    "updatedAt": "2026-10-04T20:39:52.158929+00:00",
+    "environmentRevision": 6
+  },
+  "officialArchive": {
+    "archive_format": "tar",
+    "sediment_file_id": "file_00000000fb588210b960f5428f6bc183",
+    "content_hash": "sha256:87e4e8f5e7201af91bdff935879e1dacc147b11bd786870f4bc0aedde0c01360",
+    "size_bytes": 103239680,
+    "file_count": 1356
+  },
+  "sourceReverified": true,
+  "recoverableBundleSha256": "4e9b2055bf692cdba9f55acd9c38bcb03b4fcf5ee4920ad30fc0f7a001f991ee",
+  "environmentRevision": 6,
+  "bindingsPreserved": 17,
+  "secretBindingsPreserved": 11,
+  "audiencePreserved": true,
+  "requirements": {
+    "P01": "PASS; ten full-width editor sections at all six required widths",
+    "P02": "PASS; independent native Minimise/Expand, content remains mounted",
+    "P03": "PASS; all 23 multiline fields full width, minimum 224px, padding, readable line spacing and vertical resize",
+    "P04": "PASS; draft collapse/rerender/reopen, local-only save while collapsed/reload, original bindings and live 92-control equality",
+    "P05": "PASS; accessible disclosure names, visible expanded state, 44px targets and keyboard focus; no tested clipping/overflow/errors",
+    "P06": "PASS; exact candidate gates, fresh owner comparison, source/cache/assets verification, recoverable release and GitHub tree match",
+    "RememberedCardHydration": "PASS; stable initial render and deferred device preference restoration; RED/GREEN tests, remembered state retained, settled live React error absent"
+  },
+  "tests": {
+    "tests": 1424,
+    "files": 214,
+    "failed": 0
+  },
+  "focusedTests": {
+    "tests": 12,
+    "files": 4
+  },
+  "typecheck": "PASS",
+  "buildPWA": {
+    "status": "PASS",
+    "precacheEntries": 422,
+    "precacheKiB": 42681.39
+  },
+  "targetedLint": {
+    "files": 8,
+    "diagnostics": 0,
+    "exitCode": 0
+  },
+  "privacy": {
+    "compiledArtifactFiles": 1355,
+    "credentialMatches": 0,
+    "anonymousPrivateRoutesDenied": 10,
+    "connectionSecretsExcluded": true
+  },
+  "browser": {
+    "routes": 31,
+    "routeObservations": 186,
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "populatedEditorObservations": 6,
+    "sections": 10,
+    "largeTextareas": 23,
+    "draftControlsUnchanged": 92,
+    "visibleKeyboardFocus": "solid",
+    "nextVisibleFocus": "Emergency procedures",
+    "pageOverflow": 0,
+    "testedContentClipping": 0,
+    "visibleBrokenImages": 0,
+    "settledApplicationErrors": 0,
+    "settledConsoleCheckedAt": "2026-10-04T20:53:02.819Z",
+    "productionCanonicalSaves": 0
+  },
+  "assets": {
+    "navigationByteMatches": 31,
+    "serviceWorkerByteMatch": true,
+    "workerSha256": "132549b0638f50482505e5c0d45f5012452b2972529e8f17cd25437f18e3fccb"
+  },
+  "owner": {
+    "beforeAt": "2026-10-04T20:33:16.771Z",
+    "afterAt": "2026-10-04T20:46:56.759Z",
+    "beforeRecords": 6499,
+    "afterRecords": 6499,
+    "added": 0,
+    "removed": 0,
+    "changed": 0,
+    "exactCanonicalIdsMatch": true,
+    "allOriginalRowsMatch": true,
+    "agentCanonicalDataWrites": 0,
+    "gmailCalls": 0,
+    "expectedNoncanonicalWrites": "Read-only Plan editor opening and disclosure controls; no canonical write, Gmail call or conditions retrieval.",
+    "beforeFingerprint": "7adf5673a0e56e6dbbe02d6affb19832934f1a63807673e1c88f3874ee6018a6",
+    "afterFingerprint": "7adf5673a0e56e6dbbe02d6affb19832934f1a63807673e1c88f3874ee6018a6",
+    "secretExcluded": true,
+    "encryptedRecoveryVerified": true,
+    "missingRelationshipEndpoints": 0,
+    "canonicalIdsPreserved": true,
+    "syntheticProductionRecords": 0
+  },
+  "protectedCalculations": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "expected": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "actual": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "expected": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "actual": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "expected": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "actual": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "expected": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "actual": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "expected": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "actual": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "expected": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "actual": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "matches": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "expected": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "actual": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "matches": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "expected": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "actual": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "matches": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "expected": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "actual": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "matches": true
+    }
+  ],
+  "gitHub": {
+    "pr": "https://github.com/amzeus1976/zeustek-diving/pull/92",
+    "main": "33efa4271a75beb4363f031bea6e71362f62dbf0",
+    "mainTree": "4a716c407cc46d8afbb53fbe03650bab04203d24",
+    "exactFullTreeMatchesPublished": true,
+    "wholeTreeDiffEmpty": true,
+    "reviewCompleted": true,
+    "reviewCompletedAt": "2026-10-04T20:54:09.654519Z",
+    "reviewCommit": "9b1c0af4192779ce2dbb15f2c16253b5eddb0e59",
+    "unresolvedFindings": 0,
+    "submittedReviews": 0,
+    "reviewThreads": 0,
+    "remoteCIStatuses": 0,
+    "remoteCIStatus": "No configured remote status checks; local release checks and completed automatic review are documented separately.",
+    "evidenceBranch": "t14/sites149-release-evidence"
+  },
+  "rollback": {
+    "application": "1.0.75",
+    "sites": 147,
+    "source": "58edbe397f10b51089836a6b157fa6cdb04979c2",
+    "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_e9a206766ff48191a8fc3e880c0b6f9b",
+    "verifiedRecoveryDeployment": "appgdep_6ac2af6894a08191b5a23424e2873a22",
+    "archiveSha256": "e50f0592042ca6010e285639811f2491a419cc79576db2e928d0f4ac397c307b",
+    "recoverable": true
+  },
+  "rejectedAttempt": {
+    "sites": 148,
+    "source": "d4405015d202c35569f5d96c1a347b6af002b50f",
+    "accepted": false,
+    "evidence": "sites148-rejected-attempt.md",
+    "restoredBeforeCorrectedRelease": true
+  },
+  "preserved": [
+    "People human records and canonical non-human Operators",
+    "many-to-many relationships and deletion guards",
+    "single canonical Dive owner identity self",
+    "circular profile crop",
+    "31 supplied navigation PNGs, curated registry and 748-icon superset",
+    "lossless packed conditions and existing integrations",
+    "selected-data API and existing public-profile state"
+  ],
+  "gmail": {
+    "liveOperations": 0,
+    "status": "Unverified/deferred; existing human-only acceptance controls retained. No sync, reconnect or credential change."
+  },
+  "publicProfile": "Existing owner-published state unchanged; no agent publication/update/revocation.",
+  "apiCredentials": "No key issuance, rotation or expanded consent.",
+  "providerExceptions": [
+    "Met Office access denied/unverified",
+    "Direct Copernicus subset activation conditional on the agreed bridge/access",
+    "SwellCloud awaiting approved access/API"
+  ],
+  "deferred": [
+    "Original Stage 9 finishing and optional work",
+    "Unverified Gmail human acceptance",
+    "Conditional provider access"
+  ],
+  "nextActions": "This bounded editor release is complete. Preserve accepted source and evidence; do not start unrelated work."
+}

@@ -1,0 +1,16 @@
+{
+  "status": "Sites151 REJECTED after current-head review; Sites149 restored",
+  "reason": "Ambiguous concurrent offline conversions fall back to the active source booking status; source deep links cannot retry after a failed initial load.",
+  "rejectedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_88efbc3d32fc81919ba5e035fc3fc36e",
+  "rejectedSource": "32cd32d5599aa48beacef8a5daa8a5c9e5359f18",
+  "rejectedDeployment": "appgdep_6ac3013ee190819184aae148a3475593",
+  "recovery": {
+    "id": "appgdep_6ac304923af08191a2920ec002d4e370",
+    "status": "succeeded",
+    "version": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_fe20c558256c8191b8d11cac84ee6bf2",
+    "environment": 6
+  },
+  "githubMainNotMerged": true,
+  "ownerDataNotRolledBack": true,
+  "requiredNext": "RED tests for ambiguous conversions across every export category and failed-load retry; bounded fixes, new version/cache, final gates/fresh baseline, production acceptance and exact PR93/main reconciliation."
+}
