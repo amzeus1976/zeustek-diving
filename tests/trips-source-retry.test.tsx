@@ -1,7 +1,7 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
 
 // Exercise the root component's actual load/effect sequence without a DOM or child editors.
-const harness=vi.hoisted(()=>({slots:[] as unknown[],cursor:0,effects:[] as Array<()=>unknown>,refresh:null as null|(()=>void),registered:false,fail:true,bookingExtra:{} as Record<string,unknown>,trips:[] as unknown[]}));
+const harness=vi.hoisted(()=>({slots:[] as unknown[],cursor:0,effects:[] as Array<()=>unknown>,refresh:null as null|(()=>void),registered:false,fail:true,bookingExtra:{} as Record<string,unknown>,trips:[] as unknown[],forced:[] as unknown[]}));
 vi.mock('react',async importOriginal=>{
  const actual=await importOriginal<typeof import('react')>();
  return {...actual,
@@ -12,7 +12,7 @@ vi.mock('react',async importOriginal=>{
  };
 });
 vi.mock('../components/record-status',async importOriginal=>({...await importOriginal<typeof import('../components/record-status')>(),useRecordRefresh:(refresh:()=>void)=>{harness.refresh=refresh;if(!harness.registered){harness.registered=true;harness.effects.push(refresh);}}}));
-vi.mock('../lib/offline/dive-store',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/dive-store')>(),currentDiveAccount:()=> 'dummy-owner'}));
+vi.mock('../lib/offline/dive-store',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/dive-store')>(),currentDiveAccount:()=> 'dummy-owner',refreshDiveRecords:async(kind:string,force:boolean)=>{harness.forced.push([kind,force]);harness.fail=false;}}));
 const source={entityId:'exact-booking',name:'Dummy event',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy site',notes:'Keep original text',status:'confirmed',bookingStatus:'confirmed',bookingKind:'dive'};
 vi.mock('../lib/offline/dive-planning',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/dive-planning')>(),listDiveTrips:async()=>{if(harness.fail)throw Error('Fixture transport failure');return [{...source,...harness.bookingExtra},{entityId:'legacy-plan',name:'Legacy canonical Plan',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy site'}];},listOperators:async()=>[],listDiveSites:async()=>[],listPeople:async()=>[],listEquipment:async()=>[],listEquipmentSets:async()=>[]}));
 vi.mock('../lib/offline/trips-expeditions',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/trips-expeditions')>(),listDiveExpeditionTrips:async()=>harness.trips}));
@@ -20,7 +20,7 @@ import {TripsExpeditions} from '../components/trips-expeditions';
 
 afterEach(()=>vi.unstubAllGlobals());
 function initialise(fail=false){
- harness.slots=[];harness.cursor=0;harness.effects=[];harness.registered=false;harness.fail=fail;harness.bookingExtra={};harness.trips=[];
+ harness.slots=[];harness.cursor=0;harness.effects=[];harness.registered=false;harness.fail=fail;harness.bookingExtra={};harness.trips=[];harness.forced=[];
  vi.stubGlobal('window',{location:{search:'?section=Trips&fromEventId=exact-booking'}});
  vi.stubGlobal('requestAnimationFrame',(fn:()=>void)=>{fn();return 1;});vi.stubGlobal('cancelAnimationFrame',()=>{});
  return ()=>{harness.cursor=0;const output=TripsExpeditions({});for(const effect of harness.effects.splice(0))effect();return output;};
@@ -63,4 +63,6 @@ describe('Exact event conversion after a failed initial Trip load',()=>{
   expect(editor.props.sourceBooking?.notes).toBe('Keep original text');
   expect(harness.slots).not.toContain('Trip records could not be loaded. Existing records are retained.');
  });
+ it('explicit event-backed Trip retry forces and awaits both canonical endpoints',async()=>{const render=initialise(true);render();await tick();const output=render();const find=(v:unknown):any=>{if(Array.isArray(v))return v.map(find).find(Boolean);if(!v||typeof v!=='object'||!('props' in v))return;const n=v as {type:unknown;props:any};return n.type==='button'&&n.props.children==='Refresh Trip records'?n:find(n.props.children);};const retry=find(output);expect(retry).toBeDefined();await retry.props.onClick();await tick();render();expect(harness.forced).toEqual([['trip',true],['dive-trip',true]]);expect(render().props.sourceBooking?.entityId).toBe('exact-booking');});
+
 });
