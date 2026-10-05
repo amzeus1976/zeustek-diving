@@ -1,3 +1,7 @@
+## App1.0.101 final selector correction — review before publication
+
+Review4188917037 found the controlled Site selector lost its exact selection after filling the arrival prop. Actual compiled reproduction and RED2fcfdfb preserve two failures/two passes. Snapshot the new road value with its selected Site ID; retain View Site context while keeping external arrival edits and manual overrides safe. 27focused tests pass. Source173 was never packaged or deployed; accepted153 remains live. Refreshed final gates, complete-head review, owner comparison, publication and exact main reconciliation remain.
+
 ## App1.0.101/cache48 candidate — both arrival selectors preserve provenance
 
 Sites172/app100 withdrawn after valid review4188820022 found the Getting there selector marked a Site fill as owner text. Recovery153 succeeded21:09:18UTC, deployment appgdep_6ac411e68fa48191b71a87e2c1f69b51. RED570c3b8:2 failures/14 passes plus actual compiled selector reproduction. Shared typed arrival update handles site/owner sources; both UI paths preserve saved provenance, manual edits retain owner control, Site choices replace only derived/empty fields. App100 evidence remains recoverable; no owner changes. App101 requires fresh full gates, actual Save/reopen acceptance of both selectors, six effective widths, clear complete-head review before publication and exact main reconciliation.

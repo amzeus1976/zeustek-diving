@@ -87,3 +87,7 @@ Compiled96 source acceptance additionally exposed the normal30-second cloud-read
 ### G11 — consistent forced exact-source refresh
 
 Review4188075736 withdrew168;153 restored. REDc12afa5 six failures precede matching forced awaited trip reads for event/Plan retry and trip+dive-trip reads for Trip conversion retry. Initial failed exact-source loads retain explicit retry/error identity.24 focused tests pass; app97/cache44 requires all fresh candidate release gates. Original work/owner/evidence retained.
+
+### G16 — controlled Site choice retained
+
+Review4188917037 plus actual compiled selector reproduction: arrival filled correctly but selected option reset to custom and View Site disappeared. RED2fcfdfb has2failures/2passes; selected Site now snapshots its new road value in the same handler. Manual overrides and external arrival changes remain safe. App101/cache48 is still undeployed; refreshed full/typecheck/build/lint/hash/privacy/actual-width gates and clear complete-head review precede publication, owner comparison and exact PR94/main reconciliation. No frozen file or production record changes.
