@@ -48,7 +48,8 @@ import {
   type PersonRecord,
   type Stored,
 } from '../lib/offline/dive-planning';
-import { currentDiveAccount, refreshDiveRecords } from '../lib/offline/dive-store';
+import { currentDiveAccount } from '../lib/offline/dive-store';
+import { refreshDiveRecords } from '../lib/offline/dive-store';
 import {
   editableDiveExpeditionTrip,
   listDiveExpeditionTrips,
