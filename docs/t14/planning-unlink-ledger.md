@@ -29,3 +29,6 @@ Final159 review: owner-safe Trip Plan assignment must verify reviewed versions a
 
 
 Final160 review correction: REDec40ab5 reproduces six valid deselection/inverse-only/stale/conflict/rollback regressions. New89 wrapper reviews current selected plus prior-forward and inverse Gas rows, then passes them to the unchanged frozen canonical reconciler in the existing transaction. Both links clear; all gas/Plan evidence is retained. Separate withdrawn160 evidence preserved; new release gates remain.
+
+
+Final161 review correction: REDdc6f173 reproduces canonical Plan Calendar action mislabelling. Canonical Plan lifecycle is routed to exact Dive Plans; ordinary event lifecycle remains distinct and guarded. Five rendered regressions preserve Plan/event/Trip boundaries and input data. New90/cache37 candidate requires full gates and saved responsive measurements.

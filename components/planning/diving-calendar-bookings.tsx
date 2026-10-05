@@ -531,10 +531,10 @@ export function BookingDetail({
             <Link2 size={14} /> Open Planned Training
           </button>
         ) : null}
-        <button className="focus-secondary" onClick={edit}>
-          <Pencil size={14} /> {item.calendarSource==='dive-trip'?'Edit in Trips':'Edit event'}
+        <button className="focus-secondary" onClick={isCanonicalPlan?()=>go?.(workflowDestinationUrl({route:'Dive Plans',recordId:item.entityId})):edit}>
+          <Pencil size={14} /> {isCanonicalPlan?'Open Dive Plan to edit / delete':item.calendarSource==='dive-trip'?'Edit in Trips':'Edit event'}
         </button>
-        <button
+        {!isCanonicalPlan&&<><button
           className="focus-secondary"
           disabled={busy||item.calendarLinkConflict||item.bookingStatus === 'completed'}
           onClick={() => void updateStatus('completed')}
@@ -555,12 +555,12 @@ export function BookingDetail({
         >
           <Archive size={14} /> Archive event
         </button>}
-        {item.calendarSource!=='dive-trip'&&<button type="button" className="focus-secondary danger" disabled={busy} onClick={()=>setDeleting(true)}>Delete event</button>}
+        {item.calendarSource!=='dive-trip'&&<button type="button" className="focus-secondary danger" disabled={busy} onClick={()=>setDeleting(true)}>Delete event</button>}</>}
       </div>
       {item.calendarLinkConflict&&<p role="alert">Multiple Trip associations need review. No new Trip will be created automatically.</p>}
       {!item.linkedTripId&&!item.calendarLinkConflict&&<details className={styles.existingTripLink}><summary>Link an existing Trip</summary><p>Import this event into its itinerary and fill blank Trip summary fields. Existing Trip text and dates are retained.</p><label>Trip<select value={tripId} onChange={e=>setTripId(e.target.value)}><option value="">Choose a Trip</option>{trips.map(trip=><option key={trip.entityId} value={trip.entityId}>{trip.name} · {trip.startsOn||'Undated'}</option>)}</select></label><button type="button" className="focus-secondary" disabled={!tripId||busy} onClick={()=>void linkTrip()}>Link Trip and import event details</button></details>}
       {error&&<p role="alert">{error}</p>}
-      {deleting&&<DeletePlanningRecordDialog record={item} label="event" close={()=>setDeleting(false)} deleted={refresh}/>}
+      {deleting&&!isCanonicalPlan&&item.calendarSource!=='dive-trip'&&<DeletePlanningRecordDialog record={item} label="event" close={()=>setDeleting(false)} deleted={refresh}/>}
     </section>
   );
 }

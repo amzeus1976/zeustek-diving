@@ -18,10 +18,10 @@ it('renders the exact accessible current-version link and preserves the canonica
 });
 
 it('advances the selected-task candidate version while removing replay of identity-dependent navigation', () => {
-  expect(version).toBe('1.0.89');
+  expect(version).toBe('1.0.90');
   expect(appChangelog[0]?.version).toBe(version);
   const worker = readFileSync(new URL('../app/service-worker.ts', import.meta.url), 'utf8');
-  expect(worker).toContain("cacheName: 'zeustek-static-v36'");
+  expect(worker).toContain("cacheName: 'zeustek-static-v37'");
   expect(worker).toContain("name.startsWith('zeustek-navigation-')");
   expect(worker).toContain("self.addEventListener('activate',event=>event.waitUntil(clearNavigationCaches()))");
   expect(worker).toContain('new NavigationRoute(new NetworkOnly())');
