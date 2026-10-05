@@ -1,6 +1,10 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.83',date:'2026-10-05',title:'Preserved Gas Plan copies and linked-event protection',
+    changes:['Copied Gas Plans retain their allocated or legacy cylinders on save.','Calendar events with linked Dives require explicit unlinking before deletion, including offline and atomic cloud deletion.','Includes reviewed Trip directions, plan duplication, Dive videos and compact planning improvements.'],
+  },
+  {
     version:'1.0.82',date:'2026-10-05',title:'Planning, Dive videos and a more compact interface',
     changes:['Getting there: choose current location, owner-profile Home or a temporary address/postcode.','Review a linked Site road address or save a Trip harbour/meeting point, then open Google Maps for travel time and directions.','No paid routing API, stored starting-point history or automatic location request.','Calendar List hides archived events unless Show archived is ticked.','Dive Plans and Calendar events have confirmed deletion with local and cloud dependency protection.','Duplicate Dive and Gas Plans into reviewed new drafts.','Link YouTube videos to logged Dives without automatic playback.','Calendar selection uses a 30/70 desktop layout; downloads are at the bottom.','Text is 20% smaller, with 44px interactive targets retained.','Cloud account badge shows sync status; redundant enabled text removed.'],
   },

@@ -1,0 +1,170 @@
+{
+  "reviewedSource": "dcf93f33",
+  "status": "corrected local candidate, publication pending",
+  "app": "1.0.83",
+  "cache": "zeustek-static-v30",
+  "red": {
+    "files": 3,
+    "failed": 4,
+    "passed": 18
+  },
+  "focused": {
+    "files": 3,
+    "passed": 23
+  },
+  "full": {
+    "files": 229,
+    "passed": 1544
+  },
+  "typecheck": "PASS",
+  "build": {
+    "status": "PASS",
+    "PWAEntries": 422,
+    "KiB": 42718.38
+  },
+  "lint": {
+    "files": 8,
+    "newOrChanged": 0,
+    "unchanged": 9,
+    "rawExit": 1,
+    "baseline": "dcf93f3 existing accepted153 baseline diagnostics"
+  },
+  "protected": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "unchanged": true
+    }
+  ],
+  "browser": {
+    "sixWidths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "allocatedSupplies": 2,
+    "allocatedSaveReload": "PASS, separate copy ID and original retained",
+    "legacySaveReload": "PASS, one legacy supply retained; no implicit upgrade",
+    "eventDeletion": "blocked with explicit unlink message, record retained",
+    "productionSyntheticRecords": 0
+  },
+  "ownerBaseline": {
+    "exportedAt": "2026-10-05T10:48:46.674Z",
+    "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+    "records": 6540,
+    "kindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 1,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 198,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1680,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 56,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 8
+    },
+    "fingerprint": "3695e702abb70097a18bc631a9a9a3e3aee78ad7c38ae5255f5102731eaff58b",
+    "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+    "legacyPersonEntityPairs": 8,
+    "explicitRelationships": {
+      "person-operator-link": 1
+    },
+    "missingRelationshipEndpoints": 0,
+    "secretKindExcluded": true,
+    "uniqueCanonicalIDs": true,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "dataWrites": 0,
+    "priorAuditCountsAreNotTargets": true
+  },
+  "recoveryComparison": {
+    "records": 6540,
+    "added": 0,
+    "removed": 0,
+    "changed": 0,
+    "authorisedVideoRetained": true
+  },
+  "rollback": {
+    "id": "appgdep_6ac37f46eee88191aeac97f5577e2df2",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T10:43:42.140620+00:00"
+  }
+}

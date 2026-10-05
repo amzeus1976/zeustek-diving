@@ -12,8 +12,13 @@ import {
   type GasAnalysisRecord,
 } from '../offline/loadouts-gas';
 import type { Stored } from '../offline/dive-planning';
-import { emptyAllocation, type AllocationMetadata } from './integration';
+import { emptyAllocation, type AllocationMetadata, type AllocatedGasPlan } from './integration';
 import type { AllocationCylinder, SupplyMode } from './model';
+/** Editor state follows the reviewed draft, including copies and legacy supplies. */
+export function initialGasAllocation(draft: AllocatedGasPlan, newPlan: boolean): AllocationMetadata | null {
+  if (draft.allocationV1) return structuredClone(draft.allocationV1);
+  return newPlan ? emptyAllocation() : null;
+}
 export function initialRecreationalInput(
   item: GasPlanRecord | null,
   baseline: RmvBaseline,

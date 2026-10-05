@@ -35,7 +35,6 @@ import {
   previousDiveContext,
 } from '../../lib/offline/plan-context-checks';
 import {
-  emptyAllocation,
   allocationEngineInput,
   allocationReadiness,
   gasPlanWithAllocation,
@@ -45,6 +44,7 @@ import {
 } from '../../lib/gas-allocation/integration';
 import {
   initialRecreationalInput,
+  initialGasAllocation,
   upgradeAllocation,
 } from '../../lib/gas-allocation/editor-input';
 import styles from './gas-allocation-panel.module.css';
@@ -116,11 +116,7 @@ export function T14GasPlanEditor({
     initialRecreationalInput(draft, rmvBaseline),
   );
   const [allocation, setAllocation] = useState<AllocationMetadata | null>(() =>
-    (item as AllocatedGasPlan | null)?.allocationV1
-      ? structuredClone((item as AllocatedGasPlan).allocationV1!)
-      : item
-        ? null
-        : emptyAllocation(),
+    initialGasAllocation(draft, !item && !copyFrom),
   );
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
