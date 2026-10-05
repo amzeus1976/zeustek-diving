@@ -1,0 +1,25 @@
+{
+  "status": "BLOCKED_DEPLOYMENT; Sites155 acceptance withdrawn",
+  "candidate": "7f54c8b94a252d7c8e6e98d94daed8b06c029b5a",
+  "app": "1.0.83",
+  "Sites": 155,
+  "finding": "Trip-backed Calendar entries store linkedDiveIds on canonical dive-trip records; guard was limited to trip. Extend local and atomic API checks to both canonical kinds.",
+  "reviewComment": 4183378435,
+  "rollback": {
+    "id": "appgdep_6ac387d3dc588191a883ebc201fa1b49",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T11:20:12.119210+00:00"
+  },
+  "ownerData": "No owner rollback/reset or deletion. All6540 records unchanged in initial155 smoke; preserve authorised Dive67 video.",
+  "github": "PR94 remains unmerged; main5193651 untouched."
+}
