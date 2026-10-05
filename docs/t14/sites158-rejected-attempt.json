@@ -1,0 +1,203 @@
+{
+  "status": "WITHDRAWN: final exact-head review found stale copied Gas evidence and ordinary Calendar event creation gap",
+  "appVersion": "1.0.86",
+  "sitesVersion": 158,
+  "branch": "feat/trip-getting-there",
+  "source": "e0978d17e7f5640e03b6fc9c0bb1477eec040813",
+  "tree": "3597add0d312c622d669306c34cd42887b5a8a9f",
+  "deployment": "appgdep_6ac3a70610fc8191b8a8f52aa04a4f84",
+  "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_0e6d27172db8819199a37873b362bb57",
+  "deploymentSucceeded": "2026-10-05T13:33:21.968313+00:00",
+  "cache": "zeustek-static-v33",
+  "rollback": {
+    "sitesVersion": 153,
+    "appVersion": "1.0.81",
+    "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+    "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "verifiedRecovery": "appgdep_6ac393433f8081918f77addd9a0c1626",
+    "artifactHash": "8153a7a5990b7d7a17b1fae76b6de6fe9b946e0ae5f709e4cdd7b9bbe9c1809d"
+  },
+  "fullRegression": {
+    "tests": 1577,
+    "passed": 1577,
+    "failed": 0,
+    "files": 231
+  },
+  "focused": {
+    "tests": 55,
+    "passed": 55,
+    "failed": 0,
+    "files": 5
+  },
+  "typecheck": "PASS exact candidate",
+  "buildPWA": "PASS native exact-source 422 precache entries",
+  "targetedLint": {
+    "files": 17,
+    "unchanged": 22,
+    "newOrChanged": 0,
+    "rawExit": 1,
+    "baseline": "b154febb",
+    "allAnnotatedLinesUnchanged": true
+  },
+  "privacy": {
+    "artifactFilesScanned": 1346,
+    "credentialMatches": 0,
+    "navigationIcons": 31,
+    "mastersUnchangedAndNotPrecached": true,
+    "cache": "zeustek-static-v33",
+    "nativeBuildPwa": "PASS",
+    "entries": 422,
+    "gmailOperations": 0,
+    "ownerWrites": 0
+  },
+  "archive": {
+    "bytes": 88929439,
+    "sha256": "e7c5106235cf85b31c564e43c2f2bd15b0810fdc56e9bb7c7f7b79c5327cf793",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  },
+  "officialArchive": {
+    "sha256": "27663013e8afa46819b86f8af8edee0a985dfe28b89b10c49ca62e1bd0b76d27",
+    "bytes": 103137280,
+    "files": 1346
+  },
+  "protectedHashes": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+      "unchanged": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+      "unchanged": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+      "unchanged": true
+    }
+  ],
+  "ownerData": {
+    "before": "2026-10-05T13:31:04.946Z",
+    "after": "2026-10-05T13:36:04.142Z",
+    "records": 6539,
+    "sameCanonicalIDs": true,
+    "added": 0,
+    "deleted": 0,
+    "changed": 0,
+    "preFingerprint": "3b136f8785f5bd8d8e1be5550504b86c921a8bcd4308f00a7a56963720de0dc3",
+    "postFingerprint": "3b136f8785f5bd8d8e1be5550504b86c921a8bcd4308f00a7a56963720de0dc3",
+    "allOriginalRowsByteEquivalent": true,
+    "agentProductionWrites": 0,
+    "profileAddressUntouched": true,
+    "priorActivityAccountedSeparately": true
+  },
+  "live": {
+    "viewports": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "observations": 48,
+    "consoleErrors": 0,
+    "pageOverflow": false,
+    "brokenVisibleImages": 0,
+    "writes": 0,
+    "assetsAndSecurity": {
+      "navigationIconsByteMatched": 31,
+      "workerByteMatched": true,
+      "cache": "zeustek-static-v33",
+      "anonymousPrivateAccess": [
+        {
+          "path": "/api/dive-data?kind=trip",
+          "status": 401
+        },
+        {
+          "path": "/api/dive-data?kind=dive-trip",
+          "status": 401
+        },
+        {
+          "path": "/api/dive-backup",
+          "status": 401
+        },
+        {
+          "path": "/api/v1/dives",
+          "status": 401
+        },
+        {
+          "path": "/api/v1/trips",
+          "status": 401
+        }
+      ],
+      "gmailOperations": 0
+    },
+    "environmentRevision": 6,
+    "environmentEntries": 17,
+    "environmentUnchanged": true
+  },
+  "localCompiled": {
+    "finalSource": "e0978d17e7f5640e03b6fc9c0bb1477eec040813",
+    "finalUnlinkViewportObservations": 36,
+    "actualUnlinkBothEnds": true,
+    "recoverableGasDeletionAfterSync": true,
+    "TripDeletionBlockedUntilUnlink": true,
+    "TripPlanContextAndInverseDisplay": true,
+    "missingExactPlanDoesNotSelectAnother": true,
+    "keyboardDisclosure": true,
+    "productionFixtureWrites": 0
+  },
+  "PR": 94,
+  "githubMain": null,
+  "exceptions": {
+    "Gmail": "No operation; existing authorised exception unchanged",
+    "Google": "No route launch, import or automatic Calendar write",
+    "publicProfile": "No publication",
+    "APIKeys": "No issuance or access expansion",
+    "calculations": "No byte changes"
+  },
+  "history": "Withdrawn Sites154\u2013157 and recoveries/source/evidence preserved; requested Dive67 video already present before this release",
+  "recovery": {
+    "deployment": "appgdep_6ac3aa9740ac81918bda322fb29b95ca",
+    "status": "succeeded",
+    "sitesVersion": 153,
+    "appVersion": "1.0.81"
+  },
+  "githubMainMerged": false
+}
