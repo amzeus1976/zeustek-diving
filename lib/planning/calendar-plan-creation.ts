@@ -31,10 +31,12 @@ export async function savePlanDraftWithConnections(input:Parameters<typeof saveD
    if(await pendingConflict(entry.entityId))throw new Error('Review this event’s sync differences before creating a Plan.');
   }
   let oldTripId:string|undefined;
+  let priorGasIds:string[]=[];
   if(input.entityId){
-   const row=await zeustekDb.entities.get(`${accountModule}:${input.entityId}`),plan=row?.record as unknown as ReviewedPlan&{tripId?:string;bookingKind?:unknown}|undefined;
+   const row=await zeustekDb.entities.get(`${accountModule}:${input.entityId}`),plan=row?.record as unknown as ReviewedPlan&{tripId?:string;bookingKind?:unknown;gasPlanLinks?:Array<{gasPlanId:string}>}|undefined;
    if(!reviewedPlan||reviewedPlan.entityId!==input.entityId||!row||row.deleted||row.entityType!=='trip'||!plan||'bookingKind' in plan||plan.modifiedAt!==reviewedPlan.modifiedAt||await pendingConflict(input.entityId))throw new Error('This Dive Plan changed or needs sync review. Reopen it before saving.');
    oldTripId=plan.tripId;
+   priorGasIds=(plan.gasPlanLinks??[]).map(link=>link.gasPlanId);
   }
   const changedTrips=new Map<string,typeof trips[number]>();
   for(const id of new Set([input.tripId,oldTripId&&oldTripId!==input.tripId?oldTripId:null].filter((id):id is string=>Boolean(id)))){
@@ -44,10 +46,12 @@ export async function savePlanDraftWithConnections(input:Parameters<typeof saveD
    changedTrips.set(id,trip);
   }
   const freshGas:StoredGasPlanRecord[]=[];
-  for(const id of new Set(selectedIds)){
+  const gasRows=input.entityId?await zeustekDb.entities.where('[module+entityType]').equals([accountModule,'gas-plan']).toArray():[];
+  const inverseGasIds=gasRows.filter(row=>!row.deleted&&(row.record as unknown as StoredGasPlanRecord)?.divePlanId===input.entityId).map(row=>(row.record as unknown as StoredGasPlanRecord).entityId);
+  for(const id of new Set([...selectedIds,...priorGasIds,...inverseGasIds])){
    sameAccount();const gasRow=await zeustekDb.entities.get(`${accountModule}:${id}`),reviewed=gasPlans.find(gas=>gas.entityId===id);
    const gas=gasRow?.record as unknown as StoredGasPlanRecord|undefined;
-   if(!gasRow||gasRow.deleted||gasRow.entityType!=='gas-plan'||!gas||!reviewed||gas.modifiedAt!==reviewed.modifiedAt||await pendingConflict(id))throw new Error('A selected Gas Plan changed. Refresh and review it before saving.');
+   if(!gasRow||gasRow.deleted||gasRow.entityType!=='gas-plan'||!gas||!reviewed||gas.modifiedAt!==reviewed.modifiedAt||await Dexie.waitFor(recordHash(gas as unknown as JsonValue))!==await Dexie.waitFor(recordHash(reviewed as unknown as JsonValue))||await pendingConflict(id))throw new Error('A linked Gas Plan changed or needs review. Refresh and review it before saving.');
    freshGas.push(gas);
   }
   const result=await saveDivePlanWithGasLinks(input,freshGas,selectedIds);sameAccount();
