@@ -2,12 +2,19 @@ import type {DiveSiteRecord,PersonRecord} from '../offline/dive-planning';
 import {findOwnerProfile} from '../offline/people-profiles';
 export type TripDirectionsOrigin = {kind:'current'} | {kind:'home'|'address';address:string};
 const joined=(parts:Array<string|null|undefined>)=>parts.map(part=>part?.trim()).filter(Boolean).join(', ');
+/** A standalone contact number is not road-address evidence. Keep source data intact. */
+const homeStreetAddress=(value:string|undefined):string=>{
+ const address=value?.trim()??'';const digits=address.replace(/\D/g,'');
+ return /^\+?[\d\s().-]+$/.test(address)&&digits.length>=8&&digits.length<=15?'':address;
+};
 /** Resolve the canonical owner, without guessing names or rewriting source data. */
 export function ownerHomeAddress(people:PersonRecord[]):string|null {
  if(people.filter(person=>person.roles?.ownerProfile).length!==1)return null;
  const owner=findOwnerProfile(people);
- if(!owner?.address?.trim()&&!owner?.postcode?.trim())return null;
- return joined([owner.address,owner.postcode,owner.location])||null;
+ if(!owner)return null;
+ const address=homeStreetAddress(owner.address);
+ if(!address&&!owner.postcode?.trim())return null;
+ return joined([address,owner.postcode,owner.location])||null;
 }
 /** Dive coordinates can be underwater; never infer a road arrival from them. */
 export function siteRoadArrival(site?:DiveSiteRecord|null):string|null {

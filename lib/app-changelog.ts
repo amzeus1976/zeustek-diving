@@ -1,5 +1,6 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
+  {version:'1.0.85',date:'2026-10-05',title:'Home directions use road-address evidence',changes:['A standalone telephone entered as the owner address is excluded from Home directions; recorded postcode and location remain available.','Stored Person data is unchanged. Includes preserved planning copies and Calendar/Trip deletion safeguards.']},
   {version:'1.0.84',date:'2026-10-05',title:'Consistent Calendar and Trip deletion protection',changes:['Linked Dives protect both original Calendar events and Trip-backed Calendar entries from deletion.','Includes preserved planning copies, Trip directions, Dive videos and compact planning controls.']},
   {
     version:'1.0.83',date:'2026-10-05',title:'Preserved Gas Plan copies and linked-event protection',

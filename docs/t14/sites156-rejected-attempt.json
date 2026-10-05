@@ -1,0 +1,36 @@
+{
+  "appVersion": "1.0.84",
+  "sitesVersion": 156,
+  "candidateCommit": "2ee014c2564fd2368db30a619d1daab5f94f248e",
+  "tree": "c9e5506ad6352d906648faa93fc6ffe0651836f4",
+  "deployment": {
+    "id": "appgdep_6ac38c682c488191ab14f28948adbeac",
+    "status": "succeeded",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_b0fc030b25c08191b27c7812a8769cb1"
+  },
+  "acceptance": "WITHDRAWN — owner-reported Home origin includes a phone-only address field",
+  "initialObservations": {
+    "responsive": 48,
+    "consoleErrors": 0,
+    "ownerWrites": 0
+  },
+  "cause": "Canonical owner address field contains standalone international phone data; read projection joined it into Home origin. Stored Person data must remain unchanged.",
+  "rollback": {
+    "id": "appgdep_6ac38d91a3688191a08cc1bd574690dc",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T11:44:39.869474+00:00"
+  },
+  "sourcePreserved": true,
+  "githubMainMerged": false,
+  "correction": "Omit only standalone phone-shaped Home address evidence, keep recorded postcode/location; three RED failures precede correction."
+}
