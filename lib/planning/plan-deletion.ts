@@ -1,6 +1,6 @@
 import {PLANNING_LINK_FIELDS,planningFieldTargets,type PlanningLinkField} from './planning-link-fields';
 /** Canonical trip records back both Dive Plans and Calendar events. */
-export const planningRecordDeletionGuarded=(kind:string)=>kind==='trip'||kind==='dive-trip'||kind==='gas-plan';
+export const planningRecordDeletionGuarded=(kind:string)=>kind==='trip'||kind==='dive-trip'||kind==='gas-plan'||kind==='training-progress'||kind==='certification';
 export function planningRecordHasDiveLinks(value:unknown):boolean{
  if(!value||typeof value!=='object')return false;
  const ids=(value as {linkedDiveIds?:unknown}).linkedDiveIds;

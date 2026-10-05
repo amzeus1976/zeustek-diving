@@ -4,6 +4,8 @@ export const PLANNING_LINK_FIELDS = [
  {kind:'trip',field:'linkedTripId',targetKind:'dive-trip'},
  {kind:'trip',field:'linkedDivePlanId',targetKind:'trip'},
  {kind:'trip',field:'linkedGasPlanId',targetKind:'gas-plan'},
+ {kind:'trip',field:'linkedTrainingId',targetKind:'training-progress'},
+ {kind:'trip',field:'linkedCertificationId',targetKind:'certification'},
  {kind:'trip',field:'gasPlanLinks',targetKind:'gas-plan',itemField:'gasPlanId'},
  {kind:'trip',field:'linkedDiveIds',targetKind:'dive',array:true},
  {kind:'dive-trip',field:'originCalendarBookingId',targetKind:'trip'},

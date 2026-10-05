@@ -11,13 +11,13 @@ type Endpoint={id:string;kind:string;name:string;available:boolean;href:string};
 type Reference={sourceId:string;sourceKind:string;fieldIndex:number;targetId:string};
 export type PlanningConnection={key:string;account:string;other:Endpoint;references:Reference[];versions:Array<{id:string;hash:string}>};
 const text=(value:unknown,fallback='')=>typeof value==='string'||typeof value==='number'?String(value):fallback;
-const kinds=[...new Set(PLANNING_LINK_FIELDS.map(spec=>spec.kind))];
+const kinds=[...new Set(PLANNING_LINK_FIELDS.flatMap(spec=>[spec.kind,spec.targetKind]))];
 function endpoint(kind:string,id:string,row?:EntityRow):Endpoint{
  const data=(row?.record??{}) as Record<string,unknown>;
- const route=kind==='gas-plan'?'Gas Planning':kind==='dive-trip'?'Trips':kind==='dive'?'Logbook':kind==='skill_evidence'?'Skills & Currency':!('bookingKind' in data)?'Dive Plans':'Diving Calendar & Bookings';
- const type=kind==='gas-plan'?'Gas Plan':kind==='dive-trip'?'Trip':kind==='dive'?'Logged Dive':kind==='skill_evidence'?'Skill evidence':'Dive Plan / event';
- const name=text(data.name)||text(data.title)||(kind==='dive'?`${text(data.date)} · ${text(data.site,'Dive')}`:type);
- return{id,kind,name:row?`${type} · ${name}`:`Unavailable ${type}`,available:Boolean(row),href:'/'+workflowDestinationUrl({route,recordId:kind==='skill_evidence'?(text(data.skillId)||text(data.skillKey)||id):id,...(kind==='skill_evidence'?{params:{evidenceId:id}}:{})})};
+ const route=kind==='training-progress'?'Course Map':kind==='certification'?'Training':kind==='gas-plan'?'Gas Planning':kind==='dive-trip'?'Trips':kind==='dive'?'Logbook':kind==='skill_evidence'?'Skills & Currency':!('bookingKind' in data)?'Dive Plans':'Diving Calendar & Bookings';
+ const type=kind==='training-progress'?'Planned Training':kind==='certification'?'Certification':kind==='gas-plan'?'Gas Plan':kind==='dive-trip'?'Trip':kind==='dive'?'Logged Dive':kind==='skill_evidence'?'Skill evidence':'Dive Plan / event';
+ const name=text(data.name)||text(data.courseTitle)||text(data.title)||(kind==='dive'?`${text(data.date)} · ${text(data.site,'Dive')}`:type);
+ return{id,kind,name:row?`${type} · ${name}`:`Unavailable ${type}`,available:Boolean(row),href:'/'+workflowDestinationUrl({route,recordId:kind==='skill_evidence'?(text(data.skillId)||text(data.skillKey)||id):id,...(kind==='skill_evidence'?{params:{evidenceId:id}}:kind==='training-progress'?{params:{trainingId:id}}:{})})};
 }
 async function liveRows(account:string){return(await zeustekDb.entities.where('module').equals(`dive:${account}`).toArray()).filter(row=>!row.deleted&&row.record&&kinds.includes(row.entityType as typeof kinds[number]));}
 export async function readPlanningConnections(id:string,refresh=false){
