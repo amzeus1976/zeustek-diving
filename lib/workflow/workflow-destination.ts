@@ -2,7 +2,7 @@ import {resolveWorkflowRoute,WORKFLOW_ROUTES} from './workflow-model';
 
 export interface WorkflowDestination {route:string;recordId?:string;params?:Record<string,string>}
 const recordKeys:Record<string,string>={People:'personId','Dive Centres':'operatorId',Sites:'siteId',Trips:'tripId',Logbook:'diveId','Dive Plans':'planId','Gas Planning':'gasPlanId','Dive Computer Imports':'importId','Loadouts & Gas':'loadoutId',Equipment:'equipmentId','Cylinders & Gas':'cylinderId','Diving Calendar & Bookings':'eventId',Training:'certificationId','Skills & Currency':'skillId'};
-const parameterKeys=new Set(['config','recordId',...Object.values(recordKeys),'fromEventId','divePlanId','newPlan','source','tab','view','edit','personId','equipmentId','evidenceId','eventId','loadoutId','bucketId','profileId','resolutionId','relationshipId','fillId','analysisId']);
+const parameterKeys=new Set(['config','recordId',...Object.values(recordKeys),'fromEventId','divePlanId','newPlan','newPlanForTrip','newGasPlanFor','source','tab','view','edit','personId','equipmentId','evidenceId','eventId','loadoutId','bucketId','profileId','resolutionId','relationshipId','fillId','analysisId']);
 const routes=new Set([...WORKFLOW_ROUTES.map(item=>item.route),'Dive Centres','Changelog','Imports','Sync','Backups']);
 
 export function parseWorkflowDestination(input:string|WorkflowDestination):WorkflowDestination {

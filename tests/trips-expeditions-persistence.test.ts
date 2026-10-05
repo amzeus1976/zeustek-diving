@@ -3,6 +3,7 @@ import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {zeustekDb} from '../lib/offline/db';
 import {configureDiveStore,listLocalDiveRecords,saveLocalRecord} from '../lib/offline/dive-store';
 import {localBackupPayload,restoreLocalPayload} from '../lib/offline/local-backup';
+import {readPlanningConnections,unlinkPlanningConnection} from '../lib/offline/planning-connections';
 import {DIVE_RECORD_KINDS,recordIdentity} from '../lib/record-identity';
 import {deleteDiveExpeditionTrip,editableDiveExpeditionTrip,listDiveExpeditionTrips,normaliseTripGuestParticipants,saveDiveExpeditionTrip,tripOrganiserReferences,tripReadiness,type DiveExpeditionTripInput} from '../lib/offline/trips-expeditions';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore('t04-test');await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
@@ -34,6 +35,9 @@ describe('T04 canonical offline persistence',()=>{
     const before=await Promise.all(refs.map(([kind])=>listLocalDiveRecords(kind)));
     const saved=await saveDiveExpeditionTrip({...base(),planIds:['plan'],siteIds:['site'],organiserPersonId:'person',teamPersonIds:['person'],packingEquipmentSetIds:['set']});
     const trip=(await listDiveExpeditionTrips())[0]!;await saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),packingItems:[{id:'packing',label:'Mask',packed:true}]});
+    await expect(deleteDiveExpeditionTrip(saved.id)).rejects.toThrow(/unlink/i);
+    const link=(await readPlanningConnections(saved.id)).connections.find(row=>row.other.id==='plan')!;
+    await unlinkPlanningConnection(link);
     await deleteDiveExpeditionTrip(saved.id);expect(await listDiveExpeditionTrips()).toHaveLength(0);
     expect(await Promise.all(refs.map(([kind])=>listLocalDiveRecords(kind)))).toEqual(before);
     expect(DIVE_RECORD_KINDS).toContain('site-overhead-profile');

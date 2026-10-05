@@ -21,6 +21,8 @@ import { MediaGallery } from './media-gallery';
 import { TripResources, TripLinksEditor } from './trip-resources';
 import { TripLinkedSites } from './trip-linked-sites';
 import { TripGettingThere } from './trip-getting-there';
+import {PlanningConnections} from './planning/planning-connections';
+import {PlanningWorkflow} from './planning/planning-workflow';
 import { TripNote, TripSection } from './trip-disclosure';
 import { WorkflowContextStrip } from './workflow/workflow-context-strip';
 import { resolveZeusTekIconId } from '../lib/zeustek-icons';
@@ -295,10 +297,12 @@ function TripDetail({ item, plans, sites, people, equipment, equipmentSets, curr
 
     <TripSection title="Upcoming itinerary">{item.itinerary.length ? <div className={styles.stack}>{[...item.itinerary].sort((a,b)=>(a.startsAt??'').localeCompare(b.startsAt??'')).map((segment) => <article key={segment.id}><small className={styles.itineraryKind}>{itineraryKindLabel(segment.kind)}</small><details><summary>{segment.title || itineraryKindLabel(segment.kind)} · {segment.attachments?.filter(asset => asset.contentType.startsWith('image/')).length ?? 0} images · {segment.attachments?.filter(asset => asset.contentType.startsWith('video/')).length ?? 0} videos · {segment.attachments?.filter(asset => !asset.contentType.startsWith('image/') && !asset.contentType.startsWith('video/')).length ?? 0} documents · {segment.links?.length ?? 0} links</summary><span>{[segment.startsAt && new Date(segment.startsAt).toLocaleString('en-GB'), segment.location].filter(Boolean).join(' · ')}</span>{segment.notes && <TripNote text={segment.notes} label="itinerary notes"/>}<TripResources tripId={item.entityId} itineraryId={segment.id} attachments={segment.attachments} links={segment.links} changed={changed} pendingChanged={pending => pendingChanged(segment.id,pending)}/></details></article>)}</div> : <p className="focus-copy">No itinerary segments yet.</p>}</TripSection>
 
+    <PlanningWorkflow/><PlanningConnections recordId={item.entityId} changed={changed}/>
     <TripGettingThere siteIds={item.siteIds} sites={sites} people={people} arrivalPoint={item.travelArrivalPoint??''}/>
 
     <TripSection title="Readiness · advisory"><div className={styles.readiness}><div><strong>{readiness.percent}%</strong><span>{readiness.state.replace('-', ' ')}</span></div><progress value={readiness.percent} max="100" aria-label="Trip logistics readiness"/><div className={styles.checks}>{readiness.checks.map((check) => <span key={check.id} className={check.complete ? styles.complete : ''}>{check.complete ? <Check size={14}/> : <span aria-hidden="true">○</span>}<b>{check.label}</b><small>{check.detail}</small></span>)}</div></div></TripSection>
 
+    <a className="focus-secondary" href={'/?section=Dive%20Plans&newPlanForTrip='+encodeURIComponent(item.entityId)}>Create Dive Plan for this Trip</a>
     <TripSection title="Linked Plans & Linked Sites"><div className={styles.linkColumns}><div><h3>Linked Plans</h3>{item.planIds.map((id) => { const plan=plans.find((candidate)=>candidate.entityId===id); return <a className="focus-link" key={id} href={recordHref('Dive Plans','planId',id)}>{plan?.name ?? 'Plan unavailable'}</a>; })}{!item.planIds.length&&<p className="focus-copy">No Plans linked.</p>}</div>
       <TripLinkedSites siteIds={item.siteIds} sites={sites}/></div></TripSection>
 

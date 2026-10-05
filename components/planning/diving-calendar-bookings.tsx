@@ -33,6 +33,9 @@ import {workflowDestinationUrl} from '../../lib/workflow/workflow-destination';
 import {CalendarEventText} from './calendar-event-text';
 import {CalendarDiveLinks} from './calendar-dive-links';
 import {DeletePlanningRecordDialog} from './delete-planning-record-dialog';
+import {PlanningConnections} from './planning-connections';
+import {PlanningWorkflow} from './planning-workflow';
+import {calendarPlanDestination} from '../../lib/planning/planning-start-context';
 
 type Props = { go?: (route: string) => void };
 type CalendarView = 'calendar' | 'list' | 'bookings';
@@ -499,20 +502,21 @@ function BookingDetail({
           <dd><CalendarEventText text={item.notes || item.quickNotes || 'No notes yet.'} label="event notes"/></dd>
         </div>
       </dl>
+      <PlanningWorkflow/><PlanningConnections recordId={item.entityId} changed={refresh}/>
       <CalendarDiveLinks item={item} dives={dives} refresh={refresh} go={go}/>
       {bookingRecordLinks(item).length>0&&<><h3>Linked records</h3><div className={styles.linkRows}>
         {bookingRecordLinks(item).map(link=><a className="focus-secondary" key={link.label} href={link.href} onClick={go?event=>{event.preventDefault();go(link.destination);}:undefined}>{link.label}<ChevronRight size={14}/></a>)}
       </div></>}
       <h3>Quick actions</h3>
       <div className={styles.actionGrid}>
-        <button className="focus-secondary" onClick={() => go?.('Dive Plans')}>
+        <button className="focus-secondary" onClick={() => go?.(calendarPlanDestination(item))}>
           <Link2 size={14} /> Create/link Dive Plan
         </button>
         <button
           className="focus-secondary"
-          onClick={() => go?.('Gas Planning')}
+          onClick={() => go?.(calendarPlanDestination(item))}
         >
-          <Link2 size={14} /> Create/link Gas Plan
+          <Link2 size={14} /> Plan gas from this Dive Plan
         </button>
         {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> {item.calendarSource==='dive-trip'?'Open Trip to edit / delete':'Open linked Trip'}</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
         {isTraining ? (

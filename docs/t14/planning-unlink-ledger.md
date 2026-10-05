@@ -6,12 +6,14 @@ The current canonical architecture uses `trip` for Calendar bookings/Dive Plans,
 
 | Requirement | Implementation / verification | State |
 |---|---|---|
-| U01 | Read-only list of exact linked records with canonical workspace links, from Calendar, Trips, Dive Plans and Gas Plans | Pending |
-| U02 | Explicit reviewed per-connection Unlink; clear both known references atomically on device; preserve records, text, dates, evidence, unknown fields and revision history | Pending |
-| U03 | Reject stale/account-changed review; missing endpoints can be explicitly detached; offline changes retain normal conflict review | Pending |
-| U04 | Deletion guards include Gas Plans and outgoing planning links; cloud deletion remains blocked until dependencies actually sync | Pending |
-| U05 | Calendar → Trip / Dive Plan → Gas Plan links carry the exact canonical context; create a reviewed Plan for a selected Trip | Pending |
-| U06 | Meaningful RED tests before implementation; focused/full/typecheck/build/PWA/privacy/lint/six-width acceptance; nine protected hashes unchanged | Pending |
+| U01 | Read-only list of exact linked records with canonical workspace links, from Calendar, Trips, Dive Plans and Gas Plans | LOCAL implementation/tests PASS; compiled acceptance pending |
+| U02 | Explicit reviewed per-connection Unlink; clear both known references atomically on device; preserve records, text, dates, evidence, unknown fields and revision history | LOCAL implementation/tests PASS; compiled acceptance pending |
+| U03 | Reject stale/account-changed review; missing endpoints can be explicitly detached; offline changes retain normal conflict review | LOCAL implementation/tests PASS; compiled acceptance pending |
+| U04 | Deletion guards include Gas Plans and outgoing planning links; cloud deletion remains blocked until dependencies actually sync | LOCAL implementation/tests PASS; compiled acceptance pending |
+| U05 | Calendar → Trip / Dive Plan → Gas Plan links carry the exact canonical context; create a reviewed Plan for a selected Trip | LOCAL implementation/tests PASS; compiled acceptance pending |
+| U06 | Meaningful RED tests before implementation; 1573 tests/231 files and typecheck PASS; 10 added files lint0; 7 existing modules20 unchanged accepted153 diagnostics; nine hashes unchanged; build/PWA/privacy/six-width acceptance pending | PARTIAL LOCAL PASS |
 | U07 | Fresh owner baseline, verified current153 rollback, one combined candidate publication/read-only acceptance and exact PR94/main reconciliation | Pending |
 
 No bulk owner-data edit, relationship-store migration, protected calculation edit, Gmail operation or Google Calendar mutation. Unlink never deletes records. A failed cloud update remains reviewable; do not bypass dependency guards. Final evidence belongs on a separate documentation branch after exact product freeze.
+
+RED checkpoint874ef8f preserved missing-module failure and five real atomic API guard failures before implementation. New11 unlink tests cover mirrored references, isolation, stale/account conflicts, recoverable backup/history and atomic failure. Four context tests cover exact workflow and reviewed Trip drafts. Server/local shared14-field guards include both incoming and outgoing relationships and Gas Plans; no protected calculation changed.
