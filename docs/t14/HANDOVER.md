@@ -1,3 +1,7 @@
+## Trip directions + hidden Calendar archives — local candidate
+
+Preserve feat/trip-getting-there and RED checkpoint1a453be. Read trip-getting-there-ledger.md and trip-getting-there-local-gate.json. App1.0.82/cachev29 passes1499tests/222files, focused77/8, typecheck/build/PWA/privacy/six widths and nine unchanged hashes; lint0new/11unchanged accepted153 diagnostics. Fresh6501-owner-row encrypted baseline09:00UTC/fingerprintd869f67b retained privately. Verified current recovery target is Sites153/app1.0.81/sourceb154febb/artifactc996d19c, not the historical149 target. Freeze clean source/bundle, native publish, read-only production/snapshot acceptance, exact GitHub PR/main reconciliation, separate final evidence. No private Google route launched, owner production save, Gmail or Google Calendar operation.
+
 ## Accepted Sites153 — 5 October 2026
 
 Production **app1.0.81 / Sites153**, deployment **appgdep_6ac310a6c2b4819192fdf2153ec17b61**, source **b154febb25bdeaae7ece921728eb902cd65a34bf**, tree **488d37678078b594daae4e9808574b8d8675ac04**, cache **zeustek-static-v28**. Read **sites153-release-evidence.json** and **calendar-booking-trip-links-ledger.md**. PR93 merged; GitHub main **5193651f5b7001abb2b25b6e38c3e6e6cf80518a** matches the complete published tree. Final evidence is on a separate documentation branch; it is not deployed over the accepted product source. Product branch remains recoverable at b154febb.
