@@ -34,6 +34,11 @@ function itemInTree(node:unknown):{entityId:string}|undefined{
 }
 const fixtureTrip=(entityId:string)=>({entityId,name:'Existing dummy Trip',status:'planned',startsOn:'2026-10-10',endsOn:'2026-10-10',originCalendarBookingId:'exact-booking',calendarBookingIds:['exact-booking'],teamPersonIds:[],siteIds:[],planIds:[],itinerary:[],bookings:[],packingEquipmentSetIds:[],packingItems:[],gasLogistics:[],documentAttachmentIds:[],createdAt:'2026-10-05T00:00:00Z',modifiedAt:'2026-10-05T00:00:00Z'});
 describe('Exact event conversion after a failed initial Trip load',()=>{
+ it('keeps the source booking for conversion but excludes it from linked Dive Plan choices',async()=>{
+  const render=initialise();render();await tick();render();const editor=render();
+  expect(editor.props.sourceBooking?.entityId).toBe('exact-booking');
+  expect(editor.props.plans).toEqual([]);
+ });
  it('reports conflicting conversions before opening an explicitly linked Trip',async()=>{
   const render=initialise();harness.bookingExtra={linkedTripId:'trip-a'};harness.trips=[fixtureTrip('trip-a'),fixtureTrip('trip-b')];
   render();await tick();render();const output=render();
