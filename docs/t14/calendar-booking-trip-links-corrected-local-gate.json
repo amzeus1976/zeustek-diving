@@ -290,5 +290,5 @@
   "productionDataWrites": 0,
   "googleWrites": 0,
   "gmailCalls": 0,
-  "testRunner": "Existing runner included .test.ts only. Additive .tsx inclusion now executes all three new component tests; full1465/218 and focused44/5 pass."
+  "testRunner": "Additive .tsx inclusion executes all three new component tests, which the prior .test.ts-only glob omitted. Current full1465/218 and focused44/5 pass; no assertion removed."
 }
