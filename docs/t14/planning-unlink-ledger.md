@@ -66,6 +66,10 @@ Owner approved Dive Centre selector in both Plan and Trip. W01 empty-only weathe
 
 Top row: Site & Conditions, Equipment Readiness, Team & Roles (including canonical Centre contacts). Lower four cards each span the full three-column width, independently collapsible. RED workbench regression preserves the exact selected-source Duplicate action and owner data. Pre-layout a65e076 archive/tests remain recoverable; final source gates, six widths, copy/Save/reload, current owner comparison, Sites publication and exact PR94 reconciliation still required.
 
+### G13 — fresh Trip road arrival and reliable responsive evidence
+
+Final review4188518214 reproduced stale automatic arrival after destination changes to free text, an offshore Site or empty text. RED171:3 expected failures/9 passes; six added cases also preserve manual overrides. Clear only an unchanged prior automatic address when no new road address exists. Sites170 withdrawn and verified153 restored at20:41:49UTC (deployment appgdep_6ac40b769fb0819199b555721e084c13); source/evidence preserved on evidence/planning-sites170-2026-10-05@173e511. Previous reused-tab42/54 observations are rejected as six-width evidence: effective widths1440/1280 did not change. Fresh-tab control verified actual320; subsequent release measurements must assert effective=requested. App99/cache46 requires all release gates, owner comparison, exact review and publication/main reconciliation. No frozen calculation changes.
+
 ### G10 — exact Trip-backed source availability
 
 Valid final review4187837867 withdrew167; verified153 restored. RED28c16f0 proves unavailable source was replaced by unrelated Plan. New URL-derived exact guard retains missing/failed identity, offers explicit retry and shows preparation rather than unrelated Plan while valid context opens. Retry consumes URL only after the exact Trip exists. Prior owner/evidence/candidate preserved. App1.0.96/cache43 requires complete fresh gates and source-retry acceptance before publication/main reconciliation.
