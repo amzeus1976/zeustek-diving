@@ -1,0 +1,39 @@
+{
+  "release": "Sites169 / app1.0.97",
+  "source": "cb92e5b580fc0afb9f32747d22f386bf10bff6fe",
+  "tree": "39fb05c348da8fd0603efabbe53aa3f1100c425c",
+  "cache": "zeustek-static-v44",
+  "publication": "appgdep_6ac4029f69008191914433c18d8782ca",
+  "accepted": false,
+  "reason": "Final complete-head review 5419950896 identified valid weather-mode provenance regression4188282118 and Calendar Gas quick-action routing regression4188282125. Candidate withdrawn; no merge to main.",
+  "recovery": {
+    "version": "Sites153 / app1.0.81",
+    "id": "appgdep_6ac404ec2f688191b1040896786d2250",
+    "succeededAt": "2026-10-05T20:13:55.457907+00:00",
+    "environmentRevision": 6
+  },
+  "tests": {
+    "passing": 1676,
+    "files": 245,
+    "focused": 24,
+    "typecheck": "PASS",
+    "nativeBuild": "PASS",
+    "pwaEntries": 422,
+    "lintNew": 0,
+    "lintRetained": 101,
+    "protectedMatches": 9,
+    "compiledObservations": 60,
+    "liveObservations": 48,
+    "ownerRows": 6540,
+    "ownerChanges": 0
+  },
+  "ownerFingerprint": "a9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8",
+  "archive": {
+    "bytes": 88942864,
+    "files": 1346,
+    "sha256": "99e584ace5eb8a441d1f82b6f2ec2dec860ab44514ac854d64bbf1894bd0f9ac",
+    "storedSHA256": "4534121aa8b45a606ab7f7e6f20cee44b391fe548cbd1ce44268f8385718b4e4"
+  },
+  "evidenceDirectory": "work/trip-getting-there",
+  "noProductionCanonicalWrites": true
+}
