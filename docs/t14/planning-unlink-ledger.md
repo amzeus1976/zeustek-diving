@@ -38,3 +38,6 @@ Final162 acceptance correction: REDc28fb16 reproduces exact known Calendar link 
 
 
 Final163 review correction: REDffd0c42 reproduces retained loadout application snapshots in repeated Dive Plans. New draft clears those application snapshots without changing original equipment/selected loadout/source/history; normal Save applies current loadout slots. New92/cache39 requires full gates and actual compiled changed-loadout copy acceptance before release. No frozen change or owner write.
+
+
+Final164 review correction: RED3220a90 proves old source-slot IDs remain in repeated Plans. New draft now removes only IDs attributable to source application snapshots (including multiple/array slots), retains independent/unknown legacy selections, resets applications and reapplies current loadout on Save. Original records are immutable. Version93/cache40 requires full gates and compiled full equipment-list/source-preservation acceptance. No frozen or owner write.

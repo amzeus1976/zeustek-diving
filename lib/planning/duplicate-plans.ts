@@ -3,11 +3,15 @@ import type {StoredGasPlanRecord} from '../offline/planning-pages';
 import type {AllocatedGasPlan} from '../gas-allocation/integration';
 import {buildRecreationalGasSnapshot} from '../offline/recreational-gas-planner';
 import {initialRecreationalInput} from '../gas-allocation/editor-input';
+import {flattenSlotEquipmentIds} from '../offline/loadouts-gas';
 /** New unsaved drafts: no writer, ID allocation, history or linked-record mutation. */
 export function duplicateDivePlanDraft(source:StoredEnrichedDivePlan):Omit<EnrichedDivePlan,'createdAt'|'modifiedAt'>{
  const data=structuredClone(source) as unknown as EnrichedDivePlan&Record<string,unknown>;
  for(const key of ['entityId','createdAt','modifiedAt','tripId','linkedGasPlanId','linkedDivePlanId','linkedTripId','linkedDiveIds','originCalendarBookingId','calendarSource','bookingStatus','completedAt','archivedAt','deletedAt'])delete data[key];
  if(data.cylinderAssignments)data.cylinderAssignments=data.cylinderAssignments.map(row=>({...row,fillId:null,analysisId:null}));
+ // Reapply current loadout slots on Save; retain only independent selections here.
+ const appliedEquipment=new Set((source.equipmentSetApplications??[]).flatMap(application=>flattenSlotEquipmentIds(application.slots)));
+ if(data.equipmentIds)data.equipmentIds=data.equipmentIds.filter(id=>!appliedEquipment.has(id));
  return{...data,name:`${source.name} (copy)`,status:'planned',lifecycleStatus:'draft',tripId:null,gasPlanLinks:[],conditions:{},equipmentReadiness:{},equipmentSetApplications:[],permitConfirmed:false,checklist:(source.checklist??[]).map(row=>({...row,completed:false}))};
 }
 export function duplicateGasPlanDraft(source:StoredGasPlanRecord):AllocatedGasPlan{

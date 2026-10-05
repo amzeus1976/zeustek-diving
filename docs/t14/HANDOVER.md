@@ -1,3 +1,7 @@
+## Repeated Plan equipment corrected — app1.0.93/cachev40 candidate
+
+Sites164 withdrawn after valid exact-head review4186796606. Verified153/app1.0.81 restored by appgdep_6ac3dd46bbf08191b9ed56505799ec74; separate evidence/planning-sites164-2026-10-05 preserves all prior gates. RED3220a90 reproduces stale source-slot IDs. Only new drafts remove equipment attributable to source application slots, retain independent selections and reset applications; Save reapplies the current loadout. Source records/history are untouched. Full exact-source gates, compiled full equipment-list copy acceptance, fresh owner baseline, native publication and final PR94/main reconciliation remain. No owner or frozen-file change.
+
 ## Repeated Plan loadout evidence corrected — app1.0.92/cachev39 candidate
 
 Sites163 withdrawn after valid exact-head review4186555178. Verified153/app1.0.81 restored by appgdep_6ac3d6b99f908191bd69342ca21cc325; separate evidence/planning-sites163-2026-10-05 preserves all source/gates/owner baseline. REDffd0c42 reproduces copied stale applications. Duplicate draft now clears equipmentSetApplications while retaining selected loadout/equipment/source so normal Save applies current slots afresh. No owner or frozen-file changes. Full exact-source gates, compiled copy/Save/reload, fresh owner baseline, native publication, responsive acceptance and exact PR94/main reconciliation remain.
