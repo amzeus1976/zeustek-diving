@@ -1,0 +1,117 @@
+{
+  "status": "Production verified; GitHub exact-head review and main merge pending",
+  "appVersion": "1.0.85",
+  "sitesVersion": 157,
+  "source": "a630f0cd0c4687dec960f6b31869ef31dda0bf53",
+  "tree": "6ea06b0e855dda04726631f9f3a14932e689060f",
+  "branch": "feat/trip-getting-there",
+  "workingTree": "clean at freeze",
+  "cache": "zeustek-static-v32",
+  "deployment": {
+    "id": "appgdep_6ac38f99284c819185baaeb001a86ee6",
+    "status": "succeeded",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_3d227431a4048191b7d2de382ec7cecb",
+    "updated_at": "2026-10-05T11:53:25.029495+00:00",
+    "env_set_revision": 6
+  },
+  "archive": {
+    "archive_format": "tar",
+    "sediment_file_id": "file_000000002f808243bdc9e9ca92f6bca6",
+    "content_hash": "sha256:d4719e05769768a79ec88fce4b07050b2af4f818ae0c66246efb025d6958c7b3",
+    "size_bytes": 103116800,
+    "file_count": 1346
+  },
+  "rollback": {
+    "version": 153,
+    "appVersion": "1.0.81",
+    "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "archive": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_00000000586c820ab7bf1760fc9a1fe4",
+      "content_hash": "sha256:8153a7a5990b7d7a17b1fae76b6de6fe9b946e0ae5f709e4cdd7b9bbe9c1809d",
+      "size_bytes": 103075840,
+      "file_count": 1346
+    },
+    "lastVerifiedRecovery": "appgdep_6ac38d91a3688191a08cc1bd574690dc"
+  },
+  "tests": {
+    "full": 1551,
+    "files": 229,
+    "focused": 47,
+    "focusedFiles": 7,
+    "typecheck": "PASS",
+    "nativeBuild": "PASS",
+    "pwaEntries": 422,
+    "latestLint": {
+      "files": 5,
+      "diagnostics": 0
+    },
+    "retainedGuardLint": {
+      "new": 0,
+      "unchangedBaseline": 9,
+      "rawExit": 1
+    }
+  },
+  "browser": {
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "routeChecks": 48,
+    "homeChecks": 6,
+    "consoleErrors": 0,
+    "pageOverflow": false,
+    "brokenVisibleImages": 0,
+    "homePhoneOmitted": true,
+    "duplicatePreviewCancelled": true,
+    "actualGasCopySaveReload": "Local disposable allocated and legacy fixture copies retain2 and1 supplies with separateIDs; production Gas inventory0"
+  },
+  "owner": {
+    "freshRecords": 6539,
+    "idsAndRowsUnchanged": true,
+    "fingerprint": "3b136f8785f5bd8d8e1be5550504b86c921a8bcd4308f00a7a56963720de0dc3",
+    "writesDuring157Release": 0,
+    "homeProfileNotModified": true,
+    "earlierActivity": "One trip no longer present before the fresh157 baseline; preserved, not restored to older counts",
+    "approvedDive67Video": "Saved previously; retained unchanged"
+  },
+  "privacy": {
+    "credentialMatches": 0,
+    "artifactFiles": 1346,
+    "navAssetsByteMatch": 31,
+    "workerByteMatch": true,
+    "privateEndpointsAnonymousStatus": 401,
+    "environmentRevision": 6,
+    "bindings": 17,
+    "environmentUnchanged": true
+  },
+  "protected": {
+    "files": 9,
+    "unchanged": true
+  },
+  "exceptions": {
+    "gmail": "Existing owner-authorised exception retained; no sync/reconnect operation in this release",
+    "providers": "Met Office denied; direct Copernicus conditional; SwellCloud awaiting approved access/API",
+    "apiKeys": "Unchanged; no issue/rotation",
+    "publicProfile": "Existing owner-published state unchanged",
+    "google": "No journey launch, Google import or automated write"
+  },
+  "github": {
+    "pr": 94,
+    "url": "https://github.com/amzeus1976/zeustek-diving/pull/94",
+    "head": "a630f0cd0c4687dec960f6b31869ef31dda0bf53",
+    "review": "pending",
+    "main": "not yet reconciled"
+  },
+  "historicalAttempts": [
+    154,
+    155,
+    156
+  ],
+  "next": "Complete exact-head review, merge PR94 if no blockers, verify full main tree match, publish final evidence separately from product tree."
+}

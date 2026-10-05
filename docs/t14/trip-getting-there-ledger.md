@@ -50,3 +50,7 @@ Sites155 is withdrawn on the canonical dive-trip link guard omission; verified15
 ## Owner-reported Home address correction
 
 Sites156 withdrawn on telephone-only canonical address being routed as Home. Recovery153/deployment6ac38d91 succeeded; sources and48responsive PASS observations preserved as historical. Three RED failures preceded the pure Home read correction. Stored Person address/contact is unchanged; postcode and location remain road-origin evidence. Four added regressions preserve real numbered/Unicode streets and null Home when no road evidence exists. App85/cache32 passes1551/229, focused47/7, typecheck,5latest-file lint0 and9unchanged hashes. Native build/privacy and exact publish/GitHub pending.
+
+## Sites157 accepted production; source reconciliation pending
+
+All G01–G08 and G11–G17 implementations and release gates pass. Corrected Home projection, live Duplicate draft Cancel,48six-width route observations/6Home controls, nativebuild/PWA, privacy and all9hashes pass. Original6539ownerrows/fingerprint3b136f87 unchanged; fresh earlieractivity accounted separately. Current published sourcea630f0c/version85/cache32/Sites157 is accepted for production. G09 remains pending exact-head PR94review, merge and main whole-tree comparison. Final documentation is separate from the frozen published product. No Google/Gmail or owner writes.
