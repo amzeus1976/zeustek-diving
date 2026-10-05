@@ -11,11 +11,12 @@ import {diveReferencesOperator} from '../operators/dive-log-selection';
 import {recordHash} from './canonical';
 import {referencesPlanningRecord,planningRecordHasConnections,planningRecordDeletionGuarded} from '../planning/plan-deletion';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
+import {beginCloudSyncEvidence,cancelCloudSyncEvidence,finishCloudSyncEvidence,resetCloudSyncEvidence} from './cloud-sync-evidence';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
 const checked = new Map<string, number>();
-export function configureDiveStore(userId: string) { account = userId; }
+export function configureDiveStore(userId: string) { if(account!==userId)resetCloudSyncEvidence(userId);account = userId; }
 export function currentDiveAccount() { return account; }
 const moduleName = () => { if (!account) throw new Error('Sign in to access local dive records.'); return `dive:${account}`; };
 function changed() { window.dispatchEvent(new Event('zeustek-records-updated')); }
@@ -28,6 +29,7 @@ export async function refreshDiveRecords(kind: string, force = false) {
   if (inflight.has(key)) return inflight.get(key);
   if (!navigator.onLine || (!force && Date.now() - (checked.get(key) ?? 0) < 30_000)) return;
   checked.set(key, Date.now());
+  const evidence=beginCloudSyncEvidence(account,`read:${kind}`);
   const work = (async () => {
     const started = performance.now();
     const snapshotStartedAt = new Date().toISOString();
@@ -40,8 +42,11 @@ export async function refreshDiveRecords(kind: string, force = false) {
     await cacheCloudRecords(module, kind, rows, snapshotStartedAt);
     await zeustekDb.settings.put({ key: `cached:${key}`, value: true });
     await diagnostic(`DIVE_NETWORK_${kind}`, started);
+    finishCloudSyncEvidence(evidence,true);
     changed();
   })().catch((error) => {
+    finishCloudSyncEvidence(evidence,false);
+    if(account!==evidence.owner)return;
     window.dispatchEvent(new CustomEvent('zeustek-operation', { detail: { state: 'error', message: /bulkPut|UnknownError|transaction/i.test(String(error)) ? 'Cloud download could not be saved on this device. Your existing records and unsent edits are retained. Reopen the app to retry.' : error instanceof Error ? error.message : 'Cloud refresh failed.' } }));
   }).finally(() => inflight.delete(key));
   inflight.set(key, work);
@@ -238,12 +243,14 @@ export async function flushDiveChanges() {
   const isCurrent = () => account === startingAccount;
   flushing=(async () => {
     let recordsChanged = false;
+    let evidence:ReturnType<typeof beginCloudSyncEvidence>|undefined;
     try {
       const changes=sortPendingDiveChanges((await pendingDiveChanges()).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
       for (const change of changes) {
         if (!isCurrent()) return;
         const pending=change.value as unknown as Pending;
         if (pending.state === 'conflict') continue;
+        evidence=beginCloudSyncEvidence(startingAccount,`write:${pending.id}`);
         const prepared=pending.record?await prepareCardImages(pending.record,startingAccount,isCurrent):null;
         if (!isCurrent()) return;
         const response=await fetch('/api/dive-data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:pending.id,kind:pending.kind,data:prepared,localMutation:true,baseModifiedAt:pending.baseModifiedAt}),signal:AbortSignal.timeout(20_000)});
@@ -261,6 +268,7 @@ export async function flushDiveChanges() {
               return true;
             });
             if (conflictChanged && isCurrent()) changed();
+            finishCloudSyncEvidence(evidence,false);evidence=undefined;
             continue;
           }
           throw new Error(result.error ?? 'Changes are saved on this device. Cloud sync will retry.');
@@ -285,11 +293,20 @@ export async function flushDiveChanges() {
           return false;
         });
         recordsChanged ||= acknowledged;
+        finishCloudSyncEvidence(evidence,true);evidence=undefined;
       }
       if (!isCurrent()) return;
+      evidence=beginCloudSyncEvidence(startingAccount,'attachments');
       const uploaded = await flushComputerEvidenceAttachments(startingAccount, isCurrent);
       recordsChanged ||= uploaded > 0;
+      if(uploaded>0)finishCloudSyncEvidence(evidence,true);else cancelCloudSyncEvidence(evidence);
+      evidence=undefined;
+    } catch(error) {
+      if(isCurrent())finishCloudSyncEvidence(evidence??beginCloudSyncEvidence(startingAccount,'attachments'),false);
+      evidence=undefined;
+      throw error;
     } finally {
+      if(evidence)finishCloudSyncEvidence(evidence,false);
       if (recordsChanged && isCurrent()) changed();
     }
   })().catch(error => { if (isCurrent()) window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); }).finally(()=>{flushing=null;});

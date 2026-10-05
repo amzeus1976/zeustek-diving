@@ -7,10 +7,12 @@ import {saveRecord} from '../offline/dive-planning';
 import {saveDivePlanWithGasLinks,type StoredGasPlanRecord} from '../offline/planning-pages';
 import type {CalendarBooking} from './calendar-booking-workflow';
 import {calendarTripLinkState} from './calendar-link-identity';
+import {applyReusableLoadout,normaliseReusableLoadout,type ReusableLoadoutRecord} from '../offline/loadouts-gas';
+import type {Stored} from '../offline/dive-planning';
 type ReviewedTrip={entityId:string;modifiedAt:string};
 type ReviewedPlan={entityId:string;modifiedAt:string};
 /** Plan, event and inverse Trip links use reviewed revisions and one owner-store transaction. */
-export async function savePlanDraftWithConnections(input:Parameters<typeof saveDivePlanWithGasLinks>[0],gasPlans:StoredGasPlanRecord[],selectedIds:string[],reviewedTrips:readonly ReviewedTrip[],reviewedPlan?:ReviewedPlan|null,entry?:CalendarBooking|null){
+export async function savePlanDraftWithConnections(input:Parameters<typeof saveDivePlanWithGasLinks>[0],gasPlans:StoredGasPlanRecord[],selectedIds:string[],reviewedTrips:readonly ReviewedTrip[],reviewedPlan?:ReviewedPlan|null,entry?:CalendarBooking|null,reviewedLoadout?:Stored<ReusableLoadoutRecord>|null){
  const account=currentDiveAccount(),accountModule=`dive:${account}`;
  const sameAccount=()=>{if(!account||currentDiveAccount()!==account)throw new Error('The account changed. Reopen the editor before saving.');};
  sameAccount();
@@ -18,6 +20,13 @@ export async function savePlanDraftWithConnections(input:Parameters<typeof saveD
  return zeustekDb.transaction('rw',[zeustekDb.entities,zeustekDb.events,zeustekDb.eventParents,zeustekDb.entityHeads,zeustekDb.outbox,zeustekDb.settings,zeustekDb.syncState],async()=>{
   sameAccount();
   const pendingConflict=async(id:string)=>((await zeustekDb.settings.get(`pending:${accountModule}:${id}`))?.value as {state?:string}|undefined)?.state==='conflict';
+  let currentLoadout:Stored<ReusableLoadoutRecord>|undefined;
+  if(reviewedLoadout){
+   const row=await zeustekDb.entities.get(`${accountModule}:${reviewedLoadout.entityId}`);
+   const loadout=row?.record as unknown as Stored<ReusableLoadoutRecord>|undefined;
+   if(!row||row.deleted||row.entityType!=='equipment-set'||!loadout||input.equipmentSetId!==reviewedLoadout.entityId||loadout.modifiedAt!==reviewedLoadout.modifiedAt||await pendingConflict(reviewedLoadout.entityId)||await Dexie.waitFor(recordHash(normaliseReusableLoadout(loadout) as unknown as JsonValue))!==await Dexie.waitFor(recordHash(normaliseReusableLoadout(reviewedLoadout) as unknown as JsonValue)))throw new Error('The selected loadout changed or needs review. Reopen the Plan before saving.');
+   currentLoadout=loadout;
+  }
   const tripRows=await zeustekDb.entities.where('[module+entityType]').equals([accountModule,'dive-trip']).toArray();
   const trips=tripRows.filter(row=>!row.deleted&&row.record).map(row=>row.record as unknown as ReviewedTrip&{planIds?:string[];calendarBookingIds?:unknown;originCalendarBookingId?:unknown});
   let current:CalendarBooking|undefined;
@@ -61,6 +70,8 @@ export async function savePlanDraftWithConnections(input:Parameters<typeof saveD
    const next=id===input.tripId?planIds.includes(result.id)?planIds:[...planIds,result.id]:planIds.filter(planId=>planId!==result.id);
    if(JSON.stringify(next)!==JSON.stringify(planIds))await saveRecord('dive-trip',{...trip,planIds:next});
   }
+  sameAccount();
+  if(currentLoadout)await applyReusableLoadout('trip',result.id,currentLoadout);
   sameAccount();return result;
  });
 }

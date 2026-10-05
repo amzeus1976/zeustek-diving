@@ -137,3 +137,24 @@
 .toolbar :is(input,select){background:var(--zt-bg);border-radius:var(--zt-radius-md)}
 .stack article,.repeatRow{border-radius:var(--zt-radius-lg)}
 .checks>span,.packing label,.notes>div,.guestList article{background:var(--zt-surface-2);border-radius:var(--zt-radius-md)}
+
+/* Keep the nested itinerary/resource editors as legible as the main Trip fields. */
+.editor label:not(:has(input[type='checkbox'])) { display:flex;flex-direction:column;gap:.5rem;min-width:0; }
+.editor :is(input:not([type='checkbox']):not([type='radio']),select,textarea) {
+ display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+ border:1px solid var(--zt-border-cyan);border-radius:var(--zt-radius-md);
+ background:var(--zt-bg);color:var(--zt-text);padding:.7rem .8rem;
+}
+.editor textarea { min-height:10rem;resize:vertical;line-height:1.55; }
+.editor :global(.trip-link-fields) { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;align-items:end; }
+.editor :global(.trip-link-fields)>label:has(textarea) { grid-column:1/-1; }
+.editor :global(.record-fields),.repeatRow { row-gap:1.1rem; }
+.itineraryEditor { min-width:0;border:1px solid var(--zt-border-cyan);border-radius:var(--zt-radius-lg);background:var(--zt-surface); }
+.itineraryEditor>summary { display:flex;flex-wrap:wrap;gap:.4rem 1rem;align-items:center;min-height:44px;padding:.8rem;cursor:pointer; }
+.itineraryEditor>summary::before { content:'›';color:var(--zt-accent-orange);font-size:1.3rem; }
+.itineraryEditor[open]>summary::before { transform:rotate(90deg); }
+.itineraryEditor>summary span { flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600; }
+.itineraryEditor>summary small { color:var(--zt-text-muted); }
+.itineraryEditor>.repeatRow { border:0;border-top:1px solid var(--zt-border-muted);border-radius:0; }
+.editor :global(.trip-link-fields) button { width:fit-content;max-width:100%; }
+@media(max-width:780px){.editor :global(.trip-link-fields){grid-template-columns:minmax(0,1fr);} .editor :global(.trip-link-fields)>label:has(textarea){grid-column:auto;} }

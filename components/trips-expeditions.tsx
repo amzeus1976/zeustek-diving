@@ -13,7 +13,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AccessibleDialog } from './accessible-dialog';
 import { RecordEditorWorkspace } from './shared/record-editor-workspace';
 import { ZeusTekIcon } from './zeustek-icon';
@@ -21,6 +21,8 @@ import { MediaGallery } from './media-gallery';
 import { TripResources, TripLinksEditor } from './trip-resources';
 import { TripLinkedSites } from './trip-linked-sites';
 import { TripGettingThere } from './trip-getting-there';
+import {tripDestinationDraft,tripSiteChoiceLabel} from '../lib/planning/trip-destination';
+import {findOwnerProfile,personDisplayName} from '../lib/offline/people-profiles';
 import {PlanningConnections} from './planning/planning-connections';
 import {PlanningWorkflow} from './planning/planning-workflow';
 import {DeletePlanningRecordDialog} from './planning/delete-planning-record-dialog';
@@ -103,6 +105,11 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 function recordHref(section: string, key: string, id: string) {
   const query = new URLSearchParams({ section, [key]: id });
   return `/?${query.toString()}`;
+}
+
+function tripPersonPresentation(person:Stored<PersonRecord>,people:Array<Stored<PersonRecord>>){
+ const owner=people.filter(row=>row.roles?.ownerProfile).length===1?findOwnerProfile(people):null;
+ return person.entityId===owner?.entityId?{name:'Me',role:'Self'}:{name:personDisplayName(person),role:person.role};
 }
 
 function dateLabel(value?: string | null) {
@@ -308,7 +315,7 @@ export function TripDetail({ item, plans, sites, people, equipment, equipmentSet
 
     <TripSection title="Team">
       {(item.organiserUserId || organiser) && <p><b>Organiser:</b> {organiserIsCurrentUser ? 'Me (this account)' : organiser ? <a className="focus-link" href={recordHref('People','personId',organiser.entityId)}>{organiser.name}</a> : 'Account organiser'}</p>}
-      {!!item.teamPersonIds.length && <><h4>Diving team</h4><div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person?.name ?? 'Person unavailable'}</a>;})}</div></>}
+      {!!item.teamPersonIds.length && <><h4>Diving team</h4><div className={styles.chips}>{item.teamPersonIds.map((id)=>{const person=people.find((candidate)=>candidate.entityId===id);return <a key={id} href={recordHref('People','personId',id)}>{person ? tripPersonPresentation(person,people).name : 'Person unavailable'}</a>;})}</div></>}
       {!!guests.length && <><h4>Non-diving participants</h4><div className={styles.guestList}>{guests.map((guest)=><article key={guest.id}><b>{guest.name}</b><small>{guestRoleLabel(guest.role)}</small>{guest.notes&&<TripNote text={guest.notes} label="participant notes"/>}</article>)}</div></>}
       {!item.teamPersonIds.length&&!guests.length&&<p className="focus-copy">No team members or guests linked.</p>}
     </TripSection>
@@ -338,6 +345,9 @@ export function TripEditor({ item, items, plans, sites, people, equipment, equip
 }) {
   const initial = item ? editableDiveExpeditionTrip(item) : sourceBooking?tripDraftFromBooking(sourceBooking):emptyTrip();
   const [value, setValue] = useState(initial);
+  const destinationList=useId();
+  const [destinationQuery,setDestinationQuery]=useState(initial.destination??'');
+  const autoArrival=useRef('');
   const dirty = JSON.stringify(value) !== JSON.stringify(initial);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -345,6 +355,7 @@ export function TripEditor({ item, items, plans, sites, people, equipment, equip
   const toggle = (key: 'teamPersonIds'|'siteIds'|'planIds'|'packingEquipmentSetIds', id: string, checked: boolean) => set(key, checked ? [...new Set([...value[key],id])] : value[key].filter((entry)=>entry!==id));
   const guests = value.guestParticipants ?? [];
   const organiserValue = value.organiserUserId && value.organiserUserId === currentUserId ? '__current_user__' : value.organiserPersonId ?? '';
+  function destinationChanged(query:string){setDestinationQuery(query);const next=tripDestinationDraft(value,query,sites,autoArrival.current);autoArrival.current=next.autoArrival;setValue(next.value);}
 
   async function submit() {
     if (!value.name.trim() || busy) return;
@@ -369,11 +380,11 @@ export function TripEditor({ item, items, plans, sites, people, equipment, equip
 
   return <RecordEditorWorkspace label={item?'Edit trip':'New trip'} close={close} value={value} dirty={dirty} trackInteractions={false} busy={busy} save={submit} saveLabel="Save trip" saveDisabled={!value.name.trim()} contentClassName={`record-form ${styles.editor}`}>
     <div className="record-form-head"><div><span className="focus-eyebrow">{item?'EDIT TRIP':'NEW TRIP'}</span><h3>{item?'Update trip logistics':'Create trip or expedition'}</h3></div><button className="focus-icon" aria-label="Close editor" data-dialog-close onClick={close}><X/></button></div>
-    <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input value={value.destination??''} onChange={(e)=>set('destination',e.target.value)}/></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={organiserValue} onChange={(e)=>{const next=e.target.value;const selection=next==='__current_user__'?{kind:'account' as const,id:currentUserId}:next?{kind:'person' as const,id:next}:{kind:'none' as const};setValue((current)=>({...current,...tripOrganiserReferences(selection)}));}}><option value="">Not recorded</option>{currentUserId&&<option value="__current_user__">Me (this account)</option>}{people.map((person)=><option key={person.entityId} value={person.entityId}>{person.name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
+    <div className="record-fields"><label>Name<input value={value.name} onChange={(e)=>set('name',e.target.value)} placeholder="Farne Islands weekend"/></label><label>Destination<input type="search" list={destinationList} value={destinationQuery} onChange={e=>destinationChanged(e.target.value)} placeholder="Type a Site name, location or postcode"/><datalist id={destinationList}>{sites.map(site=><option key={site.entityId} value={tripSiteChoiceLabel(site)}>{[site.name,site.location,site.postcode].filter(Boolean).join(' · ')}</option>)}</datalist><small>Select a saved Site to link it and fill its road arrival address/postcode, or type a destination.</small></label><label>Starts<input type="date" value={value.startsOn??''} onChange={(e)=>set('startsOn',e.target.value||null)}/></label><label>Ends<input type="date" value={value.endsOn??''} onChange={(e)=>set('endsOn',e.target.value||null)}/></label><label>Status<select value={value.status} onChange={(e)=>set('status',e.target.value as DiveExpeditionTripStatus)}>{statuses.map(([status,label])=><option key={status} value={status}>{label}</option>)}</select></label><label>Organiser<select value={organiserValue} onChange={(e)=>{const next=e.target.value;const selection=next==='__current_user__'?{kind:'account' as const,id:currentUserId}:next?{kind:'person' as const,id:next}:{kind:'none' as const};setValue((current)=>({...current,...tripOrganiserReferences(selection)}));}}><option value="">Not recorded</option>{currentUserId&&<option value="__current_user__">Me (this account)</option>}{people.map((person)=><option key={person.entityId} value={person.entityId}>{tripPersonPresentation(person,people).name}</option>)}</select></label><label className="record-wide">Accommodation<textarea value={value.accommodation??''} onChange={(e)=>set('accommodation',e.target.value)} placeholder="Hotel, liveaboard, campsite or meeting arrangements"/></label></div>
 
     <TripGettingThere siteIds={value.siteIds} sites={sites} people={people} arrivalPoint={value.travelArrivalPoint??''} onArrivalChange={next=>set('travelArrivalPoint',next)}/>
 
-    <EditorChoices title="Diving team" icon={<Users size={17}/>} empty="Add People first if the diving team is not listed.">{people.map((person)=><label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{person.name}</b><small>{person.role}</small></span></label>)}</EditorChoices>
+    <EditorChoices title="Diving team" icon={<Users size={17}/>} empty="Add People first if the diving team is not listed.">{people.map((person)=>{const display=tripPersonPresentation(person,people);return <label key={person.entityId}><input type="checkbox" checked={value.teamPersonIds.includes(person.entityId)} onChange={(e)=>toggle('teamPersonIds',person.entityId,e.target.checked)}/><span><b>{display.name}</b><small>{display.role}</small></span></label>;})}</EditorChoices>
 
     <RepeatSection title="Non-diving participants" addLabel="Add non-diver" add={()=>set('guestParticipants',[...guests,newGuest()])}>{guests.map((guest,index)=><div className={styles.repeatRow} key={guest.id}><label>Name<input value={guest.name} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,name:e.target.value}:row))} placeholder="Guest name"/></label><label>Role<select value={guest.role} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,role:e.target.value as TripGuestParticipant['role']}:row))}>{guestRoles.map(([role,label])=><option key={role} value={role}>{label}</option>)}</select></label><label className="record-wide">Notes<textarea value={guest.notes??''} onChange={(e)=>set('guestParticipants',guests.map((row,i)=>i===index?{...row,notes:e.target.value}:row))} placeholder="Relationship, surface-support role, travel notes…"/></label><button className="focus-secondary danger" onClick={()=>set('guestParticipants',guests.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>
 
@@ -381,7 +392,7 @@ export function TripEditor({ item, items, plans, sites, people, equipment, equip
     <EditorChoices title="Linked Dive Plans" icon={<CalendarDays size={17}/>} empty="Plans stay canonical on Dive Plans.">{plans.map((plan)=><label key={plan.entityId}><input type="checkbox" checked={value.planIds.includes(plan.entityId)} onChange={(e)=>toggle('planIds',plan.entityId,e.target.checked)}/><span><b>{plan.name}</b><small>{plan.startDate} · {plan.siteName}</small></span></label>)}</EditorChoices>
     <EditorChoices title="Reusable loadouts" icon={<Wrench size={17}/>} empty="Create Equipment Sets first if useful.">{equipmentSets.map((setRecord)=><label key={setRecord.entityId}><input type="checkbox" checked={value.packingEquipmentSetIds.includes(setRecord.entityId)} onChange={(e)=>toggle('packingEquipmentSetIds',setRecord.entityId,e.target.checked)}/><span><b>{setRecord.name}</b><small>{setRecord.equipmentIds.length} items</small></span></label>)}</EditorChoices>
 
-    <RepeatSection title="Itinerary" addLabel="Add itinerary event" add={()=>set('itinerary',[...value.itinerary,newItinerary()])}>{value.itinerary.map((segment,index)=><div className={styles.repeatRow} key={segment.id}>
+    <RepeatSection title="Itinerary" addLabel="Add itinerary event" add={()=>set('itinerary',[...value.itinerary,newItinerary()])}>{value.itinerary.map((segment,index)=><details className={styles.itineraryEditor} key={segment.id} open={initial.itinerary.some(row=>row.id===segment.id)?undefined:true}><summary><span>{itineraryKindLabel(segment.kind)} · {segment.title||'Untitled itinerary item'}</span><small>{segment.startsAt?segment.startsAt.replace('T',' · '):'Date / time not set'}</small></summary><div className={styles.repeatRow}>
       <label>Type<select value={segment.kind} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,kind:e.target.value as TripItinerarySegment['kind']}:row))}>{itineraryKinds.map(([kind,label])=><option key={kind} value={kind}>{label}</option>)}</select></label>
       {segment.kind==='travel'&&<label>Travel mode<select value={segment.travelMode??''} onChange={e=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,travelMode:e.target.value as NonNullable<TripItinerarySegment['travelMode']>}:row))}><option value="">Not specified</option><option value="flight">Flight</option><option value="rail">Rail</option><option value="road">Road</option><option value="sea">Sea</option><option value="other">Other</option></select></label>}
       <label>Title<input value={segment.title} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,title:e.target.value}:row))} placeholder="e.g. Desert camel safari"/></label>
@@ -392,7 +403,7 @@ export function TripEditor({ item, items, plans, sites, people, equipment, equip
       <label className="record-wide">Notes<textarea value={segment.notes??''} onChange={(e)=>set('itinerary',value.itinerary.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label>
       <div className="record-wide"><TripLinksEditor links={segment.links ?? []} change={links => set('itinerary',value.itinerary.map(row => row.id === segment.id ? {...row,links} : row))}/><small>Save the itinerary item before adding original files in its detail view.</small></div>
       <button className="focus-secondary danger" onClick={()=>{if(confirm('Remove this itinerary item and its own attachments? Trip-level files, other items and linked records remain.'))set('itinerary',value.itinerary.filter((_,i)=>i!==index));}}><Trash2 size={14}/> Remove</button>
-    </div>)}</RepeatSection>
+    </div></details>)}</RepeatSection>
     <TripSection title="Trip documents & links" className="focus-card"><TripLinksEditor links={value.links ?? []} change={links => set('links',links)}/></TripSection>
 
     <RepeatSection title="Bookings & payments" addLabel="Add booking" add={()=>set('bookings',[...value.bookings,newBooking()])}>{value.bookings.map((booking,index)=><div className={styles.repeatRow} key={booking.id}><label>Type<select value={booking.kind} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,kind:e.target.value as TripBooking['kind']}:row))}><option value="travel">Travel</option><option value="accommodation">Accommodation</option><option value="operator">Operator</option><option value="dive">Dive</option><option value="other">Other</option></select></label><label>Provider<input value={booking.provider} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,provider:e.target.value}:row))}/></label><label>Reference<input value={booking.reference??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,reference:e.target.value}:row))}/></label><label>Amount<input type="number" min="0" step="0.01" value={booking.amount??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,amount:e.target.value===''?null:Number(e.target.value)}:row))}/></label><label>Currency<input value={booking.currency??'GBP'} maxLength={3} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,currency:e.target.value.toUpperCase()}:row))}/></label><label>Due<input type="date" value={booking.dueOn??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,dueOn:e.target.value}:row))}/></label><label className="record-check"><input type="checkbox" checked={booking.paid??false} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,paid:e.target.checked}:row))}/>Paid</label><label className="record-wide">Notes<textarea value={booking.notes??''} onChange={(e)=>set('bookings',value.bookings.map((row,i)=>i===index?{...row,notes:e.target.value}:row))}/></label><button className="focus-secondary danger" onClick={()=>set('bookings',value.bookings.filter((_,i)=>i!==index))}><Trash2 size={14}/> Remove</button></div>)}</RepeatSection>

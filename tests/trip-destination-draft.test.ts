@@ -1,0 +1,14 @@
+import {describe,expect,it} from 'vitest';
+import {tripDestinationDraft,tripSiteChoiceLabel} from '../lib/planning/trip-destination';
+import type {DiveExpeditionTripInput} from '../lib/offline/trips-expeditions';
+import type {DiveSiteRecord,Stored} from '../lib/offline/dive-planning';
+const sites=[{entityId:'canonical-site-a',name:'Same name',address:'Pier Road',postcode:'AA1 1AA'},{entityId:'canonical-site-b',name:'Same name',postcode:'BB2 2BB'},{entityId:'offshore',name:'Offshore wreck',latitude:55,longitude:-1},{entityId:'unicode',name:'Île 海',address:'Rue de l’École',postcode:'東京 123',country:'日本'}] as Array<Stored<DiveSiteRecord>>;
+const draft=()=>({name:'Trip',destination:'',siteIds:['already-linked'],teamPersonIds:['owner'],itinerary:[],notes:'Keep notes'} as unknown as DiveExpeditionTripInput);
+describe('reviewable Trip Site destination and road arrival',()=>{
+ it('links an exact Site and fills its postcode without mutating the draft or Site',()=>{const source=draft(),before=JSON.stringify({source,sites});const result=tripDestinationDraft(source,tripSiteChoiceLabel(sites[0]!),sites);expect(result.value).toMatchObject({destination:'Same name',siteIds:['already-linked','canonical-site-a'],travelArrivalPoint:'Pier Road, AA1 1AA',teamPersonIds:['owner'],notes:'Keep notes'});expect(JSON.stringify({source,sites})).toBe(before);});
+ it('ambiguous Site names stay free text and cannot choose an arbitrary Site',()=>{expect(tripDestinationDraft(draft(),'Same name',sites).value).toMatchObject({destination:'Same name',siteIds:['already-linked']});});
+ it('replaces only a previous automatic arrival when another exact Site is selected',()=>{const first=tripDestinationDraft(draft(),tripSiteChoiceLabel(sites[0]!),sites);const second=tripDestinationDraft(first.value,tripSiteChoiceLabel(sites[1]!),sites,first.autoArrival);expect(second.value.travelArrivalPoint).toBe('BB2 2BB');expect(second.value.siteIds).toEqual(['already-linked','canonical-site-a','canonical-site-b']);});
+ it('preserves a manually entered harbour override while linking a Site',()=>{const source={...draft(),travelArrivalPoint:'Reviewed harbour AB3 4CD'};expect(tripDestinationDraft(source,tripSiteChoiceLabel(sites[0]!),sites,'Old auto address').value.travelArrivalPoint).toBe('Reviewed harbour AB3 4CD');});
+ it('does not invent a road destination from offshore coordinates',()=>{const result=tripDestinationDraft(draft(),'Offshore wreck',sites);expect(result.value.siteIds).toContain('offshore');expect(result.value.travelArrivalPoint).toBeUndefined();});
+ it('preserves Unicode road evidence and independent free text',()=>{expect(tripDestinationDraft(draft(),'Île 海',sites).value.travelArrivalPoint).toBe('Rue de l’École, 東京 123, 日本');expect(tripDestinationDraft(draft(),'Meeting at harbour',sites).value.destination).toBe('Meeting at harbour');});
+});
