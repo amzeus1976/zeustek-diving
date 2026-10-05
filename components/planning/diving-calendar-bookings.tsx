@@ -196,7 +196,7 @@ export function DivingCalendarBookings({ go }: Props) {
     saved={async () => { setEditing(undefined); await refresh(); }}
   />;
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.calendarPage}`}>
       <header className={styles.hero}>
         <div className={styles.heroTitle}>
           <ZeusTekIcon id="dive-flag" size="hero" />
@@ -214,11 +214,13 @@ export function DivingCalendarBookings({ go }: Props) {
         </button>
       </header>
 
-      <CalendarDownloadWorkspace go={go}/>
       {loadError&&<p role="alert">{loadError}</p>}
       <div className={styles.shell}>
-        <aside className={styles.sideRail}>
-          <h2>Event types</h2>
+
+
+        <section className={styles.workArea}>
+        <details className={styles.calendarFilters}>
+          <summary>Event types</summary>
           <button
             className={filter === 'all' ? styles.activePill : ''}
             onClick={() => setFilter('all')}
@@ -239,9 +241,7 @@ export function DivingCalendarBookings({ go }: Props) {
             Events remain lightweight until you link or convert them into a
             Trip, Dive Plan, Gas Plan or training record.
           </div>
-        </aside>
-
-        <section className={styles.workArea}>
+        </details>
           <div
             className={styles.tabs}
             role="tablist"
@@ -323,7 +323,7 @@ export function DivingCalendarBookings({ go }: Props) {
                   ›
                 </button>
               </div>
-              <div className={styles.calendarGrid}>
+              <section className={styles.calendarGridViewport} aria-label="Calendar days"><div className={styles.calendarGrid}>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(
                   (day) => (
                     <strong key={day}>{day}</strong>
@@ -358,7 +358,7 @@ export function DivingCalendarBookings({ go }: Props) {
                     </button>
                   );
                 })}
-              </div>
+              </div></section>
             </CollapsibleWorkCard>
           ) : null}
 
@@ -443,7 +443,7 @@ export function DivingCalendarBookings({ go }: Props) {
           )}
         </aside>
       </div>
-
+      <CalendarDownloadWorkspace go={go}/>
     </main>
   );
 }

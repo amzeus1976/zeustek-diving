@@ -1,5 +1,10 @@
 /* Application contracts use the approved core and Diving tokens loaded first.
    This final layer resolves legacy shell/control rules without changing artwork. */
+/* Owner-requested20% text reduction; fixed44px touch targets remain unchanged. */
+html[data-brand='zeustek-diving'] {font-size:80%;}
+.header-status .cloud-account-badge.synced svg{color:var(--zt-success)}
+.header-status .cloud-account-badge.pending svg{color:var(--zt-accent)}
+.header-status .cloud-account-badge.disabled svg{color:var(--zt-danger)}
 html[data-brand='zeustek-diving'] body {
   background: var(--zt-bg);
   color: var(--zt-text);

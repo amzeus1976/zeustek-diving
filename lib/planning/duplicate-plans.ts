@@ -1,0 +1,16 @@
+import type {EnrichedDivePlan,StoredEnrichedDivePlan} from '../offline/dive-planning-centre';
+import type {StoredGasPlanRecord} from '../offline/planning-pages';
+import type {AllocatedGasPlan} from '../gas-allocation/integration';
+/** New unsaved drafts: no writer, ID allocation, history or linked-record mutation. */
+export function duplicateDivePlanDraft(source:StoredEnrichedDivePlan):Omit<EnrichedDivePlan,'createdAt'|'modifiedAt'>{
+ const data=structuredClone(source) as unknown as EnrichedDivePlan&Record<string,unknown>;
+ for(const key of ['entityId','createdAt','modifiedAt','tripId','linkedGasPlanId','linkedDivePlanId','linkedTripId','linkedDiveIds','originCalendarBookingId','calendarSource','bookingStatus','completedAt','archivedAt','deletedAt'])delete data[key];
+ return{...data,name:`${source.name} (copy)`,status:'planned',lifecycleStatus:'draft',tripId:null,gasPlanLinks:[],conditions:{},equipmentReadiness:{},checklist:(source.checklist??[]).map(row=>({...row,completed:false}))};
+}
+export function duplicateGasPlanDraft(source:StoredGasPlanRecord):AllocatedGasPlan{
+ const data=structuredClone(source) as AllocatedGasPlan&Record<string,unknown>;
+ for(const key of ['entityId','createdAt','modifiedAt','completedAt','archivedAt','deletedAt'])delete data[key];
+ const stamp=new Date().toISOString();
+ if(data.allocationV1){delete data.allocationV1.assessment;delete data.allocationV1.savedAt;}
+ return{...data,name:`${source.name} (copy)`,divePlanId:null,status:'draft',warnings:[],safetyAcknowledgedAt:null,createdAt:stamp,modifiedAt:stamp};
+}

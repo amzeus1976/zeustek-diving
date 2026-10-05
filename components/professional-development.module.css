@@ -10,7 +10,7 @@
 }
 .heading h1 {
   margin: 0.15rem 0;
-  font-size: clamp(2rem, 4vw, 3.3rem);
+  font-size: clamp(2rem, 3.2vw, 3.3rem);
 }
 .heading p {
   max-width: 850px;

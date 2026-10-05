@@ -79,6 +79,7 @@ export interface DiveDebrief {
 }
 
 export interface DiveStory {
+  videoLinks?: Array<{url:string;title?:string}>;
   narrative?: string;
   standoutMoment?: string;
   challengingMoment?: string;

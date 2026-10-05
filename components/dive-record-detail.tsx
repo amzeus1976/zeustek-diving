@@ -13,6 +13,7 @@ import { DiveEditorWrites } from '../lib/offline/dive-editor-writes';
 import { recordNavigation } from '../lib/editor/navigation-guard';
 import { ComputerProfileEvidence } from './computer-profile-evidence';
 import { DiveSkillBatchEditor } from './dive-skill-batch-editor';
+import {DiveVideoLinks} from './logbook/dive-video-links';
 import { SkillEvidenceChoice } from './skill-evidence-choice';
 import { availableDiveSkills, diveSkillEnvironment, SKILL_ASSESSMENTS, SKILL_ENVIRONMENTS } from '../lib/logbook/skill-practice';
 
@@ -329,6 +330,7 @@ export function DiveRecordDetail({ dive, daySequence, title, eyebrow, rows, clos
           </div>)}<button className="focus-secondary" onClick={() => changeStory({ timelineNotes: [...(draft.current.story?.timelineNotes ?? []), { text: '' }] })}>Add timeline note</button></section>
         </TabsContent>
       </Tabs>
+      {(view === 'overview' || view === 'story') && <DiveVideoLinks links={story.videoLinks ?? []} change={videoLinks=>changeStory({videoLinks})}/>}
       {view === 'overview' && <output className="dive-local-save" aria-live="polite">{status}</output>}
       {view !== 'skills' && <MediaGallery ownerKind="dive" ownerId={dive.entityId} retainOfflineMetadata {...(view === 'story' ? { featuredIds: story.featuredAttachmentIds ?? [], onFeaturedChange: (ids: string[]) => changeStory({ featuredAttachmentIds: ids }) } : {})} />}
     </RecordEditorWorkspace>

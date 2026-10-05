@@ -1,7 +1,6 @@
 'use client';
 import {
   CheckCircle2,
-  Cloud,
   Database,
   Download,
   ImagePlus,
@@ -20,6 +19,7 @@ import {
   restoreDiveBackup,
 } from '@/lib/offline/cloud-platform';
 import { zeustekDb } from '@/lib/offline/db';
+import {CloudAccountStatus} from './cloud-account-status';
 import {
   deleteCatalogOption,
   DEFAULT_GEAR_CATEGORIES,
@@ -50,10 +50,7 @@ export function PlatformHeaderStatus() {
         {online ? <Wifi size={14} /> : <WifiOff size={14} />}
         <b>{online ? 'Online' : 'Offline'}</b>
       </span>
-      <span title="Dive data is stored in your private hosted account">
-        <Cloud size={14} />
-        <b>Cloud account</b>
-      </span>
+      <CloudAccountStatus/>
       <span title="Available anywhere you sign in">
         <Database size={14} />
         <b>All devices</b>

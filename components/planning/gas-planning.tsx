@@ -113,6 +113,7 @@ export function GasPlanning({ go }: Props) {
     diveIds: [],
   });
   const [selectedId, setSelectedId] = useState('');
+  const [copyFrom,setCopyFrom]=useState<StoredGasPlanRecord|null>(null);
   const [editing, setEditing] = useState<
     StoredGasPlanRecord | null | undefined
   >(undefined);
@@ -202,6 +203,7 @@ export function GasPlanning({ go }: Props) {
 
   if (editing !== undefined) return <T14GasPlanEditor
           item={editing}
+          copyFrom={copyFrom}
           newGasPlanFor={newGasPlanFor}
           divePlans={divePlans}
           equipment={equipment}
@@ -211,9 +213,9 @@ export function GasPlanning({ go }: Props) {
           trips={trips}
           sites={sites}
           rmvBaseline={rmvBaseline}
-          close={() => setEditing(undefined)}
+          close={() => {setEditing(undefined);setCopyFrom(null);}}
           saved={async () => {
-            setEditing(undefined);
+            setEditing(undefined);setCopyFrom(null);
             await refresh();
           }}
         />;
@@ -514,6 +516,7 @@ export function GasPlanning({ go }: Props) {
               plan={selected}
               divePlan={selectedDivePlan}
               edit={() => setEditing(selected)}
+              duplicate={() => {setCopyFrom(selected);setNewGasPlanFor(null);setEditing(null);}}
               {...(go?{share:()=>go(`Settings&config=shared-links-settings&gasPlanId=${encodeURIComponent(selected.entityId)}`)}:{})}
               remove={async () => {
                 if (
@@ -556,6 +559,7 @@ function GasDetail({
   plan,
   divePlan,
   edit,
+  duplicate,
   remove,
   saveToPlan,
   share,
@@ -563,6 +567,7 @@ function GasDetail({
   plan: StoredGasPlanRecord;
   divePlan: StoredEnrichedDivePlan | null | undefined;
   edit: () => void;
+  duplicate: () => void;
   remove: () => void;
   saveToPlan: () => Promise<void>;
   share?: () => void;
@@ -616,6 +621,7 @@ function GasDetail({
         <button className="focus-secondary" onClick={edit}>
           <Pencil size={14} /> Edit gas plan
         </button>
+        <button className="focus-secondary" onClick={duplicate}>Duplicate gas plan</button>
         <button
           className="focus-secondary"
           disabled={!divePlan}
