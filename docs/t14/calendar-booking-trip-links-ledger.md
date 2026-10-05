@@ -35,3 +35,8 @@ Fresh normal signed-in read-only owner snapshot **2026-10-05T00:29:39.404Z**,650
 Current accepted **app1.0.77/Sites149/source9b1c0af4192779ce2dbb15f2c16253b5eddb0e59** and its actual saved rollback version **appgprj_6a91926878b48191a80d70f1681ef135~appgver_fe20c558256c8191b8d11cac84ee6bf2** reverified natively. Official recovery artifact103239680bytes/1356files/SHA25687e4e8f5e7201af91bdff935879e1dacc147b11bd786870f4bc0aedde0c01360 retained. Environment6/all17bindings/11secret values preserved; public Site audience unchanged.
 
 Exact next: freeze clean source/recovery bundle, package the already-tested build using the native source helper and fresh in-memory credential, save/deploy once, inspect read-only real Calendar/Trip/link/preview source/cache/31icons/console/responsive behaviour and compare current owner rows. Roll back to verified149 on a real release blocker. Only after acceptance push/open/attach/merge exact GitHub PR and verify entire main tree. No Gmail sync, Google writes, synthetic production records, new key or public-profile publication.
+
+
+## Review/recovery checkpoint
+
+Sites150/sourcea84903b is **REJECTED**, not accepted source. P1 PR93 review reproduced lost canonical cancellation/completion status in the converted original-identity export. Sites149 restored through verified recovery deployment appgdep_6ac2f788f3448191bce35a9ef8cfdb0b and live1.0.77 footer; owner data was not rolled back and main not merged. Original local1449 and live feature results describe that exact historical candidate, not the pending corrected code. New status tests are RED before implementation. All candidate/rejected packaging/owner snapshots remain recoverable.

@@ -10,6 +10,13 @@ const event=(extra={})=>({entityId:'booking-a',name:'Farne weekend',startDate:'2
 const trip=(extra={})=>({entityId:'trip-a',name:'Existing holiday',destination:'Existing destination',startsOn:'2026-10-01',endsOn:'2026-10-20',status:'planned',teamPersonIds:['human-b'],siteIds:['site-b'],planIds:[],itinerary:[],bookings:[],packingEquipmentSetIds:[],packingItems:[],gasLogistics:[],documentAttachmentIds:[],notes:'Owner notes',createdAt:at,modifiedAt:at,...extra} as Stored<DiveExpeditionTripRecord>);
 
 describe('Calendar event / canonical Trip workflow',()=>{
+ it.each(['cancelled','completed','draft','active'] as const)('shows the canonical converted Trip status %s without changing source records',status=>{
+  const source=event({bookingStatus:'confirmed',status:'confirmed'});const converted=trip({...tripDraftFromBooking(source),entityId:'converted',status});const before=structuredClone([source,converted]);
+  const entry=calendarEntries([source],[converted])[0]!;
+  expect(entry.bookingStatus).toBe(status==='draft'?'idea':status==='active'?'confirmed':status);
+  expect([source,converted]).toEqual(before);
+ });
+
  it('carries the exact source event through canonical cross-workspace navigation',()=>{
   const destination=workflowDestinationUrl({route:'Trips',params:{fromEventId:'booking-a'}});
   expect(new URLSearchParams(destination.slice(1)).get('fromEventId')).toBe('booking-a');expect(parseWorkflowDestination(destination).params?.fromEventId).toBe('booking-a');

@@ -1,5 +1,13 @@
 # T14 resumable handover
 
+## Sites150 rejected; accepted Sites149 restored — 5 October 2026
+
+Read **sites150-rejected-attempt.json** and **calendar-booking-trip-links-ledger.md** first. Preserve candidate **a84903bd8aa1a0a618a659d854b05526cfad76e6** /app1.0.78/cachev25 on fix/calendar-booking-trip-links, its valid1449-test local evidence and all native deployment/recovery evidence. Sites150 passed initial read-only smoke but a valid P1 PR93 review then proved its converted Trip can export as active after cancellation/completion because the original booking status wins. Acceptance was withdrawn; failed150 is not merged into GitHub main.
+
+Recovery **appgdep_6ac2f788f3448191bce35a9ef8cfdb0b** succeeded and live footer confirms **app1.0.77/Sites149/source9b1c0af4192779ce2dbb15f2c16253b5eddb0e59**. Actual saved rollback149/archive is retained. Source, canonical owner data and encrypted connection were not reset; fresh6501-row pre/post150 fingerprints/IDs/original rows were identical. GitHub main remains33efa427, exactly matching149.
+
+New RED regression tests reproduce canonical cancelled/completed/draft status in bookings-only, Trips-only and itinerary-only downloads and read projection, plus stale/safe calendar status actions. Next: bounded shared status fix preserving original UID/time and all source rows; rerun changed-candidate gates/fresh baseline, advance version/cache, republish one accepted candidate and reconcile only its exact accepted tree through PR93. No Gmail or Google operation, new public-profile/API credentials, dependency or protected-calculation edit. Older150 PASS observations remain historical and do not override this rejection.
+
 ## Accepted Sites149 — 4 October 2026
 
 Production **app1.0.77 / Sites149**, deployment **appgdep_6ac2b97e47b48191a30d260f49d2bac0**, exact source **9b1c0af4192779ce2dbb15f2c16253b5eddb0e59**, full tree **4a716c407cc46d8afbb53fbe03650bab04203d24**, cache **zeustek-static-v24**, environment revision6/all17 bindings. Read **sites149-release-evidence.json** and **dive-plan-editor-layout-ledger.md**. **PR92 merged**, GitHub main **33efa4271a75beb4363f031bea6e71362f62dbf0** matches the complete published tree; fetched whole-tree diff is empty. Final evidence is kept on a separate documentation branch and is not deployed over that product source.

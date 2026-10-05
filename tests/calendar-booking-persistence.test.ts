@@ -3,7 +3,7 @@ import {beforeEach,afterEach,describe,it,expect,vi} from 'vitest';
 import {zeustekDb} from '../lib/offline/db';
 import {configureDiveStore,listLocalDiveRecords,saveLocalRecord} from '../lib/offline/dive-store';
 import {localBackupPayload,restoreLocalPayload} from '../lib/offline/local-backup';
-import {readCalendarSources,saveCalendarDiveLinks,linkCalendarBookingToTrip,tripDraftFromBooking} from '../lib/planning/calendar-booking-workflow';
+import {readCalendarSources,saveCalendarDiveLinks,linkCalendarBookingToTrip,tripDraftFromBooking,setCalendarEntryStatus} from '../lib/planning/calendar-booking-workflow';
 import {listDiveExpeditionTrips,saveDiveExpeditionTrip} from '../lib/offline/trips-expeditions';
 const account='calendar-link-fixture';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore(account);await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
@@ -14,6 +14,17 @@ async function seed(){
  return (await readCalendarSources()).entries[0]!;
 }
 describe('Canonical calendar / Dive / Trip persistence',()=>{
+ it('changes converted Trip status through its calendar event without rewriting original booking evidence',async()=>{
+  const original=await seed();await saveDiveExpeditionTrip(tripDraftFromBooking(original));const before=await listLocalDiveRecords('trip');
+  await setCalendarEntryStatus((await readCalendarSources()).entries[0]!,'cancelled');
+  expect((await listDiveExpeditionTrips())[0]?.status).toBe('cancelled');expect((await readCalendarSources()).entries[0]?.bookingStatus).toBe('cancelled');expect(await listLocalDiveRecords('trip')).toEqual(before);
+ });
+ it('rejects a stale converted Trip status edit while retaining both canonical records',async()=>{
+  const original=await seed();await saveDiveExpeditionTrip(tripDraftFromBooking(original));const stale=(await readCalendarSources()).entries[0]!;
+  const current=(await listDiveExpeditionTrips())[0]!;await saveDiveExpeditionTrip({...current,status:'completed'});const before=await listLocalDiveRecords('dive-trip');
+  await expect(setCalendarEntryStatus(stale,'cancelled')).rejects.toThrow('changed');expect(await listLocalDiveRecords('dive-trip')).toEqual(before);
+ });
+
  it('reads without writes and links zero, one or several Dives without changing any endpoint',async()=>{
   const entry=await seed();const dives=await listLocalDiveRecords('dive');const count=await zeustekDb.events.count();
   await readCalendarSources();await readCalendarSources();expect(await zeustekDb.events.count()).toBe(count);
