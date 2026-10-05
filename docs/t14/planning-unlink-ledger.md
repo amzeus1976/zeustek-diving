@@ -41,3 +41,15 @@ Final163 review correction: REDffd0c42 reproduces retained loadout application s
 
 
 Final164 review correction: RED3220a90 proves old source-slot IDs remain in repeated Plans. New draft now removes only IDs attributable to source application snapshots (including multiple/array slots), retains independent/unknown legacy selections, resets applications and reapplies current loadout on Save. Original records are immutable. Version93/cache40 requires full gates and compiled full equipment-list/source-preservation acceptance. No frozen or owner write.
+# Review / Trip correction stage — 5 October 2026
+
+Accepted live release restored to Sites153 / app1.0.81 by deployment appgdep_6ac3e4d8d9308191b2142287c8078005. Preserve withdrawn Sites165 / source87975 and separate evidence/planning-sites165-2026-10-05. PR94 remains unmerged.
+
+RED checkpoint: 14 meaningful failures / 21 retained passes across atomic Plan/loadout persistence, actual Cloud status evidence and Trip destination/owner presentation. Ignored review166-red.log retains exact output. Requirements:
+
+- PR4187081798: include reviewed current loadout application inside the existing Plan/event/Trip owner transaction; failure/account switch must roll back all rows, history and queue and permit retry. Call existing frozen helper; never change frozen bytes.
+- PR4187081812: empty device queue is not proof of cloud success. Track actual per-account requests, failures and recovery; stale-account completion must not verify another account.
+- Owner Trip request: searchable canonical Site destination; draft road arrival/postcode fill; explicit harbour overrides retained; no offshore-coordinate assumption, no source mutation. Present the unique canonical owner as Me / Self without changing Person roles or Trip reference IDs.
+- Owner Trip itinerary request: clear label spacing, visibly bounded full-width text controls, readable notes, six-width clipping/keyboard checks.
+
+Remaining: implementations, meaningful focused/full tests, typecheck/lint/privacy/nine hashes, exact native candidate build, compiled failure/retry and Trip checks, fresh owner baseline, one combined publication, read-only production smoke, complete-head PR review and exact main reconciliation. No intermediate implementation release; no owner record changes during smoke.

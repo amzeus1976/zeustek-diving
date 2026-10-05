@@ -329,7 +329,7 @@ export function TripDetail({ item, plans, sites, people, equipment, equipmentSet
   </AccessibleDialog>;
 }
 
-function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
+export function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
   item: Stored<DiveExpeditionTripRecord> | null;
   items: Array<Stored<DiveExpeditionTripRecord>>; plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>;
   people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
