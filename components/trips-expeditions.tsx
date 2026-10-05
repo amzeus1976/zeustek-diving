@@ -147,6 +147,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const currentUserId = currentDiveAccount();
   const [items, setItems] = useState<Array<Stored<DiveExpeditionTripRecord>>>([]);
   const [plans, setPlans] = useState<Array<Stored<DiveTripRecord>>>([]);
+  const [planningSources,setPlanningSources]=useState<Array<Stored<DiveTripRecord>>>([]);
   const [sites, setSites] = useState<Array<Stored<DiveSiteRecord>>>([]);
   const [people, setPeople] = useState<Array<Stored<PersonRecord>>>([]);
   const [equipment, setEquipment] = useState<Array<Stored<EquipmentRecord>>>([]);
@@ -172,7 +173,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   useEffect(()=>{
     const id=new URLSearchParams(window.location.search).get('fromEventId');
     if(!id||!loaded||openedSource.current===id)return;
-    const row=plans.find(plan=>plan.entityId===id);
+    const row=planningSources.find(plan=>plan.entityId===id);
     const frame=requestAnimationFrame(()=>{
       if(!row){setSourceMessage('The exact source event is unavailable. No replacement event or Trip has been selected.');return;}
       const booking=normaliseBooking(row as StoredDivingCalendarBooking);
@@ -182,13 +183,13 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       openedSource.current=id;setSourceMessage('');
       setSourceBooking(booking);setEditing(null);setAdding(true);
     });return()=>cancelAnimationFrame(frame);
-  },[loaded,plans,items]);
+  },[loaded,planningSources,items]);
 
   const refresh = useCallback(() => {
     void Promise.all([
       listDiveExpeditionTrips(), listDiveTrips(), listDiveSites(), listPeople(), listEquipment(), listEquipmentSets(),
     ]).then(([nextTrips, nextPlans, nextSites, nextPeople, nextEquipment, nextSets]) => {
-      setItems(nextTrips); setPlans(nextPlans); setSites(nextSites); setPeople(nextPeople);
+      setItems(nextTrips); setPlanningSources(nextPlans); setPlans(nextPlans.filter(plan=>!('bookingKind' in plan))); setSites(nextSites); setPeople(nextPeople);
       setEquipment(nextEquipment); setEquipmentSets(nextSets);
       setViewing((current) => current ? nextTrips.find((item) => item.entityId === current.entityId) ?? null : null);
       setSourceMessage('');

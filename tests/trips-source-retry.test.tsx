@@ -14,7 +14,7 @@ vi.mock('react',async importOriginal=>{
 vi.mock('../components/record-status',async importOriginal=>({...await importOriginal<typeof import('../components/record-status')>(),useRecordRefresh:(refresh:()=>void)=>{harness.refresh=refresh;if(!harness.registered){harness.registered=true;harness.effects.push(refresh);}}}));
 vi.mock('../lib/offline/dive-store',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/dive-store')>(),currentDiveAccount:()=> 'dummy-owner'}));
 const source={entityId:'exact-booking',name:'Dummy event',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy site',notes:'Keep original text',status:'confirmed',bookingStatus:'confirmed',bookingKind:'dive'};
-vi.mock('../lib/offline/dive-planning',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/dive-planning')>(),listDiveTrips:async()=>{if(harness.fail)throw Error('Fixture transport failure');return [{...source,...harness.bookingExtra}];},listDiveSites:async()=>[],listPeople:async()=>[],listEquipment:async()=>[],listEquipmentSets:async()=>[]}));
+vi.mock('../lib/offline/dive-planning',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/dive-planning')>(),listDiveTrips:async()=>{if(harness.fail)throw Error('Fixture transport failure');return [{...source,...harness.bookingExtra},{entityId:'legacy-plan',name:'Legacy canonical Plan',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy site'}];},listDiveSites:async()=>[],listPeople:async()=>[],listEquipment:async()=>[],listEquipmentSets:async()=>[]}));
 vi.mock('../lib/offline/trips-expeditions',async importOriginal=>({...await importOriginal<typeof import('../lib/offline/trips-expeditions')>(),listDiveExpeditionTrips:async()=>harness.trips}));
 import {TripsExpeditions} from '../components/trips-expeditions';
 
@@ -37,7 +37,7 @@ describe('Exact event conversion after a failed initial Trip load',()=>{
  it('keeps the source booking for conversion but excludes it from linked Dive Plan choices',async()=>{
   const render=initialise();render();await tick();render();const editor=render();
   expect(editor.props.sourceBooking?.entityId).toBe('exact-booking');
-  expect(editor.props.plans).toEqual([]);
+  expect(editor.props.plans.map((plan:{entityId:string})=>plan.entityId)).toEqual(['legacy-plan']);
  });
  it('reports conflicting conversions before opening an explicitly linked Trip',async()=>{
   const render=initialise();harness.bookingExtra={linkedTripId:'trip-a'};harness.trips=[fixtureTrip('trip-a'),fixtureTrip('trip-b')];
