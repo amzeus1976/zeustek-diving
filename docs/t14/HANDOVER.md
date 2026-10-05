@@ -1,3 +1,9 @@
+## Calendar / booking / Trip correction — final local gate
+
+Read **calendar-booking-trip-links-corrected-local-gate.json** and **calendar-booking-trip-links-ledger.md** first. Preserve branchfix/calendar-booking-trip-links, RED/recovery checkpoint0c36b6b and the corrected product commit containing this entry. App1.0.79/cachezeustek-static-v26:1465/218 full,44/5 focused, typecheck/build/PWA/privacy/six-width populated browser and9hashes PASS;18-file lint0new/11unchanged baseline. Sites150 stays rejected; original recovery evidence below is retained. Production is restored verified app1.0.77/Sites149/recoveryappgdep_6ac2f788f3448191bce35a9ef8cfdb0b; GitHubmain33efa4271a75beb4363f031bea6e71362f62dbf0 unchanged, PR93 open.
+
+Corrected canonical Trip status now controls converted booking display/export while retaining original event UID/date/time. Fresh6501-row encrypted owner baseline01:34UTC/fingerprint237c64bb reverified; no canonical owner/Google/Gmail write. Exact next: freeze clean reproducible source/bundle, native package/save/deploy new actual version, read-only actual source/cache/six-width/privacy/owner acceptance, then exact PR93 reconciliation and main fulltree match. Recover149 on a real blocker; never accept rejected150 or merge a failed candidate. No scope, dependency, frozen-file, provider, key, public-profile or Google integration expansion.
+
 # T14 resumable handover
 
 ## Sites150 rejected; accepted Sites149 restored — 5 October 2026

@@ -3,9 +3,9 @@ import {listDives} from '../offline/dives';
 import {currentDiveAccount} from '../offline/dive-store';
 import {listDivingCalendarBookings,setDivingCalendarBookingStatus,type BookingStatus,type StoredDivingCalendarBooking} from '../offline/planning-pages';
 import {editableDiveExpeditionTrip,listDiveExpeditionTrips,saveDiveExpeditionTrip,type DiveExpeditionTripInput,type DiveExpeditionTripRecord} from '../offline/trips-expeditions';
-import {sameConvertedCalendarDates} from './calendar-link-identity';
+import {sameConvertedCalendarDates,convertedCalendarBookingStatus} from './calendar-link-identity';
 
-export type CalendarBooking = StoredDivingCalendarBooking & {linkedDiveIds?:string[];calendarSource?:'trip'|'dive-trip';calendarLinkConflict?:boolean};
+export type CalendarBooking = StoredDivingCalendarBooking & {linkedDiveIds?:string[];calendarSource?:'trip'|'dive-trip';calendarLinkConflict?:boolean;calendarStatusTripId?:string;calendarStatusTripModifiedAt?:string};
 export const normaliseCalendarDiveIds=(ids:readonly string[])=>[...new Set(ids.filter(id=>typeof id==='string'&&id.trim()).map(id=>id.trim()))];
 
 /** Bounded display only; original saved text is never changed. */
@@ -21,7 +21,12 @@ export function linkedCalendarTripId(booking:StoredDivingCalendarBooking,trips:r
 }
 export function calendarEntries(bookings:readonly CalendarBooking[],trips:readonly Stored<DiveExpeditionTripRecord>[]):CalendarBooking[]{
  const sources=new Map(bookings.map(booking=>[booking.entityId,booking]));
- const rows:CalendarBooking[]=bookings.map(booking=>({...booking,calendarSource:'trip',linkedTripId:linkedCalendarTripId(booking,trips),calendarLinkConflict:!booking.linkedTripId&&trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)).length>1}));
+ const rows:CalendarBooking[]=bookings.map<CalendarBooking>(booking=>{
+  const linkedTripId=linkedCalendarTripId(booking,trips);
+  const converted=trips.find(trip=>trip.entityId===linkedTripId&&trip.originCalendarBookingId===booking.entityId&&sameConvertedCalendarDates(trip as unknown as Record<string,unknown>,booking as unknown as Record<string,unknown>));
+  const bookingStatus=converted?convertedCalendarBookingStatus(converted.status,booking.bookingStatus):booking.bookingStatus??'planned';
+  return {...booking,calendarSource:'trip',linkedTripId,bookingStatus,...(converted?{calendarStatusTripId:converted.entityId,calendarStatusTripModifiedAt:converted.modifiedAt}:{}),calendarLinkConflict:!booking.linkedTripId&&trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)).length>1};
+ });
  for(const trip of trips){
   const origin=trip.originCalendarBookingId?sources.get(trip.originCalendarBookingId):undefined;
   if(origin&&sameConvertedCalendarDates(trip as unknown as Record<string,unknown>,origin as unknown as Record<string,unknown>))continue;
@@ -71,10 +76,15 @@ export async function linkCalendarBookingToTrip(entry:CalendarBooking,tripId:str
 }
 export async function setCalendarEntryStatus(entry:CalendarBooking,status:BookingStatus){
  const account=currentDiveAccount();
- if(entry.calendarSource==='dive-trip'){
+ const tripId=entry.calendarStatusTripId??(entry.calendarSource==='dive-trip'?entry.entityId:null);
+ if(tripId&&!(entry.calendarSource==='trip'&&status==='archived')){
   if(status!=='completed'&&status!=='cancelled')throw new Error('Edit this Trip in Trips & Expeditions.');
-  const trip=(await listDiveExpeditionTrips()).find(row=>row.entityId===entry.entityId);sameAccount(account);
-  if(!trip||trip.modifiedAt!==entry.modifiedAt)throw new Error('This Trip changed. Reopen it before changing its status.');
+  const trip=(await listDiveExpeditionTrips()).find(row=>row.entityId===tripId);sameAccount(account);
+  if(!trip||trip.modifiedAt!==(entry.calendarStatusTripModifiedAt??entry.modifiedAt))throw new Error('This Trip changed. Reopen it before changing its status.');
+  if(entry.calendarStatusTripId){
+   const booking=(await listDivingCalendarBookings()).find(row=>row.entityId===entry.entityId);sameAccount(account);
+   if(!booking||booking.modifiedAt!==entry.modifiedAt||trip.originCalendarBookingId!==booking.entityId||!sameConvertedCalendarDates(trip as unknown as Record<string,unknown>,booking as unknown as Record<string,unknown>))throw new Error('This event changed. Reopen it before changing its Trip status.');
+  }
   return saveDiveExpeditionTrip({...editableDiveExpeditionTrip(trip),status});
  }
  const booking=(await listDivingCalendarBookings()).find(row=>row.entityId===entry.entityId);sameAccount(account);

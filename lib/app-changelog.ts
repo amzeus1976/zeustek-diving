@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.79',date:'2026-10-05',title:'Calendar Trips with current status and original event identity',
+    changes:[
+      'Compact event notes, multiple logged-Dive links and reviewable event-to-Trip details are available together.',
+      'New Trips appear in Calendar from their canonical record, without creating a second store.',
+      'Converted events retain their original calendar identity and saved times while reflecting the current Trip status.',
+      'Cancelled and completed converted Trips are excluded from downloads unless explicitly selected; existing privacy and Google-compatible file import remain intact.',
+    ],
+  },
+  {
     version:'1.0.78',
     date:'2026-10-05',
     title:'Calendar bookings, multiple Dives and connected Trips',

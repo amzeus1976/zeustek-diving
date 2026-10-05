@@ -3,7 +3,7 @@ import { deriveCylinderInspectionSchedule, isCylinderEquipment, type CylinderEqu
 import { equipmentServiceStatus } from '../offline/equipment-usage';
 import type { EquipmentRecord, Stored } from '../offline/dive-planning';
 import { workflowDestinationUrl } from '../workflow/workflow-destination';
-import { sameConvertedCalendarDates } from '../planning/calendar-link-identity';
+import { sameConvertedCalendarDates, convertedCalendarBookingStatus } from '../planning/calendar-link-identity';
 import { addCalendarDays, calendarMonthRange, calendarUtcStamp, resolveCalendarDateTime, validCalendarDay, type CalendarDateTimeResult, type CalendarFoldChoice } from './calendar-dates';
 
 export const CALENDAR_CATEGORIES = [
@@ -104,6 +104,11 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
   }
   const records = snapshot.records.filter(row => row.id && object(row.data) && belongsToOwner(row, snapshot.accountId));
   const bookingSources = new Map(records.filter(row => row.kind === 'trip').map(row => [row.id, row]));
+  const convertedTrips = new Map<string,CalendarSourceRecord[]>();
+  for(const record of records.filter(row=>row.kind==='dive-trip')){
+    const origin=bookingSources.get(text(record.data.originCalendarBookingId));
+    if(origin&&sameConvertedCalendarDates(record.data,origin.data))convertedTrips.set(origin.id,[...(convertedTrips.get(origin.id)??[]),record]);
+  }
   const ownerPeople = records.filter(row => row.kind === 'person' && object(row.data.roles)?.ownerProfile === true);
   const omit = (category: CalendarCategory, code: CalendarOmission['code'], explanation: string, record?: CalendarSourceRecord, resolutionKey?: string) => {
     preview.omissions.push({ category, code, explanation, ...(record ? { reviewDestination: destination(record) } : {}), ...(resolutionKey ? { resolutionKey } : {}) });
@@ -184,7 +189,9 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
         preview.totalCandidates++; omit(category, 'conflicting-date', 'Saved date and time fields disagree. Open the source record to review them.', record); return;
       }
       if (endAt && !startAt) { preview.totalCandidates++; omit(category, 'conflicting-date', 'An end time exists without a start time. No start was invented.', record); return; }
-      await project({ record, category, discriminator: 'booking', label: 'Diving booking', title: text(data.name), location: text(booking.locationName), start: startAt || data.startDate, end: startAt ? endAt : data.endDate, timed: Boolean(startAt), provenance: 'Recorded calendar/plan dates.', status: data.bookingStatus ?? data.status ?? booking.bookingStatus });
+      const matches=convertedTrips.get(record.id)??[];
+      const status=matches.length===1?convertedCalendarBookingStatus(matches[0]!.data.status,data.bookingStatus??data.status):data.bookingStatus??data.status??booking.bookingStatus;
+      await project({ record, category, discriminator: 'booking', label: 'Diving booking', title: text(data.name), location: text(booking.locationName), start: startAt || data.startDate, end: startAt ? endAt : data.endDate, timed: Boolean(startAt), provenance: 'Recorded calendar/plan dates.', status });
   };
   for (const record of records) {
     const data = record.data;
