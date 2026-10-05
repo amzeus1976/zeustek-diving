@@ -58,6 +58,8 @@ import {
   type TripPackingItem,
 } from '../lib/offline/trips-expeditions';
 import styles from './trips-expeditions.module.css';
+import {linkedCalendarTripId,tripDraftFromBooking} from '../lib/planning/calendar-booking-workflow';
+import {listDivingCalendarBookings,normaliseBooking,type StoredDivingCalendarBooking} from '../lib/offline/planning-pages';
 
 const statuses: Array<[DiveExpeditionTripStatus, string]> = [
   ['draft', 'Draft'],
@@ -151,6 +153,10 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const [editing, setEditing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
   const [viewing, setViewing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
   const [adding, setAdding] = useState(false);
+  const [sourceBooking,setSourceBooking]=useState<StoredDivingCalendarBooking|null>(null);
+  const [sourceMessage,setSourceMessage]=useState('');
+  const [loaded,setLoaded]=useState(false);
+  const openedSource=useRef('');
   const openedTrip=useRef('');
   useEffect(()=>{
     const id=new URLSearchParams(window.location.search).get('tripId');
@@ -158,6 +164,20 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     const item=items.find(row=>row.entityId===id);
     if(item){const frame=requestAnimationFrame(()=>{openedTrip.current=id;setViewing(item);});return()=>cancelAnimationFrame(frame);}
   },[items]);
+  useEffect(()=>{
+    const id=new URLSearchParams(window.location.search).get('fromEventId');
+    if(!id||!loaded||openedSource.current===id)return;
+    const row=plans.find(plan=>plan.entityId===id);
+    const frame=requestAnimationFrame(()=>{
+      openedSource.current=id;
+      if(!row){setSourceMessage('The exact source event is unavailable. No replacement event or Trip has been selected.');return;}
+      const booking=normaliseBooking(row as StoredDivingCalendarBooking);
+      const linked=linkedCalendarTripId(booking,items);
+      if(linked){const existing=items.find(trip=>trip.entityId===linked);if(existing)setViewing(existing);else setSourceMessage('The linked Trip is unavailable. The original event is retained.');return;}
+      if(items.filter(trip=>trip.calendarBookingIds?.includes(id)).length>1){setSourceMessage('Multiple Trip associations need review before creating another Trip.');return;}
+      setSourceBooking(booking);setEditing(null);setAdding(true);
+    });return()=>cancelAnimationFrame(frame);
+  },[loaded,plans,items]);
 
   const refresh = useCallback(() => {
     void Promise.all([
@@ -166,7 +186,8 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       setItems(nextTrips); setPlans(nextPlans); setSites(nextSites); setPeople(nextPeople);
       setEquipment(nextEquipment); setEquipmentSets(nextSets);
       setViewing((current) => current ? nextTrips.find((item) => item.entityId === current.entityId) ?? null : null);
-    });
+      setLoaded(true);
+    }).catch(()=>{setSourceMessage('Trip records could not be loaded. Existing records are retained.');setLoaded(true);});
   }, []);
   useRecordRefresh(refresh);
 
@@ -208,15 +229,17 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     key={editing?.entityId ?? 'new-trip'}
     item={editing} items={items} plans={plans} sites={sites} people={people}
     equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
-    close={() => { setAdding(false); setEditing(null); }} saved={refresh}
+    sourceBooking={sourceBooking}
+    close={() => { setAdding(false); setEditing(null); setSourceBooking(null); }} saved={refresh}
   />;
   return <>
     <header className="focus-heading">
       <div className="focus-heading-title"><ZeusTekIcon id="liveaboard" size="heading"/><div><span>TRAVEL · DIVING · LOGISTICS</span><h1>Trips &amp; expeditions</h1>
         <p>Keep your travel, plans, team and packing together.</p></div></div>
-      <button className="focus-primary" onClick={() => { setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
+      <button className="focus-primary" onClick={() => { setSourceBooking(null); setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
     </header>
     <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
+    {sourceMessage&&<p role="alert">{sourceMessage}</p>}
 
     <Card className={styles.toolbar}>
       <label>Search<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Trip or destination"/></label>
@@ -298,13 +321,14 @@ function TripDetail({ item, plans, sites, people, equipment, equipmentSets, curr
   </AccessibleDialog>;
 }
 
-function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, close, saved }: {
+function TripEditor({ item, items, plans, sites, people, equipment, equipmentSets, currentUserId, sourceBooking, close, saved }: {
   item: Stored<DiveExpeditionTripRecord> | null;
   items: Array<Stored<DiveExpeditionTripRecord>>; plans: Array<Stored<DiveTripRecord>>; sites: Array<Stored<DiveSiteRecord>>;
   people: Array<Stored<PersonRecord>>; equipment: Array<Stored<EquipmentRecord>>; equipmentSets: Array<Stored<EquipmentSetRecord>>; currentUserId: string;
+  sourceBooking: StoredDivingCalendarBooking|null;
   close: () => void; saved: () => void;
 }) {
-  const initial = item ? editableDiveExpeditionTrip(item) : emptyTrip();
+  const initial = item ? editableDiveExpeditionTrip(item) : sourceBooking?tripDraftFromBooking(sourceBooking):emptyTrip();
   const [value, setValue] = useState(initial);
   const dirty = JSON.stringify(value) !== JSON.stringify(initial);
   const [busy, setBusy] = useState(false);
@@ -321,6 +345,11 @@ function TripEditor({ item, items, plans, sites, people, equipment, equipmentSet
     if (duplicate && !window.confirm(`A similar Trip already exists: “${duplicate.name}”. Save another Trip anyway?`)) return;
     setBusy(true); setMessage('Saving locally…');
     try {
+      if(!item&&sourceBooking){
+        const [currentBookings,currentTrips]=await Promise.all([listDivingCalendarBookings(),listDiveExpeditionTrips()]);
+        if(currentDiveAccount()!==currentUserId||!currentBookings.some(row=>row.entityId===sourceBooking.entityId&&row.modifiedAt===sourceBooking.modifiedAt))throw new Error('The source event changed or is unavailable. Reopen it before creating this Trip.');
+        if(currentTrips.some(row=>row.calendarBookingIds?.includes(sourceBooking.entityId)))throw new Error('This event already has a Trip. Reopen the Calendar to review that Trip.');
+      }
       await saveDiveExpeditionTrip({ ...value, guestParticipants: normaliseTripGuestParticipants(guests), name:value.name.trim(), destination:value.destination?.trim()||'', accommodation:value.accommodation?.trim()||'', emergencyNotes:value.emergencyNotes?.trim()||'', insuranceNotes:value.insuranceNotes?.trim()||'', medicalNotes:value.medicalNotes?.trim()||'', notes:value.notes?.trim()||'' });
       if (item) await cleanupTripMedia(item.entityId,item.itinerary.filter(segment => !value.itinerary.some(next => next.id === segment.id)).map(segment => segment.id),false);
       saved(); close();

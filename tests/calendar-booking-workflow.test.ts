@@ -3,12 +3,17 @@ import {calendarEntries, linkedCalendarTripId, mergeBookingIntoTrip, tripDraftFr
 import type {StoredDivingCalendarBooking} from '../lib/offline/planning-pages';
 import type {DiveExpeditionTripRecord} from '../lib/offline/trips-expeditions';
 import type {Stored} from '../lib/offline/dive-planning';
+import {workflowDestinationUrl,parseWorkflowDestination} from '../lib/workflow/workflow-destination';
 
 const at='2026-10-04T12:00:00Z';
 const event=(extra={})=>({entityId:'booking-a',name:'Farne weekend',startDate:'2026-10-10',endDate:'2026-10-11',startAt:'2026-10-10T08:30',endAt:'2026-10-11T17:00',siteName:'Farne Islands',locationName:'Seahouses',siteId:'site-a',personIds:['human-a'],buddy:'Owner-entered buddy text',notes:'Long source notes\nRetain Unicode 🐬',bookingKind:'dive',bookingStatus:'confirmed',status:'confirmed',createdAt:at,modifiedAt:at,...extra} as StoredDivingCalendarBooking);
 const trip=(extra={})=>({entityId:'trip-a',name:'Existing holiday',destination:'Existing destination',startsOn:'2026-10-01',endsOn:'2026-10-20',status:'planned',teamPersonIds:['human-b'],siteIds:['site-b'],planIds:[],itinerary:[],bookings:[],packingEquipmentSetIds:[],packingItems:[],gasLogistics:[],documentAttachmentIds:[],notes:'Owner notes',createdAt:at,modifiedAt:at,...extra} as Stored<DiveExpeditionTripRecord>);
 
 describe('Calendar event / canonical Trip workflow',()=>{
+ it('carries the exact source event through canonical cross-workspace navigation',()=>{
+  const destination=workflowDestinationUrl({route:'Trips',params:{fromEventId:'booking-a'}});
+  expect(new URLSearchParams(destination.slice(1)).get('fromEventId')).toBe('booking-a');expect(parseWorkflowDestination(destination).params?.fromEventId).toBe('booking-a');
+ });
  it('caps long Unicode text and many-line text while preserving the source',()=>{
   const text='🐬'.repeat(500);const result=eventTextPreview(text);
   expect(result.truncated).toBe(true);expect(Array.from(result.preview).length).toBeLessThanOrEqual(320);expect(result.preview).not.toContain('�');expect(text).toBe('🐬'.repeat(500));
@@ -39,6 +44,14 @@ describe('Calendar event / canonical Trip workflow',()=>{
  });
  it('retains linked events and a different spanning Trip as distinct dates',()=>{
   const target=trip({calendarBookingIds:['booking-a']});expect(calendarEntries([event()], [target])).toHaveLength(2);
+ });
+ it('does not hide a converted Trip after its owner deliberately changes its date range',()=>{
+  const changed=trip({...tripDraftFromBooking(event()),entityId:'new-trip',endsOn:'2026-10-14'});
+  expect(calendarEntries([event()], [changed])).toHaveLength(2);
+ });
+ it('transfers existing logged Dive links without turning a club meeting into a Dive',()=>{
+  const draft=tripDraftFromBooking(event({bookingKind:'club',linkedDiveIds:['dive-a','dive-b']}));
+  expect(draft.linkedDiveIds).toEqual(['dive-a','dive-b']);expect(draft.itinerary[0]?.kind).toBe('meeting');
  });
  it('keeps a converted Trip readable when its historical source is unavailable',()=>{
   expect(calendarEntries([], [trip({originCalendarBookingId:'missing',calendarBookingIds:['missing']})])).toHaveLength(1);

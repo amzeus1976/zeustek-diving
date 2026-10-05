@@ -1,6 +1,18 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.78',
+    date:'2026-10-05',
+    title:'Calendar bookings, multiple Dives and connected Trips',
+    changes:[
+      'Selected-event notes have a compact preview with More and Less controls.',
+      'Bookings and Trip calendar entries can link several existing logged Dives without duplicating them.',
+      'Create a Trip from event details, or import the event into an existing Trip while keeping its saved details.',
+      'New Trips appear in Diving Calendar & Bookings automatically from the same canonical record.',
+      'Reviewed Google-compatible calendar downloads include Trips and bookings while keeping converted event identities and times.',
+    ],
+  },
+  {
     version:'1.0.77',
     date:'2026-10-04',
     title:'Roomier Dive Plan editing and remembered-card loading',

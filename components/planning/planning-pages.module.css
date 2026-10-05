@@ -4,6 +4,23 @@
   min-width: 0;
 }
 
+.eventText { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.eventText button { display: inline-flex; min-height: 44px; margin-inline-start: 8px; align-items: center; }
+.eventDives { display: grid; gap: 8px; margin-block: 16px; min-width: 0; }
+.eventDives ul { margin: 0; padding-left: 18px; overflow-wrap: anywhere; }
+.eventDives li { margin-block: 6px; }
+.calendarLinkDialog { width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); box-sizing: border-box; overflow: auto; padding: 20px; border: 1px solid var(--zt-cyan, #00cfff); border-radius: 14px; background: #0b171c; color: #eaf1f4; }
+.calendarLinkDialog label { display: grid; gap: 6px; min-width: 0; }
+.calendarLinkDialog input[type=search] { width: 100%; min-width: 0; box-sizing: border-box; min-height: 44px; }
+.calendarDiveChoices { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; margin-block: 12px; }
+.calendarDiveChoices label { display: grid; grid-template-columns: 24px minmax(0,1fr); align-items: center; min-height: 44px; padding: 8px; border: 1px solid #29434f; border-radius: 8px; overflow-wrap: anywhere; }
+.calendarDiveChoices input[type=checkbox] { width: 20px; height: 20px; padding: 0; }
+.calendarLinkActions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; }
+.existingTripLink { margin-top: 16px; }
+.existingTripLink summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.existingTripLink label { display: grid; gap: 8px; margin-block: 12px; }
+.existingTripLink select { width: 100%; min-width: 0; min-height: 44px; }
+
 .hero {
   display: flex;
   justify-content: space-between;

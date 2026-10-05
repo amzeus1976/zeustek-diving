@@ -18,16 +18,20 @@ import { useRecordRefresh } from '../record-status';
 import { CollapsibleWorkCard } from '../workflow/collapsible-work-card';
 import { ZeusTekIcon } from '../zeustek-icon';
 import {
-  archiveDivingCalendarBooking,
-  listDivingCalendarBookings,
   saveDivingCalendarBooking,
-  setDivingCalendarBookingStatus,
   type BookingKind,
   type BookingStatus,
   type DivingCalendarBooking,
   type StoredDivingCalendarBooking,
 } from '../../lib/offline/planning-pages';
 import styles from './planning-pages.module.css';
+import {readCalendarSources,linkCalendarBookingToTrip,setCalendarEntryStatus,type CalendarBooking} from '../../lib/planning/calendar-booking-workflow';
+import type {DiveExpeditionTripRecord} from '../../lib/offline/trips-expeditions';
+import type {Stored} from '../../lib/offline/dive-planning';
+import type {DiveRecord} from '../../lib/offline/dives';
+import {workflowDestinationUrl} from '../../lib/workflow/workflow-destination';
+import {CalendarEventText} from './calendar-event-text';
+import {CalendarDiveLinks} from './calendar-dive-links';
 
 type Props = { go?: (route: string) => void };
 type CalendarView = 'calendar' | 'list' | 'bookings';
@@ -118,7 +122,11 @@ export function selectCalendarBooking<T extends { entityId: string }>(
 }
 
 export function DivingCalendarBookings({ go }: Props) {
-  const [items, setItems] = useState<StoredDivingCalendarBooking[]>([]);
+  const [items, setItems] = useState<CalendarBooking[]>([]);
+  const [bookings,setBookings]=useState<StoredDivingCalendarBooking[]>([]);
+  const [trips,setTrips]=useState<Stored<DiveExpeditionTripRecord>[]>([]);
+  const [dives,setDives]=useState<Array<DiveRecord&{entityId:string}>>([]);
+  const [loadError,setLoadError]=useState('');
   const [requestedId] = useState(() => typeof window === 'undefined' ? null : requestedCalendarEventId(window.location.search));
   const [activeTab, setActiveTab] = useState<CalendarView>(requestedId === null ? 'calendar' : 'list');
   const [month, setMonth] = useState(localIsoDate().slice(0, 7));
@@ -131,7 +139,7 @@ export function DivingCalendarBookings({ go }: Props) {
   >(undefined);
 
   const refresh = useCallback(
-    async () => { setItems(await listDivingCalendarBookings()); setLoaded(true); },
+    async () => {try{const source=await readCalendarSources();setItems(source.entries);setBookings(source.bookings);setTrips(source.trips);setDives(source.dives);setLoadError('');}catch{setLoadError('Calendar records could not be loaded. Existing records are retained; try reopening this workspace.');}finally{setLoaded(true);}},
     [],
   );
   useRecordRefresh(refresh);
@@ -201,6 +209,7 @@ export function DivingCalendarBookings({ go }: Props) {
       </header>
 
       <CalendarDownloadWorkspace go={go}/>
+      {loadError&&<p role="alert">{loadError}</p>}
       <div className={styles.shell}>
         <aside className={styles.sideRail}>
           <h2>Event types</h2>
@@ -410,9 +419,12 @@ export function DivingCalendarBookings({ go }: Props) {
         <aside className={styles.detailPane}>
           {selected ? (
             <BookingDetail
+              key={selected.entityId}
               item={selected}
+              trips={trips}
+              dives={dives}
               go={go}
-              edit={() => setEditing(selected)}
+              edit={() => {if(selected.calendarSource==='dive-trip')go?.(workflowDestinationUrl({route:'Trips',recordId:selected.entityId}));else{const original=bookings.find(row=>row.entityId===selected.entityId);if(original)setEditing(original);}}}
               refresh={refresh}
             />
           ) : (
@@ -431,20 +443,25 @@ export function DivingCalendarBookings({ go }: Props) {
 
 function BookingDetail({
   item,
+  trips,
+  dives,
   go,
   edit,
   refresh,
 }: {
-  item: StoredDivingCalendarBooking;
+  item: CalendarBooking;
+  trips: Stored<DiveExpeditionTripRecord>[];
+  dives: Array<DiveRecord&{entityId:string}>;
   go?: Props['go'];
   edit: () => void;
   refresh: () => Promise<void>;
 }) {
   const isTraining = ['course', 'assessment'].includes(item.bookingKind ?? '');
+  const [tripId,setTripId]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const updateStatus = async (status: BookingStatus) => {
-    await setDivingCalendarBookingStatus(item, status);
-    await refresh();
+    if(busy)return;setBusy(true);setError('');try{await setCalendarEntryStatus(item,status);await refresh();}catch(reason){setError(reason instanceof Error?reason.message:'Event status could not be saved.');}finally{setBusy(false);}
   };
+  async function linkTrip(){if(busy||!tripId)return;setBusy(true);setError('');try{await linkCalendarBookingToTrip(item,tripId);await refresh();}catch(reason){setError(reason instanceof Error?reason.message:'Trip link could not be saved.');}finally{setBusy(false);}}
   return (
     <section className={styles.detailCard}>
       <header>
@@ -472,9 +489,10 @@ function BookingDetail({
         </div>
         <div>
           <dt>Notes</dt>
-          <dd>{item.notes || item.quickNotes || 'No notes yet.'}</dd>
+          <dd><CalendarEventText text={item.notes || item.quickNotes || 'No notes yet.'} label="event notes"/></dd>
         </div>
       </dl>
+      <CalendarDiveLinks item={item} dives={dives} refresh={refresh} go={go}/>
       {bookingRecordLinks(item).length>0&&<><h3>Linked records</h3><div className={styles.linkRows}>
         {bookingRecordLinks(item).map(link=><a className="focus-secondary" key={link.label} href={link.href} onClick={go?event=>{event.preventDefault();go(link.destination);}:undefined}>{link.label}<ChevronRight size={14}/></a>)}
       </div></>}
@@ -489,9 +507,7 @@ function BookingDetail({
         >
           <Link2 size={14} /> Create/link Gas Plan
         </button>
-        <button className="focus-secondary" onClick={() => go?.('Trips')}>
-          <Link2 size={14} /> Convert/link Trip
-        </button>
+        {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> Open linked Trip</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
         {isTraining ? (
           <button
             className="focus-secondary"
@@ -501,30 +517,33 @@ function BookingDetail({
           </button>
         ) : null}
         <button className="focus-secondary" onClick={edit}>
-          <Pencil size={14} /> Edit event
+          <Pencil size={14} /> {item.calendarSource==='dive-trip'?'Edit in Trips':'Edit event'}
         </button>
         <button
           className="focus-secondary"
-          disabled={item.bookingStatus === 'completed'}
+          disabled={busy||item.bookingStatus === 'completed'}
           onClick={() => void updateStatus('completed')}
         >
           <CheckCircle2 size={14} /> Mark complete
         </button>
         <button
           className="focus-secondary danger"
-          disabled={item.bookingStatus === 'cancelled'}
+          disabled={busy||item.bookingStatus === 'cancelled'}
           onClick={() => void updateStatus('cancelled')}
         >
           <XCircle size={14} /> Cancel event
         </button>
-        <button
+        {item.calendarSource!=='dive-trip'&&<button
           className="focus-secondary danger"
-          disabled={item.bookingStatus === 'archived'}
-          onClick={() => void archiveDivingCalendarBooking(item).then(refresh)}
+          disabled={busy||item.bookingStatus === 'archived'}
+          onClick={() => void updateStatus('archived')}
         >
           <Archive size={14} /> Archive event
-        </button>
+        </button>}
       </div>
+      {item.calendarLinkConflict&&<p role="alert">Multiple Trip associations need review. No new Trip will be created automatically.</p>}
+      {!item.linkedTripId&&!item.calendarLinkConflict&&<details className={styles.existingTripLink}><summary>Link an existing Trip</summary><p>Import this event into its itinerary and fill blank Trip summary fields. Existing Trip text and dates are retained.</p><label>Trip<select value={tripId} onChange={e=>setTripId(e.target.value)}><option value="">Choose a Trip</option>{trips.map(trip=><option key={trip.entityId} value={trip.entityId}>{trip.name} · {trip.startsOn||'Undated'}</option>)}</select></label><button type="button" className="focus-secondary" disabled={!tripId||busy} onClick={()=>void linkTrip()}>Link Trip and import event details</button></details>}
+      {error&&<p role="alert">{error}</p>}
     </section>
   );
 }

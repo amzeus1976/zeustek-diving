@@ -30,6 +30,8 @@ export interface TripGuestParticipant {
 }
 
 export interface TripItinerarySegment {
+  /** Explicit one-time import from a canonical calendar booking. */
+  calendarBookingId?: string;
   attachments?: import('./trip-attachments').TripAttachmentReference[];
   links?: import('./trip-attachments').TripResourceLink[];
   id: string;
@@ -79,6 +81,9 @@ export interface TripGasLogisticsItem {
 }
 
 export interface DiveExpeditionTripRecord {
+  calendarBookingIds?: string[];
+  originCalendarBookingId?: string;
+  linkedDiveIds?: string[];
   attachments?: import('./trip-attachments').TripAttachmentReference[];
   links?: import('./trip-attachments').TripResourceLink[];
   name: string;

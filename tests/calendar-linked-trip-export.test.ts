@@ -1,9 +1,9 @@
 import {describe,expect,it} from 'vitest';
-import {buildCalendarPreview,DEFAULT_CALENDAR_OPTIONS} from '../lib/calendar/calendar-model';
+import {buildCalendarPreview,DEFAULT_CALENDAR_OPTIONS,type CalendarSourceRecord} from '../lib/calendar/calendar-model';
 import {renderCalendar} from '../lib/calendar/calendar-ical';
 const booking={kind:'trip',id:'event-a',data:{name:'Original 🐬 event',bookingKind:'dive',startDate:'2026-10-10',endDate:'2026-10-10',startAt:'2026-10-10T08:30',endAt:'2026-10-10T16:00',siteName:'Public test harbour',locationName:'Public test harbour',bookingStatus:'confirmed',notes:'Private notes',linkedDiveIds:['private-dive-id']}};
 const converted={kind:'dive-trip',id:'trip-a',data:{name:'Original 🐬 event',startsOn:'2026-10-10',endsOn:'2026-10-10',status:'confirmed',originCalendarBookingId:'event-a',calendarBookingIds:['event-a'],itinerary:[{id:'calendar-event:event-a',calendarBookingId:'event-a',kind:'dive',title:'Original 🐬 event',startsAt:'2026-10-10T08:30',endsAt:'2026-10-10T16:00'}]}};
-const snapshot=(records=[booking,converted])=>({accountId:'dummy-owner',snapshotAt:'2026-10-04T12:00:00Z',records,completeKinds:['trip','dive-trip','equipment','cylinder','certification']});
+const snapshot=(records:CalendarSourceRecord[]=[booking,converted])=>({accountId:'dummy-owner',snapshotAt:'2026-10-04T12:00:00Z',records,completeKinds:['trip','dive-trip','equipment','cylinder','certification']});
 describe('Google-compatible booking / Trip export',()=>{
  it('exports a converted event once, preserving its pre-conversion UID and saved time',async()=>{
   const original=await buildCalendarPreview(snapshot([booking]),DEFAULT_CALENDAR_OPTIONS);
@@ -21,5 +21,14 @@ describe('Google-compatible booking / Trip export',()=>{
  it('does not collapse a distinct spanning Trip merely because it links an event',async()=>{
   const linked={...converted,data:{...converted.data,originCalendarBookingId:undefined,name:'Larger expedition',startsOn:'2026-10-08',endsOn:'2026-10-14',itinerary:[]}};
   expect((await buildCalendarPreview(snapshot([booking,linked]),DEFAULT_CALENDAR_OPTIONS)).events).toHaveLength(2);
+ });
+ it('retains owner-edited itinerary times rather than hiding them behind imported provenance',async()=>{
+  const changed={...converted,data:{...converted.data,itinerary:[{...converted.data.itinerary[0],startsAt:'2026-10-11T08:30',endsAt:'2026-10-11T16:00'}]}};
+  const preview=await buildCalendarPreview(snapshot([booking,changed]),DEFAULT_CALENDAR_OPTIONS);expect(preview.events).toHaveLength(2);expect(preview.events.some(event=>event.start.value.startsWith('20261011'))).toBe(true);
+ });
+ it('exports an imported event with its stable original identity for itinerary-only selections',async()=>{
+  const original=await buildCalendarPreview(snapshot([booking]),DEFAULT_CALENDAR_OPTIONS);
+  const preview=await buildCalendarPreview(snapshot(),{...DEFAULT_CALENDAR_OPTIONS,categories:['itinerary']});
+  expect(preview.events).toHaveLength(1);expect(preview.events[0]?.uid).toBe(original.events[0]?.uid);expect(preview.events[0]?.precision).toBe('minute');
  });
 });
