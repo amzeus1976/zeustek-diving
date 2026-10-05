@@ -6,9 +6,9 @@ import {savePlanDraftWithConnections} from '../lib/planning/calendar-plan-creati
 import type {StoredGasPlanRecord} from '../lib/offline/planning-pages';
 import type {EnrichedDivePlan} from '../lib/offline/dive-planning-centre';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore('gas-link-review');await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
-afterEach(()=>vi.unstubAllGlobals());
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
 async function seed(inverseOnly=false){
- await saveLocalRecord('trip',{entityId:'plan',name:'Plan',status:'planned',lifecycleStatus:'draft',notes:'Keep Plan notes',gasPlanLinks:inverseOnly?[]:[{gasPlanId:'gas',name:'Gas'}]});
+ await saveLocalRecord('trip',{entityId:'plan',name:'Plan',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Harbour',buddy:'',status:'planned',lifecycleStatus:'draft',notes:'Keep Plan notes',gasPlanLinks:inverseOnly?[]:[{gasPlanId:'gas',name:'Gas'}]});
  await saveLocalRecord('gas-plan',{entityId:'gas',name:'Gas',status:'draft',divePlanId:'plan',cylinders:[],notes:'Keep Gas notes',futureField:{keep:true}});
  return {plan:(await listLocalDiveRecords<EnrichedDivePlan>('trip'))[0]!,gas:await listLocalDiveRecords<StoredGasPlanRecord>('gas-plan')};
 }
