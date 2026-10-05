@@ -5,8 +5,8 @@ import {zeustekDb} from '../lib/offline/db';
 beforeEach(async()=>{vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{onLine:false});vi.stubGlobal('fetch',vi.fn());configureDiveStore('delete-plan-test');await zeustekDb.open();for(const table of zeustekDb.tables)await table.clear();});
 afterEach(()=>vi.unstubAllGlobals());
 describe('Dive Plan deletion preserves references',()=>{
- it('retains a Calendar event whose only Dive association is its own linkedDiveIds',async()=>{
-  await saveLocalRecord('trip',{entityId:'event',name:'Event',linkedDiveIds:['logged-dive']});
+ it.each(['trip','dive-trip'] as const)('retains a %s Calendar event whose only Dive association is its own linkedDiveIds',async(kind)=>{
+  await saveLocalRecord(kind,{entityId:'event',name:'Event',linkedDiveIds:['logged-dive']});
   await saveLocalRecord('dive',{entityId:'logged-dive',site:'Site'});
   await expect(deleteLocalRecord('event')).rejects.toThrow(/linked|unlink/i);
   expect(await zeustekDb.entities.get('dive:delete-plan-test:event')).toMatchObject({deleted:0});

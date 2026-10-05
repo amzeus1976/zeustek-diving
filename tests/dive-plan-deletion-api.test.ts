@@ -10,10 +10,10 @@ beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE di
 afterEach(()=>sqlite.close());
 const add=(id:string,kind:string,data:object,owner='fixture-owner')=>sqlite.prepare('INSERT INTO dive_records VALUES (?,?,?,?,?,?,NULL)').run(id,owner,kind,JSON.stringify(data),100,100);
 describe('Atomic owner-scoped Plan tombstones',()=>{
- it('blocks direct and offline-sync deletion when the event alone stores linkedDiveIds',async()=>{
-  add('event','trip',{name:'Event',linkedDiveIds:['logged-dive']});
+ it.each(['trip','dive-trip'] as const)('blocks direct and offline-sync %s deletion when the event alone stores linkedDiveIds',async(kind)=>{
+  add('event',kind,{name:'Event',linkedDiveIds:['logged-dive']});
   add('logged-dive','dive',{site:'Site'});
-  const responses=[await DELETE(new Request('https://fixture/api/dive-data?id=event',{method:'DELETE'})),await POST(new Request('https://fixture/api/dive-data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'trip',id:'event',data:null,localMutation:true,baseModifiedAt:new Date(100).toISOString()})}))];
+  const responses=[await DELETE(new Request('https://fixture/api/dive-data?id=event',{method:'DELETE'})),await POST(new Request('https://fixture/api/dive-data',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind,id:'event',data:null,localMutation:true,baseModifiedAt:new Date(100).toISOString()})}))];
   for(const response of responses)expect(response.status).toBe(409);
   expect(sqlite.prepare('SELECT deleted_at AS deleted FROM dive_records WHERE id=?').get('event')).toEqual({deleted:null});
   expect(sqlite.prepare('SELECT deleted_at AS deleted FROM dive_records WHERE id=?').get('logged-dive')).toEqual({deleted:null});
