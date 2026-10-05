@@ -27,17 +27,21 @@ export function ownerConditionMode(conditions: PlanConditionSnapshot | undefined
   const previousForecast = conditions?.provenance === 'forecast' && conditions.weatherFieldSources === undefined;
   const retained = previousForecast ? {
     ...conditions,
-    weather: null,
-    airTemperatureC: null,
     waterTemperatureC: null,
-    surfaceTemperatureC: null,
     waveHeightM: null,
     visibilityM: null,
     swellHeightM: null,
     currentStrength: null,
   } : { ...conditions };
+  const weatherValueOrigins={...conditions?.weatherValueOrigins};
+  for(const field of ['weather','airTemperatureC','surfaceTemperatureC'] as const){
+    if(weatherValueOrigins[field]==='weather'||(conditions?.provenance==='forecast'&&weatherValueOrigins[field]!=='owner')){
+      Object.assign(retained,{[field]:null});delete weatherValueOrigins[field];
+    }
+  }
   return {
     ...retained,
+    weatherValueOrigins,
     provenance: mode === 'manual' ? 'recorded' : mode,
     ...(mode === 'unavailable' ? { weatherAvailability: 'unavailable' as const } : retained.weatherAvailability ? { weatherAvailability: retained.weatherAvailability } : {}),
     sourceDetail: mode === 'seasonal'
@@ -54,6 +58,12 @@ const empty=(value:unknown)=>value===null||value===undefined||(typeof value==='s
  * Only fresh, selected, genuinely matching measurements can fill fields. Thresholds are not measurements. */
 export function fillEmptyPlanWeatherFields(current:PlanConditionSnapshot|undefined,next:PlanConditionSnapshot):PlanConditionSnapshot {
  const result:PlanConditionSnapshot={...current,...next,weatherFieldSources:{...current?.weatherFieldSources}};
+ result.weatherValueOrigins={...current?.weatherValueOrigins};
+ for(const field of ['weather','airTemperatureC','surfaceTemperatureC'] as const){
+  if(!empty(current?.[field]))result.weatherValueOrigins[field]=current?.weatherValueOrigins?.[field]??(current?.provenance==='forecast'?'weather':'owner');
+  else if(!empty(next[field]))result.weatherValueOrigins[field]='weather';
+  else delete result.weatherValueOrigins[field];
+ }
  for(const field of ['waterTemperatureC','waveHeightM','visibilityM','swellHeightM','currentStrength'] as const)Object.assign(result,{[field]:empty(current?.[field])?null:current![field]});
  for(const field of ['weather','airTemperatureC','waterTemperatureC','surfaceTemperatureC','waveHeightM','visibilityM','swellHeightM','currentStrength','tideSummary','notes'] as const){
   if(!empty(current?.[field]))Object.assign(result,{[field]:current![field]});
@@ -122,6 +132,7 @@ export function plannedWeatherSnapshot(response: PlannedWeatherResponse, regime:
     sourceDate: date,
     sourceDetail: `${response.provider ?? 'Open-Meteo'} · ${response.resolution ?? regime} · ${response.attribution ?? ''}`,
     weather: value.weatherSummary || null,
+    weatherValueOrigins:{...(value.weatherSummary?{weather:'weather' as const}:{}),...(value.airTemperatureC!=null?{airTemperatureC:'weather' as const}:{}),...(actualRegime==='forecast'&&value.surfaceTemperatureC!=null?{surfaceTemperatureC:'weather' as const}:{})},
     airTemperatureC: value.airTemperatureC ?? null,
     waterTemperatureC: null,
     surfaceTemperatureC: actualRegime === 'forecast' ? value.surfaceTemperatureC ?? null : null,

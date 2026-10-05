@@ -16,6 +16,8 @@ export interface PlanTeamMember {
   specialties?: string | null;
 }
 export interface PlanConditionSnapshot {
+  /** Unlabelled summary values are removed on owner-mode changes only when supplied by weather. */
+  weatherValueOrigins?: Partial<Record<'weather'|'airTemperatureC'|'surfaceTemperatureC','weather'|'owner'>>;
   /** Exact reading for a field filled by Get Weather; a manual edit removes only this entry. */
   weatherFieldSources?: Partial<Record<'waterTemperatureC'|'visibilityM'|'waveHeightM'|'swellHeightM'|'currentStrength',import('../weather/conditions-model').ConditionReading>>;
   conditionsV1?:import('../weather/conditions-model').ConditionsSnapshot;
