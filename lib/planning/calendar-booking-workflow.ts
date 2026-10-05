@@ -16,16 +16,18 @@ export function eventTextPreview(text:string){
 }
 export function linkedCalendarTripId(booking:StoredDivingCalendarBooking,trips:readonly Stored<DiveExpeditionTripRecord>[]){
  if(booking.linkedTripId?.trim())return booking.linkedTripId.trim();
- const matches=trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId));
+ const matches=trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)||trip.originCalendarBookingId===booking.entityId);
  return matches.length===1?matches[0]!.entityId:null;
 }
 export function calendarEntries(bookings:readonly CalendarBooking[],trips:readonly Stored<DiveExpeditionTripRecord>[]):CalendarBooking[]{
  const sources=new Map(bookings.map(booking=>[booking.entityId,booking]));
  const rows:CalendarBooking[]=bookings.map<CalendarBooking>(booking=>{
   const linkedTripId=linkedCalendarTripId(booking,trips);
-  const converted=trips.find(trip=>trip.entityId===linkedTripId&&trip.originCalendarBookingId===booking.entityId&&sameConvertedCalendarDates(trip as unknown as Record<string,unknown>,booking as unknown as Record<string,unknown>));
+  const matches=trips.filter(trip=>trip.originCalendarBookingId===booking.entityId&&sameConvertedCalendarDates(trip as unknown as Record<string,unknown>,booking as unknown as Record<string,unknown>));
+  const calendarLinkConflict=matches.length>1||(matches.length===1&&linkedTripId!==matches[0]!.entityId)||(!booking.linkedTripId&&trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)||trip.originCalendarBookingId===booking.entityId).length>1);
+  const converted=!calendarLinkConflict&&matches.length===1?matches[0]:undefined;
   const bookingStatus=converted?convertedCalendarBookingStatus(converted.status,booking.bookingStatus):booking.bookingStatus??'planned';
-  return {...booking,calendarSource:'trip',linkedTripId,bookingStatus,...(converted?{calendarStatusTripId:converted.entityId,calendarStatusTripModifiedAt:converted.modifiedAt}:{}),calendarLinkConflict:!booking.linkedTripId&&trips.filter(trip=>trip.calendarBookingIds?.includes(booking.entityId)).length>1};
+  return {...booking,calendarSource:'trip',linkedTripId:calendarLinkConflict?null:linkedTripId,bookingStatus,...(converted?{calendarStatusTripId:converted.entityId,calendarStatusTripModifiedAt:converted.modifiedAt}:{}),calendarLinkConflict};
  });
  for(const trip of trips){
   const origin=trip.originCalendarBookingId?sources.get(trip.originCalendarBookingId):undefined;
@@ -70,12 +72,14 @@ export async function linkCalendarBookingToTrip(entry:CalendarBooking,tripId:str
  const booking=bookings.find(row=>row.entityId===entry.entityId),trip=trips.find(row=>row.entityId===tripId);
  if(!booking||!trip||booking.modifiedAt!==entry.modifiedAt)throw new Error('The source event or Trip changed or is unavailable. Reopen it before linking.');
  const existing=linkedCalendarTripId(booking,trips);
- if(!booking.linkedTripId&&trips.filter(row=>row.calendarBookingIds?.includes(booking.entityId)).length>1)throw new Error('Multiple Trip associations need review before linking this event.');
+ if(calendarEntries([booking],trips)[0]?.calendarLinkConflict)throw new Error('Multiple Trip associations need review before linking this event.');
  if(existing&&existing!==tripId)throw new Error('This event already links to another Trip. Open that Trip to review the association.');
  return saveDiveExpeditionTrip(mergeBookingIntoTrip(trip,booking));
 }
 export async function setCalendarEntryStatus(entry:CalendarBooking,status:BookingStatus){
  const account=currentDiveAccount();
+ const currentEntry=(await readCalendarSources()).entries.find(row=>row.entityId===entry.entityId&&row.calendarSource===entry.calendarSource);sameAccount(account);
+ if(currentEntry?.calendarLinkConflict)throw new Error('Multiple Trip associations need review before changing this event status.');
  const tripId=entry.calendarStatusTripId??(entry.calendarSource==='dive-trip'?entry.entityId:null);
  if(tripId&&!(entry.calendarSource==='trip'&&status==='archived')){
   if(status!=='completed'&&status!=='cancelled')throw new Error('Edit this Trip in Trips & Expeditions.');

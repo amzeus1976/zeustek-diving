@@ -401,7 +401,7 @@ export function DivingCalendarBookings({ go }: Props) {
                         </small>
                       </span>
                       <em>
-                        {statuses.find(
+                        {item.calendarLinkConflict?'Needs review':statuses.find(
                           ([value]) => value === item.bookingStatus,
                         )?.[1] ?? 'Planned'}
                       </em>
@@ -481,7 +481,7 @@ function BookingDetail({
         </div>
         <div>
           <dt>Status</dt>
-          <dd>{item.bookingStatus ?? 'planned'}</dd>
+          <dd>{item.calendarLinkConflict?'Needs review — multiple Trip associations':item.bookingStatus ?? 'planned'}</dd>
         </div>
         <div>
           <dt>Location</dt>
@@ -521,21 +521,21 @@ function BookingDetail({
         </button>
         <button
           className="focus-secondary"
-          disabled={busy||item.bookingStatus === 'completed'}
+          disabled={busy||item.calendarLinkConflict||item.bookingStatus === 'completed'}
           onClick={() => void updateStatus('completed')}
         >
           <CheckCircle2 size={14} /> Mark complete
         </button>
         <button
           className="focus-secondary danger"
-          disabled={busy||item.bookingStatus === 'cancelled'}
+          disabled={busy||item.calendarLinkConflict||item.bookingStatus === 'cancelled'}
           onClick={() => void updateStatus('cancelled')}
         >
           <XCircle size={14} /> Cancel event
         </button>
         {item.calendarSource!=='dive-trip'&&<button
           className="focus-secondary danger"
-          disabled={busy||item.bookingStatus === 'archived'}
+          disabled={busy||item.calendarLinkConflict||item.bookingStatus === 'archived'}
           onClick={() => void updateStatus('archived')}
         >
           <Archive size={14} /> Archive event

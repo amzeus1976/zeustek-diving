@@ -169,12 +169,12 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     if(!id||!loaded||openedSource.current===id)return;
     const row=plans.find(plan=>plan.entityId===id);
     const frame=requestAnimationFrame(()=>{
-      openedSource.current=id;
       if(!row){setSourceMessage('The exact source event is unavailable. No replacement event or Trip has been selected.');return;}
+      openedSource.current=id;
       const booking=normaliseBooking(row as StoredDivingCalendarBooking);
       const linked=linkedCalendarTripId(booking,items);
       if(linked){const existing=items.find(trip=>trip.entityId===linked);if(existing)setViewing(existing);else setSourceMessage('The linked Trip is unavailable. The original event is retained.');return;}
-      if(items.filter(trip=>trip.calendarBookingIds?.includes(id)).length>1){setSourceMessage('Multiple Trip associations need review before creating another Trip.');return;}
+      if(items.filter(trip=>trip.calendarBookingIds?.includes(id)||trip.originCalendarBookingId===id).length>1){setSourceMessage('Multiple Trip associations need review before creating another Trip.');return;}
       setSourceBooking(booking);setEditing(null);setAdding(true);
     });return()=>cancelAnimationFrame(frame);
   },[loaded,plans,items]);
@@ -186,8 +186,9 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       setItems(nextTrips); setPlans(nextPlans); setSites(nextSites); setPeople(nextPeople);
       setEquipment(nextEquipment); setEquipmentSets(nextSets);
       setViewing((current) => current ? nextTrips.find((item) => item.entityId === current.entityId) ?? null : null);
+      setSourceMessage('');
       setLoaded(true);
-    }).catch(()=>{setSourceMessage('Trip records could not be loaded. Existing records are retained.');setLoaded(true);});
+    }).catch(()=>{setSourceMessage('Trip records could not be loaded. Existing records are retained.');setLoaded(false);});
   }, []);
   useRecordRefresh(refresh);
 
@@ -239,7 +240,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       <button className="focus-primary" onClick={() => { setSourceBooking(null); setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
     </header>
     <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
-    {sourceMessage&&<p role="alert">{sourceMessage}</p>}
+    {sourceMessage&&<div role="alert"><p>{sourceMessage}</p><button type="button" className="focus-secondary" onClick={refresh}>Refresh Trip records</button></div>}
 
     <Card className={styles.toolbar}>
       <label>Search<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Trip or destination"/></label>

@@ -181,6 +181,7 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
     if (options.fields?.sourceLink) { const url = sourceLink(options.sourceOrigin, destination(record)); if (url) event.url = url; }
     preview.events.push(event);
   };
+  const ambiguousBookingsReported = new Set<string>();
   const projectBooking = async (record: CalendarSourceRecord, category: 'bookings' | 'trips' | 'itinerary') => {
       const data = record.data;
       const booking = normaliseBooking({ ...data, entityId: record.id } as unknown as StoredDivingCalendarBooking);
@@ -190,6 +191,14 @@ export async function buildCalendarPreview(snapshot: CalendarSourceSnapshot, opt
       }
       if (endAt && !startAt) { preview.totalCandidates++; omit(category, 'conflicting-date', 'An end time exists without a start time. No start was invented.', record); return; }
       const matches=convertedTrips.get(record.id)??[];
+      if(matches.length>1){
+        const key=`${category}:${record.id}`;
+        if(!ambiguousBookingsReported.has(key)){
+          ambiguousBookingsReported.add(key);preview.totalCandidates++;
+          omit(category,'invalid-identity','Multiple converted Trips share this event identity. Review the canonical Trips before exporting; no source status was substituted.',record);
+        }
+        return;
+      }
       const status=matches.length===1?convertedCalendarBookingStatus(matches[0]!.data.status,data.bookingStatus??data.status):data.bookingStatus??data.status??booking.bookingStatus;
       await project({ record, category, discriminator: 'booking', label: 'Diving booking', title: text(data.name), location: text(booking.locationName), start: startAt || data.startDate, end: startAt ? endAt : data.endDate, timed: Boolean(startAt), provenance: 'Recorded calendar/plan dates.', status });
   };

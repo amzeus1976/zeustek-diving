@@ -20,7 +20,7 @@ describe('Canonical calendar / Dive / Trip persistence',()=>{
   await saveDiveExpeditionTrip({...draft,entityId:'duplicate-b',status:'completed'});
   const entry=(await readCalendarSources()).entries[0]!;const before=await localBackupPayload();
   await expect(setCalendarEntryStatus(entry,'cancelled')).rejects.toThrow('Multiple Trip associations');
-  expect(await localBackupPayload()).toEqual(before);
+  const after=await localBackupPayload();expect({...after,exportedAt:before.exportedAt}).toEqual(before);
  });
  it('changes converted Trip status through its calendar event without rewriting original booking evidence',async()=>{
   const original=await seed();await saveDiveExpeditionTrip(tripDraftFromBooking(original));const before=await listLocalDiveRecords('trip');

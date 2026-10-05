@@ -1,6 +1,15 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
   {
+    version:'1.0.80',date:'2026-10-05',title:'Calendar event links and reliable Trip conversion',
+    changes:[
+      'Selected event notes expand with More; each event can link multiple logged Dives.',
+      'Event-to-Trip review retains original details, and new Trips appear in the Calendar.',
+      'Ambiguous offline conversions require review rather than exporting a misleading active event.',
+      'Exact event conversion can retry after a failed load; Google-compatible downloads preserve original event identity, status and privacy.',
+    ],
+  },
+  {
     version:'1.0.79',date:'2026-10-05',title:'Calendar Trips with current status and original event identity',
     changes:[
       'Compact event notes, multiple logged-Dive links and reviewable event-to-Trip details are available together.',
