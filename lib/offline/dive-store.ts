@@ -8,7 +8,7 @@ import { flushComputerEvidenceAttachments } from './evidence-attachments';
 import { personReferencesOperator } from '../operators/operator-dependencies';
 import {diveReferencesOperator} from '../operators/dive-log-selection';
 import {recordHash} from './canonical';
-import {referencesPlanningRecord,planningRecordHasDiveLinks} from '../planning/plan-deletion';
+import {referencesPlanningRecord,planningRecordHasDiveLinks,planningRecordDeletionGuarded} from '../planning/plan-deletion';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
 
 let account = '';
@@ -153,7 +153,7 @@ export async function deleteLocalRecord(id: string) {
 async function deleteLocalRecordInternal(id:string){
   const module=moduleName();const localId=`${module}:${id}`;const old=await zeustekDb.entities.get(localId);
     if (!old) throw new Error('Load this record before deleting it.');
-    if(old.entityType==='trip'){
+    if(planningRecordDeletionGuarded(old.entityType)){
       if(planningRecordHasDiveLinks(old.record))throw new Error('This plan or event has linked Dives. Unlink them before deleting. Your record is retained.');
       const rows=await zeustekDb.entities.where('module').equals(module).toArray();
       if(rows.some(row=>row.entityId!==localId&&!row.deleted&&referencesPlanningRecord(row.entityType,row.record,id)))throw new Error('This plan or event has linked records. Unlink it from Dives, Trips, Gas Plans or skill evidence before deleting. Your record is retained.');

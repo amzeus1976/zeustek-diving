@@ -1,5 +1,6 @@
 // Read-only release history. package.json remains the current-version authority.
 export const appChangelog = [
+  {version:'1.0.84',date:'2026-10-05',title:'Consistent Calendar and Trip deletion protection',changes:['Linked Dives protect both original Calendar events and Trip-backed Calendar entries from deletion.','Includes preserved planning copies, Trip directions, Dive videos and compact planning controls.']},
   {
     version:'1.0.83',date:'2026-10-05',title:'Preserved Gas Plan copies and linked-event protection',
     changes:['Copied Gas Plans retain their allocated or legacy cylinders on save.','Calendar events with linked Dives require explicit unlinking before deletion, including offline and atomic cloud deletion.','Includes reviewed Trip directions, plan duplication, Dive videos and compact planning improvements.'],

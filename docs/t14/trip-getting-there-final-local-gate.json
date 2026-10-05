@@ -1,0 +1,110 @@
+{
+  "appVersion": "1.0.84",
+  "cache": "zeustek-static-v31",
+  "full": 1547,
+  "files": 229,
+  "focused": 26,
+  "focusedFiles": 3,
+  "typecheck": "PASS",
+  "buildPwa": {
+    "status": "PASS",
+    "entries": 422,
+    "KiB": 42718.71,
+    "finalPackaging": "Native helper will rebuild clean frozen source"
+  },
+  "lint": {
+    "files": 5,
+    "newOrChanged": 0,
+    "unchanged": 9,
+    "rawExit": 1
+  },
+  "privacy": {
+    "checkedAt": "2026-10-05T11:24:50.343Z",
+    "artifactFilesScanned": 1355,
+    "credentialMatches": 0,
+    "anonymous": [
+      {
+        "path": "/api/dive-data?kind=trip",
+        "status": 401
+      },
+      {
+        "path": "/api/dive-data?kind=dive-trip",
+        "status": 401
+      },
+      {
+        "path": "/api/dive-backup",
+        "status": 401
+      },
+      {
+        "path": "/api/v1/dives",
+        "status": 400
+      },
+      {
+        "path": "/api/v1/trips",
+        "status": 400
+      },
+      {
+        "path": "/api/gmail/status",
+        "status": 401
+      }
+    ],
+    "navigationIcons": 31,
+    "mastersUnchangedAndNotPrecached": true,
+    "cache": "zeustek-static-v31",
+    "gmailCalls": 0,
+    "productionCalls": 0
+  },
+  "protected": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "unchanged": true
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "unchanged": true
+    }
+  ],
+  "compiledTripGuard": {
+    "compiledWorker": true,
+    "tripBackedEventGuard": {
+      "directDelete": 409,
+      "offlinePost": 409,
+      "recordRetained": true
+    },
+    "localOnly": true,
+    "productionWrites": 0
+  },
+  "published": false,
+  "githubReconciled": false,
+  "priorAttempts": "154/155 rejected; source, gate and recovery evidence preserved",
+  "ownerWrites": 0,
+  "gmailOperations": 0
+}

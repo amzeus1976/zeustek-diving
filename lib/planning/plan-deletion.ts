@@ -1,4 +1,5 @@
 /** Canonical trip records back both Dive Plans and Calendar events. */
+export const planningRecordDeletionGuarded=(kind:string)=>kind==='trip'||kind==='dive-trip';
 export function planningRecordHasDiveLinks(value:unknown):boolean {
  if(!value||typeof value!=='object')return false;
  const ids=(value as {linkedDiveIds?:unknown}).linkedDiveIds;
