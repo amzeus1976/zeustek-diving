@@ -67,3 +67,7 @@ Top row: Site & Conditions, Equipment Readiness, Team & Roles (including canonic
 Valid final review4187837867 withdrew167; verified153 restored. RED28c16f0 proves unavailable source was replaced by unrelated Plan. New URL-derived exact guard retains missing/failed identity, offers explicit retry and shows preparation rather than unrelated Plan while valid context opens. Retry consumes URL only after the exact Trip exists. Prior owner/evidence/candidate preserved. App1.0.96/cache43 requires complete fresh gates and source-retry acceptance before publication/main reconciliation.
 
 Compiled96 source acceptance additionally exposed the normal30-second cloud-read throttle. RED55625c0 requires explicit Retry to force only the canonical dive-trip read before reload. Four root retry tests now pass; no source fallback or automatic record save. Preserve pre-force58006c4 native artifact separately; final fresh gates/build/source replace it before any publication.
+
+### G11 — consistent forced exact-source refresh
+
+Review4188075736 withdrew168;153 restored. REDc12afa5 six failures precede matching forced awaited trip reads for event/Plan retry and trip+dive-trip reads for Trip conversion retry. Initial failed exact-source loads retain explicit retry/error identity.24 focused tests pass; app97/cache44 requires all fresh candidate release gates. Original work/owner/evidence retained.

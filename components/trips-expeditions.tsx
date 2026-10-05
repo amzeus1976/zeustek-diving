@@ -48,7 +48,7 @@ import {
   type PersonRecord,
   type Stored,
 } from '../lib/offline/dive-planning';
-import { currentDiveAccount } from '../lib/offline/dive-store';
+import { currentDiveAccount, refreshDiveRecords } from '../lib/offline/dive-store';
 import {
   editableDiveExpeditionTrip,
   listDiveExpeditionTrips,
@@ -252,7 +252,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
       <button className="focus-primary" onClick={() => { setSourceBooking(null); setEditing(null); setAdding(true); }}><Plus size={16}/> New trip</button>
     </header>
     <WorkflowContextStrip from={[{label:'Diving Calendar & Bookings',route:'Diving Calendar & Bookings'}]} current="Trips & Expeditions" next={[{label:'Create or link Dive Plan',route:'Dive Plans'},{label:'Sites',route:'Sites'},{label:'People',route:'People'},{label:'Loadouts & Cylinder Gas',route:'Loadouts & Gas'}]} go={go??(()=>undefined)}/>
-    {sourceMessage&&<div role="alert"><p>{sourceMessage}</p><button type="button" className="focus-secondary" onClick={refresh}>Refresh Trip records</button></div>}
+    {sourceMessage&&<div role="alert"><p>{sourceMessage}</p><button type="button" className="focus-secondary" onClick={async()=>{await Promise.all([refreshDiveRecords('trip',true),refreshDiveRecords('dive-trip',true)]);refresh();}}>Refresh Trip records</button></div>}
 
     <Card className={styles.toolbar}>
       <label>Search<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Trip or destination"/></label>

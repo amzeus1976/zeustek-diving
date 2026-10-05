@@ -1,3 +1,7 @@
+## App1.0.97/cache44 candidate — complete exact-source retry correction
+
+Sites168 withdrawn on review4188075736; verified153 restored by succeeded appgdep_6ac3ff66590c8191b365b1a90048c10b. Separate evidence branch and sites168-rejected-attempt.json preserve1fe5143,1670/245 gates,36+36 observations and6540 identical owner rows. REDc12afa5 reproduces6 failures across empty/other Plan lists, event creation, initial load failure and Trip conversion Retry. All related buttons now force/await only relevant canonical trip/dive-trip reads before reloading. Failed exact source keeps explicit identity/error, not unrelated selection. Focused24/4 PASS. Full exact-source gates/native/privacy/browser/current owner/publication/complete-head PR94 review and main reconciliation remain. No owner reset or frozen/Gmail/Google/credential/profile write.
+
 ## Exact Trip source correction — app1.0.96/cachev43 candidate
 
 Sites167/source5a000787 withdrawn after valid review4187837867; succeeded recoveryappgdep_6ac3f891bb808191ab4fc670c564be1b restores accepted153/app1.0.81. Preserve separate167 evidence/archive/6540row comparison and layout/weather/contact/copy acceptance. RED28c16f0 reproduces2 exact missing/failed Trip source failures. The requested newPlanForTrip identity now blocks unrelated workbench fallback, retains its URL and retry, handles failed load and opens only the recovered exact source. No frozen or owner change. All fresh exact candidate gates/native compiled source-retry/publication/PR94 final review/main equality remain.
