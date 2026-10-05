@@ -1,0 +1,438 @@
+{
+  "status": "PRODUCTION_ACCEPTED; EXACT_GITHUB_MAIN_RECONCILED",
+  "verifiedOn": "2026-10-05",
+  "version": "1.0.102",
+  "sitesVersion": 174,
+  "cache": "zeustek-static-v49",
+  "url": "https://dive.amzeus.co.uk/",
+  "projectId": "appgprj_6a91926878b48191a80d70f1681ef135",
+  "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_a1ceb359278481918c7af9d1b32df3f9",
+  "deploymentId": "appgdep_6ac4195d337081918f2f092d8471e21e",
+  "deploymentSucceededAt": "2026-10-05T21:41:11.958310+00:00",
+  "source": "b68323877ea9608dd4e755a4ca63a0fd8c18b056",
+  "sourceTree": "7b417510ce78f11ca390b496d4151f61ebc71c2e",
+  "environmentRevision": 6,
+  "unchangedSecretBindingCount": 17,
+  "audience": "public; unchanged",
+  "localArchive": {
+    "bytes": 88945576,
+    "sha256": "06d360db2bebe8da59e7cb5918a198ff6965ddd564e55895464e5d11675e041d",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  },
+  "storedArchive": {
+    "sha256": "6091de307bc623630e1c9f9fd21cfb629d15b59126fc3e2d39624777c89c3726",
+    "bytes": 103208960,
+    "files": 1346,
+    "sedimentFileId": "file_000000007aa081f49fb8fa5e16fbba08"
+  },
+  "github": {
+    "pr": 94,
+    "url": "https://github.com/amzeus1976/zeustek-diving/pull/94",
+    "merged": true,
+    "mergedAt": "2026-10-05T21:46:54Z",
+    "main": "fd974785d887f72c285ba699a89420e398ca9416",
+    "mainTree": "7b417510ce78f11ca390b496d4151f61ebc71c2e",
+    "publishedTreeEqualsMain": true,
+    "fileDiff": [],
+    "review": {
+      "id": 6003522463,
+      "commit": "b68323877ea9608dd4e755a4ca63a0fd8c18b056",
+      "at": "2026-10-05T21:39:27Z",
+      "url": "https://github.com/amzeus1976/zeustek-diving/pull/94#issuecomment-6003522463",
+      "result": "No major issues; zero unresolved review threads before publication and merge"
+    },
+    "finalEvidenceBranch": "evidence/planning-sites174-2026-10-05",
+    "evidenceBranchIsDocumentationOnly": true
+  },
+  "rollback": {
+    "version": "1.0.81",
+    "sitesVersion": 153,
+    "cache": "zeustek-static-v28",
+    "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+    "sourceTree": "488d37678078b594daae4e9808574b8d8675ac04",
+    "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "storedArchiveBytes": 103075840,
+    "storedArchiveFiles": 1346,
+    "storedArchiveSha256": "8153a7a5990b7d7a17b1fae76b6de6fe9b946e0ae5f709e4cdd7b9bbe9c1809d",
+    "freshNativeEvidenceVerifiedBeforePublication": true,
+    "lastVerifiedRestoreDeployment": "appgdep_6ac411e68fa48191b71a87e2c1f69b51",
+    "restoreSucceededAt": "2026-10-05T21:09:18.656942+00:00"
+  },
+  "requirements": {
+    "workbench": "VERIFIED: three top columns in Site, Equipment, Team order; four individual full-width lower cards, independently collapsible; working visible Duplicate action",
+    "duplication": "VERIFIED: independent unsaved Dive/Gas drafts, new IDs on Save; current loadout applied atomically; stale copied safety/permit/evidence claims cleared; source retained",
+    "connections": "VERIFIED: canonical exact-record links; explicit reviewed atomic unlink; stale/account/conflict guards; no deletion without resolving live dependencies",
+    "workflow": "VERIFIED: Calendar -> Trip/Dive Plan -> Gas; exact parent availability/retry and canonical event-vs-Plan ownership",
+    "deletion": "VERIFIED: device/direct/sync protect both ends of Calendar/Trip logged-Dive associations; unlinked historical Dive deletion remains recoverable; committed deletion closes even if follow-up refresh fails",
+    "travel": "VERIFIED: temporary Current/Home/address origins, phone excluded; explicit linked-Site road destination/harbour; saved site/owner arrival provenance; no offshore-coordinate fallback, private fields excluded from public/API",
+    "tripEditor": "VERIFIED: searchable Site destination/postcode; canonical owner Me/Self; bounded larger fields; individually collapsible itinerary items; new items expanded",
+    "weather": "VERIFIED: fresh matching provider measurements fill empty latest-draft fields only, manual/zero values retained; grouped fields and individual source labels; no atmospheric visibility presented as underwater visibility",
+    "centres": "VERIFIED: canonical private operator contacts in Plans and Trips; phone/exact links; separate from People; owner/endpoint checks and deletion protections",
+    "calendar": "VERIFIED: archived hidden by default; 30/70 selection layout; downloads below; existing reviewed ICS includes canonical bookings/Trips; no automatic Google Calendar API sync",
+    "cloudAndTypography": "VERIFIED: actual per-account request evidence drives status; redundant enabled text removed; typography reduced 20% with 44px controls/artwork retained",
+    "diveVideo": "VERIFIED: private normalized YouTube links using existing Dive story; no remote embed/fetch; prior explicitly approved Dive67 link preserved"
+  },
+  "gates": {
+    "regression": {
+      "testsPassed": 1706,
+      "filesPassed": 247,
+      "failed": 0,
+      "evidence": "work/trip-getting-there/full176.json",
+      "retainedAssertionsUnchanged": true
+    },
+    "typecheck": {
+      "result": "PASS",
+      "exit": 0,
+      "evidence": "work/trip-getting-there/typecheck176.log"
+    },
+    "productionBuildAndPwa": {
+      "result": "PASS",
+      "exit": 0,
+      "entries": 422,
+      "evidence": "work/trip-getting-there/build176.log"
+    },
+    "targetedLint": {
+      "baselineSource": "cb92e5b580fc0afb9f32747d22f386bf10bff6fe",
+      "currentDiagnostics": 101,
+      "baselineDiagnostics": 101,
+      "newOrChanged": 0,
+      "annotatedSourceLinesUnchanged": true,
+      "rawExit": 1
+    },
+    "protectedManifest": "docs/t14/protected-calculations.json",
+    "protectedFiles": [
+      {
+        "path": "lib/offline/buhlmann-ndl.ts",
+        "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-planner.ts",
+        "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-reserve.ts",
+        "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/gas-planning-foundation.ts",
+        "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/planning-pages.ts",
+        "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/loadouts-gas.ts",
+        "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+        "matches": true
+      },
+      {
+        "path": "lib/gas-rates.ts",
+        "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+        "matches": true
+      },
+      {
+        "path": "lib/pressure-group-engine.ts",
+        "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+        "matches": true
+      },
+      {
+        "path": "lib/offline/plan-gas-acceptance.ts",
+        "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+        "matches": true
+      }
+    ],
+    "artifactPrivacy": {
+      "artifactFilesScanned": 1346,
+      "credentialMatches": 0,
+      "navigationIcons": 31,
+      "mastersUnchangedAndNotPrecached": true,
+      "cache": "zeustek-static-v49",
+      "nativeBuildPwa": "PASS",
+      "entries": 422,
+      "gmailOperations": 0,
+      "ownerWrites": 0
+    },
+    "compiledBrowser": {
+      "result": "PASS",
+      "validObservations": 60,
+      "actualWidths": [
+        320,
+        390,
+        430,
+        820,
+        1024,
+        1440
+      ],
+      "errors": 0,
+      "warnings": 0,
+      "evidence": "work/trip-getting-there/compiled176-browser.json"
+    },
+    "liveBrowser": {
+      "result": "PASS",
+      "validObservations": 72,
+      "actualWidths": [
+        320,
+        390,
+        430,
+        820,
+        1024,
+        1440
+      ],
+      "errors": 0,
+      "warnings": 0,
+      "pageOverflow": 0,
+      "internalContentClipping": 0,
+      "visibleBrokenImages": 0,
+      "keyboardAndFocusVerified": true,
+      "evidence": "work/trip-getting-there/live174-browser.json"
+    },
+    "compiledSavedFixtures": [
+      "selector174-green.json",
+      "arrival174-acceptance.json",
+      "delete176-compiled.json",
+      "verify169-fixtures.mjs"
+    ],
+    "liveAssetsAndPrivateAccess": {
+      "navigationIconsByteMatched": 31,
+      "workerByteMatched": true,
+      "cache": "zeustek-static-v49",
+      "anonymousPrivateAccess": [
+        {
+          "path": "/api/dive-data?kind=trip",
+          "status": 401
+        },
+        {
+          "path": "/api/dive-data?kind=dive-trip",
+          "status": 401
+        },
+        {
+          "path": "/api/dive-backup",
+          "status": 401
+        },
+        {
+          "path": "/api/v1/dives",
+          "status": 401
+        },
+        {
+          "path": "/api/v1/trips",
+          "status": 401
+        }
+      ],
+      "gmailOperations": 0
+    },
+    "security": "Retained public/API authorization, scopes, secret exclusion, cache boundaries and input-escaping regression suites pass; unchanged integrations not activated by smoke"
+  },
+  "ownerComparison": {
+    "before": "2026-10-05T21:38:43.400Z",
+    "after": "2026-10-05T21:45:52.924Z",
+    "records": 6540,
+    "sameCanonicalIDs": true,
+    "added": 0,
+    "deleted": 0,
+    "changed": 0,
+    "preFingerprint": "a9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8",
+    "postFingerprint": "a9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8",
+    "allOriginalRowsByteEquivalent": true,
+    "agentProductionWrites": 0,
+    "profileAddressUntouched": true,
+    "priorActivityAccountedSeparately": true
+  },
+  "ownerIntegrity": {
+    "uniqueCanonicalIDs": true,
+    "missingRelationshipEndpoints": 0,
+    "encryptedRecoveryVerified": true,
+    "keyProtection": "Windows user DPAPI; key not printed",
+    "canonicalKindCounts": {
+      "album": 2,
+      "bucket-list": 13,
+      "catalog-option": 62,
+      "certification": 13,
+      "computer-import": 1,
+      "computer-profile": 63,
+      "conservation_activity": 2,
+      "currency-policy": 2,
+      "cylinder": 9,
+      "cylinder-fill": 21,
+      "dashboard-settings": 1,
+      "dive": 68,
+      "dive-media": 57,
+      "dive-trip": 2,
+      "equipment": 52,
+      "equipment-event": 6,
+      "equipment-set": 6,
+      "gas-analysis": 17,
+      "gear-wishlist": 5,
+      "gear-wishlist-group": 5,
+      "gmail-news": 20,
+      "import-resolution": 46,
+      "learning-ai-checkpoint": 1,
+      "news-article": 198,
+      "news-preferences": 1,
+      "news-source": 7,
+      "operator": 5,
+      "person": 12,
+      "person-operator-link": 1,
+      "price-store": 4,
+      "price-store-settings": 1,
+      "professional-evidence": 10,
+      "professional-pathway": 2,
+      "question-review-state": 1,
+      "question-set": 141,
+      "reference-requirement-set": 6,
+      "site": 1680,
+      "site-overhead-profile": 2,
+      "skill": 3874,
+      "skill_evidence": 56,
+      "test-attempt": 14,
+      "training-progress": 44,
+      "trip": 7
+    },
+    "priorLiveActivityPreservedSeparately": true,
+    "noHistoricalCountReset": true
+  },
+  "integrationState": {
+    "gmail": {
+      "syncMode": "disabled",
+      "reconnectRequired": true,
+      "configured": true,
+      "connected": true,
+      "lastRun": {
+        "runId": "5f1544bc-3278-4db9-82da-dd413f59cfbd",
+        "status": "failed",
+        "startedAt": "2026-10-04T23:55:07.415Z",
+        "completedAt": "2026-10-04T23:55:07.928Z",
+        "count": 0,
+        "imported": 0,
+        "updated": 0,
+        "unchanged": 0,
+        "failed": 1,
+        "hasMore": false,
+        "diagnostic": {
+          "code": "reconnect_required",
+          "message": "Stored Gmail access is unavailable, expired or revoked.",
+          "remedy": "Reconnect the dedicated mailbox to renew offline read-only access.",
+          "reconnect": true,
+          "evidence": {
+            "version": 2,
+            "phase": "token_refresh",
+            "kind": "http",
+            "httpStatus": 400,
+            "requestStage": "response_body"
+          }
+        }
+      },
+      "diagnostic": {
+        "code": "reconnect_required",
+        "message": "Stored Gmail access is unavailable, expired or revoked.",
+        "remedy": "Reconnect the dedicated mailbox to renew offline read-only access.",
+        "reconnect": true,
+        "evidence": {
+          "version": 2,
+          "phase": "token_refresh",
+          "kind": "http",
+          "httpStatus": 400,
+          "requestStage": "response_body"
+        }
+      },
+      "operations": 0
+    },
+    "api": {
+      "keyCount": 0,
+      "activeKeys": 0,
+      "issued": 0
+    },
+    "publicProfile": {
+      "enabled": true,
+      "updatedAt": "2026-10-04T09:43:27.911Z",
+      "url": "https://dive.amzeus.co.uk/public-profile",
+      "publicationOperations": 0
+    },
+    "googleCalendarOperations": 0
+  },
+  "integrationComparison": {
+    "allOriginalIntegrationRowsUnchanged": true,
+    "gmailDisabled": true,
+    "reconnectRequired": true,
+    "apiKeys": 0,
+    "profileAlreadyPublished": true,
+    "profileUpdatedAt": "2026-10-04T09:43:27.911Z",
+    "gmailOperations": 0,
+    "apiKeyOperations": 0,
+    "profileOperations": 0,
+    "googleCalendarOperations": 0
+  },
+  "selectedTasks": {
+    "1": "IMPLEMENTED/VERIFIED; retained brand/target/artwork coverage",
+    "2": "IMPLEMENTED/VERIFIED; canonical data/People/owner/cylinder guards retained",
+    "3": "DIAGNOSTICS IMPLEMENTED/VERIFIED; GMAIL RESTORATION BLOCKED; consumed failed human run is not successful acceptance",
+    "4": "IMPLEMENTED/VERIFIED; five-format and retained actual PDF/DOCX evidence, including owner-confirmed two-page attachment PDF",
+    "6": "IMPLEMENTED/VERIFIED; existing owner-published public profile unchanged",
+    "7": "IMPLEMENTED/VERIFIED; real API credentials UNISSUED"
+  },
+  "completedSelectedIssues": [
+    73,
+    79,
+    74,
+    77,
+    80,
+    85,
+    87,
+    86,
+    75,
+    76,
+    78,
+    81,
+    82
+  ],
+  "subsequentlyCompletedIssueScopes": [
+    50,
+    54
+  ],
+  "openIssueNumbers": [
+    55,
+    56,
+    60,
+    61
+  ],
+  "outstandingWork": "docs/t14/sites174-follow-up-backlog.md",
+  "excluded": [
+    "Task5 implementation under this goal",
+    "T15",
+    "unrelated work",
+    "silent Gmail/background retries",
+    "automatic Google Calendar API mutations",
+    "production key issuance without reviewed client consent"
+  ],
+  "preservedRejectedEvidence": {
+    "sites170": "Withdrawn after valid stale-arrival review; source/evidence branch retained",
+    "sites171": "Saved but never deployed",
+    "sites172": "Withdrawn after valid arrival-provenance review; evidence/planning-sites172-2026-10-05 retained; accepted153 restored",
+    "sites173": "Saved app101 but never deployed after valid inbound-Dive/deletion-callback review",
+    "full175": "1704/1705 pass; retained historical deletion assertion failed, not waived; RED0f4e0b6 and final1706 all pass",
+    "pre102Archive": "app1.0.102-pre-b683238.tar retained; not final published archive",
+    "invalidViewportReports": "Reused-tab nominal-width reports rejected; every final observation checks actual requested width and workspace",
+    "minimalDummyFixture": "Minimal synthetic Trip117 lacked required arrays; corrected via local API. The earlier failed fixture-device observation is retained and excluded from PASS."
+  },
+  "productionSmokeBoundaries": {
+    "canonicalWrites": 0,
+    "confirmedUnlinks": 0,
+    "deletions": 0,
+    "gmailOperations": 0,
+    "providerRetrievals": 0,
+    "googleCalendarOperations": 0,
+    "profileOperations": 0,
+    "keyIssuances": 0
+  },
+  "proofScreenshot": "work/trip-getting-there/live174-plan-layout.png",
+  "privateEvidencePolicy": "Raw owner snapshots, encrypted recovery, credentials, runtime state and private screenshots remain ignored/local; only this redacted aggregate report is committed"
+}

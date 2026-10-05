@@ -54,3 +54,12 @@ Sites156 withdrawn on telephone-only canonical address being routed as Home. Rec
 ## Technical evidence and permit reset correction
 
 Sites157 withdrawn on PR94 P1/P2 old copied confirmations; recovery153/deployment6ac39343 succeeded. RED2failures preceded source-preserving copied assignment null fill/analysis references and permit confirmation reset. Existing readiness now warns until fresh evidence selected even after all checklist items checked. Permit requirement and numbered/Unicode Home routing remain intact. Full1553/229, focused49/7, typecheck/latest5-filelint0 and9hashes pass. Native clean build/privacy/compiled editor, fresh baseline, publication and exact GitHub reconciliation pending.
+
+
+## Production completion — app1.0.102 / Sites174
+
+U01–U07, W01–W04, E01–E03 and G01–G17 are IMPLEMENTED/VERIFIED for the combined planning scope. Read sites174-release-evidence.json for exact source, complete gates, compiled fixture Save/reopen/delete tests, six actual widths, owner comparison, native publication and merged-main equality. Each requirement's earlier pending status above is historical and superseded by this completion.
+
+Live b68323877ea9608dd4e755a4ca63a0fd8c18b056/cache49 deployed21:41:11UTC; final clear review6003522463. PR94 merged to fd974785d887f72c285ba699a89420e398ca9416, full tree7b417510ce78f11ca390b496d4151f61ebc71c2e matches production with zero diff. Final1706/247 regressions/typecheck/build/PWA/privacy and9approved hashes PASS. Targeted lint0new/changed,101retained/rawexit1.60compiled +72live valid measurements assert all six actual widths, correct workspace, containment, keyboard/focus and zero fresh-console errors/warnings.
+
+Fresh6540 owner IDs/rows unchanged:0added/0deleted/0changed; fingerprinta9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8; no missing relationship endpoints; encrypted recovery verified. No production Save/unlink/delete or provider/Gmail/Google/profile/key writes during smoke. Gmail remains disabled/reconnect-required; existing published profile is unchanged and API credentials remain unissued. Open integration/optional tasks are accurately listed in sites174-follow-up-backlog.md; stop after this handover.
