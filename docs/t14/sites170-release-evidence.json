@@ -1,0 +1,172 @@
+{
+  "release": {
+    "appVersion": "1.0.98",
+    "sitesVersion": 170,
+    "source": "9fd7a1bb3758a9512655bda03f6e21647303b4d4",
+    "tree": "884f83ed22092fb80f74f1c6c51d3386231145e8",
+    "cache": "zeustek-static-v45",
+    "url": "https://dive.amzeus.co.uk/",
+    "savedVersionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_66a6f2558ff8819180428b0d36735732",
+    "deploymentId": "appgdep_6ac4087b029c8191b1a764b98ccd8ad8",
+    "deployedAt": "2026-10-05T20:29:09.527542+00:00",
+    "deploymentStatus": "succeeded",
+    "environmentRevision": 6,
+    "audience": "public (unchanged)",
+    "productionAcceptance": "WITHDRAWN",
+    "finalReview": "FAILED: stale automatic Trip arrival (review4188518214)",
+    "mainReconciliation": "NOT MERGED"
+  },
+  "scope": {
+    "topRow": [
+      "SITE & CONDITIONS",
+      "EQUIPMENT READINESS",
+      "TEAM & ROLES"
+    ],
+    "lowerCards": "Each of LINKED GAS PLANS, SAFETY & HF, EMERGENCY & CHECKLISTS and PLAN NOTES spans the full three-column width and collapses independently.",
+    "duplicate": "Independent draft; current loadout applied atomically at Save; source retained.",
+    "otherCombinedChanges": [
+      "Atomic Plan/event/Trip/loadout/Gas relationships and guarded unlink/delete",
+      "Calendar to Trip/Plan to Gas workflow and exact-source forced retries",
+      "Home phone exclusion, temporary Google Maps origins and Site/Postcode Trip destination",
+      "Compact Calendar/archived filtering/smaller text/44px controls",
+      "Truthful Cloud status, Me/Self presentation, collapsible itinerary and visible fields",
+      "Empty-only weather fill, manual/source provenance, canonical private Dive Centre contacts in both Plan and Trip"
+    ],
+    "excluded": [
+      "Task5",
+      "T15",
+      "unrelated enhancements",
+      "production Gmail operation",
+      "Google Calendar mutation",
+      "new public content",
+      "API credential issuance"
+    ]
+  },
+  "tests": {
+    "redCheckpoint": "c657450 (6 expected failures / 12 retained passes)",
+    "implementation": "9fd7a1bb3758a9512655bda03f6e21647303b4d4",
+    "focused": "59 tests /8files PASS",
+    "full": "1683 tests /245files PASS",
+    "typecheck": "PASS",
+    "productionBuild": "PASS",
+    "pwaEntries": 422,
+    "lint": {
+      "new": 0,
+      "retained": 101,
+      "rawExit": 1,
+      "byteIdenticalAnnotatedSourceLines": true
+    },
+    "protectedCalculationHashes": "All9 match current separately approved manifest",
+    "privacy": {
+      "files": 1346,
+      "credentialMatches": 0,
+      "navigationPNGs": 31,
+      "artworkUnchanged": true
+    },
+    "compiledResponsiveObservations": 42,
+    "liveResponsiveObservations": 54,
+    "widths": [
+      320,
+      390,
+      430,
+      820,
+      1024,
+      1440
+    ],
+    "pageOverflow": 0,
+    "clippedCards": 0,
+    "clippedControls": 0,
+    "visibleBrokenImages": 0,
+    "compiledConsole": [],
+    "liveConsole": [],
+    "compiledAcceptance": [
+      "Actual Calendar gas keyboard link preselects exact Plan; draft cancelled",
+      "Get Weather -> Save/reopen -> Manual clears unlabelled provider summaries and retains labelled marine readings",
+      "Owner zeros/sky/visibility/notes -> Get Weather -> Seasonal -> Save/reload retained",
+      "Existing source/copy equipment/application snapshots and27Trip itinerary IDs retained"
+    ],
+    "productionSmoke": "Read-only, unsaved Plan/duplicate/Gas/Trip drafts cancelled",
+    "anonymousPrivateEndpoints": "5 return401; no anonymous canonical/API/backup access"
+  },
+  "ownerData": {
+    "before": "2026-10-05T20:21:19.937Z",
+    "after": "2026-10-05T20:31:44.803Z",
+    "records": 6540,
+    "originalIDsIdentical": true,
+    "added": 0,
+    "deleted": 0,
+    "changed": 0,
+    "allRowsByteEquivalent": true,
+    "fingerprint": "a9d0b4f4cf7b4e0f27590d2d4ab6cab84b6421ecae4e54594d01dfe409be25b8",
+    "missingRelationshipEndpoints": 0,
+    "encryptedRecoveryVerified": true,
+    "productionCanonicalWrites": 0
+  },
+  "artifact": {
+    "nativeSHA256": "ff0cadefea6f2c1b9963990b3be4df51601686d3b68c09871892ea171bc33818",
+    "nativeBytes": 88943112,
+    "stored": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_00000000d2d08210b02bc723d4be159a",
+      "content_hash": "sha256:600dd042c296b28a0bedf5e45be64f61efff27c260ab66a1928930c062da4f6d",
+      "size_bytes": 103198720,
+      "file_count": 1346
+    },
+    "workerAnd31PNGsByteMatched": true,
+    "sourceBundle": "work/trip-getting-there/candidate170.bundle",
+    "archive": "work/trip-getting-there/app1.0.98.tar"
+  },
+  "rollback": {
+    "acceptedVersion": "Sites153/app1.0.81",
+    "source": "b154febb25bdeaae7ece921728eb902cd65a34bf",
+    "versionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "archive": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_00000000586c820ab7bf1760fc9a1fe4",
+      "content_hash": "sha256:8153a7a5990b7d7a17b1fae76b6de6fe9b946e0ae5f709e4cdd7b9bbe9c1809d",
+      "size_bytes": 103075840,
+      "file_count": 1346
+    },
+    "lastVerifiedRestore": {
+      "id": "appgdep_6ac404ec2f688191b1040896786d2250",
+      "status": "succeeded",
+      "updatedAt": "2026-10-05T20:13:55.457907+00:00"
+    },
+    "rejected169Evidence": "evidence/planning-sites169-2026-10-05@be38dcb"
+  },
+  "runtime": {
+    "environmentEntries": 17,
+    "revision": 6,
+    "beforeAfterIdentical": true,
+    "audienceUnchanged": true
+  },
+  "integrations": {
+    "gmail": "Disabled/reconnect-required. Consumed human acceptance5f1544bc failed2026-10-04T23:55:07.928Z; token_refresh/HTTP400/response_body. No retry/reconnect/agent sync performed.",
+    "publicProfile": "Existing owner-published profile enabled, updated2026-10-04T09:43:27.911Z, unchanged; /public-profile.",
+    "api": "0issued/0activekeys; selected-data read-only API available. Key issuance needs exact client/record/field/expiry review.",
+    "googleCalendarMutations": 0
+  },
+  "github": {
+    "pr": "https://github.com/amzeus1976/zeustek-diving/pull/94",
+    "head": "9fd7a1bb3758a9512655bda03f6e21647303b4d4",
+    "base": "5193651f5b7001abb2b25b6e38c3e6e6cf80518a",
+    "finalReviewRequest": 6002402247,
+    "prior20ReviewThreadsResolved": true,
+    "mainTreeMatches": null
+  },
+  "evidenceDirectory": "work/trip-getting-there",
+  "buildToolCompatibility": "Native Sites workflow preserved paired locks/stack. Default build helper rejects existing dual locks; existing direct prebuild/Vinext build used. Windows bash/tar resolution corrected for native packager; final workflow successful. Initial failures retained as failed tool output, not claimed PASS.",
+  "browser": {
+    "status": "REJECTED_AS_SIX_WIDTH_EVIDENCE",
+    "reason": "Reused tabs ignored viewport override: compiled effective1440 and live1280 for every request. Fresh-tab override applies actual width; rerun must assert effective equals requested.",
+    "priorCompiledObservations": 42,
+    "priorLiveObservations": 54
+  },
+  "recovery": {
+    "version": 153,
+    "appVersion": "1.0.81",
+    "deploymentId": "appgdep_6ac40b769fb0819199b555721e084c13",
+    "status": "succeeded",
+    "updatedAt": "2026-10-05T20:41:49.508112+00:00"
+  }
+}
