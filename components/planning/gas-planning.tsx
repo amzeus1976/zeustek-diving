@@ -539,7 +539,7 @@ export function GasPlanning({ go }: Props) {
         </aside>
       </div>
 
-      {deleting&&<DeletePlanningRecordDialog record={deleting} label="gas plan" close={()=>setDeleting(null)} deleted={async()=>{setSelectedId('');await refresh();}}/>}
+      {deleting&&<DeletePlanningRecordDialog record={deleting} label="gas plan" close={()=>setDeleting(null)} changed={refresh} deleted={async()=>{setSelectedId('');await refresh();}}/>}
       {warningsOpen && selected ? <AccessibleDialog label="Gas planning warnings" close={() => setWarningsOpen(false)} className="focus-modal">
         <header><h2>Gas planning warnings</h2><button type="button" className="focus-icon" aria-label="Close warnings" data-dialog-close onClick={() => setWarningsOpen(false)}><X /></button></header>
         <p>{GAS_PLANNING_CAUTION}</p>

@@ -23,6 +23,8 @@ import { TripLinkedSites } from './trip-linked-sites';
 import { TripGettingThere } from './trip-getting-there';
 import {PlanningConnections} from './planning/planning-connections';
 import {PlanningWorkflow} from './planning/planning-workflow';
+import {DeletePlanningRecordDialog} from './planning/delete-planning-record-dialog';
+import {linkedPlanIdsForTrip} from '../lib/planning/planning-start-context';
 import { TripNote, TripSection } from './trip-disclosure';
 import { WorkflowContextStrip } from './workflow/workflow-context-strip';
 import { resolveZeusTekIconId } from '../lib/zeustek-icons';
@@ -43,7 +45,6 @@ import {
 } from '../lib/offline/dive-planning';
 import { currentDiveAccount } from '../lib/offline/dive-store';
 import {
-  deleteDiveExpeditionTrip,
   editableDiveExpeditionTrip,
   listDiveExpeditionTrips,
   normaliseTripGuestParticipants,
@@ -155,6 +156,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
   const [sort, setSort] = useState('soonest');
   const [editing, setEditing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
   const [viewing, setViewing] = useState<Stored<DiveExpeditionTripRecord> | null>(null);
+  const [deleting,setDeleting]=useState<Stored<DiveExpeditionTripRecord>|null>(null);
   const [adding, setAdding] = useState(false);
   const [sourceBooking,setSourceBooking]=useState<StoredDivingCalendarBooking|null>(null);
   const [sourceMessage,setSourceMessage]=useState('');
@@ -206,12 +208,7 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
     return (a.startsOn ?? '9999').localeCompare(b.startsOn ?? '9999') || a.name.localeCompare(b.name);
   }), [items, search, status, sort]);
 
-  async function remove(item: Stored<DiveExpeditionTripRecord>) {
-    if (!window.confirm(`Delete ${item.name}? Linked Plans, Sites, People and Equipment will not be deleted.`)) return;
-    await deleteDiveExpeditionTrip(item.entityId);
-    await cleanupTripMedia(item.entityId,item.itinerary.map(segment => segment.id));
-    setViewing(null); refresh();
-  }
+  function remove(item: Stored<DiveExpeditionTripRecord>) {setViewing(null);setDeleting(item);}
 
   async function togglePacked(item: Stored<DiveExpeditionTripRecord>, packingId: string) {
     const packingItems = item.packingItems.map((packing) => packing.id === packingId
@@ -253,7 +250,8 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
 
     <div className={styles.grid}>
       {visible.map((item) => {
-        const readiness = tripReadiness(item);
+        const planIds=linkedPlanIdsForTrip(item,plans);
+        const readiness = tripReadiness({...item,planIds});
         const participantCount = item.teamPersonIds.length + (item.guestParticipants?.filter((guest) => guest.name.trim()).length ?? 0);
         return <Card key={item.entityId} className={`${styles.tripCard} clickable-card`}>
           <button className="card-hit" aria-label={`Open ${item.name}`} onClick={() => setViewing(item)}/>
@@ -265,13 +263,14 @@ export function TripsExpeditions({ go }: { go?: (next: string) => void }) {
           <p>{item.destination || 'Destination not recorded'}</p>
           <div className={styles.dates}><CalendarDays size={15}/><span>{dateLabel(item.startsOn)} → {dateLabel(item.endsOn)}</span></div>
           <div className={styles.readinessMini}><span>Readiness</span><strong>{readiness.percent}%</strong><progress value={readiness.percent} max="100" aria-label={`${readiness.percent}% trip readiness`}/></div>
-          <div className={styles.chips}><span>{item.planIds.length} plans</span><span>{item.siteIds.length} sites</span><span>{participantCount} people</span></div>
+          <div className={styles.chips}><span>{planIds.length} plans</span><span>{item.siteIds.length} sites</span><span>{participantCount} people</span></div>
         </Card>;
       })}
     </div>
     {!visible.length && !adding && <Card className="focus-empty"><ShipWheel size={32}/><h2>{items.length ? 'No matching trips' : 'No trips yet'}</h2><p>Create a UK day trip, liveaboard, holiday or expedition and link the records you already have.</p></Card>}
 
-    {viewing && <TripDetail item={viewing} plans={plans} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
+    {deleting&&<DeletePlanningRecordDialog record={deleting} label="trip" close={()=>setDeleting(null)} changed={refresh} deleted={async()=>{await cleanupTripMedia(deleting.entityId,deleting.itinerary.map(segment=>segment.id));refresh();}}/>}
+    {viewing && <TripDetail item={{...viewing,planIds:linkedPlanIdsForTrip(viewing,plans)}} plans={plans} sites={sites} people={people} equipment={equipment} equipmentSets={equipmentSets} currentUserId={currentUserId}
       close={() => setViewing(null)} edit={() => { setEditing(viewing); setViewing(null); setAdding(true); }}
       remove={() => void remove(viewing)} togglePacked={(id) => void togglePacked(viewing, id)}
       addDocuments={(ids) => changeDocuments(viewing, ids)} removeDocument={(id) => changeDocuments(viewing, [], id)} changed={refresh} />}
