@@ -2,7 +2,7 @@
 export const appChangelog = [
   {
     version:'1.0.82',date:'2026-10-05',title:'Trip driving directions',
-    changes:['Getting there: choose current location, owner-profile Home or a temporary address/postcode.','Review a linked Site road address or save a Trip harbour/meeting point, then open Google Maps for travel time and directions.','No paid routing API, stored starting-point history or automatic location request.','Calendar List hides archived events unless Show archived is ticked.'],
+    changes:['Getting there: choose current location, owner-profile Home or a temporary address/postcode.','Review a linked Site road address or save a Trip harbour/meeting point, then open Google Maps for travel time and directions.','No paid routing API, stored starting-point history or automatic location request.','Calendar List hides archived events unless Show archived is ticked.','Dive Plans and Calendar events have confirmed deletion with local and cloud dependency protection.'],
   },
   {
     version:'1.0.81',date:'2026-10-05',title:'Calendar events, multiple Dives and safe Trip links',

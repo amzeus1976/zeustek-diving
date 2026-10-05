@@ -32,6 +32,7 @@ import type {DiveRecord} from '../../lib/offline/dives';
 import {workflowDestinationUrl} from '../../lib/workflow/workflow-destination';
 import {CalendarEventText} from './calendar-event-text';
 import {CalendarDiveLinks} from './calendar-dive-links';
+import {DeletePlanningRecordDialog} from './delete-planning-record-dialog';
 
 type Props = { go?: (route: string) => void };
 type CalendarView = 'calendar' | 'list' | 'bookings';
@@ -463,7 +464,7 @@ function BookingDetail({
   refresh: () => Promise<void>;
 }) {
   const isTraining = ['course', 'assessment'].includes(item.bookingKind ?? '');
-  const [tripId,setTripId]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const [tripId,setTripId]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [deleting,setDeleting]=useState(false);
   const updateStatus = async (status: BookingStatus) => {
     if(busy)return;setBusy(true);setError('');try{await setCalendarEntryStatus(item,status);await refresh();}catch(reason){setError(reason instanceof Error?reason.message:'Event status could not be saved.');}finally{setBusy(false);}
   };
@@ -513,7 +514,7 @@ function BookingDetail({
         >
           <Link2 size={14} /> Create/link Gas Plan
         </button>
-        {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> Open linked Trip</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
+        {item.linkedTripId?<button className="focus-secondary" onClick={()=>go?.(workflowDestinationUrl({route:'Trips',recordId:item.linkedTripId!}))}><Link2 size={14}/> {item.calendarSource==='dive-trip'?'Open Trip to edit / delete':'Open linked Trip'}</button>:<button className="focus-secondary" disabled={item.calendarLinkConflict} onClick={()=>go?.(workflowDestinationUrl({route:'Trips',params:{fromEventId:item.entityId}}))}><Link2 size={14}/> Create Trip from event</button>}
         {isTraining ? (
           <button
             className="focus-secondary"
@@ -546,10 +547,12 @@ function BookingDetail({
         >
           <Archive size={14} /> Archive event
         </button>}
+        {item.calendarSource!=='dive-trip'&&<button type="button" className="focus-secondary danger" disabled={busy} onClick={()=>setDeleting(true)}>Delete event</button>}
       </div>
       {item.calendarLinkConflict&&<p role="alert">Multiple Trip associations need review. No new Trip will be created automatically.</p>}
       {!item.linkedTripId&&!item.calendarLinkConflict&&<details className={styles.existingTripLink}><summary>Link an existing Trip</summary><p>Import this event into its itinerary and fill blank Trip summary fields. Existing Trip text and dates are retained.</p><label>Trip<select value={tripId} onChange={e=>setTripId(e.target.value)}><option value="">Choose a Trip</option>{trips.map(trip=><option key={trip.entityId} value={trip.entityId}>{trip.name} · {trip.startsOn||'Undated'}</option>)}</select></label><button type="button" className="focus-secondary" disabled={!tripId||busy} onClick={()=>void linkTrip()}>Link Trip and import event details</button></details>}
       {error&&<p role="alert">{error}</p>}
+      {deleting&&<DeletePlanningRecordDialog record={item} label="event" close={()=>setDeleting(false)} deleted={refresh}/>}
     </section>
   );
 }
