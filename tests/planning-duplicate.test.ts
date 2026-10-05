@@ -4,15 +4,28 @@ import type {StoredEnrichedDivePlan} from '../lib/offline/dive-planning-centre';
 import type {StoredGasPlanRecord} from '../lib/offline/planning-pages';
 import {evaluatePlanReadiness,assessPlanSiteAndTeam} from '../lib/offline/dive-planning-centre';
 describe('Reviewed new planning copies',()=>{
- it('requires a fresh loadout application in a repeated Dive while preserving selected equipment and source history',()=>{
+ it('requires current loadout equipment in a repeated Dive while retaining independent selections and source history',()=>{
   const original={entityId:'loadout-plan',name:'Repeated loadout dive',equipmentSetId:'set',equipmentSetIds:['set'],equipmentIds:['old-mask','independent-torch'],equipmentSetApplications:[{equipmentSetId:'set',equipmentSetName:'Original loadout',appliedAt:'2026-09-01T09:00:00Z',slots:{'personal.mask':'old-mask'},overrides:{}}]} as unknown as StoredEnrichedDivePlan;
   const before=structuredClone(original);
   const copy=duplicateDivePlanDraft(original);
   expect(copy.equipmentSetId).toBe('set');
   expect(copy.equipmentSetIds).toEqual(['set']);
-  expect(copy.equipmentIds).toEqual(['old-mask','independent-torch']);
+  expect(copy.equipmentIds).toEqual(['independent-torch']);
   expect(copy.equipmentSetApplications).toEqual([]);
   expect(original).toEqual(before);
+ });
+ it('removes equipment attributable to all original loadout snapshots including multi-item slots',()=>{
+  const original={entityId:'multi',name:'Repeat',equipmentSetId:'current',equipmentIds:['mask','camera','light','spare-mask','independent-torch'],equipmentSetApplications:[{equipmentSetId:'first',slots:{'personal.mask':'mask',camera_video:['camera','light']},overrides:{}},{equipmentSetId:'second',slots:{'personal.mask':'spare-mask',other:['light']},overrides:{}}]} as unknown as StoredEnrichedDivePlan;
+  const before=structuredClone(original);
+  expect(duplicateDivePlanDraft(original).equipmentIds).toEqual(['independent-torch']);
+  expect(original).toEqual(before);
+ });
+ it('retains legacy independent selections when no source snapshot establishes equipment attribution',()=>{
+  const original={entityId:'legacy',name:'Legacy repeat',equipmentSetId:'set',equipmentIds:['mask','torch'],equipmentSetApplications:[{equipmentSetId:'set',overrides:{}}]} as unknown as StoredEnrichedDivePlan;
+  expect(duplicateDivePlanDraft(original).equipmentIds).toEqual(['mask','torch']);
+  const absent={...original,equipmentSetApplications:undefined};
+  expect(duplicateDivePlanDraft(absent).equipmentIds).toEqual(['mask','torch']);
+  expect(duplicateDivePlanDraft({...absent,equipmentIds:undefined}).equipmentIds).toBeUndefined();
  });
  it('retains technical cylinder inputs but requires fresh fill and analysis selections before readiness',()=>{const original={entityId:'technical',name:'Technical repeat',siteId:'site',startAt:'2026-10-10T09:00',planTeam:[{personId:'self',role:'Diver'}],equipmentSetId:'loadout',emergency:{emergencyContact:'Dummy centre'},humanFactors:{keyRisks:['Review']},checklist:[{id:'check',completed:true}],technicalMode:true,plannedMaxDepthM:42,plannedRuntimeMin:55,cylinderAssignments:[{id:'slot',cylinderEquipmentId:'equipment',fillId:'old-fill',analysisId:'old-analysis',role:'backgas',gasLabel:'21/35',startPressureBar:200,switchDepthM:21}]} as unknown as StoredEnrichedDivePlan;const before=structuredClone(original);expect(evaluatePlanReadiness(original).state).toBe('ready');const copy=duplicateDivePlanDraft(original);expect(copy.cylinderAssignments).toEqual([{id:'slot',cylinderEquipmentId:'equipment',fillId:null,analysisId:null,role:'backgas',gasLabel:'21/35',startPressureBar:200,switchDepthM:21}]);copy.checklist=copy.checklist!.map(row=>({...row,completed:true}));const readiness=evaluatePlanReadiness({...copy,createdAt:'new',modifiedAt:'new'});expect(readiness.state).not.toBe('ready');expect(readiness.warnings).toContain('Link current fill and analysis evidence for every planned cylinder.');expect(original).toEqual(before);});
  it('retains permit requirement but resets confirmation and restores the new Dive warning',()=>{const original={entityId:'permit',name:'Permit dive',planTeam:[],permitRequired:true,permitConfirmed:true} as unknown as StoredEnrichedDivePlan;const before=structuredClone(original);const copy=duplicateDivePlanDraft(original);expect(copy.permitRequired).toBe(true);expect(copy.permitConfirmed).toBe(false);expect(assessPlanSiteAndTeam({...copy,createdAt:'new',modifiedAt:'new'})).toContain('Access permit required but not confirmed.');expect(original).toEqual(before);});
