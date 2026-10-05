@@ -1,3 +1,7 @@
+## App1.0.101/cache48 candidate — both arrival selectors preserve provenance
+
+Sites172/app100 withdrawn after valid review4188820022 found the Getting there selector marked a Site fill as owner text. Recovery153 succeeded21:09:18UTC, deployment appgdep_6ac411e68fa48191b71a87e2c1f69b51. RED570c3b8:2 failures/14 passes plus actual compiled selector reproduction. Shared typed arrival update handles site/owner sources; both UI paths preserve saved provenance, manual edits retain owner control, Site choices replace only derived/empty fields. App100 evidence remains recoverable; no owner changes. App101 requires fresh full gates, actual Save/reopen acceptance of both selectors, six effective widths, clear complete-head review before publication and exact main reconciliation.
+
 ## App1.0.100/cache47 candidate — saved arrival provenance and exact Gas availability
 
 App99/Sites171 saved but never deployed: complete-head review4188637481/4188637496 found reopen provenance and unavailable linked Gas parent cases. RED05d394a:2 failures/21 passes. Add private site/owner arrival provenance, retain legacy/manual values, and disable Gas action unless the exact canonical Plan is available. App99 passed1689 tests, build and48 actual-width compiled observations; this new candidate requires fresh full gates, saved Trip reopen acceptance, six-width checks and production owner comparison before exact PR94 reconciliation. Production remains verified153/app81. No protected file change.
