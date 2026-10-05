@@ -1,0 +1,927 @@
+{
+  "status": "PUBLISHED; PRODUCTION VERIFIED; GITHUB REVIEW PENDING",
+  "appVersion": "1.0.83",
+  "Sites": 155,
+  "source": "7f54c8b94a252d7c8e6e98d94daed8b06c029b5a",
+  "tree": "a22d8e9d9c6638a8c08003268342e75f5587fee2",
+  "branch": "feat/trip-getting-there",
+  "workingTreeAtFreeze": "clean",
+  "cache": "zeustek-static-v30",
+  "deployment": {
+    "id": "appgdep_6ac383994a448191b0676badd6ac7da3",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_e24f6612656c81919adf756a0faa7aef",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T11:02:13.314568+00:00"
+  },
+  "version": {
+    "id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_e24f6612656c81919adf756a0faa7aef",
+    "version_number": 155,
+    "source": {
+      "commit_sha": "7f54c8b94a252d7c8e6e98d94daed8b06c029b5a"
+    },
+    "archive_storage": {
+      "archive_format": "tar",
+      "sediment_file_id": "file_0000000084f881f490a500015acd711f",
+      "content_hash": "sha256:8bbf58bffe951b44c05fd02a00e2c15a416aa8c5c212d5a12c2338b6469cc226",
+      "size_bytes": 103116800,
+      "file_count": 1346
+    }
+  },
+  "rollback": {
+    "id": "appgdep_6ac37f46eee88191aeac97f5577e2df2",
+    "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+    "title": "Zeustek Dive",
+    "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+    "type": "publish",
+    "status": "succeeded",
+    "url": "https://zeustek-dive.amzeus.chatgpt.site",
+    "has_mcp": false,
+    "screenshot_asset_pointer": null,
+    "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+    "failure_message": null,
+    "env_set_revision": 6,
+    "updated_at": "2026-10-05T10:43:42.140620+00:00"
+  },
+  "rollbackApp": "1.0.81",
+  "rollbackSites": 153,
+  "environment": {
+    "revision": 6,
+    "bindings": 17,
+    "unchanged": true
+  },
+  "github": {
+    "PR": 94,
+    "url": "https://github.com/amzeus1976/zeustek-diving/pull/94",
+    "head": "7f54c8b94a252d7c8e6e98d94daed8b06c029b5a",
+    "mainSHA": null,
+    "sourceMatch": null,
+    "reviewRequested": true
+  },
+  "gmail": "DEFERRED \u2014 unverified; no operation; existing connection and disabling exception preserved",
+  "providers": {
+    "MetOffice": "Access denied/unverified",
+    "directCopernicus": "Conditional",
+    "SwellCloud": "Agreed access required"
+  },
+  "publicProfile": "unchanged, no publication",
+  "apiCredentials": "unchanged, none issued/rotated/expanded",
+  "googleCalendar": "unchanged; no automatic writes",
+  "rejectedAttempt": "Sites154 acceptance withdrawn; recovery succeeded; candidate/evidence preserved",
+  "notes": "Gas Plan production inventory is empty. Save/reload and both legacy/allocated persistence verified using disposable local fixtures; no synthetic production records.",
+  "checks": {
+    "reviewedSource": "dcf93f33",
+    "status": "PASS for corrected published candidate",
+    "app": "1.0.83",
+    "cache": "zeustek-static-v30",
+    "red": {
+      "files": 3,
+      "failed": 4,
+      "passed": 18
+    },
+    "focused": {
+      "files": 3,
+      "passed": 23
+    },
+    "full": {
+      "files": 229,
+      "passed": 1544
+    },
+    "typecheck": "PASS",
+    "build": {
+      "status": "PASS",
+      "PWAEntries": 422,
+      "KiB": 42718.38
+    },
+    "lint": {
+      "files": 8,
+      "newOrChanged": 0,
+      "unchanged": 9,
+      "rawExit": 1,
+      "baseline": "dcf93f3 existing accepted153 baseline diagnostics"
+    },
+    "protected": [
+      {
+        "path": "lib/offline/buhlmann-ndl.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-planner.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/offline/recreational-gas-reserve.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/offline/gas-planning-foundation.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/offline/planning-pages.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/offline/loadouts-gas.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/gas-rates.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/pressure-group-engine.ts",
+        "unchanged": true
+      },
+      {
+        "path": "lib/offline/plan-gas-acceptance.ts",
+        "unchanged": true
+      }
+    ],
+    "browser": {
+      "sixWidths": [
+        320,
+        390,
+        430,
+        820,
+        1024,
+        1440
+      ],
+      "allocatedSupplies": 2,
+      "allocatedSaveReload": "PASS, separate copy ID and original retained",
+      "legacySaveReload": "PASS, one legacy supply retained; no implicit upgrade",
+      "eventDeletion": "blocked with explicit unlink message, record retained",
+      "productionSyntheticRecords": 0
+    },
+    "ownerBaseline": {
+      "exportedAt": "2026-10-05T10:48:46.674Z",
+      "source": "Normal signed-in read-only live /api/dive-backup; complete rendered JSON captured locally",
+      "records": 6540,
+      "kindCounts": {
+        "album": 2,
+        "bucket-list": 13,
+        "catalog-option": 62,
+        "certification": 13,
+        "computer-import": 1,
+        "computer-profile": 63,
+        "conservation_activity": 2,
+        "currency-policy": 2,
+        "cylinder": 9,
+        "cylinder-fill": 21,
+        "dashboard-settings": 1,
+        "dive": 68,
+        "dive-media": 57,
+        "dive-trip": 1,
+        "equipment": 52,
+        "equipment-event": 6,
+        "equipment-set": 6,
+        "gas-analysis": 17,
+        "gear-wishlist": 5,
+        "gear-wishlist-group": 5,
+        "gmail-news": 20,
+        "import-resolution": 46,
+        "learning-ai-checkpoint": 1,
+        "news-article": 198,
+        "news-preferences": 1,
+        "news-source": 7,
+        "operator": 5,
+        "person": 12,
+        "person-operator-link": 1,
+        "price-store": 4,
+        "price-store-settings": 1,
+        "professional-evidence": 10,
+        "professional-pathway": 2,
+        "question-review-state": 1,
+        "question-set": 141,
+        "reference-requirement-set": 6,
+        "site": 1680,
+        "site-overhead-profile": 2,
+        "skill": 3874,
+        "skill_evidence": 56,
+        "test-attempt": 14,
+        "training-progress": 44,
+        "trip": 8
+      },
+      "fingerprint": "3695e702abb70097a18bc631a9a9a3e3aee78ad7c38ae5255f5102731eaff58b",
+      "fingerprintRule": "SHA256 UTF8 JSON of original cloud rows sorted by kind/id, compact separators, Unicode retained",
+      "legacyPersonEntityPairs": 8,
+      "explicitRelationships": {
+        "person-operator-link": 1
+      },
+      "missingRelationshipEndpoints": 0,
+      "secretKindExcluded": true,
+      "uniqueCanonicalIDs": true,
+      "encryptedRecoveryVerified": true,
+      "keyProtection": "Windows user DPAPI; key not printed",
+      "dataWrites": 0,
+      "priorAuditCountsAreNotTargets": true
+    },
+    "recoveryComparison": {
+      "records": 6540,
+      "added": 0,
+      "removed": 0,
+      "changed": 0,
+      "authorisedVideoRetained": true
+    },
+    "rollback": {
+      "id": "appgdep_6ac37f46eee88191aeac97f5577e2df2",
+      "project_id": "appgprj_6a91926878b48191a80d70f1681ef135",
+      "title": "Zeustek Dive",
+      "version_id": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_c996d19cb02c8191b981caef76467181",
+      "type": "publish",
+      "status": "succeeded",
+      "url": "https://zeustek-dive.amzeus.chatgpt.site",
+      "has_mcp": false,
+      "screenshot_asset_pointer": null,
+      "provider_deployment_id": "site---6a91926878b48191a80d70f1681ef135",
+      "failure_message": null,
+      "env_set_revision": 6,
+      "updated_at": "2026-10-05T10:43:42.140620+00:00"
+    },
+    "privacy": {
+      "checkedAt": "2026-10-05T11:05:22.608Z",
+      "navigationIcons": 31,
+      "allByteMatch": true,
+      "cache": "zeustek-static-v30",
+      "mastersNotPrecached": true,
+      "anonymous": [
+        {
+          "path": "/api/dive-data?kind=trip",
+          "status": 401
+        },
+        {
+          "path": "/api/dive-backup",
+          "status": 401
+        },
+        {
+          "path": "/api/v1/dives",
+          "status": 401
+        },
+        {
+          "path": "/api/gmail/status",
+          "status": 401
+        }
+      ],
+      "gmailOperations": 0
+    },
+    "productionBrowser": {
+      "checks": [
+        {
+          "route": "Diving Calendar & Bookings",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Diving Calendar & Bookings"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Trips",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Trips & expeditions"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Dive Plans",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Planning Centre"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Gas Planning",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Gas Planning"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "People",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "People"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Dive Centres",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Centres"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Insights",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Experience & Analytics"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Overview",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Checking sync status",
+          "headings": [
+            "Ready for the next descent."
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 320
+        },
+        {
+          "route": "Diving Calendar & Bookings",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Diving Calendar & Bookings"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Trips",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Trips & expeditions"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Dive Plans",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Planning Centre"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Gas Planning",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Gas Planning"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "People",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "People"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Dive Centres",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Centres"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Insights",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Experience & Analytics"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Overview",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Checking sync status",
+          "headings": [
+            "Ready for the next descent."
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 390
+        },
+        {
+          "route": "Diving Calendar & Bookings",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Diving Calendar & Bookings"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Trips",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Trips & expeditions"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Dive Plans",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Planning Centre"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Gas Planning",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Gas Planning"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "People",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "People"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Dive Centres",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Centres"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Insights",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Experience & Analytics"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Overview",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Checking sync status",
+          "headings": [
+            "Ready for the next descent."
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 430
+        },
+        {
+          "route": "Diving Calendar & Bookings",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Diving Calendar & Bookings"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Trips",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Trips & expeditions"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Dive Plans",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Planning Centre"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Gas Planning",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Gas Planning"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "People",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "People"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Dive Centres",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Centres"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Insights",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Experience & Analytics"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Overview",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Checking sync status",
+          "headings": [
+            "Ready for the next descent."
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 820
+        },
+        {
+          "route": "Diving Calendar & Bookings",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Diving Calendar & Bookings"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Trips",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Trips & expeditions"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Dive Plans",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Planning Centre"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Gas Planning",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Gas Planning"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "People",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "People"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Dive Centres",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Centres"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Insights",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Experience & Analytics"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Overview",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Checking sync status",
+          "headings": [
+            "Ready for the next descent."
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1024
+        },
+        {
+          "route": "Diving Calendar & Bookings",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Diving Calendar & Bookings"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "Trips",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Trips & expeditions"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "Dive Plans",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Planning Centre"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "Gas Planning",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Gas Planning"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "People",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "People"
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "Dive Centres",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Dive Centres"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "Insights",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Synced",
+          "headings": [
+            "Experience & Analytics"
+          ],
+          "mainCount": 2,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        },
+        {
+          "route": "Overview",
+          "body": "12.8px",
+          "brokenVisible": 0,
+          "cloud": "Cloud account \u00b7 Checking sync status",
+          "headings": [
+            "Ready for the next descent."
+          ],
+          "mainCount": 1,
+          "pageOverflow": false,
+          "root": "12.8px",
+          "width": 1440
+        }
+      ],
+      "errors": []
+    }
+  },
+  "ownerComparison": {
+    "pre": "2026-10-05T11:00:38.422Z",
+    "post": "2026-10-05T11:05:37.650Z",
+    "records": 6540,
+    "sameIDs": true,
+    "sameOriginalRows": true,
+    "added": 0,
+    "deleted": 0,
+    "changed": 0,
+    "agentWrites": 0,
+    "fingerprint": "3695e702abb70097a18bc631a9a9a3e3aee78ad7c38ae5255f5102731eaff58b",
+    "authorisedDive67VideoRetained": true
+  },
+  "localArchive": {
+    "bytes": 88920929,
+    "sha256": "5d81f765179b0bdb1e42a23f550ba042f8746bfc9b7fd4657cd2bfb907f1b6f8",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  }
+}
