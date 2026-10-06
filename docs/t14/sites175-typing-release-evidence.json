@@ -1,0 +1,296 @@
+{
+  "scope": "Issue95: Dive Plan text-entry latency",
+  "app": "1.0.103",
+  "Sites": 175,
+  "cache": "zeustek-static-v50",
+  "source": "85eae436ddbd10dd8703feb3908350ea64f30284",
+  "deployment": {
+    "id": "appgdep_6ac4aa4fedb88191aca5d1959a9d68af",
+    "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_14a2de9d8c0c81919f41447cddde8ef0",
+    "status": "succeeded",
+    "acceptedUrl": "https://dive.amzeus.co.uk",
+    "updatedAt": "2026-10-06T07:59:37.428241+00:00",
+    "environmentRevision": 6,
+    "audience": "unchanged public"
+  },
+  "storedArchive": {
+    "format": "tar",
+    "sha256": "215326405986aa9e954c07ea90de37de39c79b2950dd57b15072ba066e3a99ca",
+    "bytes": 103208960,
+    "files": 1346
+  },
+  "nativeUploadArchive": {
+    "bytes": 88947146,
+    "sha256": "2f844d1332c235a9b363ece0c97b4790ca353363d980ffc95cad5c878a44ea24",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  },
+  "rollback": {
+    "Sites": 174,
+    "app": "1.0.102",
+    "source": "b68323877ea9608dd4e755a4ca63a0fd8c18b056",
+    "savedVersion": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_a1ceb359278481918c7af9d1b32df3f9",
+    "storedSha256": "6091de307bc623630e1c9f9fd21cfb629d15b59126fc3e2d39624777c89c3726",
+    "nativeVerified6Oct": true
+  },
+  "rootCause": "Unchanged mounted saved weather panel rerendered on each keystroke, constructing a formatter for each reading across several forecast-selection passes.",
+  "red": {
+    "checkpoint": "ed69c40",
+    "failures": 2,
+    "passes": 1,
+    "dummyReadings": 840,
+    "formatterConstructions": 8395,
+    "invalidEarlierFixtureEvidenceRejected": true
+  },
+  "gates": {
+    "fullTests": 1709,
+    "fullFiles": 248,
+    "focusedTests": 33,
+    "focusedFiles": 6,
+    "typecheck": "PASS",
+    "build": "PASS",
+    "PWAEntries": 422,
+    "PWAKiB": 42763.44,
+    "lint": {
+      "baselineSource": "b68323877ea9608dd4e755a4ca63a0fd8c18b056",
+      "retained": 101,
+      "newOrChanged": 0,
+      "rawExit": 1,
+      "scope": "changed files plus accepted baseline diagnostic surfaces"
+    },
+    "privacy": {
+      "artifactFilesScanned": 1346,
+      "credentialMatches": 0,
+      "navigationIcons": 31,
+      "mastersUnchangedAndNotPrecached": true,
+      "cache": "zeustek-static-v50",
+      "nativeBuildPwa": "PASS",
+      "entries": 422,
+      "gmailOperations": 0,
+      "ownerWrites": 0
+    },
+    "protected": {
+      "allNineUnchanged": true,
+      "files": [
+        {
+          "path": "lib/offline/buhlmann-ndl.ts",
+          "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206",
+          "workingTreeSha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206"
+        },
+        {
+          "path": "lib/offline/recreational-gas-planner.ts",
+          "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec",
+          "workingTreeSha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec"
+        },
+        {
+          "path": "lib/offline/recreational-gas-reserve.ts",
+          "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8",
+          "workingTreeSha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8"
+        },
+        {
+          "path": "lib/offline/gas-planning-foundation.ts",
+          "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba",
+          "workingTreeSha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba"
+        },
+        {
+          "path": "lib/offline/planning-pages.ts",
+          "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6",
+          "workingTreeSha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6"
+        },
+        {
+          "path": "lib/offline/loadouts-gas.ts",
+          "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5",
+          "workingTreeSha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5"
+        },
+        {
+          "path": "lib/gas-rates.ts",
+          "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633",
+          "workingTreeSha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633"
+        },
+        {
+          "path": "lib/pressure-group-engine.ts",
+          "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1",
+          "workingTreeSha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1"
+        },
+        {
+          "path": "lib/offline/plan-gas-acceptance.ts",
+          "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485",
+          "workingTreeSha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485"
+        }
+      ]
+    }
+  },
+  "compiled": {
+    "app": "1.0.103",
+    "source": "85eae436ddbd10dd8703feb3908350ea64f30284",
+    "readings": 2352,
+    "nameThreeCharactersMs": 352,
+    "risk19CharactersMs": 1539,
+    "timingIncludesBrowserControlOverhead": true,
+    "charactersPreserved": true,
+    "unicodeNotesPreserved": true,
+    "immediateSaveReopen": true,
+    "expandedWeatherReadable": true,
+    "newDummyWeatherSnapshotDisplayed": true,
+    "oldDummySnapshotReplaced": true,
+    "unsavedDiscardProtection": true,
+    "productionWrites": 0,
+    "firstAsyncWeatherObservationRejected": true,
+    "firstViewportAttemptRejected": true,
+    "widths": [
+      {
+        "requested": 320,
+        "broken": 0,
+        "clipped": [],
+        "focused": "SELECT",
+        "overflow": false,
+        "width": 320
+      },
+      {
+        "requested": 390,
+        "broken": 0,
+        "clipped": [],
+        "focused": "SELECT",
+        "overflow": false,
+        "width": 390
+      },
+      {
+        "requested": 430,
+        "broken": 0,
+        "clipped": [],
+        "focused": "SELECT",
+        "overflow": false,
+        "width": 430
+      },
+      {
+        "requested": 820,
+        "broken": 0,
+        "clipped": [],
+        "focused": "SELECT",
+        "overflow": false,
+        "width": 820
+      },
+      {
+        "requested": 1024,
+        "broken": 0,
+        "clipped": [],
+        "focused": "SELECT",
+        "overflow": false,
+        "width": 1024
+      },
+      {
+        "requested": 1440,
+        "broken": 0,
+        "clipped": [],
+        "focused": "SELECT",
+        "overflow": false,
+        "width": 1440
+      }
+    ]
+  },
+  "live": {
+    "widths": [
+      {
+        "requested": 320,
+        "broken": 0,
+        "clipped": [],
+        "overflow": false,
+        "version": "Version 1.0.103. Open changelog",
+        "width": 320,
+        "threeCharactersMs": 317,
+        "intact": true
+      },
+      {
+        "requested": 390,
+        "broken": 0,
+        "clipped": [],
+        "overflow": false,
+        "version": "Version 1.0.103. Open changelog",
+        "width": 390,
+        "threeCharactersMs": 267,
+        "intact": true
+      },
+      {
+        "requested": 430,
+        "broken": 0,
+        "clipped": [],
+        "overflow": false,
+        "version": "Version 1.0.103. Open changelog",
+        "width": 430,
+        "threeCharactersMs": 257,
+        "intact": true
+      },
+      {
+        "requested": 820,
+        "broken": 0,
+        "clipped": [],
+        "overflow": false,
+        "version": "Version 1.0.103. Open changelog",
+        "width": 820,
+        "threeCharactersMs": 271,
+        "intact": true
+      },
+      {
+        "requested": 1024,
+        "broken": 0,
+        "clipped": [],
+        "overflow": false,
+        "version": "Version 1.0.103. Open changelog",
+        "width": 1024,
+        "threeCharactersMs": 267,
+        "intact": true
+      },
+      {
+        "requested": 1440,
+        "broken": 0,
+        "clipped": [],
+        "overflow": false,
+        "version": "Version 1.0.103. Open changelog",
+        "width": 1440,
+        "threeCharactersMs": 250,
+        "intact": true
+      }
+    ],
+    "bothOperationalPlansTested": true,
+    "firstPlan3CharactersMs": 278,
+    "secondPlan3CharactersMs": 260,
+    "timingIncludesBrowserControlOverhead": true,
+    "allTemporaryEditsDiscarded": true,
+    "newWarningsErrors": 0,
+    "unchangedEarlierAuthSdkWarningExcluded": true
+  },
+  "owner": {
+    "before": 6541,
+    "after": 6541,
+    "identicalRowsIDsContentTimestamps": true,
+    "fingerprint": "3b5b3599db0d3ba30b3da686b888dacf564c436f4a720f5eb75aba61ee776b57",
+    "ownerDataWrites": 0,
+    "source": "Complete normal signed-in read-only live backups",
+    "baselineAt": "2026-10-06T07:42:16.003Z",
+    "acceptedAt": "2026-10-06T08:02:39.163Z"
+  },
+  "github": {
+    "pr": 96,
+    "merged": true,
+    "source": "85eae436ddbd10dd8703feb3908350ea64f30284",
+    "main": "39de587b8f6bf9dd0d5d3f2d14e8196f88bcbb9e",
+    "identicalTree": "42349629fef26f5edc60368a4f7dba33a06b1f55"
+  },
+  "review": {
+    "completeHead": "85eae436ddbd10dd8703feb3908350ea64f30284",
+    "comment": 6011888273,
+    "majorFindings": 0,
+    "unresolvedThreads": 0
+  },
+  "unchangedIntegrationStates": {
+    "gmail": "disabled/reconnect-required; no new operation",
+    "publicProfile": "existing publication unchanged; no content publication",
+    "APIKeys": "previously unissued; no issue/rotation/revocation operation",
+    "weatherProviders": "no access check or change",
+    "GoogleCalendar": "no operation"
+  },
+  "toolCompatibility": "New Sites wrapper rejects existing dual lockfiles; existing prebuild/Vinext commands reused without dependency change. Packaging used the native workflow with official Git Bash, local archive paths forced local, and resolved temporary cleanup constrained to task staging. Initial failed packaging attempts never deployed."
+}
