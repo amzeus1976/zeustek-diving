@@ -8,7 +8,7 @@ export interface PlanTextNode {
 }
 export interface PlanTextDocument extends PlanTextNode {type: 'doc'; version: 1}
 export type PlanTextFormats = Record<string, PlanTextDocument | undefined>;
-const formattedFields=['aim','goals','secondaryObjectives','notes','conditions.notes',
+export const PLAN_TEXT_FIELDS=['aim','goals','secondaryObjectives','notes','conditions.notes',
   ...['keyRisks','mitigations','pressures','stopAbortCriteria','taskLoading','communicationPlan','decisionPoints','lostBuddyPlan','lostGasPlan','surfaceProtocol','overheadPrompt','teamConcerns','reviewNotes'].map(key=>'humanFactors.'+key),
   ...['evacuation','hyperbaricAccessNotes','hyperbaricPathway','notes'].map(key=>'emergency.'+key)];
 
@@ -16,7 +16,7 @@ const formattedFields=['aim','goals','secondaryObjectives','notes','conditions.n
 export function normalisePlanTextFormats(value:unknown):PlanTextFormats|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value))return undefined;
   const result:PlanTextFormats={};
-  for(const key of formattedFields){
+  for(const key of PLAN_TEXT_FIELDS){
     const document=safePlanTextDocument((value as Record<string,unknown>)[key]);
     if(document)result[key]=document;
   }

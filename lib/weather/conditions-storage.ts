@@ -1,5 +1,5 @@
 import {gzipSync,gunzipSync,strToU8} from 'fflate';
-import {normalisePlanTextFormats} from '../planning/formatted-text';
+import {normalisePlanTextFormats,PLAN_TEXT_FIELDS} from '../planning/formatted-text';
 
 const MAX_JSON_BYTES=5_000_000;
 const MAX_PACKED_CHARACTERS=160_000;
@@ -20,6 +20,16 @@ function sameJson(a:unknown,b:unknown):boolean {
   return keys.length===Object.keys(y).length&&keys.every(key=>Object.hasOwn(y,key)&&sameJson(x[key],y[key]));
 }
 function validPresentation(value:unknown){return object(value)&&sameJson(value,normalisePlanTextFormats(value));}
+const textFields=new Set([...PLAN_TEXT_FIELDS,'objective','humanFactors.objective']);
+const arrayFields=new Set(['goals','secondaryObjectives',...['keyRisks','mitigations','pressures','stopAbortCriteria','teamConcerns'].map(key=>'humanFactors.'+key)]);
+const textValue=(key:string,value:unknown)=>textFields.has(key)&&(arrayFields.has(key)?Array.isArray(value)&&value.every(row=>typeof row==='string'):typeof value==='string');
+function fieldValue(record:Record<string,unknown>,path:string){const [parent,key]=path.split('.');return key?(object(record[parent!])?(record[parent!] as Record<string,unknown>)[key]:undefined):record[parent!];}
+function setTextField(record:Record<string,unknown>,path:string,value:unknown,remove=false){
+  const [parent,key]=path.split('.'),result={...record};
+  if(key){if(result[parent!]!==undefined&&!object(result[parent!]))throw invalid();const nested={...result[parent!] as Record<string,unknown>};if(remove)delete nested[key];else nested[key]=value;result[parent!]=nested;}
+  else if(remove)delete result[parent!];else result[parent!]=value;
+  return result;
+}
 function readPackedJson(packed:unknown):unknown {
   if(!object(packed)||packed.version!==1||packed.encoding!=='gzip-base64'||
      !Number.isInteger(packed.jsonBytes)||Number(packed.jsonBytes)<1||Number(packed.jsonBytes)>MAX_JSON_BYTES||
@@ -35,8 +45,9 @@ function readPackedJson(packed:unknown):unknown {
   }catch{throw invalid();}
 }
 function planTextPayload(value:unknown){
-  if(!object(value)||!Object.keys(value).length||Object.keys(value).some(key=>key!=='notes'&&key!=='textFormatting')||
+  if(!object(value)||!Object.keys(value).length||Object.keys(value).some(key=>key!=='notes'&&key!=='fields'&&key!=='textFormatting')||
     (value.notes!==undefined&&typeof value.notes!=='string')||(value.textFormatting!==undefined&&!validPresentation(value.textFormatting)))throw invalid();
+  if(value.fields!==undefined&&(!object(value.fields)||Object.entries(value.fields).some(([key,row])=>!textValue(key,row))||(value.notes!==undefined&&Object.hasOwn(value.fields,'notes'))))throw invalid();
   return value;
 }
 function packDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
@@ -50,12 +61,13 @@ function packDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
   if(typeof source.notes==='string'&&source.notes.length&&typeof record.notes==='string'&&record.notes.startsWith(source.notes)&&JSON.stringify(candidate).length>180000){
     const {notes:omitted,...rest}=candidate;void omitted;candidate={...rest,notesFromPlan:{version:1,suffix:record.notes.slice(source.notes.length)}};
   }
-  const text={...(typeof compactSource.notes==='string'?{notes:compactSource.notes}:{}),...(validPresentation(compactSource.textFormatting)?{textFormatting:compactSource.textFormatting}:{})};
+  const fields:Record<string,unknown>={};for(const key of textFields){const value=fieldValue(compactSource,key);if(textValue(key,value))fields[key]=value;}
+  const text={...(Object.keys(fields).length?{fields}:{}),...(validPresentation(compactSource.textFormatting)?{textFormatting:compactSource.textFormatting}:{})};
   if(Object.keys(text).length&&(JSON.stringify(text).length>=64000||JSON.stringify(candidate).length>180000)){
-    const encoded=packedJson(text);
+    let encoded:ReturnType<typeof packedJson>|undefined;try{encoded=packedJson(text);}catch{/* Incompressible text stays exact; the ordinary whole-record limit still applies. */}
     // Only these private text fields are packed; canonical IDs and references stay visible.
-    if(JSON.stringify(encoded).length<JSON.stringify(text).length){
-      const rest={...compactSource};if(Object.hasOwn(text,'notes'))delete rest.notes;if(Object.hasOwn(text,'textFormatting'))delete rest.textFormatting;
+    if(encoded&&JSON.stringify(encoded).length<JSON.stringify(text).length){
+      let rest={...compactSource};for(const key of Object.keys(fields))rest=setTextField(rest,key,undefined,true);if(Object.hasOwn(text,'textFormatting'))delete rest.textFormatting;
       compactSource={...rest,planTextPacked:encoded};candidate={...candidate,originatingPlanRevision:{...revision,snapshot:{...origin,record:compactSource}}};
     }
   }
@@ -68,7 +80,9 @@ function unpackDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
   if(source.planTextPacked!==undefined){
     const text=planTextPayload(readPackedJson(source.planTextPacked));
     if((Object.hasOwn(text,'notes')&&source.notes!==undefined)||(Object.hasOwn(text,'textFormatting')&&source.textFormatting!==undefined))throw invalid();
-    const {planTextPacked:omitted,...rest}=source;void omitted;expandedSource={...rest,...text};
+    const {planTextPacked:omitted,...rest}=source;void omitted;
+    expandedSource={...rest,...(Object.hasOwn(text,'notes')?{notes:text.notes}:{}),...(Object.hasOwn(text,'textFormatting')?{textFormatting:text.textFormatting}:{})};
+    if(object(text.fields))for(const [key,value] of Object.entries(text.fields)){if(fieldValue(source,key)!==undefined)throw invalid();expandedSource=setTextField(expandedSource,key,value);}
   }
   expandedSource=unpackConditionsRecord('trip',expandedSource);
   if(expandedSource===source&&record.notesFromPlan===undefined)return record;

@@ -1,11 +1,23 @@
 import {describe,expect,it} from 'vitest';
 import {gzipSync,strToU8} from 'fflate';
 import {packConditionsRecord,unpackConditionsRecord} from '../lib/weather/conditions-storage';
-import {planTextFromPlain} from '../lib/planning/formatted-text';
+import {planTextFromPlain,PLAN_TEXT_FIELDS} from '../lib/planning/formatted-text';
 const readings=Array.from({length:3000},(_,i)=>({id:`reading-${i}`,metric:i%2?'wave-height':'air-temperature',value:i%20,units:i%2?'m':'°C',provider:'fixture-weather',attribution:'Fixture source — no real observation',classification:'forecast',validAt:`2026-10-11T${String(i%24).padStart(2,'0')}:00:00Z`,resolution:'hourly forecast',retrievedAt:'2026-10-04T12:00:00Z',latitude:55,longitude:-1,depth:{kind:'surface'},status:'usable'}));
 const snapshot={version:1,request:{siteId:'fixture-site',date:'2026-10-11',time:'12:00',provider:'fixture-weather'},readings,diagnostics:[]};
 const plan={entityId:'fixture-plan',name:'Owner-entered plan',notes:'Owner-entered text 🌊 海',conditions:{weather:'Saved conditions',conditionsV1:snapshot}};
 describe('Lossless bounded saved Plan conditions',()=>{
+ it('packs every supported long-text path near the whole-record boundary while retaining linked IDs',()=>{
+  const arrays=new Set(['goals','secondaryObjectives',...['keyRisks','mitigations','pressures','stopAbortCriteria','teamConcerns'].map(key=>'humanFactors.'+key)]);
+  for(const path of [...PLAN_TEXT_FIELDS,'objective','humanFactors.objective']){
+   const source:Record<string,unknown>={entityId:'plan',name:'Boundary',equipmentIds:['equipment'],planTeam:[{personId:'person'}],gasPlanId:'gas',emergency:{oxygenTrainedPersonIds:['person']}};
+   const value=arrays.has(path)?['  '+'x'.repeat(185000)+'  ','','🌊']: '  '+'x'.repeat(185000)+'  ',[parent,key]=path.split('.');
+   if(key)source[parent!]={...source[parent!] as Record<string,unknown>,[key]:value};else source[parent!]=value;
+   const dive={notes:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanRevision:{snapshot:{version:1,accountId:'owner',record:source}}};
+   expect(JSON.stringify(source).length).toBeLessThan(200000);expect(JSON.stringify(dive).length).toBeGreaterThan(200000);
+   const packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);expect(unpackConditionsRecord('dive',packed)).toEqual(dive);
+   expect(packed.originatingPlanRevision.snapshot.record).toMatchObject({equipmentIds:['equipment'],planTeam:[{personId:'person'}],gasPlanId:'gas',emergency:{oxygenTrainedPersonIds:['person']}});
+  }
+ });
  it('deduplicates incompressible repeated Plan notes and leaves canonical references visible in stored Dive snapshots',()=>{
   let seed=123456789;const notes=Array.from({length:100000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
   const source={entityId:'plan',notes,siteId:'site',equipmentIds:['equipment'],planTeam:[{personId:'person'}],gasPlanId:'gas'};

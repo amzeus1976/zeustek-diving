@@ -16,6 +16,15 @@ type PlanResponse={items:Array<typeof plan&{id:string}>};
 const request=(data:unknown)=>new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-plan',kind:'trip',data,localMutation:true,baseModifiedAt:null})});
 beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)');fixture.db=database();});afterEach(()=>sqlite.close());
 describe('Actual Plan API and backup boundaries for packed conditions',()=>{
+ it('accepts and restores derived Dives with near-limit Aim, Goals, human-factor and emergency text',async()=>{
+  for(const [index,fields] of [{aim:'x'.repeat(185000)},{goals:['x'.repeat(185000),'','🌊']},{humanFactors:{stopAbortCriteria:['x'.repeat(185000)]}},{emergency:{notes:'x'.repeat(185000)}}].entries()){
+   const source={entityId:'plan-'+index,name:'Boundary source',startDate:'2026-10-10',notes:'',...fields},id='dive-'+index;
+   expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:source.entityId,kind:'trip',data:source,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
+   const data={notes:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanId:source.entityId,originatingPlanRevision:{eventId:'event',recordHash:'hash',modifiedAt:'stamp',snapshot:{version:1,accountId:'fixture-owner',record:source}}};
+   expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id,kind:'dive',data,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
+   const {items}=await (await GET(new Request('https://fixture/api/dive-data?kind=dive'))).json() as {items:Array<{id:string}>};expect(items.find(row=>row.id===id)).toMatchObject(data);
+  }
+ });
  it('packs a complete formatted source snapshot and accepts a derived Dive without losing any presentation or text',async()=>{
   const notes='x'.repeat(67000),snapshot={entityId:'fixture-plan',name:'Formatted fixture',notes},document=planTextFromPlain(notes);
   const dive={site:'Fixture coast',date:'2026-10-10',notes,originatingPlanId:'fixture-plan',originatingPlanRevision:{eventId:'source-event',recordHash:'source-hash',modifiedAt:'2026-10-06',snapshot:{version:1,accountId:'fixture-owner',recordHash:'snapshot-hash',record:snapshot}}};
