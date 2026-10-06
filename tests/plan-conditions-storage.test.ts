@@ -6,6 +6,16 @@ const readings=Array.from({length:3000},(_,i)=>({id:`reading-${i}`,metric:i%2?'w
 const snapshot={version:1,request:{siteId:'fixture-site',date:'2026-10-11',time:'12:00',provider:'fixture-weather'},readings,diagnostics:[]};
 const plan={entityId:'fixture-plan',name:'Owner-entered plan',notes:'Owner-entered text 🌊 海',conditions:{weather:'Saved conditions',conditionsV1:snapshot}};
 describe('Lossless bounded saved Plan conditions',()=>{
+ it('packs incompressible non-narrative source text without base64 expansion and preserves strict decoding bounds',()=>{
+  let seed=123456789;const text=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
+  for(const path of ['aim','emergency.notes']){
+   const source:Record<string,unknown>={entityId:'plan',equipmentIds:['equipment'],planTeam:[{personId:'person'}]};const [parent,key]=path.split('.');if(key)source[parent!]={[key]:text};else source[parent!]=text;
+   const dive={notes:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanRevision:{snapshot:{record:source}}};
+   const packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);expect(unpackConditionsRecord('dive',JSON.parse(JSON.stringify(packed)))).toEqual(dive);
+   const packet=packed.originatingPlanRevision.snapshot.record.planTextPacked as Record<string,unknown>;expect(packet.encoding).toBe('gzip-unicode8');
+   for(const replacement of [{...packet,body:String(packet.body)+'a'},{...packet,jsonBytes:100},{...packet,encoding:'arbitrary'}]){const invalid=structuredClone(packed);invalid.originatingPlanRevision.snapshot.record.planTextPacked=replacement;expect(()=>unpackConditionsRecord('dive',invalid)).toThrow(/conditions/i);}
+  }
+ });
  it('validates generalized note references, bounds expansion and reads legacy prefix packets',()=>{
   const record={originatingPlanRevision:{snapshot:{record:{notes:'legacy',humanFactors:{stopAbortCriteria:['Exact 🌊']}}}}};
   expect(unpackConditionsRecord('dive',{...record,notesFromPlan:{version:1,suffix:' suffix'}})).toHaveProperty('notes','legacy suffix');

@@ -24,11 +24,11 @@ const plan = { entityId: 'same-plan', name: 'Quarry practice', siteName: 'Capern
 describe('shared Dive references and save boundary', () => {
   it('deduplicates the real enriched converter narrative for large objectives and stop/abort entries without losing source integrity',async()=>{
     let seed=123456789;const large=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
-    for(const field of ['objective','stopAbortCriteria']){
-      const source={...plan,entityId:plan.entityId+'-'+field,notes:'',...(field==='objective'?{objective:large}:{humanFactors:{stopAbortCriteria:[large]}})};
+    for(const field of ['objective','stopAbortCriteria','manyRows']){
+      const source={...plan,entityId:plan.entityId+'-'+field,notes:'',...(field==='objective'?{objective:large}:{humanFactors:{stopAbortCriteria:field==='manyRows'?Array.from({length:190},()=>large.slice(0,1000)):[large]}})};
       await saveLocalRecord('trip',source);const draft=await createDiveDraftFromEnrichedPlan(source.entityId);
       const dive={...draft,entityId:'converted',site:draft.site!,date:draft.date!,maxDepthM:12,bottomTimeMin:38,gas:'Air',notes:draft.notes!,editorFields:'q'.repeat(12000)};
-      expect(dive.notes).toContain(large);expect(JSON.stringify(dive).length).toBeGreaterThan(200000);
+      expect(dive.notes).toContain(field==='manyRows'?large.slice(0,1000):large);expect(JSON.stringify(dive).length).toBeGreaterThan(200000);
       const packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);
       const restored=unpackConditionsRecord('dive',JSON.parse(JSON.stringify(packed)));expect(restored).toEqual(dive);expect(await loadOriginatingPlan(restored)).toMatchObject(source);
     }

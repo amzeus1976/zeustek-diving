@@ -17,10 +17,11 @@ const request=(data:unknown)=>new Request('https://fixture/api/dive-data',{metho
 beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)');fixture.db=database();});afterEach(()=>sqlite.close());
 describe('Actual Plan API and backup boundaries for packed conditions',()=>{
  it('accepts and restores derived Dives with near-limit Aim, Goals, human-factor and emergency text',async()=>{
-  for(const [index,fields] of [{aim:'x'.repeat(185000)},{goals:['x'.repeat(185000),'','🌊']},{humanFactors:{stopAbortCriteria:['x'.repeat(185000)]}},{emergency:{notes:'x'.repeat(185000)}}].entries()){
+  let seed=123456789;const random=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
+  for(const [index,fields] of [{aim:'x'.repeat(185000)},{goals:['x'.repeat(185000),'','🌊']},{humanFactors:{stopAbortCriteria:['x'.repeat(185000)]}},{emergency:{notes:'x'.repeat(185000)}},{aim:random},{emergency:{notes:random}},{humanFactors:{stopAbortCriteria:Array.from({length:190},()=>random.slice(0,1000))}}].entries()){
    const source={entityId:'plan-'+index,name:'Boundary source',startDate:'2026-10-10',notes:'',...fields},id='dive-'+index;
    expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:source.entityId,kind:'trip',data:source,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
-   const data={notes:index===2?'Created from Plan\n\nStop / abort: '+fields.humanFactors!.stopAbortCriteria[0]:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanId:source.entityId,originatingPlanRevision:{eventId:'event',recordHash:'hash',modifiedAt:'stamp',snapshot:{version:1,accountId:'fixture-owner',record:source}}};
+   const data={notes:fields.humanFactors?'Created from Plan\n\nStop / abort: '+fields.humanFactors.stopAbortCriteria.join('; '):'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanId:source.entityId,originatingPlanRevision:{eventId:'event',recordHash:'hash',modifiedAt:'stamp',snapshot:{version:1,accountId:'fixture-owner',record:source}}};
    expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id,kind:'dive',data,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
    const {items}=await (await GET(new Request('https://fixture/api/dive-data?kind=dive'))).json() as {items:Array<{id:string}>};expect(items.find(row=>row.id===id)).toMatchObject(data);
   }
