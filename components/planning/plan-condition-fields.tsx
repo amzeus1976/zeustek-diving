@@ -23,6 +23,6 @@ export function PlanConditionFields({draft,change,changeWeather}:{draft:Enriched
   <label><input type="checkbox" checked={Boolean(draft.permitConfirmed)} onChange={e=>change({permitConfirmed:e.target.checked})}/> Permit confirmed</label>
   <label>Entry cost<input value={draft.entryCost??''} onChange={e=>change({entryCost:e.target.value})}/></label>
   <h3>Notes</h3><label className={styles.wide}>Conditions notes<textarea value={c?.notes??''} onChange={e=>change({conditions:{...c,notes:e.target.value}})}/></label>
-  <p className={styles.wide}>Get Weather fills empty measurement fields only. Underwater visibility needs an actual underwater source. Planning limits, permits, costs and notes stay under your control. Surface temperature does not establish the temperature at dive depth.</p>
+  <p className={styles.wide}>Get Weather fills empty measurements. Refresh Weather updates weather-sourced values and preserves your entries. Underwater visibility needs an actual underwater source. Planning limits, permits, costs and notes stay under your control. Surface temperature does not establish the temperature at dive depth.</p>
  </div>;
 }

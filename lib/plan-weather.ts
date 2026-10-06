@@ -84,6 +84,30 @@ export function fillEmptyPlanWeatherFields(current:PlanConditionSnapshot|undefin
  }
  return result;
 }
+/** An explicit refresh may replace provider-filled measurements. Owner edits and
+ * earlier measurements without a usable replacement remain intact. */
+export function refreshPlanWeatherFields(current:PlanConditionSnapshot|undefined,next:PlanConditionSnapshot):PlanConditionSnapshot {
+ const editable={...current};
+ const refreshable:Array<'weather'|'airTemperatureC'|'surfaceTemperatureC'|PlanWeatherField>=[];
+ for(const field of ['weather','airTemperatureC','surfaceTemperatureC'] as const){
+  if(current?.weatherValueOrigins?.[field]==='weather')refreshable.push(field);
+ }
+ for(const field of ['waterTemperatureC','visibilityM','waveHeightM','swellHeightM','currentStrength'] as const){
+  if(current?.weatherFieldSources?.[field])refreshable.push(field);
+ }
+ for(const field of refreshable)Object.assign(editable,{[field]:null});
+ const result=fillEmptyPlanWeatherFields(editable,next);
+ for(const field of refreshable){
+  if(!empty(result[field]))continue;
+  Object.assign(result,{[field]:current?.[field]});
+  if(field==='weather'||field==='airTemperatureC'||field==='surfaceTemperatureC'){
+   result.weatherValueOrigins={...result.weatherValueOrigins,[field]:'weather'};
+  }else if(current?.weatherFieldSources?.[field]){
+   result.weatherFieldSources={...result.weatherFieldSources,[field]:current.weatherFieldSources[field]};
+  }
+ }
+ return result;
+}
 /** Focusing does not clear data. Only an actual field edit changes its provenance. */
 export function editPlanWeatherField(current:PlanConditionSnapshot|undefined,field:PlanWeatherField,value:number|string|null,capturedAt:string):PlanConditionSnapshot {
  const weatherFieldSources={...current?.weatherFieldSources};delete weatherFieldSources[field];
