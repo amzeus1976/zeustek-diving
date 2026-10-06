@@ -1,6 +1,6 @@
 # Plan workbench header layout
 
-Owner screenshot, 6 October 2026: PLAN WORKBENCH wraps over SITE & CONDITIONS, TEAM & ROLES and LINKED GAS PLANS. Baseline is live app1.0.105 / cache52 / Sites178, source a6df51213290ca1bfc4b9787725b76518ee9590; this release retains its static weather fix.
+Owner screenshot, 6 October 2026: PLAN WORKBENCH wraps over SITE & CONDITIONS, TEAM & ROLES and LINKED GAS PLANS. Baseline is live app1.0.105 / cache52 / Sites178, source a6df51213290ca1bfcf4b9787725b76518ee9590; this release retains its static weather fix.
 
 The desktop label was absolutely positioned over a title button with only 16px of reserved space. A short title restricted the heading column, forcing the longer label onto two lines. The shared header now gives its text column the available width, keeps the label in normal document flow and permits both labels and titles to wrap. Header height follows its contents. Detail buttons and minimise controls retain their 44px minimum targets. The three top cards and four individually full-width lower cards are unchanged.
 
