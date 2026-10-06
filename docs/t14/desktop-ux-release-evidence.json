@@ -1,0 +1,116 @@
+{
+  "accepted": {
+    "version": 177,
+    "appVersion": "1.0.104",
+    "cache": "zeustek-static-v51",
+    "versionId": "appgprj_6a91926878b48191a80d70f1681ef135~appgver_1640b8e873d881919b7141dcd08be406",
+    "deploymentId": "appgdep_6ac4bcfaa5888191b2fc197ae28819c0",
+    "status": "succeeded",
+    "envSetRevision": 6,
+    "audience": "public",
+    "source": "d83544db69a9abd261e7c3c8ef7618105ef05996",
+    "githubMain": "4e9fc47334beab333710c04d166de48dba66f45e",
+    "tree": "b6d4255f1e425a3d622e902c900dceca92448f52",
+    "sameTree": true,
+    "productionUrl": "https://dive.amzeus.co.uk"
+  },
+  "review": {
+    "pr": 98,
+    "completedAt": "2026-10-06T09:17:36.439213Z",
+    "head": "d83544db69a9abd261e7c3c8ef7618105ef05996",
+    "resolvedFinding": 4193510574,
+    "unresolved": 0
+  },
+  "rollback": {
+    "acceptedVersion": 175,
+    "verified": true,
+    "environment": 6
+  },
+  "ownerComparison": {
+    "beforeExportedAt": "2026-10-06T09:04:35.265Z",
+    "afterExportedAt": "2026-10-06T09:21:18.822Z",
+    "records": 6541,
+    "fingerprint": "3b5b3599db0d3ba30b3da686b888dacf564c436f4a720f5eb75aba61ee776b57",
+    "sameOriginalRows": true,
+    "sameCanonicalIDs": true,
+    "dataWrites": 0
+  },
+  "archive": {
+    "bytes": 88951074,
+    "sha256": "75891cbe7dac0cda49bef624ddd80e745108e650c3fe05725d774fb838d5dfd2",
+    "files": 1346,
+    "credentialMatches": 0,
+    "localRuntimeStateExcluded": true,
+    "ownerSnapshotsExcluded": true,
+    "projectConfirmed": true
+  },
+  "privacy": {
+    "artifactFilesScanned": 1346,
+    "credentialMatches": 0,
+    "navigationIcons": 31,
+    "mastersUnchangedAndNotPrecached": true,
+    "cache": "zeustek-static-v51",
+    "nativeBuildPwa": "PASS",
+    "entries": 422,
+    "gmailOperations": 0,
+    "ownerWrites": 0
+  },
+  "protected": [
+    {
+      "path": "lib/offline/buhlmann-ndl.ts",
+      "sha256": "3d82e305a9135024cba93000763ca80ae354ca2f88a13b763123648240b86206"
+    },
+    {
+      "path": "lib/offline/recreational-gas-planner.ts",
+      "sha256": "3c13c9689500eeb4709b69a4b53ca420182b0608a57889c7b5b65aae0e791aec"
+    },
+    {
+      "path": "lib/offline/recreational-gas-reserve.ts",
+      "sha256": "4d54d57a61c1eca6840e15e11a6b54fa92685c19e38c5aadce25a626da0b86e8"
+    },
+    {
+      "path": "lib/offline/gas-planning-foundation.ts",
+      "sha256": "4f50b5c990b803a43c84345e730f33a40f30ca28cd42fe313e701b81f44685ba"
+    },
+    {
+      "path": "lib/offline/planning-pages.ts",
+      "sha256": "ebd49745cea5e1de0d671a70f52af302000200d6735ef1a10345f03920cd1fc6"
+    },
+    {
+      "path": "lib/offline/loadouts-gas.ts",
+      "sha256": "e19c9a311db3e8d8cda209c5b03aaccd99840b462c66dbcd22e603e021b6e4c5"
+    },
+    {
+      "path": "lib/gas-rates.ts",
+      "sha256": "0c6a7f0718af14ae09bb79e0edf68355122087c1f5345255baaa11f56b38f633"
+    },
+    {
+      "path": "lib/pressure-group-engine.ts",
+      "sha256": "77e2248ea198e44a4076e938fbe886b9bcb42c3d6046bf6f528334944fbb3ec1"
+    },
+    {
+      "path": "lib/offline/plan-gas-acceptance.ts",
+      "sha256": "ba712a82c8d0beaf7ef84a7d3121b37efce1e9cc1d002921fc814b763e2b1485"
+    }
+  ],
+  "validation": {
+    "fullTests": 1716,
+    "failedTests": 0,
+    "typecheck": "PASS",
+    "buildPwa": "PASS",
+    "newLintDiagnostics": 0,
+    "retainedLintDiagnostics": 76,
+    "compiledRoutesTwoDesktops": 62,
+    "coreSixResponsiveWidths": 42,
+    "finalGasResponsiveWidths": 8,
+    "finalDenseCalendarWidths": 8,
+    "liveOwnerCoreStructuralChecks": 6,
+    "liveConfiguration": "Visually inspected; DOM-wide measurement timed out in the browser tool",
+    "liveActualViewport": [
+      1080,
+      1920
+    ],
+    "liveUltrawideLimit": "Browser retained1080x1920 despite requested3440x1440; do not accept the mis-sized capture. Exact ultrawide is verified on the same compiled artifact, not by this live capture.",
+    "physicalIPhone": "Not verified"
+  }
+}
