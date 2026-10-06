@@ -97,7 +97,10 @@ export interface DiveRecord {
   originatingPlanId?: string;
   originatingPlanRevision?: { eventId: string; recordHash: string; modifiedAt: string;
     /** Immutable, owner-scoped provenance saved with the Dive; draft creation has no writes. */
-    snapshot?: { version: 1; accountId: string; record: Record<string, import('./types').JsonValue> };
+    snapshot?: { version: 1; accountId: string; record: Record<string, import('./types').JsonValue>;
+      /** Hash of canonical snapshot bytes when private Plan presentation is omitted. Source revision hash stays exact. */
+      recordHash?: string;
+    };
   };
   weatherProvider?: string; weatherResolution?: string; weatherAttribution?: string;
 

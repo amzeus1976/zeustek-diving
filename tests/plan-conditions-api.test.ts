@@ -16,6 +16,15 @@ type PlanResponse={items:Array<typeof plan&{id:string}>};
 const request=(data:unknown)=>new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-plan',kind:'trip',data,localMutation:true,baseModifiedAt:null})});
 beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)');fixture.db=database();});afterEach(()=>sqlite.close());
 describe('Actual Plan API and backup boundaries for packed conditions',()=>{
+ it('accepts a derived Dive with canonical Plan notes without copying private presentation',async()=>{
+  const notes='x'.repeat(67000),snapshot={entityId:'fixture-plan',name:'Formatted fixture',notes},document=planTextFromPlain(notes);
+  const dive={site:'Fixture coast',date:'2026-10-10',notes,originatingPlanId:'fixture-plan',originatingPlanRevision:{eventId:'source-event',recordHash:'source-hash',modifiedAt:'2026-10-06',snapshot:{version:1,accountId:'fixture-owner',recordHash:'snapshot-hash',record:snapshot}}};
+  const write=(data:unknown)=>POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-dive',kind:'dive',data,localMutation:true,baseModifiedAt:null})}));
+  const oversized={...dive,originatingPlanRevision:{...dive.originatingPlanRevision,snapshot:{...dive.originatingPlanRevision.snapshot,record:{...snapshot,textFormatting:{notes:document}}}}};
+  expect((await write(oversized)).status).toBe(413);expect((await write(dive)).status).toBe(200);
+  const stored=sqlite.prepare('SELECT data_json AS dataJson FROM dive_records').get();expect(String(stored?.dataJson).length).toBeLessThan(200000);
+  expect(JSON.parse(String(stored?.dataJson))).toMatchObject({notes,originatingPlanRevision:{snapshot:{record:{notes}}}});
+ });
  it('keeps exactly 100000 formatted characters within the real sync limit without altering text',async()=>{
   const notes='  '+'x'.repeat(99996)+'  ',document=planTextFromPlain(notes);
   const original={...plan,notes,textFormatting:{notes:document}},prepared=fitPlanTextForSync(original);

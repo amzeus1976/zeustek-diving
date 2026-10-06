@@ -8,6 +8,8 @@ import { saveDivePerspective } from '../lib/offline/dive-perspectives';
 import { localBackupPayload, restoreLocalPayload } from '../lib/offline/local-backup';
 import { loadMediaMetadata } from '../lib/offline/media-metadata';
 import { DiveEditorWrites } from '../lib/offline/dive-editor-writes';
+import {planTextFromPlain} from '../lib/planning/formatted-text';
+import {recordHash} from '../lib/offline/canonical';
 
 beforeEach(async () => {
   vi.stubGlobal('window', new EventTarget()); vi.stubGlobal('navigator', { onLine: false }); vi.stubGlobal('fetch', vi.fn());
@@ -18,6 +20,27 @@ afterEach(() => vi.unstubAllGlobals());
 const plan = { entityId: 'same-plan', name: 'Quarry practice', siteName: 'Capernwray', siteId: 'same-site', startDate: '2026-09-12', endDate: '2026-09-12', startAt: '2026-09-12T10:00', buddy: 'Buddy', status: 'planned', notes: 'Original intent', futurePlanField: 'retain' };
 
 describe('shared Dive references and save boundary', () => {
+  it('omits only private formatting from a derived Dive, retaining canonical text, exact source provenance and verified backup snapshots',async()=>{
+    const notes='  '+'x'.repeat(66996)+'  ',formatting={notes:planTextFromPlain(notes)};
+    await saveLocalRecord('trip',{...plan,notes,textFormatting:formatting});
+    const source=(await zeustekDb.entities.get('dive:context-test:same-plan'))!;
+    const eventsBefore=await zeustekDb.events.count(),draft=await createDiveDraftFromPlan(plan.entityId);
+    const revision=draft.originatingPlanRevision!,snapshot=revision.snapshot!;
+    expect(revision.recordHash).toBe(source.recordHash);expect(revision.eventId).toBe(source.updatedEventId);
+    expect(snapshot.record.notes).toBe(notes);expect(snapshot.record.futurePlanField).toBe('retain');
+    expect(snapshot.record).not.toHaveProperty('textFormatting');expect(snapshot.recordHash).toBe(await recordHash(snapshot.record));
+    expect((await zeustekDb.entities.get(source.entityId))?.record).toHaveProperty('textFormatting',formatting);
+    expect(await zeustekDb.events.count()).toBe(eventsBefore);
+    await saveDive({...draft,entityId:'formatted-dive',site:draft.site!,date:draft.date!,maxDepthM:12,bottomTimeMin:38,gas:'Air',notes:draft.notes!});
+    const dive=(await listDives())[0]!;expect(JSON.stringify(dive).length).toBeLessThan(200000);
+    expect(await loadOriginatingPlan(dive)).toMatchObject({notes,futurePlanField:'retain'});
+    await saveLocalRecord('trip',{entityId:plan.entityId,notes:'Later changed Plan'});
+    const backup=await localBackupPayload();for(const table of zeustekDb.tables)await table.clear();await restoreLocalPayload(backup);
+    const restored=(await listDives())[0]!;expect(await loadOriginatingPlan(restored)).toMatchObject({notes});
+    const tampered=structuredClone(restored);tampered.originatingPlanRevision!.snapshot!.record.notes='Forged';
+    expect(await loadOriginatingPlan(tampered)).toBeNull();
+    configureDiveStore('other-account');expect(await loadOriginatingPlan(restored)).toBeNull();
+  });
   it('preserves the original immutable Plan revision through later edits and backup/restore', async () => {
     await saveLocalRecord('trip', plan);
     const draft = await createDiveDraftFromPlan(plan.entityId);
