@@ -1,10 +1,42 @@
 import {describe,expect,it} from 'vitest';
 import {gzipSync,strToU8} from 'fflate';
 import {packConditionsRecord,unpackConditionsRecord} from '../lib/weather/conditions-storage';
+import {planTextFromPlain} from '../lib/planning/formatted-text';
 const readings=Array.from({length:3000},(_,i)=>({id:`reading-${i}`,metric:i%2?'wave-height':'air-temperature',value:i%20,units:i%2?'m':'°C',provider:'fixture-weather',attribution:'Fixture source — no real observation',classification:'forecast',validAt:`2026-10-11T${String(i%24).padStart(2,'0')}:00:00Z`,resolution:'hourly forecast',retrievedAt:'2026-10-04T12:00:00Z',latitude:55,longitude:-1,depth:{kind:'surface'},status:'usable'}));
 const snapshot={version:1,request:{siteId:'fixture-site',date:'2026-10-11',time:'12:00',provider:'fixture-weather'},readings,diagnostics:[]};
 const plan={entityId:'fixture-plan',name:'Owner-entered plan',notes:'Owner-entered text 🌊 海',conditions:{weather:'Saved conditions',conditionsV1:snapshot}};
 describe('Lossless bounded saved Plan conditions',()=>{
+ it('deduplicates incompressible repeated Plan notes and leaves canonical references visible in stored Dive snapshots',()=>{
+  let seed=123456789;const notes=Array.from({length:100000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
+  const source={entityId:'plan',notes,siteId:'site',equipmentIds:['equipment'],planTeam:[{personId:'person'}],gasPlanId:'gas'};
+  const dive={notes:notes+'\n\nCreated from plan',originatingPlanId:'plan',originatingPlanRevision:{eventId:'event',recordHash:'exact-source-hash',modifiedAt:'stamp',snapshot:{version:1,accountId:'owner',record:source}}};
+  expect(JSON.stringify(dive).length).toBeGreaterThan(200000);const packed=packConditionsRecord('dive',dive);
+  expect(JSON.stringify(packed).length).toBeLessThan(200000);expect(unpackConditionsRecord('dive',packed)).toEqual(dive);
+  expect(packed.originatingPlanRevision.snapshot.record).toMatchObject({entityId:'plan',siteId:'site',equipmentIds:['equipment'],planTeam:[{personId:'person'}],gasPlanId:'gas'});
+ });
+ it('packs source weather and long text without mutating an immutable full Plan snapshot',()=>{
+  const source={...plan,notes:'海🌊'.repeat(23000)},dive={notes:source.notes+'\n\nCreated from plan',originatingPlanRevision:{eventId:'event',recordHash:'exact-source-hash',snapshot:{version:1,accountId:'owner',record:source}}};
+  const initial=JSON.stringify(dive),packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);
+  expect(unpackConditionsRecord('dive',packed)).toEqual(dive);expect(JSON.stringify(dive)).toBe(initial);expect(packConditionsRecord('dive',packed)).toEqual(packed);
+ });
+ it('rejects corrupt, conflicting and forged packed source text and invalid note references',()=>{
+  const source={entityId:'plan',notes:'x'.repeat(100000)},dive={notes:source.notes,originatingPlanRevision:{snapshot:{version:1,accountId:'owner',record:source}}};
+  const packed=packConditionsRecord('dive',dive) as unknown as {originatingPlanRevision:{snapshot:{record:Record<string,unknown>}},notesFromPlan:unknown};
+  const body=packed.originatingPlanRevision.snapshot.record.planTextPacked as Record<string,unknown>;
+  for(const replacement of [{...body,jsonBytes:90000000},{...body,body:'invalid'},{...body,jsonBytes:100}]){
+   const broken=structuredClone(packed);broken.originatingPlanRevision.snapshot.record.planTextPacked=replacement;expect(()=>unpackConditionsRecord('dive',broken)).toThrow(/conditions/i);
+  }
+  const conflicting=structuredClone(packed);conflicting.originatingPlanRevision.snapshot.record.notes='conflict';expect(()=>unpackConditionsRecord('dive',conflicting)).toThrow(/conditions/i);
+  expect(()=>unpackConditionsRecord('dive',{notesFromPlan:{version:1,suffix:'x'}})).toThrow(/conditions/i);
+  const injected=structuredClone(packed);const json=strToU8(JSON.stringify({notes:'x',equipmentIds:['hidden']}));injected.originatingPlanRevision.snapshot.record.planTextPacked={version:1,encoding:'gzip-base64',jsonBytes:json.length,body:btoa(String.fromCharCode(...gzipSync(json)))};expect(()=>unpackConditionsRecord('dive',injected)).toThrow(/conditions/i);
+  const badStyle=strToU8(JSON.stringify({textFormatting:{equipmentIds:['hidden']}}));injected.originatingPlanRevision.snapshot.record.planTextPacked={version:1,encoding:'gzip-base64',jsonBytes:badStyle.length,body:btoa(String.fromCharCode(...gzipSync(badStyle)))};expect(()=>unpackConditionsRecord('dive',injected)).toThrow(/conditions/i);
+ });
+ it('never hides unsupported metadata references or drops legacy non-string notes while packing another text field',()=>{
+  const source={entityId:'plan',notes:'x'.repeat(100000),textFormatting:{equipmentIds:['equipment']}},dive={originatingPlanRevision:{snapshot:{version:1,accountId:'owner',record:source}}};
+  const packed=packConditionsRecord('dive',dive);expect(packed.originatingPlanRevision.snapshot.record.textFormatting).toEqual(source.textFormatting);expect(unpackConditionsRecord('dive',packed)).toEqual(dive);
+  const legacy={originatingPlanRevision:{snapshot:{version:1,accountId:'owner',record:{entityId:'plan',notes:['Legacy shape'],textFormatting:{notes:planTextFromPlain('x'.repeat(100000))}}}}};
+  const legacyPacked=packConditionsRecord('dive',legacy);expect(legacyPacked.originatingPlanRevision.snapshot.record.notes).toEqual(['Legacy shape']);expect(unpackConditionsRecord('dive',legacyPacked)).toEqual(legacy);
+ });
  it('fits a 3000-reading forecast inside the existing record limit and reconstructs every reading and owner field',()=>{
   const original=JSON.stringify(plan);expect(original.length).toBeGreaterThan(200000);
   const packed=packConditionsRecord('trip',plan);expect(JSON.stringify(packed).length).toBeLessThan(200000);

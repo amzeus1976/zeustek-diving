@@ -16,14 +16,24 @@ type PlanResponse={items:Array<typeof plan&{id:string}>};
 const request=(data:unknown)=>new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-plan',kind:'trip',data,localMutation:true,baseModifiedAt:null})});
 beforeEach(()=>{sqlite=new DatabaseSync(':memory:');sqlite.exec('CREATE TABLE dive_records (id TEXT PRIMARY KEY,user_id TEXT NOT NULL,kind TEXT NOT NULL,data_json TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,deleted_at INTEGER)');fixture.db=database();});afterEach(()=>sqlite.close());
 describe('Actual Plan API and backup boundaries for packed conditions',()=>{
- it('accepts a derived Dive with canonical Plan notes without copying private presentation',async()=>{
+ it('packs a complete formatted source snapshot and accepts a derived Dive without losing any presentation or text',async()=>{
   const notes='x'.repeat(67000),snapshot={entityId:'fixture-plan',name:'Formatted fixture',notes},document=planTextFromPlain(notes);
   const dive={site:'Fixture coast',date:'2026-10-10',notes,originatingPlanId:'fixture-plan',originatingPlanRevision:{eventId:'source-event',recordHash:'source-hash',modifiedAt:'2026-10-06',snapshot:{version:1,accountId:'fixture-owner',recordHash:'snapshot-hash',record:snapshot}}};
   const write=(data:unknown)=>POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-dive',kind:'dive',data,localMutation:true,baseModifiedAt:null})}));
   const oversized={...dive,originatingPlanRevision:{...dive.originatingPlanRevision,snapshot:{...dive.originatingPlanRevision.snapshot,record:{...snapshot,textFormatting:{notes:document}}}}};
-  expect((await write(oversized)).status).toBe(413);expect((await write(dive)).status).toBe(200);
+  expect(JSON.stringify(oversized).length).toBeGreaterThan(200000);expect((await write(oversized)).status).toBe(200);
   const stored=sqlite.prepare('SELECT data_json AS dataJson FROM dive_records').get();expect(String(stored?.dataJson).length).toBeLessThan(200000);
-  expect(JSON.parse(String(stored?.dataJson))).toMatchObject({notes,originatingPlanRevision:{snapshot:{record:{notes}}}});
+  const {items}=await (await GET(new Request('https://fixture/api/dive-data?kind=dive'))).json() as {items:unknown[]};expect(items[0]).toMatchObject(oversized);
+ });
+ it('accepts the 100000-character plain fallback as a full derived Dive and preserves it through cloud backup restore',async()=>{
+  const notes='  '+'x'.repeat(99996)+'  ',prepared=fitPlanTextForSync({...plan,notes,conditions:{},textFormatting:{notes:planTextFromPlain(notes)}});
+  expect(prepared.formattingReduced).toBe(true);
+  const data={site:'Fixture coast',date:'2026-10-10',notes:notes+'\n\nCreated from dive plan: Fixture',editorFields:'q'.repeat(12000),originatingPlanId:'fixture-plan',originatingPlanRevision:{eventId:'source-event',recordHash:'source-hash',modifiedAt:'2026-10-06',snapshot:{version:1,accountId:'fixture-owner',record:prepared.record}}};
+  expect(JSON.stringify(data).length).toBeGreaterThan(200000);
+  expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:'fixture-dive',kind:'dive',data,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
+  const payload=await (await backup()).json() as {records:Array<{dataJson:string}>};expect(payload.records[0]!.dataJson.length).toBeLessThan(200000);
+  sqlite.exec('DELETE FROM dive_records');expect(await (await restore(new Request('https://fixture/api/dive-backup',{method:'POST',body:JSON.stringify(payload)}))).json()).toMatchObject({restored:1,conflicts:0});
+  const {items}=await (await GET(new Request('https://fixture/api/dive-data?kind=dive'))).json() as {items:unknown[]};expect(items[0]).toMatchObject(data);
  });
  it('keeps exactly 100000 formatted characters within the real sync limit without altering text',async()=>{
   const notes='  '+'x'.repeat(99996)+'  ',document=planTextFromPlain(notes);

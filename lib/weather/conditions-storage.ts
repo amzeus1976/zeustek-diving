@@ -1,4 +1,5 @@
 import {gzipSync,gunzipSync,strToU8} from 'fflate';
+import {normalisePlanTextFormats} from '../planning/formatted-text';
 
 const MAX_JSON_BYTES=5_000_000;
 const MAX_PACKED_CHARACTERS=160_000;
@@ -8,9 +9,81 @@ const crcTable=Uint32Array.from({length:256},(_,index)=>{let n=index;for(let bit
 function crc32(bytes:Uint8Array){let n=0xffffffff;for(const byte of bytes)n=crcTable[(n^byte)&255]!^(n>>>8);return (n^0xffffffff)>>>0;}
 function base64(bytes:Uint8Array){let binary='';for(let start=0;start<bytes.length;start+=8192)binary+=String.fromCharCode(...bytes.subarray(start,start+8192));return btoa(binary);}
 function snapshot(value:unknown){if(!object(value)||value.version!==1||!object(value.request)||!Array.isArray(value.readings)||value.readings.length>6000)throw invalid();return value;}
+function packedJson(value:unknown){
+  const bytes=strToU8(JSON.stringify(value));if(bytes.length>MAX_JSON_BYTES)throw invalid();
+  const body=base64(gzipSync(bytes,{level:6,mtime:0}));if(body.length>MAX_PACKED_CHARACTERS)throw invalid();
+  return {version:1,encoding:'gzip-base64',jsonBytes:bytes.length,body};
+}
+function sameJson(a:unknown,b:unknown):boolean {
+  if(a===b)return true;if(!a||!b||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
+  const x=a as Record<string,unknown>,y=b as Record<string,unknown>,keys=Object.keys(x);
+  return keys.length===Object.keys(y).length&&keys.every(key=>Object.hasOwn(y,key)&&sameJson(x[key],y[key]));
+}
+function validPresentation(value:unknown){return object(value)&&sameJson(value,normalisePlanTextFormats(value));}
+function readPackedJson(packed:unknown):unknown {
+  if(!object(packed)||packed.version!==1||packed.encoding!=='gzip-base64'||
+     !Number.isInteger(packed.jsonBytes)||Number(packed.jsonBytes)<1||Number(packed.jsonBytes)>MAX_JSON_BYTES||
+     typeof packed.body!=='string'||packed.body.length>MAX_PACKED_CHARACTERS||!/^[A-Za-z0-9+/]*={0,2}$/.test(packed.body))throw invalid();
+  try{
+    const binary=atob(packed.body),compressed=Uint8Array.from(binary,char=>char.charCodeAt(0));
+    if(compressed.length<18||compressed[0]!==31||compressed[1]!==139||compressed[2]!==8)throw invalid();
+    const tail=new DataView(compressed.buffer,compressed.byteOffset+compressed.length-8,8);
+    if(tail.getUint32(4,true)!==packed.jsonBytes)throw invalid();
+    const bytes=gunzipSync(compressed,{out:new Uint8Array(Number(packed.jsonBytes))});
+    if(bytes.length!==packed.jsonBytes||crc32(bytes)!==tail.getUint32(0,true))throw invalid();
+    return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+  }catch{throw invalid();}
+}
+function planTextPayload(value:unknown){
+  if(!object(value)||!Object.keys(value).length||Object.keys(value).some(key=>key!=='notes'&&key!=='textFormatting')||
+    (value.notes!==undefined&&typeof value.notes!=='string')||(value.textFormatting!==undefined&&!validPresentation(value.textFormatting)))throw invalid();
+  return value;
+}
+function packDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
+  if(!object(record.originatingPlanRevision)||!object(record.originatingPlanRevision.snapshot)||!object(record.originatingPlanRevision.snapshot.record)){
+    if(record.notesFromPlan!==undefined)throw invalid();return record;
+  }
+  const revision=record.originatingPlanRevision,origin=revision.snapshot as Record<string,unknown>,source=origin.record as Record<string,unknown>;
+  if(source.planTextPacked!==undefined||record.notesFromPlan!==undefined){unpackConditionsRecord('dive',record);return record;}
+  let compactSource=packConditionsRecord('trip',source),candidate:Record<string,unknown>={...record,originatingPlanRevision:{...revision,snapshot:{...origin,record:compactSource}}};
+  // Store a repeated immutable Plan-note prefix once, including incompressible text.
+  if(typeof source.notes==='string'&&source.notes.length&&typeof record.notes==='string'&&record.notes.startsWith(source.notes)&&JSON.stringify(candidate).length>180000){
+    const {notes:omitted,...rest}=candidate;void omitted;candidate={...rest,notesFromPlan:{version:1,suffix:record.notes.slice(source.notes.length)}};
+  }
+  const text={...(typeof compactSource.notes==='string'?{notes:compactSource.notes}:{}),...(validPresentation(compactSource.textFormatting)?{textFormatting:compactSource.textFormatting}:{})};
+  if(Object.keys(text).length&&(JSON.stringify(text).length>=64000||JSON.stringify(candidate).length>180000)){
+    const encoded=packedJson(text);
+    // Only these private text fields are packed; canonical IDs and references stay visible.
+    if(JSON.stringify(encoded).length<JSON.stringify(text).length){
+      const rest={...compactSource};if(Object.hasOwn(text,'notes'))delete rest.notes;if(Object.hasOwn(text,'textFormatting'))delete rest.textFormatting;
+      compactSource={...rest,planTextPacked:encoded};candidate={...candidate,originatingPlanRevision:{...revision,snapshot:{...origin,record:compactSource}}};
+    }
+  }
+  return candidate as T;
+}
+function unpackDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
+  const revision=record.originatingPlanRevision;
+  if(!object(revision)||!object(revision.snapshot)||!object(revision.snapshot.record)){if(record.notesFromPlan!==undefined)throw invalid();return record;}
+  const origin=revision.snapshot,source=origin.record as Record<string,unknown>;let expandedSource=source;
+  if(source.planTextPacked!==undefined){
+    const text=planTextPayload(readPackedJson(source.planTextPacked));
+    if((Object.hasOwn(text,'notes')&&source.notes!==undefined)||(Object.hasOwn(text,'textFormatting')&&source.textFormatting!==undefined))throw invalid();
+    const {planTextPacked:omitted,...rest}=source;void omitted;expandedSource={...rest,...text};
+  }
+  expandedSource=unpackConditionsRecord('trip',expandedSource);
+  if(expandedSource===source&&record.notesFromPlan===undefined)return record;
+  let expanded:Record<string,unknown>={...record,originatingPlanRevision:{...revision,snapshot:{...origin,record:expandedSource}}};
+  if(record.notesFromPlan!==undefined){
+    const repeated=record.notesFromPlan;
+    if(record.notes!==undefined||!object(repeated)||repeated.version!==1||Object.keys(repeated).some(key=>key!=='version'&&key!=='suffix')||typeof repeated.suffix!=='string'||typeof expandedSource.notes!=='string')throw invalid();
+    const {notesFromPlan:omitted,...rest}=expanded;void omitted;expanded={...rest,notes:expandedSource.notes+repeated.suffix};
+  }
+  return expanded as T;
+}
 
 /** Storage-only, lossless packing. Canonical Plan fields, source readings and timestamps are unchanged. */
 export function packConditionsRecord<T extends Record<string,unknown>>(kind:string,record:T):T {
+  if(kind==='dive')return packDiveSnapshot(record);
   if(kind!=='trip'||!object(record.conditions))return record;
   const conditions=record.conditions;
   if(conditions.conditionsV1Packed!==undefined){unpackConditionsRecord(kind,record);return record;}
@@ -27,6 +100,7 @@ export function packConditionsRecord<T extends Record<string,unknown>>(kind:stri
 
 /** Old uncompressed records remain readable; packed snapshots are expanded only behind owner boundaries. */
 export function unpackConditionsRecord<T extends Record<string,unknown>>(kind:string,record:T):T {
+  if(kind==='dive')return unpackDiveSnapshot(record);
   if(kind!=='trip'||!object(record.conditions)||record.conditions.conditionsV1Packed===undefined)return record;
   const conditions=record.conditions;const packed=conditions.conditionsV1Packed;
   if(conditions.conditionsV1!==undefined||!object(packed)||packed.version!==1||packed.encoding!=='gzip-base64'||
