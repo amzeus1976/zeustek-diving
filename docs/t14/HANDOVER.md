@@ -1,3 +1,7 @@
+## Desktop UX app1.0.104/cache51 candidate - issue97
+
+Baseline accepted Sites175/app1.0.103/cache50, GitHub39de587 tree42349629; rollback175 verified. Compact desktop type/spacing, regular1520px and ultrawide2560px main width, portrait accessible drawer, calendar30/70 with all seven days visible, clearer fields, Site disclosures and wide selected Gas Plan results.31 routes x two owner desktop sizes plus42 core responsive checks pass;1716 regressions, typecheck, build/PWA, privacy and nine protected hashes pass; zero new lint diagnostics (76 retained). Complete owner6541 rows unchanged at09:04UTC. Full-head review and one combined live publication, post owner comparison and exact GitHub reconciliation remain. See desktop-ux-ledger.md for evidence and physical iPhone limitations.
+
 ## App1.0.102/cache49 final deletion corrections
 
 Saved app101/Sites173/sourcebd81a642 remains undeployed after valid complete-head review4188994883/4188994906. RED372d1ad:5 failures/32 passes. Guard both ends of Calendar/Trip links to logged Dives across device/direct cloud/offline sync. Separate committed tombstone success from follow-up cleanup/refresh failure; close the dialog with an accurate redacted notice.55focused PASS. Fresh final gates, compiled deletion checks, clear complete-head review, owner comparison, publication and exact PR94/main reconciliation remain. No protected calculation changes or production writes.

@@ -224,7 +224,7 @@ export function GasPlanning({ go }: Props) {
         />;
 
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.gasPage}`}>
       <header className={styles.hero}>
         <div className={styles.heroTitle}>
           <ZeusTekIcon id="gas-mix" size="hero" />
@@ -243,8 +243,8 @@ export function GasPlanning({ go }: Props) {
         </button>
       </header>
 
-      <div className={styles.shell}>
-        <aside className={styles.sideRail}>
+      <details className={styles.gasGuide}><summary>Planning guidance &amp; evidence sources</summary>
+        <div className={styles.sideRail}>
           <h2>Planning context</h2>
           <ul>
             <li>Link an existing Dive Plan</li>
@@ -272,7 +272,11 @@ export function GasPlanning({ go }: Props) {
           >
             Open Dive Planning Centre
           </button>
-        </aside>
+        </div>
+      </details>
+
+      <div className={styles.shell}>
+
 
         <section className={styles.workArea}>
           <div className={styles.toolbar}>
@@ -334,6 +338,31 @@ export function GasPlanning({ go }: Props) {
             )}
           </CollapsibleWorkCard>
 
+        </section>
+
+        <aside className={styles.detailPane}>
+          {selected ? (
+            <GasDetail
+              plan={selected}
+              divePlan={selectedDivePlan}
+              edit={() => setEditing(selected)}
+              changed={refresh}
+              duplicate={() => {setCopyFrom(selected);setNewGasPlanFor(null);setEditing(null);}}
+              {...(go?{share:()=>go(`Settings&config=shared-links-settings&gasPlanId=${encodeURIComponent(selected.entityId)}`)}:{})}
+              remove={() => setDeleting(selected)}
+              saveToPlan={async () => {
+                if (selectedDivePlan)
+                  if(allocationResult)await saveAllocationNotesToDivePlan(selectedDivePlan,selected,allocationResult);else await saveGasPlanNotesToDivePlan(selectedDivePlan, selected);
+                await refresh();
+              }}
+            />
+          ) : (
+            <div className={styles.emptyPane}>
+              <Cylinder />
+              <h2>No gas plan selected</h2>
+              <p>Create a gas plan or pick one from the list.</p>
+            </div>
+          )}
           {selected ? (
             <>
               <CollapsibleWorkCard
@@ -511,31 +540,6 @@ export function GasPlanning({ go }: Props) {
               </CollapsibleWorkCard>
             </>
           ) : null}
-        </section>
-
-        <aside className={styles.detailPane}>
-          {selected ? (
-            <GasDetail
-              plan={selected}
-              divePlan={selectedDivePlan}
-              edit={() => setEditing(selected)}
-              changed={refresh}
-              duplicate={() => {setCopyFrom(selected);setNewGasPlanFor(null);setEditing(null);}}
-              {...(go?{share:()=>go(`Settings&config=shared-links-settings&gasPlanId=${encodeURIComponent(selected.entityId)}`)}:{})}
-              remove={() => setDeleting(selected)}
-              saveToPlan={async () => {
-                if (selectedDivePlan)
-                  if(allocationResult)await saveAllocationNotesToDivePlan(selectedDivePlan,selected,allocationResult);else await saveGasPlanNotesToDivePlan(selectedDivePlan, selected);
-                await refresh();
-              }}
-            />
-          ) : (
-            <div className={styles.emptyPane}>
-              <Cylinder />
-              <h2>No gas plan selected</h2>
-              <p>Create a gas plan or pick one from the list.</p>
-            </div>
-          )}
         </aside>
       </div>
 

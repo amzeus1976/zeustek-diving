@@ -1,0 +1,36 @@
+# Desktop UX, design and feature pass â€” issue97
+
+Owner target: 3440Ã—1440 ultrawide and 1080Ã—1920 portrait, at 100% browser zoom. Preserve earlier approved workflows, data, artwork and calculation hashes. Current accepted baseline: Sites175/app1.0.103/cache50, GitHub main39de587 and published85eae436 share tree42349629. Native rollback175 archive/deployment reverified6October; environment6/audience public unchanged. Fresh complete owner baseline6541 rows; fingerprint3b5b3599db0d3ba30b3da686b888dacf564c436f4a720f5eb75aba61ee776b57; zero missing Person/centre relationship endpoints. Local encrypted recovery verified, not a target for overwriting current owner records.
+
+## Findings and implementation
+
+1. Shared desktop shell: actual3440 viewport/scale1, content1260px despite3187px available. Regular maximum1520px (+20.6%), ultrawide2560px. Compact desktop root70% from80%, smaller shared headings and tighter card/page gaps; phone text and16px inputs retained independently. No CSS zoom or cropping the document.
+2. Portrait navigation: permanent238px sidebar squeezed1080 viewport content to842px. Use the existing accessible drawer below1200; bottom quick navigation remains for phone widths rather than occupying portrait desktop space.
+3. Calendar: seven44px minimum columns conflicted with the30% pane. Fit seven actual columns; preserve44px cell height, allow bounded narrow cell widths. Use minimum350px browsing pane beside the larger event pane from780px; below780 provide a labelled jump to selected event. Remove redundant Event types disclosure, retain the exact type filter; compact metadata/actions and keep download at the bottom.
+4. Calendar keyboard: roving Tab stop, Left/Right with wraparound, Home/End move both focus and selected view. Seven behaviour tests pass. Existing ownership, archived filtering, unlink/delete and exact record destinations retained.
+5. Record controls: clear borders/backgrounds across entry fields; smaller visual checkbox inside its44px clickable label. Preserve large text areas and their existing disclosure controls. Do not conceal fields with overflow-hidden.
+6. Long site listing: put complete access/hazard/environment descriptions behind a keyboard-operable native disclosure on each card; keep location/metrics and full detail view. Ultrawide cards and log records use additional columns, avoiding empty screen margins.
+
+## Audit evidence and limits
+
+Current-run files under ignored work/desktop-ux. Accepted before evidence:01-before-ultrawide.png and02-before-portrait.png; loaded03-before Logbook/People/Equipment/Trips/Sites show density and long-list issues. Initial route probes before hydration are rejected (reported Overview while another route loaded); no acceptance claim from those. Initial Plan/Skills/Settings screenshots with empty/loading data do not establish record counts or feature health. Final compiled/live evidence must wait for the actual route and loaded data, confirm every requested viewport, and inspect screenshots before accepting.
+
+## Prior feedback to recheck
+
+Calendar30/70 and archived hiding; multi-Dive associations, Trip import and workflow directions; unlink/delete guards; duplicate Plans; full-width Plan editor and three ordered workbench cards plus four full-width lower cards; large writing fields; Trip destination postcode/Home phone exclusion/Self/centre selectors and per-itinerary disclosures; Debrief/Story/Skills layouts and bulk practice; seven-day weather and one attribution/empty-only fill; API selection/collapse/docs/public-profile URL; cloud status and record-specific review. Existing endpoints and features remain unchanged unless a confirmed UX defect warrants a bounded correction.
+
+## Release candidate validation
+
+Compiled production build: all31 routes at3440×1440 and1080×1920, effective scale1;62 route checks, correct active routes/headings, zero document/internal horizontal overflow. Seven core routes also pass42 checks at320/390/430/820/1024/1440. The final Gas Planning correction was rechecked at all eight widths; calculations and selected-plan context now occupy the wider column, while the plan picker alone occupies the narrow column. Existing gas results, warnings and nine frozen calculation files remain unchanged.
+
+Keyboard checks: portrait drawer opens on Close menu, wraps Shift+Tab to the last menu link, Escape closes and restores Open menu; calendar arrow selection and native Site/itinerary disclosures work; the390px View selected event link moves focus to the selected-event aside. Local duplicate Dive Plan was saved/reloaded, original retained; gas duplication opens the fresh copy editor. Large224px Plan and160px Trip notes boxes, self/centre selectors and independent itinerary expansion retained. No production record was edited.
+
+Final full regression1716/1716 across249 files, typecheck and build/PWA pass (422 precache entries). Changed-source lint retains76 pre-existing diagnostics and introduces zero; Gas Planning itself has zero diagnostics. This is not a claim that the entire repository is lint-clean. Credential scan:1346 compiled files, zero credential matches;31 navigation icons byte-match their masters and master files are excluded from precache. All nine protected calculation hashes unchanged.
+
+Complete owner baseline refreshed2026-10-06T09:04:35.265Z:6541 original canonical rows, same3b5b3599 fingerprint as the earlier snapshot, verified encrypted local recovery. Rollback Sites175 reverified succeeded/environment6. Publication awaits complete-head review; post-publication owner comparison and exact GitHub tree reconciliation will be recorded in release evidence. Gmail/provider recovery, test-data dependency deletion and unrelated backlog are outside this visual release.
+
+Accepted screenshots:04 compiled calendar,05 Sites disclosures,07 large Plan fields,08 final Trip itinerary,10 final portrait Gas Planning.09 shows the superseded narrow gas-results layout and is not final acceptance. Actual production acceptance will capture fresh screenshots after publication.
+
+## iPhone assessment
+
+Keep one installable PWA sharing authentication, records and sync. A simpler phone presentation is preferable to maintaining a second app: prioritise next Trip, Log dive, checklists and centre contacts, with advanced planning/admin behind disclosures. Existing phone navigation and16px inputs are retained by this pass. Apple supports installing a website from Safari using Add to Home Screen/Open as Web App: https://support.apple.com/en-lamr/guide/iphone/iphea86e5236/ios . No separate app or datastore was created. A physical iPhone Safari/VoiceOver, keyboard and installed/offline acceptance pass remains; emulated viewport checks do not establish those behaviours.

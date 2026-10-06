@@ -296,7 +296,8 @@ describe('T12.3 route and shell integration', () => {
     expect(`${calendar}\n${gas}`).toContain('CollapsibleWorkCard');
     expect(`${calendar}\n${gas}`).not.toContain('WorkflowContextStrip');
     expect(card).toContain("minimized ? '+' : '−'");
-    expect(calendar).toContain('role="tablist"');
+    expect(calendar).toContain('<CalendarViewTabs');
+    expect(read('components/planning/calendar-view-tabs.tsx')).toContain('role="tablist"');
     expect(read('components/planning/t14-gas-plan-editor.tsx')).toContain('This is not decompression software');
   });
 });

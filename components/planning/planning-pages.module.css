@@ -664,11 +664,53 @@
 .formulaResults small,.emptyPane svg{color:var(--brand-secondary)}
 
 /* Calendar selection owns the wider column; downloads follow the workspace. */
-.calendarPage .shell{grid-template-columns:minmax(0,3fr) minmax(0,7fr)}
+.calendarPage .shell{grid-template-columns:minmax(350px,3fr) minmax(0,7fr)}
 .calendarPage .toolbar{grid-template-columns:minmax(0,1fr)}
 .calendarFilters{border:1px solid var(--zt-border);border-radius:12px;background:var(--zt-surface);padding:12px;min-width:0}
 .calendarFilters summary{width:100%;min-height:44px;cursor:pointer;font-weight:700}
 .calendarFilters button{min-height:44px;display:flex;align-items:center;gap:8px;width:100%;text-align:left;margin-top:6px;border:1px solid var(--zt-border);border-radius:8px;padding:8px;background:var(--zt-surface-2)}
-.calendarGridViewport{overflow-x:auto;min-width:0;max-width:100%}
-.calendarPage .calendarGrid{grid-template-columns:repeat(7,minmax(44px,1fr))}
-@media(max-width:900px){.calendarPage .shell{grid-template-columns:minmax(0,1fr)}}
+.calendarGridViewport{min-width:0;max-width:100%}
+.calendarPage .calendarGrid{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+/* The seven-day grid is a bounded target arrangement; keep its 44px height. */
+:global(html[data-brand='zeustek-diving']) .calendarPage .calendarGrid button{min-width:0!important;min-height:52px!important;padding:5px;height:auto}
+.calendarPage .calendarGrid strong{font-size:.95rem}
+.calendarPage .tabs{flex-wrap:wrap;overflow:visible;gap:6px}
+.calendarPage .hero{padding:12px;gap:12px}
+.calendarPage .heroTitle{gap:10px}
+.calendarPage .detailCard{padding:12px;gap:8px}
+.calendarPage .detailCard dl{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.calendarPage .detailCard dl>div:last-child{grid-column:1/-1}
+.calendarPage .detailCard h3{margin:4px 0 0}
+.calendarPage .detailCard>nav{margin-block:0!important;gap:4px!important}
+.calendarPage .eventDives{margin-block:4px}
+.calendarPage .actionGrid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:6px}
+.calendarPage .actionGrid :is(a,button){justify-content:flex-start;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.calendarPage .actionGrid>p{grid-column:1/-1;margin:0}
+.selectedJump{display:none!important}
+.gasPage .shell{grid-template-columns:minmax(280px,3fr) minmax(0,7fr)}
+.gasPage .detailPane{order:0;position:static}
+.gasPage .hero{padding:12px}
+.gasGuide{min-width:0;border:1px solid var(--zt-border);border-radius:12px;padding:0 12px;background:var(--zt-surface)}
+.gasGuide>summary{display:flex;width:100%;cursor:pointer;min-height:44px;align-items:center;gap:8px}
+.gasGuide>summary::before{content:'›';color:var(--brand-primary);font-size:1.4rem}
+.gasGuide[open]>summary::before{transform:rotate(90deg)}
+.gasGuide .sideRail{display:grid;position:static;border:0;padding:8px 0;grid-template-columns:minmax(0,1fr)}
+@media(max-width:1100px){.calendarPage .detailPane{order:0}}
+@media(max-width:779px){
+ .calendarPage .shell{grid-template-columns:minmax(0,1fr)}
+ .gasPage .shell{grid-template-columns:minmax(0,1fr)}
+ .selectedJump{display:inline-flex!important;justify-content:flex-start;white-space:normal;overflow-wrap:anywhere}
+}
+@media(max-width:450px){
+ .calendarPage .detailCard dl{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .calendarPage .detailCard dl>div:nth-child(3){grid-column:1/-1}
+ .calendarPage .actionGrid{grid-template-columns:minmax(0,1fr)}
+ :global(html[data-brand='zeustek-diving']) .calendarPage .calendarGrid button{min-height:48px!important}
+}
+
+.gasPage .detailPane{display:grid;align-content:start;gap:10px}
+.gasPage .detailCard{padding:12px;gap:8px}
+.gasPage .detailCard dl{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gasPage .detailCard dl>div:last-child{grid-column:1/-1}
+.gasPage .actionGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+@media(max-width:450px){.gasPage .detailCard dl,.gasPage .actionGrid{grid-template-columns:minmax(0,1fr)}}
