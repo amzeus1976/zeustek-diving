@@ -30,6 +30,37 @@ function setTextField(record:Record<string,unknown>,path:string,value:unknown,re
   else if(remove)delete result[parent!];else result[parent!]=value;
   return result;
 }
+type NotePart=string|{field:string;index?:number};
+function deduplicatedNotes(notes:string,source:Record<string,unknown>){
+  const values:Array<{text:string;ref:Exclude<NotePart,string>}>=[];
+  for(const field of textFields){const value=fieldValue(source,field);if(!textValue(field,value))continue;
+    if(typeof value==='string'){if(value.length>=1024)values.push({text:value,ref:{field}});}
+    else (value as string[]).forEach((text,index)=>{if(text.length>=1024)values.push({text,ref:{field,index}});});
+  }
+  let parts:NotePart[]=[notes];
+  for(const {text,ref} of values.sort((a,b)=>b.text.length-a.text.length)){
+    parts=parts.flatMap(part=>{if(typeof part!=='string'||!part.includes(text))return [part];const segments=part.split(text),next:NotePart[]=[];
+      segments.forEach((segment,index)=>{if(index)next.push(ref);if(segment)next.push(segment);});return next;});
+    if(parts.length>10000)return undefined;
+  }
+  return parts.some(part=>typeof part!=='string')&&JSON.stringify(parts).length<JSON.stringify(notes).length?{version:2,parts}:undefined;
+}
+function restoredNotes(repeated:unknown,source:Record<string,unknown>){
+  if(!object(repeated))throw invalid();
+  if(repeated.version===1){if(Object.keys(repeated).some(key=>key!=='version'&&key!=='suffix')||typeof repeated.suffix!=='string'||typeof source.notes!=='string')throw invalid();return source.notes+repeated.suffix;}
+  if(repeated.version!==2||Object.keys(repeated).some(key=>key!=='version'&&key!=='parts')||!Array.isArray(repeated.parts)||repeated.parts.length>10000)throw invalid();
+  let length=0;const parts=repeated.parts.map(part=>{
+    let text:string;
+    if(typeof part==='string')text=part;
+    else{
+      if(!object(part)||typeof part.field!=='string'||!textFields.has(part.field)||Object.keys(part).some(key=>key!=='field'&&key!=='index'))throw invalid();
+      const value=fieldValue(source,part.field);if(!textValue(part.field,value))throw invalid();
+      if(typeof value==='string'){if(part.index!==undefined)throw invalid();text=value;}
+      else{if(!Number.isInteger(part.index)||Number(part.index)<0||Number(part.index)>=(value as string[]).length)throw invalid();text=(value as string[])[Number(part.index)]!;}
+    }
+    length+=text.length;if(length>MAX_JSON_BYTES)throw invalid();return text;
+  });return parts.join('');
+}
 function readPackedJson(packed:unknown):unknown {
   if(!object(packed)||packed.version!==1||packed.encoding!=='gzip-base64'||
      !Number.isInteger(packed.jsonBytes)||Number(packed.jsonBytes)<1||Number(packed.jsonBytes)>MAX_JSON_BYTES||
@@ -57,9 +88,10 @@ function packDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
   const revision=record.originatingPlanRevision,origin=revision.snapshot as Record<string,unknown>,source=origin.record as Record<string,unknown>;
   if(source.planTextPacked!==undefined||record.notesFromPlan!==undefined){unpackConditionsRecord('dive',record);return record;}
   let compactSource=packConditionsRecord('trip',source),candidate:Record<string,unknown>={...record,originatingPlanRevision:{...revision,snapshot:{...origin,record:compactSource}}};
-  // Store a repeated immutable Plan-note prefix once, including incompressible text.
-  if(typeof source.notes==='string'&&source.notes.length&&typeof record.notes==='string'&&record.notes.startsWith(source.notes)&&JSON.stringify(candidate).length>180000){
-    const {notes:omitted,...rest}=candidate;void omitted;candidate={...rest,notesFromPlan:{version:1,suffix:record.notes.slice(source.notes.length)}};
+  // Synthesized narrative can repeat notes, objectives and stop/abort entries anywhere.
+  if(typeof record.notes==='string'&&JSON.stringify(candidate).length>180000){
+    const repeated=deduplicatedNotes(record.notes,source);
+    if(repeated){const {notes:omitted,...rest}=candidate;void omitted;candidate={...rest,notesFromPlan:repeated};}
   }
   const fields:Record<string,unknown>={};for(const key of textFields){const value=fieldValue(compactSource,key);if(textValue(key,value))fields[key]=value;}
   const text={...(Object.keys(fields).length?{fields}:{}),...(validPresentation(compactSource.textFormatting)?{textFormatting:compactSource.textFormatting}:{})};
@@ -88,9 +120,8 @@ function unpackDiveSnapshot<T extends Record<string,unknown>>(record:T):T {
   if(expandedSource===source&&record.notesFromPlan===undefined)return record;
   let expanded:Record<string,unknown>={...record,originatingPlanRevision:{...revision,snapshot:{...origin,record:expandedSource}}};
   if(record.notesFromPlan!==undefined){
-    const repeated=record.notesFromPlan;
-    if(record.notes!==undefined||!object(repeated)||repeated.version!==1||Object.keys(repeated).some(key=>key!=='version'&&key!=='suffix')||typeof repeated.suffix!=='string'||typeof expandedSource.notes!=='string')throw invalid();
-    const {notesFromPlan:omitted,...rest}=expanded;void omitted;expanded={...rest,notes:expandedSource.notes+repeated.suffix};
+    if(record.notes!==undefined)throw invalid();
+    const {notesFromPlan:omitted,...rest}=expanded;void omitted;expanded={...rest,notes:restoredNotes(record.notesFromPlan,expandedSource)};
   }
   return expanded as T;
 }

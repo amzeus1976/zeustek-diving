@@ -6,6 +6,13 @@ const readings=Array.from({length:3000},(_,i)=>({id:`reading-${i}`,metric:i%2?'w
 const snapshot={version:1,request:{siteId:'fixture-site',date:'2026-10-11',time:'12:00',provider:'fixture-weather'},readings,diagnostics:[]};
 const plan={entityId:'fixture-plan',name:'Owner-entered plan',notes:'Owner-entered text 🌊 海',conditions:{weather:'Saved conditions',conditionsV1:snapshot}};
 describe('Lossless bounded saved Plan conditions',()=>{
+ it('validates generalized note references, bounds expansion and reads legacy prefix packets',()=>{
+  const record={originatingPlanRevision:{snapshot:{record:{notes:'legacy',humanFactors:{stopAbortCriteria:['Exact 🌊']}}}}};
+  expect(unpackConditionsRecord('dive',{...record,notesFromPlan:{version:1,suffix:' suffix'}})).toHaveProperty('notes','legacy suffix');
+  expect(unpackConditionsRecord('dive',{...record,notesFromPlan:{version:2,parts:['Before ',{field:'humanFactors.stopAbortCriteria',index:0},' after']}})).toHaveProperty('notes','Before Exact 🌊 after');
+  for(const parts of [[{field:'equipmentIds',index:0}],[{field:'notes',index:0}],[{field:'humanFactors.stopAbortCriteria',index:-1}],[{field:'humanFactors.stopAbortCriteria',index:9}],[{field:'notes',hidden:'id'}]])expect(()=>unpackConditionsRecord('dive',{...record,notesFromPlan:{version:2,parts}})).toThrow(/conditions/i);
+  const large={originatingPlanRevision:{snapshot:{record:{notes:'x'.repeat(100000)}}},notesFromPlan:{version:2,parts:Array.from({length:51},()=>({field:'notes'}))}};expect(()=>unpackConditionsRecord('dive',large)).toThrow(/conditions/i);
+ });
  it('packs every supported long-text path near the whole-record boundary while retaining linked IDs',()=>{
   const arrays=new Set(['goals','secondaryObjectives',...['keyRisks','mitigations','pressures','stopAbortCriteria','teamConcerns'].map(key=>'humanFactors.'+key)]);
   for(const path of [...PLAN_TEXT_FIELDS,'objective','humanFactors.objective']){

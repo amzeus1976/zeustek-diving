@@ -20,7 +20,7 @@ describe('Actual Plan API and backup boundaries for packed conditions',()=>{
   for(const [index,fields] of [{aim:'x'.repeat(185000)},{goals:['x'.repeat(185000),'','🌊']},{humanFactors:{stopAbortCriteria:['x'.repeat(185000)]}},{emergency:{notes:'x'.repeat(185000)}}].entries()){
    const source={entityId:'plan-'+index,name:'Boundary source',startDate:'2026-10-10',notes:'',...fields},id='dive-'+index;
    expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id:source.entityId,kind:'trip',data:source,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
-   const data={notes:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanId:source.entityId,originatingPlanRevision:{eventId:'event',recordHash:'hash',modifiedAt:'stamp',snapshot:{version:1,accountId:'fixture-owner',record:source}}};
+   const data={notes:index===2?'Created from Plan\n\nStop / abort: '+fields.humanFactors!.stopAbortCriteria[0]:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanId:source.entityId,originatingPlanRevision:{eventId:'event',recordHash:'hash',modifiedAt:'stamp',snapshot:{version:1,accountId:'fixture-owner',record:source}}};
    expect((await POST(new Request('https://fixture/api/dive-data',{method:'POST',body:JSON.stringify({id,kind:'dive',data,localMutation:true,baseModifiedAt:null})}))).status).toBe(200);
    const {items}=await (await GET(new Request('https://fixture/api/dive-data?kind=dive'))).json() as {items:Array<{id:string}>};expect(items.find(row=>row.id===id)).toMatchObject(data);
   }

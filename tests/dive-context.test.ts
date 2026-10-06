@@ -11,6 +11,7 @@ import { DiveEditorWrites } from '../lib/offline/dive-editor-writes';
 import {planTextFromPlain} from '../lib/planning/formatted-text';
 import {recordHash} from '../lib/offline/canonical';
 import {packConditionsRecord,unpackConditionsRecord} from '../lib/weather/conditions-storage';
+import {createDiveDraftFromEnrichedPlan} from '../lib/offline/dive-planning-centre';
 
 beforeEach(async () => {
   vi.stubGlobal('window', new EventTarget()); vi.stubGlobal('navigator', { onLine: false }); vi.stubGlobal('fetch', vi.fn());
@@ -21,6 +22,17 @@ afterEach(() => vi.unstubAllGlobals());
 const plan = { entityId: 'same-plan', name: 'Quarry practice', siteName: 'Capernwray', siteId: 'same-site', startDate: '2026-09-12', endDate: '2026-09-12', startAt: '2026-09-12T10:00', buddy: 'Buddy', status: 'planned', notes: 'Original intent', futurePlanField: 'retain' };
 
 describe('shared Dive references and save boundary', () => {
+  it('deduplicates the real enriched converter narrative for large objectives and stop/abort entries without losing source integrity',async()=>{
+    let seed=123456789;const large=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
+    for(const field of ['objective','stopAbortCriteria']){
+      const source={...plan,entityId:plan.entityId+'-'+field,notes:'',...(field==='objective'?{objective:large}:{humanFactors:{stopAbortCriteria:[large]}})};
+      await saveLocalRecord('trip',source);const draft=await createDiveDraftFromEnrichedPlan(source.entityId);
+      const dive={...draft,entityId:'converted',site:draft.site!,date:draft.date!,maxDepthM:12,bottomTimeMin:38,gas:'Air',notes:draft.notes!,editorFields:'q'.repeat(12000)};
+      expect(dive.notes).toContain(large);expect(JSON.stringify(dive).length).toBeGreaterThan(200000);
+      const packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);
+      const restored=unpackConditionsRecord('dive',JSON.parse(JSON.stringify(packed)));expect(restored).toEqual(dive);expect(await loadOriginatingPlan(restored)).toMatchObject(source);
+    }
+  });
   it('retains the entire formatted source Plan and binds immutable snapshots to exact source provenance through backup',async()=>{
     const notes='  '+'x'.repeat(66996)+'  ',formatting={notes:planTextFromPlain(notes)};
     await saveLocalRecord('trip',{...plan,notes,textFormatting:formatting});
