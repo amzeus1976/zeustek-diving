@@ -499,8 +499,27 @@ export default function DiveApp({ userId }: { userId: string }) {
   const [showAdd, setShowAdd] = useState(false);
   const [draftDive, setDraftDive] = useState<(Partial<DiveRecord> & { entityId?: string }) | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  const menuDrawer = useRef<HTMLElement>(null);
   const [compactViewport,setCompactViewport]=useState(false);
-  useEffect(()=>{const query=window.matchMedia('(max-width: 1000px)');const update=()=>setCompactViewport(query.matches);update();query.addEventListener('change',update);return()=>query.removeEventListener('change',update);},[]);
+  useEffect(()=>{const query=window.matchMedia('(max-width: 1199px)');const update=()=>setCompactViewport(query.matches);update();query.addEventListener('change',update);return()=>query.removeEventListener('change',update);},[]);
+  useEffect(() => {
+    if (!compactViewport || !menuOpen) return;
+    const drawer = menuDrawer.current;
+    const trigger = menuTrigger.current;
+    const targets = () => [...(drawer?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]') ?? [])].filter(node => node.getClientRects().length > 0);
+    const frame = requestAnimationFrame(() => targets()[0]?.focus());
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); setMenuOpen(false); return; }
+      if (event.key !== 'Tab') return;
+      const nodes = targets(), first = nodes[0], last = nodes[nodes.length - 1];
+      if (!drawer?.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+        event.preventDefault(); (event.shiftKey ? last : first)?.focus();
+      }
+    };
+    window.addEventListener('keydown', keyboard);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('keydown', keyboard); requestAnimationFrame(() => trigger?.focus()); };
+  }, [compactViewport, menuOpen]);
   const go = useWorkflowNavigation((destination) => {
     const resolved = destination.route;
     setDestinationTab(resolved === 'Diver Summary Export' ? 'Diver summary' : destination.params?.tab ?? resolved);
@@ -540,7 +559,7 @@ export default function DiveApp({ userId }: { userId: string }) {
           onClick={() => setMenuOpen(false)}
         />
       )}
-      <aside className={`focus-sidebar ${menuOpen ? 'open' : ''}`} inert={compactViewport&&!menuOpen} aria-hidden={compactViewport&&!menuOpen}>
+      <aside ref={menuDrawer} id="workflow-menu" className={`focus-sidebar ${menuOpen ? 'open' : ''}`} inert={compactViewport&&!menuOpen} aria-hidden={compactViewport&&!menuOpen} role={compactViewport&&menuOpen?'dialog':undefined} aria-modal={compactViewport&&menuOpen?true:undefined} aria-label={compactViewport&&menuOpen?'Navigation menu':undefined}>
         <div className="focus-brand">
           <img src="/zeustek-wordmark.png" alt="ZeusTek Diving" />
           <button
@@ -554,11 +573,14 @@ export default function DiveApp({ userId }: { userId: string }) {
         <WorkflowNavigation active={active} go={go}/>
         <div className="focus-version"><AppVersionLink open={() => go('Changelog')} /></div>
       </aside>
-      <section className="focus-shell">
+      <section className="focus-shell" inert={compactViewport&&menuOpen}>
         <header className="focus-topbar">
           <button
             className="focus-icon mobile-menu"
             aria-label="Open menu"
+            ref={menuTrigger}
+            aria-controls="workflow-menu"
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
           >
             <Menu size={20} />
@@ -2980,6 +3002,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
                   <b>{item.parking ? 'Recorded' : 'Not set'}</b> parking
                 </span>
               </div>
+              <details className="site-list-details"><summary>Access, hazards &amp; site details</summary>
               <div className="site-detail-grid">
                 <SiteDetail
                   label="Access / entry"
@@ -3001,6 +3024,7 @@ function SitesV2({ go }: { go: (next: string) => void }) {
                     .join(' · ')}
                 />
               </div>
+              </details>
               {item.website && (
                 <a
                   className="focus-link"

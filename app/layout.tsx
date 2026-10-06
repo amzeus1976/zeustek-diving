@@ -15,6 +15,7 @@ import './brand-application.css';
 import './sharing.css';
 import './dive-log-workspace.css';
 import './sync-review.css';
+import './desktop-workspace.css';
 import { PwaRegister } from '@/components/pwa-register';
 
 const geistSans = Inter({

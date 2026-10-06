@@ -35,10 +35,10 @@ import {CalendarDiveLinks} from './calendar-dive-links';
 import {DeletePlanningRecordDialog} from './delete-planning-record-dialog';
 import {PlanningConnections} from './planning-connections';
 import {PlanningWorkflow} from './planning-workflow';
+import {CalendarViewTabs, type CalendarView} from './calendar-view-tabs';
 import {calendarPlanDestination,calendarGasDestination} from '../../lib/planning/planning-start-context';
 
 type Props = { go?: (route: string) => void };
-type CalendarView = 'calendar' | 'list' | 'bookings';
 type BookingDraft = DivingCalendarBooking & { entityId?: string };
 
 const kinds: Array<[BookingKind, string, string]> = [
@@ -223,52 +223,9 @@ export function DivingCalendarBookings({ go }: Props) {
 
 
         <section className={styles.workArea}>
-        <details className={styles.calendarFilters}>
-          <summary>Event types</summary>
-          <button
-            className={filter === 'all' ? styles.activePill : ''}
-            onClick={() => setFilter('all')}
-          >
-            All events
-          </button>
-          {kinds.map(([value, label, icon]) => (
-            <button
-              key={value}
-              className={filter === value ? styles.activePill : ''}
-              onClick={() => setFilter(value)}
-            >
-              <ZeusTekIcon id={icon} size="chip" />
-              {label}
-            </button>
-          ))}
-          <div className={styles.railNote}>
-            Events remain lightweight until you link or convert them into a
-            Trip, Dive Plan, Gas Plan or training record.
-          </div>
-        </details>
-          <div
-            className={styles.tabs}
-            role="tablist"
-            aria-label="Calendar views"
-          >
-            {(
-              [
-                ['calendar', 'Calendar'],
-                ['list', 'List'],
-                ['bookings', 'Bookings'],
-              ] as const
-            ).map(([view, label]) => (
-              <button
-                key={view}
-                role="tab"
-                aria-selected={activeTab === view}
-                className={activeTab === view ? styles.activeTab : ''}
-                onClick={() => setActiveTab(view)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+
+          <CalendarViewTabs value={activeTab} onChange={setActiveTab} className={styles.tabs} activeClassName={styles.activeTab}/>
+          {selected && <a className={`focus-secondary ${styles.selectedJump}`} href="#selected-calendar-event">View selected event: {selected.name}</a>}
           <div className={styles.toolbar}>
             <input
               aria-label="Search calendar events"
@@ -427,7 +384,7 @@ export function DivingCalendarBookings({ go }: Props) {
           </CollapsibleWorkCard>
         </section>
 
-        <aside className={styles.detailPane}>
+        <aside className={styles.detailPane} id="selected-calendar-event" aria-label="Selected calendar event" tabIndex={-1}>
           {selected ? (
             <BookingDetail
               key={selected.entityId}

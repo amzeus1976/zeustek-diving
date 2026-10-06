@@ -1,0 +1,90 @@
+/* Owner-requested compact desktop workspace. Keep this after legacy rules. */
+html[data-brand='zeustek-diving'] { font-size: 70%; }
+html[data-brand='zeustek-diving'] .focus-shell { min-width: 0; }
+html[data-brand='zeustek-diving'] .focus-content {
+  width: 100%; max-width: 1520px; padding: 18px 20px 28px; min-width: 0;
+}
+html[data-brand='zeustek-diving'] .focus-content h1 {
+  font-size: clamp(1.8rem, 1.8vw, 2.3rem); line-height: 1.25;
+}
+html[data-brand='zeustek-diving'] .focus-heading { margin-bottom: 14px; gap: 12px; }
+html[data-brand='zeustek-diving'] .focus-heading-title { gap: 10px; }
+html[data-brand='zeustek-diving'] .focus-topbar { min-height: 60px; padding-inline: 20px; }
+html[data-brand='zeustek-diving'] :is(.focus-card, .panel) { padding: 12px; }
+html[data-brand='zeustek-diving'] .focus-card-head { margin-bottom: 8px; gap: 8px; }
+html[data-brand='zeustek-diving'] .focus-row { padding-block: 8px; }
+html[data-brand='zeustek-diving'] .focus-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; align-items: start;
+}
+html[data-brand='zeustek-diving'] :is(.record-fields, .field-grid) {
+  min-width: 0; column-gap: 12px; row-gap: 10px;
+}
+/* Every entry surface has a visible boundary, including in-route editors. */
+html[data-brand='zeustek-diving'] .focus-content :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']) {
+  min-width: 0 !important; max-width: 100%; box-sizing: border-box;
+  border: 1px solid var(--zt-border-strong); border-radius: 8px;
+  background: var(--zt-bg); color: var(--zt-text); padding: 8px 10px; font-family: inherit;
+}
+/* The surrounding label remains a 44px target; the check itself need not be a 44px block. */
+html[data-brand='zeustek-diving'] label:has(input:is([type='checkbox'],[type='radio'])) {
+  min-height: 44px; cursor: pointer;
+}
+html[data-brand='zeustek-diving'] label input:is([type='checkbox'],[type='radio']) {
+  width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important;
+}
+html[data-brand='zeustek-diving'] .site-card-main { padding: 12px; }
+html[data-brand='zeustek-diving'] .site-metrics { margin-block: 8px; gap: 6px; }
+html[data-brand='zeustek-diving'] .site-list { gap: 10px; }
+html[data-brand='zeustek-diving'] .site-list-details { position: relative; z-index: 2; margin-block: 8px; }
+html[data-brand='zeustek-diving'] .site-list-details > summary {
+  display: flex; width: 100%; cursor: pointer; color: var(--brand-secondary); gap: 8px;
+}
+html[data-brand='zeustek-diving'] .site-list-details > summary::before { content: '›'; font-size: 1.4rem; }
+html[data-brand='zeustek-diving'] .site-list-details[open] > summary::before { transform: rotate(90deg); }
+html[data-brand='zeustek-diving'] .site-detail-grid { margin-block: 4px 10px; }
+html[data-brand='zeustek-diving'] .record-summary { flex-wrap: wrap; overflow: visible; gap: 6px; margin-block: 8px; }
+html[data-brand='zeustek-diving'] .log-card { padding: 12px; gap: 12px; }
+html[data-brand='zeustek-diving'] .log-card p { margin-block: 5px; }
+html[data-brand='zeustek-diving'] .log-metrics { flex-wrap: wrap; gap: 6px 10px; }
+html[data-brand='zeustek-diving'] .focus-empty { padding: 24px 12px; }
+html[data-brand='zeustek-diving'] .focus-content nav[aria-label='Planning workflow'] { margin-block: 4px !important; gap: 4px !important; }
+@media (min-width: 1800px) {
+  html[data-brand='zeustek-diving'] .log-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); align-items: start;
+  }
+  html[data-brand='zeustek-diving'] .site-list {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start;
+  }
+  html[data-brand='zeustek-diving'] .site-list > button { grid-column: 1 / -1; }
+}
+@media (min-width: 2200px) {
+  html[data-brand='zeustek-diving'] .focus-content { max-width: 2560px; padding-inline: 24px; }
+}
+@media (min-width: 761px) {
+  /* Inline citations are part of the text's hit area, rather than full-height action rows. */
+  html[data-brand='zeustek-diving'] .focus-content :is(p,small) > a {
+    display: inline; min-height: 0 !important; min-width: 0 !important;
+  }
+  html[data-brand='zeustek-diving'] .focus-mobile-nav { display: none; }
+}
+@media (max-width: 1199px) {
+  html[data-brand='zeustek-diving'] .focus-shell { margin-left: 0; }
+  html[data-brand='zeustek-diving'] .focus-sidebar {
+    display: flex !important; transform: translateX(-105%); transition: transform .22s ease; box-shadow: 15px 0 50px #000;
+  }
+  html[data-brand='zeustek-diving'] .focus-sidebar.open { transform: translateX(0); }
+  html[data-brand='zeustek-diving'] :is(.mobile-menu, .menu-close) { display: grid; }
+  html[data-brand='zeustek-diving'] .menu-scrim { display: block; position: fixed; inset: 0; z-index: 19; background: #000b; border: 0; }
+  html[data-brand='zeustek-diving'] .focus-content { padding: 14px 12px 24px; }
+}
+@media (max-width: 760px) {
+  html[data-brand='zeustek-diving'] { font-size: 87.5%; }
+  html[data-brand='zeustek-diving'] .focus-content { padding: 12px 10px 100px; }
+  html[data-brand='zeustek-diving'] .focus-topbar { padding-inline: 10px; }
+  html[data-brand='zeustek-diving'] .focus-grid { grid-template-columns: minmax(0,1fr); }
+  /* Avoid iPhone's automatic input zoom without changing desktop density. */
+  html[data-brand='zeustek-diving'] .focus-content :is(input, select, textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-brand='zeustek-diving'] .focus-sidebar { transition: none; }
+}

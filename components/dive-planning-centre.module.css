@@ -84,5 +84,9 @@
 
 /* Three summary cards, then independent disclosures spanning every column. */
 .workbenchWide{grid-column:1/-1}
+.planTabs{flex-wrap:wrap;overflow:visible}
+
+@media(min-width:761px){.hero{min-height:96px;padding:12px;gap:12px}.siteArt{height:80px}.upcoming{padding:12px;gap:12px}}
+:global(html[data-brand='zeustek-diving']) .planTabs button{min-width:0!important;flex:0 1 240px;max-width:100%;width:min(240px,100%)}
 .contactHeading{margin:12px 0 8px;font-size:1rem;color:var(--zt-accent-orange)}
 .grid :global([data-zeustek-density-card]){overflow-wrap:anywhere;align-self:start}
