@@ -1,5 +1,6 @@
 import { localBackupPayload, restoreLocalPayload } from './local-backup';
 import { DIVE_RECORD_KINDS } from '../record-identity';
+import {unpackConditionsRecord} from '../weather/conditions-storage';
 
 const encoder = new TextEncoder(); const decoder = new TextDecoder();
 const FORMAT = 'zeustek-dive-encrypted-backup';
@@ -26,11 +27,16 @@ export async function createDiveBackup(passphrase: string) {
       if (!response.ok) throw new Error('Cloud backup unavailable');
       const cloud = await response.json() as {records:Array<{id:string;kind:string;dataJson:string;createdAt:number;updatedAt:number}>};
       const known = new Set(snapshot.entities.map(row => row.entityId));
+      const additions:typeof snapshot.entities=[];
       for (const row of cloud.records) {
         const entityId = `dive:${snapshot.account}:${row.id}`;
         if (known.has(entityId) || !(DIVE_RECORD_KINDS as readonly string[]).includes(row.kind)) continue;
-        snapshot.entities.push({entityId,module:`dive:${snapshot.account}`,entityType:row.kind,schemaVersion:1,record:{...JSON.parse(row.dataJson),entityId:row.id,createdAt:new Date(row.createdAt).toISOString(),modifiedAt:new Date(row.updatedAt).toISOString()},recordHash:'',deleted:0,updatedEventId:'',updatedAt:new Date(row.updatedAt).toISOString()});
+        const raw=JSON.parse(row.dataJson) as Record<string,unknown>;
+        if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Cloud backup contains invalid record data.');
+        const record=unpackConditionsRecord(row.kind,raw);
+        additions.push({entityId,module:`dive:${snapshot.account}`,entityType:row.kind,schemaVersion:1,record:JSON.parse(JSON.stringify({...record,entityId:row.id,createdAt:new Date(row.createdAt).toISOString(),modifiedAt:new Date(row.updatedAt).toISOString()})),recordHash:'',deleted:0,updatedEventId:'',updatedAt:new Date(row.updatedAt).toISOString()});
       }
+      snapshot.entities.push(...additions);
       snapshot.coverage = 'Cloud records plus local records, history, pending edits and locally available card/profile images. Cloud-only gallery media and server connection credentials are not included. Reconnect the Dive News mailbox after a restore.';
     } catch { /* The local snapshot remains a usable offline backup; its coverage text is explicit. */ }
   }
