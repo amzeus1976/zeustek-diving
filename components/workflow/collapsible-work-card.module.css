@@ -4,13 +4,13 @@
 /* T14 approved domain surfaces; functional states and artwork retained. */
 .card{background:var(--zt-surface)}
 
-/* Keep desktop headings and status on compact rows without shrinking targets. */
+/* Labels and headings stay in normal flow, including when either wraps. */
+.heading{flex:1}
+.heading>:global(.focus-eyebrow){display:block;overflow-wrap:anywhere}
+.headingButton{overflow-wrap:anywhere}
+/* Keep desktop status compact without shrinking the interactive targets. */
 @media(min-width:761px){
  .header{padding:10px;gap:8px}
- .heading{position:relative}
- .heading:has(.headingButton)>:global(.focus-eyebrow){position:absolute;top:0;pointer-events:none}
- .heading:has(.headingButton) h2{margin:0}
- .headingButton{display:flex;align-items:flex-end;padding:16px 0 0;box-sizing:border-box}
  .status>span{display:inline-flex;align-items:center;gap:6px}
  .status svg{width:18px;height:18px;flex:none}
  .body{padding:0 10px 10px}
