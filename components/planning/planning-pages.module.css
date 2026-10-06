@@ -672,7 +672,7 @@
 .calendarGridViewport{min-width:0;max-width:100%}
 .calendarPage .calendarGrid{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 /* The seven-day grid is a bounded target arrangement; keep its 44px height. */
-:global(html[data-brand='zeustek-diving']) .calendarPage .calendarGrid button{min-width:0!important;min-height:44px!important;padding:5px;height:52px}
+:global(html[data-brand='zeustek-diving']) .calendarPage .calendarGrid button{min-width:0!important;min-height:52px!important;padding:5px;height:auto}
 .calendarPage .calendarGrid strong{font-size:.95rem}
 .calendarPage .tabs{flex-wrap:wrap;overflow:visible;gap:6px}
 .calendarPage .hero{padding:12px;gap:12px}
@@ -705,7 +705,7 @@
  .calendarPage .detailCard dl{grid-template-columns:repeat(2,minmax(0,1fr))}
  .calendarPage .detailCard dl>div:nth-child(3){grid-column:1/-1}
  .calendarPage .actionGrid{grid-template-columns:minmax(0,1fr)}
- .calendarPage .calendarGrid button{height:48px}
+ :global(html[data-brand='zeustek-diving']) .calendarPage .calendarGrid button{min-height:48px!important}
 }
 
 .gasPage .detailPane{display:grid;align-content:start;gap:10px}
