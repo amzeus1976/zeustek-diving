@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { zeustekDb } from '../lib/offline/db';
-import { configureDiveStore, pendingDiveChanges } from '../lib/offline/dive-store';
+import { configureDiveStore, pendingDiveChanges, saveLocalRecord } from '../lib/offline/dive-store';
 import { listEnrichedDivePlans, normalisePlan, saveEnrichedDivePlan } from '../lib/offline/dive-planning-centre';
 import { matchSiteChoice, siteChoiceLabel, siteMapQuery } from '../lib/offline/plan-site-choice';
 import type { DiveSiteRecord, Stored } from '../lib/offline/dive-planning';
@@ -56,13 +56,13 @@ describe('Sites108 Plan editor baseline reconciliation', () => {
     expect(reopened.textFormatting?.notes).toEqual(document);
     expect(fetch).not.toHaveBeenCalled();
   });
-  it('retains oversized notes whitespace through plain-text fallback and leaves legacy trimming compatible',async()=>{
+  it('retains oversized notes whitespace through fallback and later plain-text Saves',async()=>{
     const notes='  '+ 'x'.repeat(100001)+'  \n',update=editedPlanText(planTextFromPlain(notes));
     const base={name:'Fallback QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned' as const,notes:update.text};
     await saveEnrichedDivePlan({...base,entityId:'fallback-plan',textFormatting:{notes:update.document}});
     expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='fallback-plan')?.notes).toBe(notes);
     await saveEnrichedDivePlan({...base,entityId:'legacy-plan'});
-    expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='legacy-plan')?.notes).toBe(notes.trim());
+    expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='legacy-plan')?.notes).toBe(notes);
   });
   it('removes malformed restored formatting before draft normalisation and unrelated Save',async()=>{
     const valid=planTextFromPlain('Aim'),unsafe={aim:valid,notes:planTextFromPlain('x'.repeat(100001)),goals:{version:1,type:'script'},unknown:{secret:'Discard'}};
@@ -72,6 +72,15 @@ describe('Sites108 Plan editor baseline reconciliation', () => {
     const stored=await zeustekDb.entities.get('dive:t12-5d-test:restored-plan');
     expect((stored?.record as {textFormatting?:unknown}|undefined)?.textFormatting).toEqual({aim:valid});
     expect((await listEnrichedDivePlans())[0]?.textFormatting).toEqual({aim:valid});
+  });
+  it('budgets formatting after merging retained legacy fields into the final stored record',async()=>{
+    await saveLocalRecord('trip',{entityId:'prior-size',name:'Prior QA',notes:'Initial',legacyText:'x'.repeat(120000)});
+    const notes='🌊'.repeat(25000),result=await saveEnrichedDivePlan({entityId:'prior-size',name:'Edited QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned',notes,textFormatting:{notes:planTextFromPlain(notes)}});
+    expect(result.planTextFormattingReduced).toBe(true);
+    const row=await zeustekDb.entities.get('dive:t12-5d-test:prior-size');
+    expect(row?.record).not.toHaveProperty('textFormatting');
+    expect(JSON.stringify(row?.record).length).toBeLessThanOrEqual(200000);
+    expect((await listEnrichedDivePlans())[0]?.notes).toBe(notes);
   });
 
   it('renders canonical Site facts and disambiguates identical names using stable IDs', () => {

@@ -12,8 +12,7 @@ const formattedFields=['aim','goals','secondaryObjectives','notes','conditions.n
   ...['keyRisks','mitigations','pressures','stopAbortCriteria','taskLoading','communicationPlan','decisionPoints','lostBuddyPlan','lostGasPlan','surfaceProtocol','overheadPrompt','teamConcerns','reviewNotes'].map(key=>'humanFactors.'+key),
   ...['evacuation','hyperbaricAccessNotes','hyperbaricPathway','notes'].map(key=>'emergency.'+key)];
 
-/** Empty metadata identifies visual-editor text too, including plain-text fallback.
- * Read only supported keys, so imported extra properties never inflate a draft. */
+/** Read only supported keys, so imported extra properties never inflate a draft. */
 export function normalisePlanTextFormats(value:unknown):PlanTextFormats|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value))return undefined;
   const result:PlanTextFormats={};

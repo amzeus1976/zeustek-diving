@@ -272,7 +272,7 @@ export async function saveEnrichedDivePlan(input: Omit<EnrichedDivePlan, 'create
     name: input.name.trim(),
     siteName: input.siteName?.trim() || '',
     buddy: input.buddy?.trim() || '',
-    notes: textFormatting ? input.notes ?? '' : input.notes?.trim() || '',
+    notes: input.notes ?? '',
     status: legacyStatus,
     lifecycleStatus,
     primaryObjective: 'Return safely to the surface',
