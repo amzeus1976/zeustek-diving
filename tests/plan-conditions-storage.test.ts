@@ -6,6 +6,13 @@ const readings=Array.from({length:3000},(_,i)=>({id:`reading-${i}`,metric:i%2?'w
 const snapshot={version:1,request:{siteId:'fixture-site',date:'2026-10-11',time:'12:00',provider:'fixture-weather'},readings,diagnostics:[]};
 const plan={entityId:'fixture-plan',name:'Owner-entered plan',notes:'Owner-entered text 🌊 海',conditions:{weather:'Saved conditions',conditionsV1:snapshot}};
 describe('Lossless bounded saved Plan conditions',()=>{
+ it('fits high-entropy CJK text using the API character metric and rejects forged plane-packet lengths and padding',()=>{
+  let seed=123456789;const text=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return String.fromCharCode(0x4e00+((seed>>>0)%20992));}).join('');
+  const dive={notes:'Created from Plan',editorFields:'q'.repeat(16000),originatingPlanRevision:{snapshot:{record:{entityId:'plan',aim:text,equipmentIds:['equipment']}}}};
+  const packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);expect(unpackConditionsRecord('dive',JSON.parse(JSON.stringify(packed)))).toEqual(dive);
+  const source=packed.originatingPlanRevision.snapshot.record as unknown as Record<string,unknown>,packet=source.planTextPacked as Record<string,unknown>;expect(packet.encoding).toBe('gzip-utf16planes-unicode15');
+  for(const replacement of [{...packet,compressedBytes:9000000},{...packet,compressedBytes:Number(packet.compressedBytes)-1},{...packet,jsonBytes:100},{...packet,body:String(packet.body)+'a'},{...packet,body:String(packet.body).slice(0,-1)+'\u8fff'}]){const broken=structuredClone(packed);(broken.originatingPlanRevision.snapshot.record as unknown as Record<string,unknown>).planTextPacked=replacement;expect(()=>unpackConditionsRecord('dive',broken)).toThrow(/conditions/i);}
+ });
  it('packs incompressible non-narrative source text without base64 expansion and preserves strict decoding bounds',()=>{
   let seed=123456789;const text=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
   for(const path of ['aim','emergency.notes']){

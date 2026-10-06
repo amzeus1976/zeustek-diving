@@ -3,6 +3,7 @@ import {normalisePlanTextFormats,PLAN_TEXT_FIELDS} from '../planning/formatted-t
 
 const MAX_JSON_BYTES=5_000_000;
 const MAX_PACKED_CHARACTERS=160_000;
+const MAX_TEXT_PACKED_CHARACTERS=200_000;
 const object=(value:unknown):value is Record<string,unknown>=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
 const invalid=()=>new Error('Saved conditions exceed the supported size or contain invalid packed data. The original device record is retained.');
 const crcTable=Uint32Array.from({length:256},(_,index)=>{let n=index;for(let bit=0;bit<8;bit++)n=(n&1)?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
@@ -15,7 +16,15 @@ function packedJson(value:unknown){
   if(body.length<=MAX_PACKED_CHARACTERS)return {version:1,encoding:'gzip-base64',jsonBytes:bytes.length,body};
   // Private JSON can carry each octet as U+0100..U+01FF without base64 expansion.
   // This preserves the same allocation/CRC bounds and the existing character limit.
-  if(compressed.length>MAX_PACKED_CHARACTERS)throw invalid();
+  if(compressed.length>MAX_PACKED_CHARACTERS){
+    const json=JSON.stringify(value),units=json.length;if(units*2>MAX_JSON_BYTES)throw invalid();
+    const planes=new Uint8Array(units*2);for(let index=0;index<units;index++){const code=json.charCodeAt(index);planes[index]=code>>>8;planes[units+index]=code&255;}
+    const payload=gzipSync(planes,{level:6,mtime:0});let body='',bits=0,buffer=0;
+    for(const byte of payload){buffer=(buffer<<8)|byte;bits+=8;if(bits>=15){bits-=15;body+=String.fromCharCode(0x1000+((buffer>>>bits)&32767));buffer&=(1<<bits)-1;}}
+    if(bits)body+=String.fromCharCode(0x1000+(buffer<<(15-bits)));
+    if(body.length>MAX_TEXT_PACKED_CHARACTERS)throw invalid();
+    return {version:1,encoding:'gzip-utf16planes-unicode15',jsonBytes:planes.length,compressedBytes:payload.length,body};
+  }
   let compact='';for(let start=0;start<compressed.length;start+=8192)compact+=String.fromCharCode(...Array.from(compressed.subarray(start,start+8192),byte=>byte+256));
   return {version:1,encoding:'gzip-unicode8',jsonBytes:bytes.length,body:compact};
 }
@@ -69,16 +78,26 @@ function restoredNotes(repeated:unknown,source:Record<string,unknown>){
   });return parts.join('');
 }
 function readPackedJson(packed:unknown):unknown {
-  if(!object(packed)||packed.version!==1||(packed.encoding!=='gzip-base64'&&packed.encoding!=='gzip-unicode8')||
+  if(!object(packed)||packed.version!==1||(packed.encoding!=='gzip-base64'&&packed.encoding!=='gzip-unicode8'&&packed.encoding!=='gzip-utf16planes-unicode15')||
      !Number.isInteger(packed.jsonBytes)||Number(packed.jsonBytes)<1||Number(packed.jsonBytes)>MAX_JSON_BYTES||
-     typeof packed.body!=='string'||packed.body.length>MAX_PACKED_CHARACTERS||(packed.encoding==='gzip-base64'?!/^[A-Za-z0-9+/]*={0,2}$/.test(packed.body):!/^[\u0100-\u01ff]+$/.test(packed.body)))throw invalid();
+     typeof packed.body!=='string'||packed.body.length>(packed.encoding==='gzip-utf16planes-unicode15'?MAX_TEXT_PACKED_CHARACTERS:MAX_PACKED_CHARACTERS)||(packed.encoding==='gzip-base64'?!/^[A-Za-z0-9+/]*={0,2}$/.test(packed.body):packed.encoding==='gzip-unicode8'?!/^[\u0100-\u01ff]+$/.test(packed.body):!/^[\u1000-\u8fff]+$/.test(packed.body)))throw invalid();
   try{
-    const binary=packed.encoding==='gzip-base64'?atob(packed.body):packed.body,offset=packed.encoding==='gzip-base64'?0:256,compressed=Uint8Array.from(binary,char=>char.charCodeAt(0)-offset);
+    let compressed:Uint8Array;
+    if(packed.encoding==='gzip-utf16planes-unicode15'){
+      const length=Number(packed.compressedBytes);
+      if(!Number.isInteger(length)||length<18||length>MAX_JSON_BYTES||packed.body.length!==Math.ceil(length*8/15)||Number(packed.jsonBytes)%2)throw invalid();
+      compressed=new Uint8Array(length);let buffer=0,bits=0,index=0;
+      for(const char of packed.body){buffer=(buffer<<15)|(char.charCodeAt(0)-0x1000);bits+=15;while(bits>=8){bits-=8;if(index<length)compressed[index++]=(buffer>>>bits)&255;else if(((buffer>>>bits)&255)!==0)throw invalid();}buffer&=(1<<bits)-1;}
+      if(index!==length||buffer!==0)throw invalid();
+    }else{const binary=packed.encoding==='gzip-base64'?atob(packed.body):packed.body,offset=packed.encoding==='gzip-base64'?0:256;compressed=Uint8Array.from(binary,char=>char.charCodeAt(0)-offset);}
     if(compressed.length<18||compressed[0]!==31||compressed[1]!==139||compressed[2]!==8)throw invalid();
     const tail=new DataView(compressed.buffer,compressed.byteOffset+compressed.length-8,8);
     if(tail.getUint32(4,true)!==packed.jsonBytes)throw invalid();
     const bytes=gunzipSync(compressed,{out:new Uint8Array(Number(packed.jsonBytes))});
     if(bytes.length!==packed.jsonBytes||crc32(bytes)!==tail.getUint32(0,true))throw invalid();
+    if(packed.encoding==='gzip-utf16planes-unicode15'){
+      const units=bytes.length/2;let json='';for(let start=0;start<units;start+=8192){const codes=Array.from({length:Math.min(8192,units-start)},(_,offset)=>(bytes[start+offset]!<<8)|bytes[units+start+offset]!);json+=String.fromCharCode(...codes);}return JSON.parse(json);
+    }
     return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
   }catch{throw invalid();}
 }
