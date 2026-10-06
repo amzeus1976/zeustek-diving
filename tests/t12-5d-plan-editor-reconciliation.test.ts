@@ -7,6 +7,7 @@ import { configureDiveStore, pendingDiveChanges } from '../lib/offline/dive-stor
 import { listEnrichedDivePlans, saveEnrichedDivePlan } from '../lib/offline/dive-planning-centre';
 import { matchSiteChoice, siteChoiceLabel, siteMapQuery } from '../lib/offline/plan-site-choice';
 import type { DiveSiteRecord, Stored } from '../lib/offline/dive-planning';
+import {planTextFromPlain} from '../lib/planning/formatted-text';
 
 const editor = () => readFileSync(resolve(process.cwd(), 'components/dive-planning-centre.tsx'), 'utf8');
 
@@ -36,15 +37,24 @@ describe('Sites108 Plan editor baseline reconciliation', () => {
     expect(source).toContain("onClick={()=>update({planTeam:(draft.planTeam??[]).filter(row=>row.personId!==member.personId)})}");
   });
 
-  it('retains spaces during controlled multiline typing, and uses compact accessible help', () => {
+  it('uses compact accessible help', () => {
     const source = editor();
-    expect(source).toContain("goals:e.target.value.split('\\n')");
-    expect(source).toContain("secondaryObjectives:e.target.value.split('\\n')");
-    expect(source).not.toContain("e.target.value.split('\\n').map(value=>value.trim()).filter(Boolean)");
-    expect(source).not.toContain("e.target.value.split('\\n').map((v:string)=>v.trim()).filter(Boolean)");
     expect(source).toContain('aria-label="About duplicate Site selection"');
     expect(source).toContain('aria-label="About team capability"');
     expect(readFileSync(resolve(process.cwd(), 'components/dive-planning-centre.module.css'), 'utf8')).toContain('.editorGrid label>.infoButton');
+  });
+
+  it('saves and reopens private formatting alongside exact canonical text offline',async()=>{
+    const notes='  Notes 🌊\n\nKeep these spaces  ',document=planTextFromPlain(notes);
+    document.content![0]!.content![0]!.marks=[{type:'bold'},{type:'underline'}];
+    await saveEnrichedDivePlan({entityId:'formatted-plan',name:'Formatted QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned',notes,aim:'QA aim',goals:['First  ','','Second'],textFormatting:{notes:document}});
+    const initial=(await listEnrichedDivePlans())[0]!;
+    await saveEnrichedDivePlan({...initial,entityId:initial.entityId,name:'Reopened formatted QA'});
+    const reopened=(await listEnrichedDivePlans())[0]!;
+    expect(reopened.notes).toBe(notes);
+    expect(reopened.goals).toEqual(['First  ','','Second']);
+    expect(reopened.textFormatting?.notes).toEqual(document);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('renders canonical Site facts and disambiguates identical names using stable IDs', () => {

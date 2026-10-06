@@ -104,6 +104,8 @@ export interface PlanGasReference {
   };
 }
 export interface EnrichedDivePlanExtension {
+  /** Private formatting accompanies plain text; excluded from public/API fields. */
+  textFormatting?: import('../planning/formatted-text').PlanTextFormats;
   /** Private canonical non-human contact references; never copied into the People team. */
   diveCentreIds?: string[];
   weatherProvider?: import('../weather/provider-contract').WeatherProviderId;
@@ -263,7 +265,7 @@ export async function saveEnrichedDivePlan(input: Omit<EnrichedDivePlan, 'create
     name: input.name.trim(),
     siteName: input.siteName?.trim() || '',
     buddy: input.buddy?.trim() || '',
-    notes: input.notes?.trim() || '',
+    notes: input.textFormatting?.notes ? input.notes ?? '' : input.notes?.trim() || '',
     status: legacyStatus,
     lifecycleStatus,
     primaryObjective: 'Return safely to the surface',
