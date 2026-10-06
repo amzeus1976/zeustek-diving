@@ -13,6 +13,7 @@ import {recordHash} from './canonical';
 import {referencesPlanningRecord,planningRecordHasConnections,planningRecordDeletionGuarded} from '../planning/plan-deletion';
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
 import {beginCloudSyncEvidence,cancelCloudSyncEvidence,finishCloudSyncEvidence,resetCloudSyncEvidence} from './cloud-sync-evidence';
+import {fitPlanTextForSync} from '../planning/plan-text-sync';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
@@ -153,14 +154,16 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
   }
   const queued = (await zeustekDb.settings.get(`pending:${localId}`))?.value as Pending | undefined;
   const now = new Date().toISOString();
-  const record = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
+  const completeRecord = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
+  const prepared = kind==='trip' ? fitPlanTextForSync(completeRecord) : {record:completeRecord,formattingReduced:false};
+  const record=prepared.record;
   const pending: Pending = {id,kind,record,baseModifiedAt:queued ? queued.baseModifiedAt : typeof prior?.modifiedAt === 'string' ? prior.modifiedAt : null,token:crypto.randomUUID(),state:'pending'};
   await mutateEntity({entityId:localId,module,entityType:kind,schemaVersion:1,operation:old ? 'update':'create',record,pendingSync:{key:`pending:${localId}`,value:pending as unknown as JsonValue}});
   // Enclosing multi-record edits must finish before exposing changes or sending their outbox.
   const transaction=Dexie.currentTransaction;
   if(transaction)transaction.on('complete',()=>{changed();void flushDiveChanges();});
   else{changed();void flushDiveChanges();}
-  return {id};
+  return {id,...(prepared.formattingReduced ? {planTextFormattingReduced:true} : {})};
 }
 export async function deleteLocalRecord(id: string) {
   return sequentialWrite(`${moduleName()}:${id}`,()=>deleteLocalRecordInternal(id));

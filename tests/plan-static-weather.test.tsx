@@ -15,6 +15,8 @@ vi.mock('../lib/weather/client-provider',()=>({weatherProvider:()=>weather}));
 vi.mock('../lib/planning/calendar-plan-creation',()=>({savePlanDraftWithConnections:persistence.save}));
 import {PlanEditor} from '../components/dive-planning-centre';
 import {RecordEditorWorkspace} from '../components/shared/record-editor-workspace';
+import {RichTextField} from '../components/planning/rich-text-field';
+import {planTextFromPlain,type PlanTextDocument} from '../lib/planning/formatted-text';
 
 type Node={type?:unknown;props?:Record<string,unknown>&{children?:unknown}};
 function nodes(value:unknown):Node[]{if(Array.isArray(value))return value.flatMap(nodes);if(!value||typeof value!=='object'||!('props' in value))return [];const node=value as Node;return [node,...nodes(node.props?.children)];}
@@ -35,6 +37,32 @@ function mount(plan:StoredEnrichedDivePlan,copy=false){
 afterEach(()=>{vi.restoreAllMocks();vi.useRealTimers();});
 
 describe('Static weather in the Dive Plan editor',()=>{
+ it('preserves spaces and blank lines through formatted Goals and Secondary objectives edits and Save',async()=>{
+  const {plan,snapshot}=fixture(),editor=mount(plan),initial=JSON.stringify(editor.workspace().props?.value);
+  for(const label of ['Goals','Secondary objectives']){
+   const field=editor.render().find(node=>node.type===RichTextField&&node.props?.label===label)!;
+   const value='First  \n\n  Second 🌊',document=planTextFromPlain(value);
+   document.content![0]!.content![0]!.marks=[{type:'bold'}];
+   (field.props!.onChange as (text:string,document:PlanTextDocument)=>void)(value,document);
+  }
+  expect(JSON.stringify(editor.workspace().props?.value)).not.toBe(initial);
+  await (editor.workspace().props!.save as ()=>Promise<void>)();
+  const saved=persistence.save.mock.calls[0]![0] as StoredEnrichedDivePlan;
+  expect(saved.goals).toEqual(['First  ','','  Second 🌊']);
+  expect(saved.secondaryObjectives).toEqual(saved.goals);
+  expect(saved.textFormatting?.goals?.content![0]!.content![0]!.marks).toEqual([{type:'bold'}]);
+  expect(saved.textFormatting?.secondaryObjectives).toEqual(saved.textFormatting?.goals);
+  expect(saved.conditions?.conditionsV1).toBe(snapshot);expect(weather.forecast).not.toHaveBeenCalled();
+ });
+ it('marks a formatting-only edit dirty and saves it without changing the plain text',async()=>{
+  const {plan}=fixture(),editor=mount(plan),initial=JSON.stringify(editor.workspace().props?.value),field=editor.render().find(node=>node.type===RichTextField&&node.props?.label==='Plan notes')!;
+  const document=planTextFromPlain(plan.notes);document.content![0]!.content![0]!.marks=[{type:'underline'}];
+  (field.props!.onChange as (text:string,document:PlanTextDocument)=>void)(plan.notes,document);
+  expect(JSON.stringify(editor.workspace().props?.value)).not.toBe(initial);
+  await (editor.workspace().props!.save as ()=>Promise<void>)();
+  const saved=persistence.save.mock.calls[0]![0] as StoredEnrichedDivePlan;
+  expect(saved.notes).toBe(plan.notes);expect(saved.textFormatting?.notes).toEqual(document);
+ });
  it('opens with saved values and source, without mounting provider readings or requesting weather',()=>{
   const {plan,snapshot}=fixture(),editor=mount(plan),tree=editor.render();
   expect(tree.some(node=>node.props?.snapshot===snapshot)).toBe(false);

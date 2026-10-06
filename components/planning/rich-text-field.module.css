@@ -1,0 +1,21 @@
+.field{display:grid;gap:6px;min-width:0;align-content:start;margin-bottom:11px;color:var(--zt-text-muted,#bbb)}
+.caption{display:flex;gap:6px;align-items:center;font-size:1rem}
+.frame{border:1px solid var(--zt-border-cyan,#177e92);border-radius:9px;background:var(--zt-input-bg,#080808);overflow:clip;min-width:0}
+.frame:focus-within{outline:2px solid var(--zt-focus,#00d8ff);outline-offset:2px}
+/* Keep the toolbar compact when the host editor also styles fieldsets. */
+.toolbar.toolbar{display:flex;flex-wrap:wrap;gap:2px;padding:4px;margin:0;min-width:0;border:0;border-radius:0;border-bottom:1px solid var(--zt-border,#333);background:var(--zt-surface,#111)}
+.toolbar button{display:inline-flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--zt-text,#eee);cursor:pointer}
+.toolbar button[aria-pressed=true]{background:#153941;border-color:var(--zt-accent-cyan,#00d8ff);color:var(--zt-accent-cyan,#00d8ff)}
+.toolbar button:hover{border-color:var(--zt-accent-cyan,#00d8ff)}
+.toolbar button:focus-visible{outline:2px solid var(--zt-focus,#00d8ff);outline-offset:1px}
+.toolbar button:disabled{opacity:.4;cursor:default}
+.toolbar svg{width:18px;height:18px}
+.editor{min-height:224px;padding:12px;outline:none;color:var(--zt-text,#eee);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:1rem}
+.editor p,.readOnly p{margin:0 0 .65em}
+.editor p:last-child,.readOnly p:last-child{margin-bottom:0}
+.editor ul,.editor ol,.readOnly ul,.readOnly ol{margin:.4em 0;padding-left:1.8em;list-style-position:outside}
+.editor ul,.readOnly ul{list-style-type:disc}
+.editor ol,.readOnly ol{list-style-type:decimal}
+.editor li,.readOnly li{margin:.25em 0}
+.readOnly{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+@media(max-width:760px){.editor{font-size:16px}.toolbar.toolbar{gap:1px}}

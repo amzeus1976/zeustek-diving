@@ -3,6 +3,7 @@ import { createDiveDraftFromPlan, loadOriginatingPlan } from './dive-context';
 import type { DiveRecord } from './dives';
 import type { LoadoutApplication } from './loadouts-gas';
 import type { PlannedCylinderAssignment } from './technical-workspace';
+import {normalisePlanTextFormats} from '../planning/formatted-text';
 
 export type PlanLifecycleStatus = 'draft' | 'planned' | 'ready' | 'in_progress' | 'completed' | 'cancelled';
 export interface PlanTeamMember {
@@ -104,6 +105,8 @@ export interface PlanGasReference {
   };
 }
 export interface EnrichedDivePlanExtension {
+  /** Private formatting accompanies plain text; excluded from public/API fields. */
+  textFormatting?: import('../planning/formatted-text').PlanTextFormats;
   /** Private canonical non-human contact references; never copied into the People team. */
   diveCentreIds?: string[];
   weatherProvider?: import('../weather/provider-contract').WeatherProviderId;
@@ -156,11 +159,14 @@ export const DEFAULT_PLAN_CHECKLIST: PlanChecklistItem[] = [
 ];
 
 export function normalisePlan(plan: StoredEnrichedDivePlan): StoredEnrichedDivePlan {
+  const {textFormatting:incomingFormatting,...plainPlan}=plan;
+  const textFormatting=normalisePlanTextFormats(incomingFormatting);
   const lifecycleStatus: PlanLifecycleStatus = plan.lifecycleStatus ?? (
     plan.status === 'completed' ? 'completed' : plan.status === 'confirmed' ? 'planned' : 'draft'
   );
   return {
-    ...plan,
+    ...plainPlan,
+    ...(textFormatting ? {textFormatting} : {}),
     lifecycleStatus,
     primaryObjective: plan.primaryObjective ?? 'Return safely to the surface',
     aim: plan.aim ?? plan.objective ?? '',
@@ -254,16 +260,19 @@ export function evaluatePlanReadiness(plan: EnrichedDivePlan): PlanReadiness {
 }
 
 export async function saveEnrichedDivePlan(input: Omit<EnrichedDivePlan, 'createdAt' | 'modifiedAt'> & { entityId?: string }) {
+  const {textFormatting:incomingFormatting,...plainInput}=input;
+  const textFormatting=normalisePlanTextFormats(incomingFormatting);
   if (!input.name.trim()) throw new Error('Enter a plan name.');
   if (!input.startDate && !input.startAt) throw new Error('Choose a planned date.');
   const lifecycleStatus = input.lifecycleStatus ?? 'draft';
   const legacyStatus: DiveTripRecord['status'] = lifecycleStatus === 'completed' ? 'completed' : lifecycleStatus === 'ready' || lifecycleStatus === 'in_progress' || lifecycleStatus === 'planned' ? 'confirmed' : 'planned';
   return saveDiveTrip({
-    ...input,
+    ...plainInput,
+    ...(textFormatting ? {textFormatting} : {}),
     name: input.name.trim(),
     siteName: input.siteName?.trim() || '',
     buddy: input.buddy?.trim() || '',
-    notes: input.notes?.trim() || '',
+    notes: input.notes ?? '',
     status: legacyStatus,
     lifecycleStatus,
     primaryObjective: 'Return safely to the surface',

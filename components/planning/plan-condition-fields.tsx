@@ -1,6 +1,7 @@
 import type {EnrichedDivePlanExtension} from '../../lib/offline/dive-planning-centre';
 import type {PlanWeatherField} from '../../lib/plan-weather';
 import {depthLabel} from '../../lib/weather/conditions-model';
+import {RichTextField} from './rich-text-field';
 import styles from './plan-condition-fields.module.css';
 
 export function PlanConditionFields({draft,change,changeWeather}:{draft:EnrichedDivePlanExtension;change:(patch:Partial<EnrichedDivePlanExtension>)=>void;changeWeather:(field:PlanWeatherField,value:number|string|null)=>void}){
@@ -22,7 +23,7 @@ export function PlanConditionFields({draft,change,changeWeather}:{draft:Enriched
   <label><input type="checkbox" checked={Boolean(draft.permitRequired)} onChange={e=>change({permitRequired:e.target.checked})}/> Access permit required</label>
   <label><input type="checkbox" checked={Boolean(draft.permitConfirmed)} onChange={e=>change({permitConfirmed:e.target.checked})}/> Permit confirmed</label>
   <label>Entry cost<input value={draft.entryCost??''} onChange={e=>change({entryCost:e.target.value})}/></label>
-  <h3>Notes</h3><label className={styles.wide}>Conditions notes<textarea value={c?.notes??''} onChange={e=>change({conditions:{...c,notes:e.target.value}})}/></label>
+  <h3>Notes</h3><RichTextField className={styles.wide} label="Conditions notes" value={c?.notes??''} document={draft.textFormatting?.['conditions.notes']} onChange={(text,document)=>change({conditions:{...c,notes:text},textFormatting:{...draft.textFormatting,'conditions.notes':document}})}/>
   <p className={styles.wide}>Get Weather fills empty measurements. Refresh Weather updates weather-sourced values and preserves your entries. Underwater visibility needs an actual underwater source. Planning limits, permits, costs and notes stay under your control. Surface temperature does not establish the temperature at dive depth.</p>
  </div>;
 }

@@ -3,10 +3,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { zeustekDb } from '../lib/offline/db';
-import { configureDiveStore, pendingDiveChanges } from '../lib/offline/dive-store';
-import { listEnrichedDivePlans, saveEnrichedDivePlan } from '../lib/offline/dive-planning-centre';
+import { configureDiveStore, pendingDiveChanges, saveLocalRecord } from '../lib/offline/dive-store';
+import { listEnrichedDivePlans, normalisePlan, saveEnrichedDivePlan } from '../lib/offline/dive-planning-centre';
 import { matchSiteChoice, siteChoiceLabel, siteMapQuery } from '../lib/offline/plan-site-choice';
 import type { DiveSiteRecord, Stored } from '../lib/offline/dive-planning';
+import {editedPlanText,planTextFromPlain} from '../lib/planning/formatted-text';
 
 const editor = () => readFileSync(resolve(process.cwd(), 'components/dive-planning-centre.tsx'), 'utf8');
 
@@ -36,15 +37,50 @@ describe('Sites108 Plan editor baseline reconciliation', () => {
     expect(source).toContain("onClick={()=>update({planTeam:(draft.planTeam??[]).filter(row=>row.personId!==member.personId)})}");
   });
 
-  it('retains spaces during controlled multiline typing, and uses compact accessible help', () => {
+  it('uses compact accessible help', () => {
     const source = editor();
-    expect(source).toContain("goals:e.target.value.split('\\n')");
-    expect(source).toContain("secondaryObjectives:e.target.value.split('\\n')");
-    expect(source).not.toContain("e.target.value.split('\\n').map(value=>value.trim()).filter(Boolean)");
-    expect(source).not.toContain("e.target.value.split('\\n').map((v:string)=>v.trim()).filter(Boolean)");
     expect(source).toContain('aria-label="About duplicate Site selection"');
     expect(source).toContain('aria-label="About team capability"');
     expect(readFileSync(resolve(process.cwd(), 'components/dive-planning-centre.module.css'), 'utf8')).toContain('.editorGrid label>.infoButton');
+  });
+
+  it('saves and reopens private formatting alongside exact canonical text offline',async()=>{
+    const notes='  Notes 🌊\n\nKeep these spaces  ',document=planTextFromPlain(notes);
+    document.content![0]!.content![0]!.marks=[{type:'bold'},{type:'underline'}];
+    await saveEnrichedDivePlan({entityId:'formatted-plan',name:'Formatted QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned',notes,aim:'QA aim',goals:['First  ','','Second'],textFormatting:{notes:document}});
+    const initial=(await listEnrichedDivePlans())[0]!;
+    await saveEnrichedDivePlan({...initial,entityId:initial.entityId,name:'Reopened formatted QA'});
+    const reopened=(await listEnrichedDivePlans())[0]!;
+    expect(reopened.notes).toBe(notes);
+    expect(reopened.goals).toEqual(['First  ','','Second']);
+    expect(reopened.textFormatting?.notes).toEqual(document);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('retains oversized notes whitespace through fallback and later plain-text Saves',async()=>{
+    const notes='  '+ 'x'.repeat(100001)+'  \n',update=editedPlanText(planTextFromPlain(notes));
+    const base={name:'Fallback QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned' as const,notes:update.text};
+    await saveEnrichedDivePlan({...base,entityId:'fallback-plan',textFormatting:{notes:update.document}});
+    expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='fallback-plan')?.notes).toBe(notes);
+    await saveEnrichedDivePlan({...base,entityId:'legacy-plan'});
+    expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='legacy-plan')?.notes).toBe(notes);
+  });
+  it('removes malformed restored formatting before draft normalisation and unrelated Save',async()=>{
+    const valid=planTextFromPlain('Aim'),unsafe={aim:valid,notes:planTextFromPlain('x'.repeat(100001)),goals:{version:1,type:'script'},unknown:{secret:'Discard'}};
+    const plan={entityId:'restored-plan',name:'Restored QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned' as const,notes:'  Existing notes  ',createdAt:'now',modifiedAt:'now',textFormatting:unsafe as unknown as NonNullable<ReturnType<typeof normalisePlan>['textFormatting']>};
+    expect(normalisePlan(plan).textFormatting).toEqual({aim:valid});
+    await saveEnrichedDivePlan({...plan,name:'Unrelated name edit'});
+    const stored=await zeustekDb.entities.get('dive:t12-5d-test:restored-plan');
+    expect((stored?.record as {textFormatting?:unknown}|undefined)?.textFormatting).toEqual({aim:valid});
+    expect((await listEnrichedDivePlans())[0]?.textFormatting).toEqual({aim:valid});
+  });
+  it('budgets formatting after merging retained legacy fields into the final stored record',async()=>{
+    await saveLocalRecord('trip',{entityId:'prior-size',name:'Prior QA',notes:'Initial',legacyText:'x'.repeat(120000)});
+    const notes='🌊'.repeat(25000),result=await saveEnrichedDivePlan({entityId:'prior-size',name:'Edited QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned',notes,textFormatting:{notes:planTextFromPlain(notes)}});
+    expect(result.planTextFormattingReduced).toBe(true);
+    const row=await zeustekDb.entities.get('dive:t12-5d-test:prior-size');
+    expect(row?.record).not.toHaveProperty('textFormatting');
+    expect(JSON.stringify(row?.record).length).toBeLessThanOrEqual(200000);
+    expect((await listEnrichedDivePlans())[0]?.notes).toBe(notes);
   });
 
   it('renders canonical Site facts and disambiguates identical names using stable IDs', () => {

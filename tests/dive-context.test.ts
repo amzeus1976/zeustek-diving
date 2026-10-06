@@ -8,6 +8,10 @@ import { saveDivePerspective } from '../lib/offline/dive-perspectives';
 import { localBackupPayload, restoreLocalPayload } from '../lib/offline/local-backup';
 import { loadMediaMetadata } from '../lib/offline/media-metadata';
 import { DiveEditorWrites } from '../lib/offline/dive-editor-writes';
+import {planTextFromPlain} from '../lib/planning/formatted-text';
+import {recordHash} from '../lib/offline/canonical';
+import {packConditionsRecord,unpackConditionsRecord} from '../lib/weather/conditions-storage';
+import {createDiveDraftFromEnrichedPlan} from '../lib/offline/dive-planning-centre';
 
 beforeEach(async () => {
   vi.stubGlobal('window', new EventTarget()); vi.stubGlobal('navigator', { onLine: false }); vi.stubGlobal('fetch', vi.fn());
@@ -18,6 +22,44 @@ afterEach(() => vi.unstubAllGlobals());
 const plan = { entityId: 'same-plan', name: 'Quarry practice', siteName: 'Capernwray', siteId: 'same-site', startDate: '2026-09-12', endDate: '2026-09-12', startAt: '2026-09-12T10:00', buddy: 'Buddy', status: 'planned', notes: 'Original intent', futurePlanField: 'retain' };
 
 describe('shared Dive references and save boundary', () => {
+  it('deduplicates the real enriched converter narrative for large objectives and stop/abort entries without losing source integrity',async()=>{
+    let seed=123456789;const large=Array.from({length:185000},()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[(seed>>>0)%64];}).join('');
+    for(const field of ['objective','stopAbortCriteria','manyRows']){
+      const source={...plan,entityId:plan.entityId+'-'+field,notes:'',...(field==='objective'?{objective:large}:{humanFactors:{stopAbortCriteria:field==='manyRows'?Array.from({length:190},()=>large.slice(0,1000)):[large]}})};
+      await saveLocalRecord('trip',source);const draft=await createDiveDraftFromEnrichedPlan(source.entityId);
+      const dive={...draft,entityId:'converted',site:draft.site!,date:draft.date!,maxDepthM:12,bottomTimeMin:38,gas:'Air',notes:draft.notes!,editorFields:'q'.repeat(12000)};
+      expect(dive.notes).toContain(field==='manyRows'?large.slice(0,1000):large);expect(JSON.stringify(dive).length).toBeGreaterThan(200000);
+      const packed=packConditionsRecord('dive',dive);expect(JSON.stringify(packed).length).toBeLessThan(200000);
+      const restored=unpackConditionsRecord('dive',JSON.parse(JSON.stringify(packed)));expect(restored).toEqual(dive);expect(await loadOriginatingPlan(restored)).toMatchObject(source);
+    }
+  });
+  it('retains the entire formatted source Plan and binds immutable snapshots to exact source provenance through backup',async()=>{
+    const notes='  '+'x'.repeat(66996)+'  ',formatting={notes:planTextFromPlain(notes)};
+    await saveLocalRecord('trip',{...plan,notes,textFormatting:formatting});
+    const source=(await zeustekDb.entities.get('dive:context-test:same-plan'))!;
+    const eventsBefore=await zeustekDb.events.count(),draft=await createDiveDraftFromPlan(plan.entityId);
+    const revision=draft.originatingPlanRevision!,snapshot=revision.snapshot!;
+    expect(revision.recordHash).toBe(source.recordHash);expect(revision.eventId).toBe(source.updatedEventId);
+    expect(snapshot.record.notes).toBe(notes);expect(snapshot.record.futurePlanField).toBe('retain');
+    expect(snapshot.record).toHaveProperty('textFormatting',formatting);expect(await recordHash(snapshot.record)).toBe(revision.recordHash);
+    expect(snapshot.version).toBe(2);expect(snapshot.integrityHash).toBeTruthy();
+    expect((await zeustekDb.entities.get(source.entityId))?.record).toHaveProperty('textFormatting',formatting);
+    expect(await zeustekDb.events.count()).toBe(eventsBefore);
+    await saveDive({...draft,entityId:'formatted-dive',site:draft.site!,date:draft.date!,maxDepthM:12,bottomTimeMin:38,gas:'Air',notes:draft.notes!});
+    const dive=(await listDives())[0]!;
+    const packed=packConditionsRecord('dive',{...dive});expect(JSON.stringify(packed).length).toBeLessThan(200000);
+    const cloudCopy=unpackConditionsRecord('dive',JSON.parse(JSON.stringify(packed)));expect(cloudCopy).toEqual(dive);
+    expect(await loadOriginatingPlan(cloudCopy)).toMatchObject({notes,textFormatting:formatting});
+    expect(await loadOriginatingPlan(dive)).toMatchObject({notes,futurePlanField:'retain'});
+    await saveLocalRecord('trip',{entityId:plan.entityId,notes:'Later changed Plan'});
+    const backup=await localBackupPayload();for(const table of zeustekDb.tables)await table.clear();await restoreLocalPayload(backup);
+    const restored=(await listDives())[0]!;expect(await loadOriginatingPlan(restored)).toMatchObject({notes});
+    const tampered=structuredClone(restored);tampered.originatingPlanRevision!.snapshot!.record.notes='Forged';
+    expect(await loadOriginatingPlan(tampered)).toBeNull();
+    for(const field of ['eventId','recordHash','modifiedAt'] as const){const corrupted=structuredClone(restored);corrupted.originatingPlanRevision![field]='Corrupted';expect(await loadOriginatingPlan(corrupted)).toBeNull();}
+    const missing=structuredClone(restored);delete missing.originatingPlanRevision!.snapshot!.integrityHash;expect(await loadOriginatingPlan(missing)).toBeNull();
+    configureDiveStore('other-account');expect(await loadOriginatingPlan(restored)).toBeNull();
+  });
   it('preserves the original immutable Plan revision through later edits and backup/restore', async () => {
     await saveLocalRecord('trip', plan);
     const draft = await createDiveDraftFromPlan(plan.entityId);
