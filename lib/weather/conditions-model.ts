@@ -327,6 +327,29 @@ export function conditionGroup(reading: ConditionReading) {
     reading.metric === 'visibility' ? reading.unit : '',
   ]);
 }
+// Retain only reusable formatters, never readings or owner data. Bound regions
+// so imported snapshots cannot grow process state without limit.
+const wallTimeFormatters = new Map<string, Intl.DateTimeFormat | null>();
+function wallTimeFormatter(timeZone: string) {
+  const cached = wallTimeFormatters.get(timeZone);
+  if (cached !== undefined) {
+    wallTimeFormatters.delete(timeZone);
+    wallTimeFormatters.set(timeZone, cached);
+    return cached;
+  }
+  let formatter: Intl.DateTimeFormat | null = null;
+  try {
+    formatter = new Intl.DateTimeFormat('sv-SE', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    });
+  } catch { /* Invalid zones remain unavailable, as before. */ }
+  if (wallTimeFormatters.size >= 16) {
+    wallTimeFormatters.delete(wallTimeFormatters.keys().next().value!);
+  }
+  wallTimeFormatters.set(timeZone, formatter);
+  return formatter;
+}
 /** Compare the requested site-local wall time with the returned time zone. Never relabel UTC as local. */
 export function conditionWallTime(reading: ConditionReading): string | null {
   if (!reading.validAt) return null;
@@ -337,15 +360,9 @@ export function conditionWallTime(reading: ConditionReading): string | null {
     )
   ) {
     try {
-      const parts = new Intl.DateTimeFormat('sv-SE', {
-        timeZone: reading.timeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hourCycle: 'h23',
-      }).format(new Date(reading.validAt));
+      const formatter = wallTimeFormatter(reading.timeZone);
+      if (!formatter) return null;
+      const parts = formatter.format(new Date(reading.validAt));
       return parts.replace(' ', 'T');
     } catch {
       return null;
