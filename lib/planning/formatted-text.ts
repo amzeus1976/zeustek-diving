@@ -8,6 +8,21 @@ export interface PlanTextNode {
 }
 export interface PlanTextDocument extends PlanTextNode {type: 'doc'; version: 1}
 export type PlanTextFormats = Record<string, PlanTextDocument | undefined>;
+const formattedFields=['aim','goals','secondaryObjectives','notes','conditions.notes',
+  ...['keyRisks','mitigations','pressures','stopAbortCriteria','taskLoading','communicationPlan','decisionPoints','lostBuddyPlan','lostGasPlan','surfaceProtocol','overheadPrompt','teamConcerns','reviewNotes'].map(key=>'humanFactors.'+key),
+  ...['evacuation','hyperbaricAccessNotes','hyperbaricPathway','notes'].map(key=>'emergency.'+key)];
+
+/** Empty metadata identifies visual-editor text too, including plain-text fallback.
+ * Read only supported keys, so imported extra properties never inflate a draft. */
+export function normalisePlanTextFormats(value:unknown):PlanTextFormats|undefined {
+  if(!value||typeof value!=='object'||Array.isArray(value))return undefined;
+  const result:PlanTextFormats={};
+  for(const key of formattedFields){
+    const document=safePlanTextDocument((value as Record<string,unknown>)[key]);
+    if(document)result[key]=document;
+  }
+  return result;
+}
 
 /** Accept only text, the five requested formats and bounded list structure.
  * Never interpret imported HTML, URL attributes, images or arbitrary nodes. */

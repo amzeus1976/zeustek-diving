@@ -91,3 +91,4 @@
 .contactHeading{margin:12px 0 8px;font-size:1rem;color:var(--zt-accent-orange)}
 .grid :global([data-zeustek-density-card]){overflow-wrap:anywhere;align-self:start}
 .readOnlyValue{font-size:1rem;color:var(--zt-text-muted,#b8c7cf);margin-top:4px}
+.rowCopy{display:grid;min-width:0}

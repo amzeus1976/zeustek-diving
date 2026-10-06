@@ -4,10 +4,10 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { zeustekDb } from '../lib/offline/db';
 import { configureDiveStore, pendingDiveChanges } from '../lib/offline/dive-store';
-import { listEnrichedDivePlans, saveEnrichedDivePlan } from '../lib/offline/dive-planning-centre';
+import { listEnrichedDivePlans, normalisePlan, saveEnrichedDivePlan } from '../lib/offline/dive-planning-centre';
 import { matchSiteChoice, siteChoiceLabel, siteMapQuery } from '../lib/offline/plan-site-choice';
 import type { DiveSiteRecord, Stored } from '../lib/offline/dive-planning';
-import {planTextFromPlain} from '../lib/planning/formatted-text';
+import {editedPlanText,planTextFromPlain} from '../lib/planning/formatted-text';
 
 const editor = () => readFileSync(resolve(process.cwd(), 'components/dive-planning-centre.tsx'), 'utf8');
 
@@ -55,6 +55,23 @@ describe('Sites108 Plan editor baseline reconciliation', () => {
     expect(reopened.goals).toEqual(['First  ','','Second']);
     expect(reopened.textFormatting?.notes).toEqual(document);
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it('retains oversized notes whitespace through plain-text fallback and leaves legacy trimming compatible',async()=>{
+    const notes='  '+ 'x'.repeat(100001)+'  \n',update=editedPlanText(planTextFromPlain(notes));
+    const base={name:'Fallback QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned' as const,notes:update.text};
+    await saveEnrichedDivePlan({...base,entityId:'fallback-plan',textFormatting:{notes:update.document}});
+    expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='fallback-plan')?.notes).toBe(notes);
+    await saveEnrichedDivePlan({...base,entityId:'legacy-plan'});
+    expect((await listEnrichedDivePlans()).find(plan=>plan.entityId==='legacy-plan')?.notes).toBe(notes.trim());
+  });
+  it('removes malformed restored formatting before draft normalisation and unrelated Save',async()=>{
+    const valid=planTextFromPlain('Aim'),unsafe={aim:valid,notes:planTextFromPlain('x'.repeat(100001)),goals:{version:1,type:'script'},unknown:{secret:'Discard'}};
+    const plan={entityId:'restored-plan',name:'Restored QA',startDate:'2026-10-10',endDate:'2026-10-10',siteName:'Dummy',buddy:'',status:'planned' as const,notes:'  Existing notes  ',createdAt:'now',modifiedAt:'now',textFormatting:unsafe as unknown as NonNullable<ReturnType<typeof normalisePlan>['textFormatting']>};
+    expect(normalisePlan(plan).textFormatting).toEqual({aim:valid});
+    await saveEnrichedDivePlan({...plan,name:'Unrelated name edit'});
+    const stored=await zeustekDb.entities.get('dive:t12-5d-test:restored-plan');
+    expect((stored?.record as {textFormatting?:unknown}|undefined)?.textFormatting).toEqual({aim:valid});
+    expect((await listEnrichedDivePlans())[0]?.textFormatting).toEqual({aim:valid});
   });
 
   it('renders canonical Site facts and disambiguates identical names using stable IDs', () => {

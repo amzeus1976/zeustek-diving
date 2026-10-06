@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {FormattedPlanText} from '../components/planning/formatted-plan-text';
-import {editedPlanText,matchingPlanText,planTextFromPlain,planTextPlain,safePlanTextDocument} from '../lib/planning/formatted-text';
+import {editedPlanText,matchingPlanText,normalisePlanTextFormats,planTextFromPlain,planTextPlain,safePlanTextDocument} from '../lib/planning/formatted-text';
 import {duplicateDivePlanDraft} from '../lib/planning/duplicate-plans';
 import type {StoredEnrichedDivePlan} from '../lib/offline/dive-planning-centre';
 
@@ -37,6 +37,13 @@ describe('Private formatted Plan text',()=>{
     const text='🌊'.repeat(50001),update=editedPlanText(planTextFromPlain(text));
     expect(update.text).toBe(text);
     expect(update.document).toBeUndefined();
+  });
+  it('bounds restored formatting to supported fields and restricted documents',()=>{
+    const valid=safePlanTextDocument(doc)!;
+    const restored={aim:valid,notes:planTextFromPlain('x'.repeat(100001)),goals:{version:1,type:'script'},unknown:valid};
+    expect(normalisePlanTextFormats(restored)).toEqual({aim:valid});
+    expect(normalisePlanTextFormats({notes:undefined})).toEqual({});
+    for(const invalid of [undefined,null,[],42])expect(normalisePlanTextFormats(invalid)).toBeUndefined();
   });
   it('retains formatting through backup JSON and a fresh duplicated Plan without sharing mutable nodes',()=>{
     const document=safePlanTextDocument(doc)!;
