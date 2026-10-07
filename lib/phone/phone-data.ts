@@ -27,14 +27,14 @@ import type { JsonValue } from '../offline/types';
 import type { DiveRecord } from '../offline/dives';
 
 export const PHONE_DOWNLOAD_KINDS = [
-  'dive',
-  'trip',
-  'dive-trip',
-  'gas-plan',
   'person',
   'operator',
   'person-operator-link',
   'operator-operator-link',
+  'dive-trip',
+  'trip',
+  'gas-plan',
+  'dive',
   'site',
   'site-overhead-profile',
   'equipment',
@@ -244,10 +244,13 @@ export async function missingPhoneReferences(account: string, data: PhoneData) {
   return [...missing];
 }
 export async function synchronizePhoneRecords(
-  progress: (message: string) => void = () => {},
+  progress: (message: string, completed: number, total: number) => void = () => {},
 ) {
   const account = currentDiveAccount();
-  progress('Checking the signed-in account…');
+  const total = PHONE_DOWNLOAD_KINDS.length;
+  let completed = 0;
+  const failures: string[] = [];
+  progress('Checking the signed-in account…', completed, total);
   const identity = await fetch('/api/household', {
     cache: 'no-store',
     signal: AbortSignal.timeout(15000),
@@ -262,20 +265,37 @@ export async function synchronizePhoneRecords(
       'The signed-in account changed. Reopen ZeusTek online in the correct account before syncing.',
     );
   await withRecordNetwork(account, async () => {
-    progress('Uploading saved changes…');
-    await flushDiveChanges(true);
+    progress('Uploading saved changes…', completed, total);
+    try { await flushDiveChanges(true); }
+    catch (cause) {
+      if (currentDiveAccount() !== account) throw cause;
+      failures.push('Saved changes could not upload. Your device versions are retained.');
+    }
     const pending = await pendingDiveChanges();
     if (pending.length)
-      throw new Error(
+      failures.push(
         `${pending.length} saved change${pending.length === 1 ? '' : 's'} still need sync or review. Both versions are retained.`,
       );
+    // A review or unavailable record group must not prevent known contacts and
+    // other available records from reaching the phone. Never clear local edits.
     for (const kind of PHONE_DOWNLOAD_KINDS) {
-      progress(`Downloading ${kind.replaceAll('-', ' ')}…`);
-      await refreshDiveRecords(kind, true, true);
       if (currentDiveAccount() !== account)
         throw new Error('The account changed during download.');
+      const name = kind === 'person' ? 'People' : kind === 'operator' ? 'Dive Centres' : kind === 'dive-trip' ? 'Trips & bookings' : kind.replaceAll('-', ' ');
+      progress(`Downloading ${name}…`, completed, total);
+      try {
+        await refreshDiveRecords(kind, true, true);
+        completed++;
+      } catch (cause) {
+        if (currentDiveAccount() !== account) throw cause;
+        failures.push(`${name}: ${cause instanceof Error ? cause.message : 'Download unavailable.'}`);
+      }
+      if (currentDiveAccount() !== account)
+        throw new Error('The account changed during download.');
+      progress(`${completed} of ${total} record groups saved.`, completed, total);
     }
   });
+  if (failures.length) throw new Error(`Download incomplete. ${failures.join(' ')} Retry when online; downloaded contacts, records and drafts are retained.`);
   const downloadedAt = new Date().toISOString();
   await zeustekDb.settings.put({
     key: `phone:download:${account}`,

@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-export const PHONE_SHELL_CACHE = 'zeustek-phone-shell-v57';
+export const PHONE_SHELL_CACHE = 'zeustek-phone-shell-v58';
 export const PHONE_SHELL_PATH = '/phone/offline';
 export const PHONE_RSC_PATH = '/phone/offline-payload';
 export const PHONE_ENTRY_PATH = '/phone/offline-entry';
@@ -32,7 +32,8 @@ export async function clearPhoneOfflineIdentity() {
   const cache = await caches.open(PHONE_SHELL_CACHE);
   await cache.delete(PHONE_ENTRY_PATH);
 }
-export async function preparePhoneShell() {
+export async function preparePhoneShell(progress: (completed: number, total: number) => void = () => {}) {
+  progress(0, 2);
   const response = await fetch(PHONE_SHELL_PATH, {
     cache: 'no-store',
     credentials: 'omit',
@@ -43,6 +44,7 @@ export async function preparePhoneShell() {
     !response.headers.get('content-type')?.includes('text/html')
   )
     throw new Error('The offline app could not be downloaded.');
+  progress(1, 2);
   // vinext hydrates SSR with a separate public component payload. Cache that
   // anonymous payload too; an HTML-only fallback cannot become interactive.
   const payload = await fetch(PHONE_SHELL_PATH, {
@@ -62,6 +64,7 @@ export async function preparePhoneShell() {
     PHONE_ENTRY_PATH,
     new Response('phone', { headers: { 'content-type': 'text/plain' } }),
   );
+  progress(2, 2);
 }
 export async function phoneShellReady() {
   const cache = await caches.open(PHONE_SHELL_CACHE);

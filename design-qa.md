@@ -1,4 +1,12 @@
-# Phone PWA design QA — 1.0.110
+# Phone PWA design QA — 1.0.111
+
+## Phone sync correction
+
+The supplied physical iPhone screenshots exposed a 20-second app-preparation timeout, repeated Sync prompts and missing contact downloads. The correction downloads known People and Dive Centres first, continues available downloads when an unrelated record needs review, and displays one Sync & download card. Its percentage is derived from completed record groups and cached app files; it reaches 100 only after both are ready. App versions are compared after the current draft is saved and download finishes, with a guard against repeated automatic refreshes.
+
+An actual compiled 390 × 844 browser run displayed the progress bar, completed the download without a manual reload, and exposed existing People and Dive Centre/operator choices in the Dive editor. With transport unavailable, a cold restart retained the downloaded contacts and the draft's selected buddy and Centre. The six established widths had one card, one idle action and no horizontal overflow (305/305, 375/375, 415/415, 805/805, 1009/1009 and 1425/1425 content/scroll widths). Ignored `work/phone-pwa/sync-progress-390.png` is the actual progress capture. Phone automatic selection remains disabled; physical Safari acceptance is still pending.
+
+Final regression: 254 files / 1,782 tests passed, including slow initial preparation beyond the previous timeout, partial-download retention, complete known contacts, progress and single-action rendering. Typecheck, changed-file lint, build/PWA and the credential/icon scan passed. All nine protected calculation hashes matched. Fresh owner fingerprints and the verified 1.0.110 rollback artifact were captured before publication; no owner data writes are part of this correction.
 
 ## Authority and scope
 

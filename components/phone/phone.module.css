@@ -597,6 +597,26 @@
   font-size: 13px;
   min-height: 19px;
 }
+.syncProgress > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0 6px;
+}
+.syncProgress progress {
+  display: block;
+  width: 100%;
+  height: 12px;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  accent-color: var(--phone-cyan);
+  background: #293139;
+}
+.syncProgress progress::-webkit-progress-bar { background: #293139; }
+.syncProgress progress::-webkit-progress-value { background: var(--phone-cyan); }
+.syncProgress progress::-moz-progress-bar { background: var(--phone-cyan); }
+.syncProgress output { display: block; margin-top: 8px; }
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

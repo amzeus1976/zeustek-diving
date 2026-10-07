@@ -49,6 +49,8 @@ import {
   forgetPhoneAccount,
 } from '../../lib/phone/offline-access';
 import { phoneWorkerMessage } from '../../lib/phone/offline-shell';
+import { phoneReloadRequired, phoneSyncProgress, type PhoneSyncProgress } from '../../lib/phone/sync-progress';
+import { version as appVersion } from '../../package.json';
 import {
   listPhoneDrafts,
   listPhoneDraftReviews,
@@ -82,6 +84,7 @@ import {
 } from '../../lib/phone/interface-mode';
 import type { JsonValue } from '../../lib/offline/types';
 import { PhoneEditor } from './phone-editor';
+import { PhoneSyncCard } from './phone-sync-card';
 import styles from './phone.module.css';
 
 type Tab = 'day' | 'plans' | 'logbook' | 'people' | 'more';
@@ -359,10 +362,13 @@ export default function PhoneApp({
   const [interfacePreference, setInterfacePreference] =
     useState<InterfaceMode>('auto');
   const [missing, setMissing] = useState<string[]>([]);
+  const [syncProgress, setSyncProgress] = useState<PhoneSyncProgress | null>(null),
+    [syncError, setSyncError] = useState('');
   const [search, setSearch] = useState(''),
     [showArchived, setShowArchived] = useState(false);
   const firstLoad = useRef(true),
     dayChosen = useRef(false),
+    syncing = useRef(false),
     leaveEditor = useRef<(() => Promise<void>) | null>(null);
   const editable = loaded && !busy && !pauseEdits;
   const refresh = useCallback(async () => {
@@ -409,6 +415,7 @@ export default function PhoneApp({
     });
     let refreshTimer: ReturnType<typeof setTimeout>;
     const updated = () => {
+      if (syncing.current) return;
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(
         () =>
@@ -424,7 +431,7 @@ export default function PhoneApp({
       setConnectionVerified(false);
       setPauseEdits(true);
       setMessage(
-        'Back online. Sync now before making further edits. Your current draft is retained.',
+        'Back online. Sync & download before making further edits. Your current draft is retained.',
       );
     };
     const disconnected = () => {
@@ -465,30 +472,50 @@ export default function PhoneApp({
     }
   }
   async function sync() {
-    if (busy || !online) return;
+    if (syncing.current || !online) return;
+    syncing.current = true;
     setBusy(true);
     setError('');
+    setSyncError('');
+    setSyncProgress(phoneSyncProgress('records', 0, 1, 'Saving the current draft…'));
     try {
       await leaveEditor.current?.();
-      setMessage('Preparing offline app…');
-      await phoneWorkerMessage('PREPARE_PHONE_OFFLINE');
+      let downloadError: unknown;
+      await synchronizePhoneRecords((label, completed, total) => setSyncProgress(phoneSyncProgress('records', completed, total, label))).catch(cause => { downloadError = cause; });
+      // Available contacts still reach the phone even when another group or an
+      // upload needs review. Prepare the public app without losing that result.
+      let workerVersion: string | undefined;
+      const ready = await phoneWorkerMessage('PREPARE_PHONE_OFFLINE', {
+        onProgress: ({ stage, completed, total }) => setSyncProgress(phoneSyncProgress(stage, completed, total, stage === 'install' ? total > 1 ? `Preparing offline app: ${completed} of ${total} files saved…` : 'Checking the offline app…' : 'Saving the offline app…')),
+        onVersion: version => { workerVersion = version; },
+      });
+      if (!ready) throw new Error('The offline app is not ready. Downloaded contacts, records and drafts are retained. Retry while online.');
       setShellReady(true);
-      await synchronizePhoneRecords(setMessage);
       await refresh();
+      if (downloadError) throw downloadError;
       setConnectionVerified(true);
       setPauseEdits(false);
+      setSyncProgress(phoneSyncProgress('complete', 1, 1, 'Download complete.'));
       setMessage(
         'Synced. Saved records and the phone app are ready for offline use.',
       );
       void navigator.storage?.persist?.().catch(() => false);
+      const reloadKey = `phone:sync-reloaded:${userId}`;
+      if (phoneReloadRequired(appVersion, workerVersion, sessionStorage.getItem(reloadKey))) {
+        sessionStorage.setItem(reloadKey, workerVersion!);
+        window.location.reload();
+      }
     } catch (cause) {
       setPauseEdits(true);
-      setError(
+      setMessage('');
+      setSyncError(
         cause instanceof Error
           ? cause.message
           : 'Sync did not finish. Device records and drafts are retained.',
       );
+      await refresh().catch(() => {});
     } finally {
+      syncing.current = false;
       setBusy(false);
     }
   }
@@ -631,7 +658,7 @@ export default function PhoneApp({
   async function fullInterface(section: string, id?: string) {
     if (!online || pending.length || pauseEdits || busy) {
       setError(
-        'Sync now before opening the full interface. Your device changes remain saved.',
+        'Sync & download before opening the full interface. Your device changes remain saved.',
       );
       return;
     }
@@ -723,14 +750,14 @@ export default function PhoneApp({
         ? data.operators.find((item) => item.entityId === screen.id)
         : undefined;
   const statusLabel = busy
-    ? 'Syncing…'
+    ? 'Downloading…'
     : !online || !connectionVerified
       ? `Offline / ${pending.length} saved change${pending.length === 1 ? '' : 's'}`
       : pending.length
-        ? `${pending.length} saved · Sync now`
+        ? `${pending.length} saved changes`
         : downloadedAt && !pauseEdits
           ? 'Synced'
-          : 'Sync now';
+          : 'Download needed';
   return (
     <div className={styles.app}>
       <header className={styles.topbar}>
@@ -742,7 +769,7 @@ export default function PhoneApp({
         <button
           className={styles.status}
           data-tone={
-            !online || !connectionVerified || pending.length || pauseEdits
+            busy || syncError || !online || !connectionVerified || pending.length || pauseEdits
               ? 'warning'
               : downloadedAt
                 ? 'good'
@@ -764,18 +791,8 @@ export default function PhoneApp({
           {error}
         </p>
       )}
-      {pauseEdits && online && (
-        <div className={styles.warning}>
-          <p>Sync now before editing. Your current draft is saved here.</p>
-          <button
-            className={styles.primary}
-            type="button"
-            disabled={busy}
-            onClick={() => void sync()}
-          >
-            Sync now
-          </button>
-        </div>
+      {(busy || pauseEdits || syncError || screen.kind === 'tab' && screen.tab === 'more') && (
+        <PhoneSyncCard online={online} busy={busy} ready={shellReady && !!downloadedAt} downloadedAt={downloadedAt} pauseEdits={pauseEdits} error={syncError} message={message} progress={syncProgress} people={data.people.length} centres={data.operators.length} onSync={() => void sync()} />
       )}
       {!loaded && (
         <output className={styles.card}>Opening saved records…</output>
@@ -924,7 +941,7 @@ export default function PhoneApp({
           </button>
           <p className={styles.footnote}>
             <ArrowDownToLine aria-hidden />
-            Saved here. Tap Sync now when back online.
+            Saved here. Tap Sync &amp; download when back online.
           </p>
         </>
       )}
@@ -1124,7 +1141,7 @@ export default function PhoneApp({
       {loaded && screen.kind === 'tab' && screen.tab === 'more' && (
         <>
           <h1>More</h1>
-          {missing.length > 0 && (
+          {!busy && missing.length > 0 && (
             <Detail title={`Missing linked records (${missing.length})`}>
               <ul>
                 {missing.map((item) => (
@@ -1137,34 +1154,6 @@ export default function PhoneApp({
               </p>
             </Detail>
           )}
-          <section className={styles.card}>
-            <h2>Sync &amp; offline</h2>
-            <p className={styles.muted}>
-              Last complete download: {stamp(downloadedAt)}
-            </p>
-            <p>
-              {shellReady && downloadedAt
-                ? 'Phone app and downloaded records are ready offline.'
-                : 'Download this phone before leaving coverage.'}
-            </p>
-            <button
-              className={`${styles.primary} ${styles.wide}`}
-              disabled={!online || busy}
-              onClick={() => void sync()}
-            >
-              {busy
-                ? 'Syncing…'
-                : downloadedAt
-                  ? 'Sync now / refresh download'
-                  : 'Download for offline use'}
-            </button>
-            <output className={styles.notice}>{message}</output>
-            <p className={styles.muted}>
-              Upload and download happen when you tap Sync now. Booking codes
-              and saved plan details are included. Document attachments need a
-              separate download.
-            </p>
-          </section>
           {pending.length > 0 && (
             <Detail title={`${pending.length} saved changes`} open>
               {pending.map((row) => {
@@ -1178,7 +1167,7 @@ export default function PhoneApp({
                     <p className={styles.muted}>
                       {value.state === 'conflict'
                         ? summary.message
-                        : 'Saved here, waiting for Sync now.'}
+                        : 'Saved here, waiting for Sync & download.'}
                     </p>
                     {value.state === 'conflict' && online && (
                       <DiveConflictReview recordKey={row.key} />
@@ -1353,7 +1342,7 @@ export default function PhoneApp({
           saved={async () => {
             leaveEditor.current = null;
             await refresh();
-            setMessage('Saved on this device. Tap Sync now when online.');
+            setMessage('Saved on this device. Tap Sync & download when online.');
             setScreen({
               kind: 'tab',
               tab:
