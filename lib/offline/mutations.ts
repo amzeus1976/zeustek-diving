@@ -26,6 +26,8 @@ export async function mutateEntity(input: {
   record: JsonValue | null;
   parents?: string[];
   pendingSync?: { key: string; value: JsonValue };
+  /** Phone drafts compare the local revision inside the same write transaction. */
+  expectedLocalModifiedAt?: string | null;
 }): Promise<EventRow> {
   const entityId = input.entityId ?? uuidv7();
   const eventId = uuidv7();
@@ -70,6 +72,14 @@ export async function mutateEntity(input: {
     zeustekDb.outbox,
     zeustekDb.settings, zeustekDb.syncState],
     async () => {
+      if ('expectedLocalModifiedAt' in input) {
+        const current = await zeustekDb.entities.get(entityId);
+        const record = current?.record as Record<string, JsonValue> | null | undefined;
+        const revision = current && !current.deleted ? record?.modifiedAt : null;
+        if (revision !== input.expectedLocalModifiedAt || (current?.deleted && input.expectedLocalModifiedAt !== null)) {
+          throw new Error('This record changed since you started writing. Your draft is retained. Review the latest record before saving.');
+        }
+      }
       const existingHeads = await zeustekDb.entityHeads.where('entityId').equals(entityId).toArray();
       parents = [...(input.parents ?? existingHeads.map(head => head.eventId))].sort();
       event.parents = parents;

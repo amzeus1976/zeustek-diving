@@ -1,4 +1,55 @@
-# TWEAKS design QA
+# Phone PWA design QA — 1.0.108
+
+## Authority and scope
+
+The supplied 592 × 1280 iPhone Dive day image is the visual authority. Its complete screen was compared beside an actual 390 × 844 browser render at the same display size. The comparison is retained in ignored `work/phone-pwa/phone-comparison.png`, with the implementation in `phone-final-390.png` and both underlying browser captures. No UI elements were painted into the capture. The real ZeusTek wordmark and emblem retain their original proportions.
+
+This release adds an opt-in `/phone` interface. Desktop components, global styles and all nine protected calculation files remain unchanged. Automatic phone selection remains disabled pending physical iPhone acceptance.
+
+## Visual review
+
+| Area | Result | Evidence |
+|---|---|---|
+| Hierarchy and branding | Pass | Black background, supplied wordmark/emblem, orange save/sync state, cyan timeline and persistent five-tab navigation match the supplied structure. Actual connection state controls the status badge. |
+| Timeline and actions | Pass | Boat departure, Dive 01 and Dive 02 precede Equipment checks, Centre contacts, Add buddy and the orange Log dive action. Times and row contents come from saved records. |
+| Density | Pass | Log dive ends at y=724 and navigation starts at y=772 in the 390 × 844 frame; the save/sync note also fits. A preceding comparison revealed overlap and the phone spacing was reduced before acceptance. |
+| Readability and forms | Pass | Inputs use 16 px text, explicit labels, visible borders and collapsible sections. The small Person form exposes 71 inputs/selects/textareas without horizontal overflow. |
+| Complete planning viewers | Pass | Expandable views include full stored Trip, booking, itinerary, Dive Plan, Gas Plan, conditions, safety, emergency and contact information. Advanced plans retain full viewing even when editing requires the desktop interface. |
+
+The combined full-screen comparison made the wordmark, timeline spacing, primary action and navigation legible together. No separate crops were needed for the verdict. The production icons use the existing local ZeusTek artwork rather than attempting to recreate the illustrative mockup icons.
+
+## Responsive checks
+
+| Frame | Content / scroll width | Result |
+|---|---|---|
+| 320 × 844 | 304 / 304 | Pass |
+| 390 × 844 | 375 / 375 | Pass |
+| 430 × 932 | 430 / 430 | Pass |
+| 820 × 900 | 820 / 820 | Pass |
+| 1024 × 900 | 1024 / 1024 | Pass |
+| 1440 × 900 | 1440 / 1440 | Pass |
+| 844 × 390 landscape | 828 / 828 | Pass |
+| Desktop 3440 × 1440 | 3424 / 3424 | Pass; original Dive Planning Centre, no phone navigation |
+| Desktop 1080 × 1920 | 1065 / 1065 | Pass; original Dive Planning Centre, no phone navigation |
+
+All five navigation controls remain present. Minimum measured button height is 43.998 px (44 px within browser rounding). Browser-native date inputs respond to keyboard changes, and editor dates/time stay consistent for single-day plans. Native disclosure controls support keyboard operation. CSS accounts for safe areas and the on-screen keyboard; physical Safari behavior remains to be tested.
+
+## Interaction and offline evidence
+
+- A compiled production build reopened with transport unavailable, hydrated the anonymous offline shell and displayed saved booking codes and itinerary details.
+- Full safety notes and a 12,100-character expanded Gas Plan view remained readable offline.
+- A Person and a duplicated Dive Plan saved locally, retained their new identities, and uploaded only on explicit Sync now.
+- Gas inputs survived closing/reopening, calculated offline through the unchanged desktop engine, saved locally and reopened with results, warnings and assumptions.
+- Updating the same Dive/Gas Plans retained their identities. Reviewed stale-draft merges, account boundaries, failed sync retention and upload dependency order have automated coverage.
+- Final regression: 253 files / 1,774 tests passed. Typecheck and changed-file lint passed. Nine protected hashes matched. Artifact privacy scan found zero credential matches and all 31 navigation icons matched their originals.
+
+## Verdict
+
+**Passed for the opt-in browser/PWA release.** No unresolved critical or high-priority visual defects remain in the checked layouts. Physical iPhone installation, airplane-mode cold start, keyboard/safe areas and reconnect sync are pending acceptance; automatic phone selection stays off. Attached PDFs and external websites still require their own download, and the interface states that explicitly.
+
+---
+
+# Earlier TWEAKS design QA (historical)
 
 ## Comparison authority
 

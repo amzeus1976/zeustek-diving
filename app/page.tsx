@@ -10,8 +10,14 @@ export const dynamic = 'force-dynamic';
 export default async function Page({searchParams}: {searchParams?:Promise<Record<string,string|string[]|undefined>>}) {
   const user = await getChatGPTUser();
   if (user && allowedHouseholdUser(user)) {
+    const destination=await searchParams;
+    if(destination?.interface==='phone'){
+      const query=new URLSearchParams();for(const [key,value] of Object.entries(destination)){if(key==='interface')continue;if(Array.isArray(value))value.forEach(item=>query.append(key,item));else if(value!==undefined)query.set(key,value);}
+      redirect('/phone'+(query.size?'?'+query:''));
+    }
     const {default: DiveApp} = await import('./dashboard-client');
-    return <DiveApp userId={user.userId} />;
+    const {default: AppExperience} = await import('../components/phone/app-experience');
+    return <AppExperience><DiveApp userId={user.userId}/></AppExperience>;
   }
   const query = new URLSearchParams();
   for (const [key,value] of Object.entries(await searchParams ?? {})) {

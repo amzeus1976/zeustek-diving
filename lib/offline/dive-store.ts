@@ -14,22 +14,23 @@ import {referencesPlanningRecord,planningRecordHasConnections,planningRecordDele
 import {normaliseEntityRelation,personEntityLinkIdentity} from '../operators/entity-relationships';
 import {beginCloudSyncEvidence,cancelCloudSyncEvidence,finishCloudSyncEvidence,resetCloudSyncEvidence} from './cloud-sync-evidence';
 import {fitPlanTextForSync} from '../planning/plan-text-sync';
+import {configureRecordNetwork, manualRecordNetwork, recordNetworkAllowed} from '../phone/network-policy';
 
 let account = '';
 const inflight = new Map<string, Promise<void>>();
 const checked = new Map<string, number>();
-export function configureDiveStore(userId: string) { if(account!==userId)resetCloudSyncEvidence(userId);account = userId; }
+export function configureDiveStore(userId: string, network: 'automatic' | 'manual' = 'automatic') { if(account!==userId)resetCloudSyncEvidence(userId);account = userId;configureRecordNetwork(userId,network); }
 export function currentDiveAccount() { return account; }
 const moduleName = () => { if (!account) throw new Error('Sign in to access local dive records.'); return `dive:${account}`; };
 function changed() { window.dispatchEvent(new Event('zeustek-records-updated')); }
 async function diagnostic(code: string, started: number) {
   await zeustekDb.diagnostics.put({ id: code, code, createdAt: new Date().toISOString(), detail: { durationMs: Math.round(performance.now() - started) } }).catch(() => {});
 }
-export async function refreshDiveRecords(kind: string, force = false) {
+export async function refreshDiveRecords(kind: string, force = false, strict = false) {
   const module = moduleName();
   const key = `${module}:${kind}`;
   if (inflight.has(key)) return inflight.get(key);
-  if (!navigator.onLine || (!force && Date.now() - (checked.get(key) ?? 0) < 30_000)) return;
+  if (!recordNetworkAllowed() || !navigator.onLine || (!force && Date.now() - (checked.get(key) ?? 0) < 30_000)) return;
   checked.set(key, Date.now());
   const evidence=beginCloudSyncEvidence(account,`read:${kind}`);
   const work = (async () => {
@@ -38,6 +39,7 @@ export async function refreshDiveRecords(kind: string, force = false) {
     const response = await fetch(`/api/dive-data?kind=${encodeURIComponent(kind)}`, { cache: 'no-store', signal: AbortSignal.timeout(20_000) });
     if (!response.ok) throw new Error(response.status === 401 ? 'Sign in again to refresh cloud records.' : 'Cloud refresh unavailable; local records remain available.');
     const { items } = await response.json() as { items: Array<Record<string, JsonValue> & { id: string }> };
+    if(account!==evidence.owner)throw new Error('The account changed during download.');
     if (!Array.isArray(items)) throw new Error('Invalid cloud response.');
     // Cache is account-scoped. It never replaces the immutable mutation history.
     const rows = items.map(({ id, ...record }) => ({ entityId: `${module}:${id}`, module, entityType: kind, schemaVersion: 1, record: { ...record, entityId: id }, recordHash: '', deleted: 0 as const, updatedEventId: '', updatedAt: String(record.modifiedAt ?? '') }));
@@ -50,6 +52,7 @@ export async function refreshDiveRecords(kind: string, force = false) {
     finishCloudSyncEvidence(evidence,false);
     if(account!==evidence.owner)return;
     window.dispatchEvent(new CustomEvent('zeustek-operation', { detail: { state: 'error', message: /bulkPut|UnknownError|transaction/i.test(String(error)) ? 'Cloud download could not be saved on this device. Your existing records and unsent edits are retained. Reopen the app to retry.' : error instanceof Error ? error.message : 'Cloud refresh failed.' } }));
+    if(strict)throw error;
   }).finally(() => inflight.delete(key));
   inflight.set(key, work);
   return work;
@@ -86,7 +89,7 @@ export async function cacheDeletedRecord(id: string) {
   changed();
 }
 
-type Pending = { id: string; kind: string; record: Record<string, JsonValue> | null; baseModifiedAt: string | null; token: string; state: string };
+type Pending = { id: string; kind: string; record: Record<string, JsonValue> | null; baseModifiedAt: string | null; token: string; state: string; manualSync?: boolean };
 export function sortPendingDiveChanges<T extends {kind:string;record:Record<string,unknown>|null}>(rows:ReadonlyArray<T>):T[]{
   const priority=(row:T)=>{
     const link=row.kind==='person-operator-link'||row.kind==='operator-operator-link';
@@ -106,11 +109,11 @@ async function sequentialWrite<T>(key:string,action:()=>Promise<T>):Promise<T>{
   const prior=localWrites.get(key);const work=(prior??Promise.resolve()).catch(()=>{}).then(action);
   localWrites.set(key,work);try{return await work;}finally{if(localWrites.get(key)===work)localWrites.delete(key);}
 }
-export async function saveLocalRecord(kind: string, input: Record<string, unknown> & {entityId?: string}) {
+export async function saveLocalRecord(kind: string, input: Record<string, unknown> & {entityId?: string}, options: {expectedLocalModifiedAt?:string|null} = {}) {
   const key=`${moduleName()}:${input.entityId??`${kind}:${recordIdentity(kind,input)||JSON.stringify(input)}`}`;
-  return sequentialWrite(key,()=>saveLocalRecordInternal(kind,input));
+  return sequentialWrite(key,()=>saveLocalRecordInternal(kind,input,options));
 }
-async function saveLocalRecordInternal(kind: string, input: Record<string, unknown> & {entityId?: string}) {
+async function saveLocalRecordInternal(kind: string, input: Record<string, unknown> & {entityId?: string}, options: {expectedLocalModifiedAt?:string|null}) {
   const module = moduleName();
   const {entityId, ...data} = input;
   if(kind==='person-operator-link'||kind==='operator-operator-link'){
@@ -157,8 +160,8 @@ async function saveLocalRecordInternal(kind: string, input: Record<string, unkno
   const completeRecord = JSON.parse(JSON.stringify({...prior, ...data, entityId:id, createdAt:prior?.createdAt ?? now, modifiedAt:now}));
   const prepared = kind==='trip' ? fitPlanTextForSync(completeRecord) : {record:completeRecord,formattingReduced:false};
   const record=prepared.record;
-  const pending: Pending = {id,kind,record,baseModifiedAt:queued ? queued.baseModifiedAt : typeof prior?.modifiedAt === 'string' ? prior.modifiedAt : null,token:crypto.randomUUID(),state:'pending'};
-  await mutateEntity({entityId:localId,module,entityType:kind,schemaVersion:1,operation:old ? 'update':'create',record,pendingSync:{key:`pending:${localId}`,value:pending as unknown as JsonValue}});
+  const pending: Pending = {id,kind,record,baseModifiedAt:queued ? queued.baseModifiedAt : typeof prior?.modifiedAt === 'string' ? prior.modifiedAt : null,token:crypto.randomUUID(),state:'pending',...((manualRecordNetwork()||queued?.manualSync) ? {manualSync:true} : {})};
+  await mutateEntity({entityId:localId,module,entityType:kind,schemaVersion:1,operation:old ? 'update':'create',record,...options,pendingSync:{key:`pending:${localId}`,value:pending as unknown as JsonValue}});
   // Enclosing multi-record edits must finish before exposing changes or sending their outbox.
   const transaction=Dexie.currentTransaction;
   if(transaction)transaction.on('complete',()=>{changed();void flushDiveChanges();});
@@ -247,8 +250,8 @@ export async function resolveDiveConflict(key:string,token:string,choice:'local'
   assertAccount();
   changed();void flushDiveChanges();
 }
-export async function flushDiveChanges() {
-  if (flushing || !navigator.onLine) return flushing;
+export async function flushDiveChanges(strict = false) {
+  if (!recordNetworkAllowed() || flushing || !navigator.onLine) return flushing;
   const startingAccount = account;
   const accountModule = moduleName();
   const isCurrent = () => account === startingAccount;
@@ -256,7 +259,9 @@ export async function flushDiveChanges() {
     let recordsChanged = false;
     let evidence:ReturnType<typeof beginCloudSyncEvidence>|undefined;
     try {
-      const changes=sortPendingDiveChanges((await pendingDiveChanges()).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
+      const changes=sortPendingDiveChanges((await pendingDiveChanges()).filter(row=>manualRecordNetwork()||!(row.value as unknown as Pending).manualSync).map(row=>({...row,kind:(row.value as unknown as Pending).kind,record:(row.value as unknown as Pending).record})));
+      // New phone buddies must reach the cloud before their linked Dive records.
+      if(manualRecordNetwork()){const priority=(kind:string)=>['person','operator'].includes(kind)?0:kind==='dive-trip'?1:kind==='trip'?2:kind==='gas-plan'?3:kind==='dive'?4:5;changes.sort((a,b)=>priority(a.kind)-priority(b.kind));}
       for (const change of changes) {
         if (!isCurrent()) return;
         const pending=change.value as unknown as Pending;
@@ -320,6 +325,6 @@ export async function flushDiveChanges() {
       if(evidence)finishCloudSyncEvidence(evidence,false);
       if (recordsChanged && isCurrent()) changed();
     }
-  })().catch(error => { if (isCurrent()) window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); }).finally(()=>{flushing=null;});
+  })().catch(error => { if (isCurrent()) window.dispatchEvent(new CustomEvent('zeustek-operation',{detail:{state:'error',message:error instanceof Error ? error.message : 'Cloud sync pending.'}})); if(strict)throw error; }).finally(()=>{flushing=null;});
   return flushing;
 }
