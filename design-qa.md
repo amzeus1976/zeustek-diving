@@ -1,4 +1,4 @@
-# Phone PWA design QA — 1.0.108
+# Phone PWA design QA — 1.0.109
 
 ## Authority and scope
 
@@ -15,6 +15,8 @@ This release adds an opt-in `/phone` interface. Desktop components, global style
 | Density | Pass | Log dive ends at y=724 and navigation starts at y=772 in the 390 × 844 frame; the save/sync note also fits. A preceding comparison revealed overlap and the phone spacing was reduced before acceptance. |
 | Readability and forms | Pass | Inputs use 16 px text, explicit labels, visible borders and collapsible sections. The small Person form exposes 71 inputs/selects/textareas without horizontal overflow. |
 | Complete planning viewers | Pass | Expandable views include full stored Trip, booking, itinerary, Dive Plan, Gas Plan, conditions, safety, emergency and contact information. Advanced plans retain full viewing even when editing requires the desktop interface. |
+
+The live-site check additionally found an unsupported status message from an older worker and eager rendering of large saved weather payloads. The patch keeps unavailable initial status quiet, loads closed detail cards only when opened, and pages long saved lists without omitting items.
 
 The combined full-screen comparison made the wordmark, timeline spacing, primary action and navigation legible together. No separate crops were needed for the verdict. The production icons use the existing local ZeusTek artwork rather than attempting to recreate the illustrative mockup icons.
 

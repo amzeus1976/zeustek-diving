@@ -8,6 +8,8 @@ On iPhone, open the phone page in Safari and add it to the Home Screen. Launch t
 
 The phone provides a dated Dive day timeline, Events and Trips, full booking codes, itinerary, Dive Plans, linked Gas Plans, equipment checks, saved conditions, team and Dive Centre contacts. Expand the detail cards to read the complete stored planning information. Advanced plans remain fully viewable. Source documents and external links require their own download; the app does not claim to cache attached PDFs or third-party websites.
 
+Detail cards load when opened. Long saved lists show 20 items at a time; **Previous items** and **Next items** reach every item. No stored list items or planning fields are truncated.
+
 ## Writing
 
 Basic recreational Dive Plans and single-cylinder, direct-ascent Gas Plans can be created, updated and duplicated. Gas calculations use the existing desktop engine in a background worker. Unknown inputs remain unknown. Technical and advanced Gas Plans use the full interface for editing.

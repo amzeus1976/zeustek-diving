@@ -183,10 +183,14 @@ function Detail({
   children: ReactNode;
   open?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(open);
   return (
-    <details open={open}>
+    <details
+      open={expanded}
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+    >
       <summary>{title}</summary>
-      <div className={styles.body}>{children}</div>
+      {expanded && <div className={styles.body}>{children}</div>}
     </details>
   );
 }
@@ -212,6 +216,40 @@ function Facts({ items }: { items: Array<[string, unknown]> }) {
     </dl>
   );
 }
+function SavedFieldList({ items, depth }: { items: unknown[]; depth: number }) {
+  const [page, setPage] = useState(0);
+  const size = 20;
+  const pages = Math.ceil(items.length / size);
+  const current = Math.min(page, pages - 1);
+  return (
+    <>
+      <p className={styles.muted}>
+        Items {current * size + 1}–
+        {Math.min((current + 1) * size, items.length)} of {items.length}
+      </p>
+      <ul>
+        {items
+          .slice(current * size, (current + 1) * size)
+          .map((item, index) => (
+            <li key={current * size + index}>
+              <SavedFields value={item} depth={depth + 1} />
+            </li>
+          ))}
+      </ul>
+      <div className={styles.actions}>
+        <button disabled={current === 0} onClick={() => setPage(current - 1)}>
+          Previous items
+        </button>
+        <button
+          disabled={current + 1 === pages}
+          onClick={() => setPage(current + 1)}
+        >
+          Next items
+        </button>
+      </div>
+    </>
+  );
+}
 export function SavedFields({
   value,
   depth = 0,
@@ -228,7 +266,9 @@ export function SavedFields({
       </>
     );
   if (Array.isArray(value))
-    return value.length ? (
+    return value.length > 20 ? (
+      <SavedFieldList items={value} depth={depth} />
+    ) : value.length ? (
       <ul>
         {value.map((item, index) => (
           <li key={index}>
@@ -346,7 +386,11 @@ export default function PhoneApp({
       if (verifiedOnline) await rememberPhoneAccount(userId);
       await refresh();
       if ('serviceWorker' in navigator) {
-        const ready = await phoneWorkerMessage('PHONE_OFFLINE_STATUS');
+        // An older worker may not support this status query. Preparation is
+        // explicit in More, so an unavailable status is not a download error.
+        const ready = await phoneWorkerMessage('PHONE_OFFLINE_STATUS').catch(
+          () => false,
+        );
         if (alive) setShellReady(ready);
       }
     })().catch((cause) => {

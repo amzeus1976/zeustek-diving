@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-export const PHONE_SHELL_CACHE = 'zeustek-phone-shell-v55';
+export const PHONE_SHELL_CACHE = 'zeustek-phone-shell-v56';
 export const PHONE_SHELL_PATH = '/phone/offline';
 export const PHONE_RSC_PATH = '/phone/offline-payload';
 export const PHONE_ENTRY_PATH = '/phone/offline-entry';
