@@ -33,6 +33,7 @@ import type {
 import { RichTextField } from '../planning/rich-text-field';
 import { ProfilePicture } from '../profile-picture';
 import type { CardImage } from '../../lib/offline/dive-images';
+import { chooseDiveEntity, diveEntityChoices } from '../../lib/operators/dive-log-selection';
 import { GasSummary, SavedFields } from './phone-app';
 // Vite generates the default URL export for this bundled worker asset.
 // oxlint-disable-next-line import/default
@@ -324,6 +325,7 @@ export function PhoneEditor({
     ];
     return (
       <Section title={title}>
+        {!data.people.length && <p className={styles.muted}>Sync &amp; download brings your existing People to this phone. You can also add a new Person here.</p>}
         <div className={styles.rows}>
           {data.people.map((person) => (
             <label className={styles.check} key={person.entityId}>
@@ -382,6 +384,7 @@ export function PhoneEditor({
     ) as string[];
     return (
       <Section title="Dive Centre contacts">
+        {!data.operators.length && <p className={styles.muted}>Sync &amp; download brings your existing Dive Centres to this phone.</p>}
         <div className={styles.rows}>
           {data.operators.map((centre) => (
             <label className={styles.check} key={centre.entityId}>
@@ -409,6 +412,23 @@ export function PhoneEditor({
         </button>
       </Section>
     );
+  }
+  function loggedDiveCentre() {
+    const previous = { name: text('operator'), ...(text('operatorId') ? { id: text('operatorId') } : {}) };
+    const choices = diveEntityChoices(data.operators, 'operator', previous);
+    return <Section title="Dive Centre / operator">
+      <label className={styles.field}>Saved Dive Centre / operator
+        <select value={previous.id ? `entity:${previous.id}` : previous.name ? 'legacy' : ''} onChange={event => {
+          const selected = chooseDiveEntity(event.target.value, choices, previous);
+          patch({ operatorId: selected.id || null, operator: selected.name });
+        }}>
+          <option value="">Choose a Dive Centre / operator</option>
+          {choices.map(choice => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
+        </select>
+      </label>
+      {!data.operators.length && <p className={styles.muted}>Sync &amp; download brings your existing Dive Centres to this phone.</p>}
+      <button type="button" onClick={addCentre}><Plus />Add Dive Centre</button>
+    </Section>;
   }
   const gasInput = phoneGasInput(record);
   const snapshot = record.recGasPlan101 as unknown as
@@ -1105,6 +1125,7 @@ export function PhoneEditor({
                 </p>
               </Section>
               {choosePeople('buddyIds', 'Buddies & team')}
+              {loggedDiveCentre()}
               <Section title="Conditions & notes">
                 <div className={styles.fields}>
                   {input('visibilityM', 'Underwater visibility (m)', 'number')}
@@ -1398,7 +1419,7 @@ export function PhoneEditor({
       <p className={styles.muted}>
         {(draft.kind === 'trip' || draft.kind === 'gas-plan') &&
           'Save and sync a new plan before opening it in the full interface. '}
-        Closing this editor retains its draft. Sync now uploads saved records
+        Closing this editor retains its draft. Sync &amp; download uploads saved records
         when you are online.
       </p>
     </div>
