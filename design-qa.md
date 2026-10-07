@@ -1,4 +1,4 @@
-# Phone PWA design QA — 1.0.111
+# Phone PWA design QA — 1.0.112
 
 ## Phone sync correction
 
@@ -7,6 +7,8 @@ The supplied physical iPhone screenshots exposed a 20-second app-preparation tim
 An actual compiled 390 × 844 browser run displayed the progress bar, completed the download without a manual reload, and exposed existing People and Dive Centre/operator choices in the Dive editor. With transport unavailable, a cold restart retained the downloaded contacts and the draft's selected buddy and Centre. The six established widths had one card, one idle action and no horizontal overflow (305/305, 375/375, 415/415, 805/805, 1009/1009 and 1425/1425 content/scroll widths). Ignored `work/phone-pwa/sync-progress-390.png` is the actual progress capture. Phone automatic selection remains disabled; physical Safari acceptance is still pending.
 
 Final regression: 254 files / 1,782 tests passed, including slow initial preparation beyond the previous timeout, partial-download retention, complete known contacts, progress and single-action rendering. Typecheck, changed-file lint, build/PWA and the credential/icon scan passed. All nine protected calculation hashes matched. Fresh owner fingerprints and the verified 1.0.110 rollback artifact were captured before publication; no owner data writes are part of this correction.
+
+The release review identified a failed update that could remove the installing worker while retaining the older active worker. The follow-up tracks the exact requested worker until activation and rejects a redundant or missing target. Two regression cases cover both transitions without ever requesting preparation from the older active worker. The follow-up also uses a separate v59 shell cache, so its failed installation cannot replace the preceding worker's offline bootstrap. Updated focused checks: 4 files / 40 tests passed, with typecheck, changed-file lint and all nine protected hashes passing again.
 
 ## Authority and scope
 

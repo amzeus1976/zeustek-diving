@@ -123,3 +123,17 @@ it('returns an unavailable initial status immediately while installation continu
   workerFixture();
   expect(await phoneWorkerMessage('PHONE_OFFLINE_STATUS')).toBe(false);
 });
+it.each(['redundant', 'installing'])('rejects a failed update removed from the registration instead of accepting the older active worker (%s)', async failedState => {
+  vi.useFakeTimers();
+  const fixture = workerFixture();
+  const oldWorker = { state: 'activated', postMessage: vi.fn() };
+  fixture.registration.active = oldWorker;
+  const result = phoneWorkerMessage('PREPARE_PHONE_OFFLINE').then(() => 'incorrect success', cause => cause.message as string);
+  await vi.advanceTimersByTimeAsync(1000);
+  fixture.registration.installing = null;
+  fixture.worker.state = failedState;
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(await result).toMatch(/could not be installed.*retained/);
+  expect(oldWorker.postMessage).not.toHaveBeenCalled();
+  expect(vi.getTimerCount()).toBe(0);
+});

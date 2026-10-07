@@ -26,10 +26,13 @@ function requestWorker(worker: ServiceWorker, type: string, timeoutMs: number, o
 }
 
 async function waitForWorker(registration: ServiceWorkerRegistration, onProgress?: WorkerOptions['onProgress']) {
+  const worker = registration.waiting || registration.installing || registration.active;
+  if (!worker) throw new Error('The offline app could not be installed. Your downloaded records and drafts are retained. Stay online and retry.');
   let lastProgress = Date.now(), completed = -1;
-  while (registration.installing || registration.waiting || !registration.active) {
-    const worker = registration.waiting || registration.installing;
-    if (!worker || worker.state === 'redundant')
+  // Keep the exact requested worker even if the browser removes it from the
+  // registration after a failed install. An older active worker is not success.
+  while (worker.state !== 'activated' || registration.active !== worker) {
+    if (worker.state === 'redundant' || ![registration.installing, registration.waiting, registration.active].includes(worker))
       throw new Error('The offline app could not be installed. Your downloaded records and drafts are retained. Stay online and retry.');
     if (worker.state === 'installed') worker.postMessage({ type: 'SKIP_WAITING' });
     // Query the installing worker directly instead of waiting for the complete
@@ -44,7 +47,7 @@ async function waitForWorker(registration: ServiceWorkerRegistration, onProgress
     await new Promise<void>(resolve => setTimeout(resolve, 500));
   }
   onProgress?.({ stage: 'install', completed: 1, total: 1 });
-  return registration.active!;
+  return worker;
 }
 
 /** Only the public, anonymous phone bootstrap and component payload are cached. */
@@ -59,12 +62,12 @@ export async function phoneWorkerMessage(
   let registration = await navigator.serviceWorker.getRegistration();
   if (type !== 'PREPARE_PHONE_OFFLINE' && !registration?.active) return false;
   if (!registration) registration = await navigator.serviceWorker.register('/service-worker.js');
+  let worker = registration.active;
   if (type === 'PREPARE_PHONE_OFFLINE') {
     options.onProgress?.({ stage: 'install', completed: 0, total: 0 });
     if (registration.active && !registration.installing && !registration.waiting) await registration.update();
-    await waitForWorker(registration, options.onProgress);
+    worker = await waitForWorker(registration, options.onProgress);
   }
-  const worker = registration.active;
   if (!worker) return false;
   const reply = await requestWorker(worker, type, type === 'PREPARE_PHONE_OFFLINE' ? 180000 : 5000, options.onProgress);
   if (reply.appVersion) options.onVersion?.(reply.appVersion);
