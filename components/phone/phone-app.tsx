@@ -77,6 +77,7 @@ import {
 } from '../../lib/offline/sync-review';
 import {
   saveInterfaceMode,
+  readInterfaceMode,
   type InterfaceMode,
 } from '../../lib/phone/interface-mode';
 import type { JsonValue } from '../../lib/offline/types';
@@ -355,6 +356,8 @@ export default function PhoneApp({
     [error, setError] = useState('');
   const [planTab, setPlanTab] = useState<'dive' | 'gas'>('dive'),
     [peopleTab, setPeopleTab] = useState<'people' | 'centres'>('people');
+  const [interfacePreference, setInterfacePreference] =
+    useState<InterfaceMode>('auto');
   const [missing, setMissing] = useState<string[]>([]);
   const [search, setSearch] = useState(''),
     [showArchived, setShowArchived] = useState(false);
@@ -384,6 +387,7 @@ export default function PhoneApp({
     let alive = true;
     void (async () => {
       if (verifiedOnline) await rememberPhoneAccount(userId);
+      setInterfacePreference(readInterfaceMode());
       await refresh();
       if ('serviceWorker' in navigator) {
         // An older worker may not support this status query. Preparation is
@@ -1259,10 +1263,12 @@ export default function PhoneApp({
             <label className={styles.field}>
               Interface preference
               <select
-                defaultValue="phone"
-                onChange={(e) =>
-                  saveInterfaceMode(e.target.value as InterfaceMode)
-                }
+                value={interfacePreference}
+                onChange={(e) => {
+                  const mode = e.target.value as InterfaceMode;
+                  saveInterfaceMode(mode);
+                  setInterfacePreference(mode);
+                }}
               >
                 <option value="auto">Auto (phone preview is opt-in)</option>
                 <option value="phone">Phone</option>

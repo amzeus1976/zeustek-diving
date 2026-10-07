@@ -552,7 +552,7 @@ export function PhoneEditor({
     setBusy(true);
     setError('');
     try {
-      if (draft.kind === 'gas-plan' && !snapshot && gasInput.plannedDepthM > 0)
+      if (draft.kind === 'gas-plan' && !snapshot)
         await calculate();
       await flush();
       await commitPhoneDraft(live.current);

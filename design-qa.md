@@ -1,4 +1,4 @@
-# Phone PWA design QA — 1.0.109
+# Phone PWA design QA — 1.0.110
 
 ## Authority and scope
 
@@ -43,7 +43,8 @@ All five navigation controls remain present. Minimum measured button height is 4
 - A Person and a duplicated Dive Plan saved locally, retained their new identities, and uploaded only on explicit Sync now.
 - Gas inputs survived closing/reopening, calculated offline through the unchanged desktop engine, saved locally and reopened with results, warnings and assumptions.
 - Updating the same Dive/Gas Plans retained their identities. Reviewed stale-draft merges, account boundaries, failed sync retention and upload dependency order have automated coverage.
-- Final regression: 253 files / 1,774 tests passed. Typecheck and changed-file lint passed. Nine protected hashes matched. Artifact privacy scan found zero credential matches and all 31 navigation icons matched their originals.
+- Incomplete Gas Plan inputs remain in their durable draft when a calculation is unavailable; the interface preference reflects the stored choice.
+- Final regression: 253 files / 1,775 tests passed. Typecheck and changed-file lint passed. Nine protected hashes matched. Artifact privacy scan found zero credential matches and all 31 navigation icons matched their originals.
 
 ## Verdict
 

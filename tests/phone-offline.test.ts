@@ -98,6 +98,27 @@ beforeEach(async () => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('phone canonical records and durable drafts', () => {
+  it('retains incomplete Gas Plan inputs in the durable draft instead of silently committing and losing them', async () => {
+    const input = {
+      ...basicGasInput(),
+      plannedDepthM: 0,
+      cylinderWaterVolumeL: 12,
+      startPressureBar: 210,
+      ownRmvLMin: 18,
+      buddyRmvLMin: 20,
+      plannedWorkingTimeMin: 25,
+    };
+    const draft = newDraft('gas-plan', {
+      name: 'Incomplete gas plan',
+      phoneGasInput: input as unknown as import('../lib/offline/types').JsonValue,
+    });
+    await savePhoneDraft(draft);
+    await expect(commitPhoneDraft(draft)).rejects.toThrow(/Calculate/);
+    expect(await readPhoneDraft(draft.id)).toEqual(draft);
+    expect(phoneGasInput((await readPhoneDraft(draft.id))!.record)).toEqual(input);
+    expect(await listLocalDiveRecords('gas-plan')).toHaveLength(0);
+    expect(await pendingDiveChanges()).toHaveLength(0);
+  });
   it('creates a new offline Person before linking its stable ID to an offline Dive, without uploading or renumbering another Dive', async () => {
     const request = vi.fn();
     vi.stubGlobal('fetch', request);

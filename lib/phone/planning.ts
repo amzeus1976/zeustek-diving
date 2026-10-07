@@ -170,6 +170,10 @@ export function preparePhoneRecord(
   if (kind === 'gas-plan') {
     if (!basicGasEditable(result))
       throw new Error('Use the full interface for advanced gas planning.');
+    if (result.phoneGasInput && !result.recGasPlan101)
+      throw new Error(
+        'Calculate the Gas Plan before saving. Your inputs remain in the device draft.',
+      );
     result.status = 'draft';
     delete result.phoneGasInput;
   }
