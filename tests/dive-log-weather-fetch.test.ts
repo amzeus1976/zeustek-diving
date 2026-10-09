@@ -11,6 +11,7 @@ describe('bounded Dive Log weather retrieval',()=>{
   expect(result).toMatchObject({provider:'NASA POWER',resolution:'daily',logConditions:{airTemperatureC:16}});expect(fetcher).toHaveBeenCalledTimes(1);
  });
  it('falls back once to the same no-key provider in the browser when server IP is throttled',async()=>{
+  vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-04T12:00:00Z'));
   const fetcher=vi.fn(async (url:string|URL|Request)=>urlText(url).startsWith('/api/')?Response.json({code:'rate_limited',directFallback:true},{status:429}):Response.json(hourly));const result=await fetchDiveLogWeather(request,undefined,fetcher);
   expect(result).toMatchObject({provider:'Open-Meteo',resolution:'hourly',logConditions:{weatherSummary:'Partly cloudy',airTemperatureC:14,windSpeedKnots:8}});expect(fetcher).toHaveBeenCalledTimes(2);expect(urlText(fetcher.mock.calls[1]![0])).toMatch(/^https:\/\/api.open-meteo.com\/v1\/forecast\?/);
  });
