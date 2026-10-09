@@ -6,6 +6,9 @@ import {EquipmentEventSource} from './equipment-maintenance-log';
 
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   CheckCircle2,
   Copy,
   Cylinder,
@@ -72,6 +75,7 @@ import {
 } from '../lib/offline/loadouts-gas';
 import styles from './loadouts-gas.module.css';
 import { CYLINDER_COLUMNS, CYLINDER_COLUMN_LABELS, DEFAULT_CYLINDER_COLUMNS, normaliseCylinderColumns, type CylinderColumn } from '../lib/cylinders/cylinder-column-preferences';
+import { buildCylinderTableRows, nextCylinderSort, sortCylinderTableRows, type CylinderSort } from '../lib/cylinders/cylinder-table';
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string | undefined }) {
   return <section className={`focus-card ${className}`}>{children}</section>;
@@ -150,6 +154,7 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
   const numberRows=cylinders.map(item=>({...item,recordStorageKind:item.recordStorageKind??'cylinder' as const}));
   const numberIssues=cylinderNumberIssues(numberRows);
   const [query, setQuery] = useState('');
+  const [cylinderSort, setCylinderSort] = useState<CylinderSort>({ column: 'id', direction: 'ascending' });
   const [visibleColumns, setVisibleColumns] = useState<CylinderColumn[]>(() => {
     if (typeof window === 'undefined') return DEFAULT_CYLINDER_COLUMNS;
     try { return normaliseCylinderColumns(JSON.parse(localStorage.getItem('zeustek-cylinder-columns') ?? 'null') as string[] | null); }
@@ -185,9 +190,12 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
   const visibleLoadouts = loadouts.filter((item) =>
     !normalQuery || `${item.name} ${item.description ?? ''} ${item.intendedUse ?? ''} ${(item.environmentTags ?? []).join(' ')}`.toLocaleLowerCase('en-GB').includes(normalQuery),
   );
-  const visibleCylinders = cylinders.filter((item) =>
+  const cylinderRows = useMemo(() => buildCylinderTableRows(cylinders, fills, analyses), [cylinders, fills, analyses]);
+  const activeCylinderSort: CylinderSort = visibleColumns.includes(cylinderSort.column)
+    ? cylinderSort : { column: visibleColumns[0] ?? 'id', direction: 'ascending' };
+  const visibleCylinders = sortCylinderTableRows(cylinderRows.filter(({ item }) =>
     !normalQuery || `${item.name} ${item.manufacturer} ${item.model} ${item.serialNumber}`.toLocaleLowerCase('en-GB').includes(normalQuery),
-  );
+  ), activeCylinderSort);
 
   async function removeLoadout(item: Stored<ReusableLoadoutRecord>) {
     if (!window.confirm(`Delete reusable loadout “${item.name}”? Equipment items and historical Dive/Plan references are not deleted.`)) return;
@@ -245,14 +253,15 @@ function LoadoutsGasWorkspace({ initialTab }: { initialTab: 'loadouts' | 'cylind
       {!visibleLoadouts.length && <Card className="focus-empty"><Wrench size={30}/><h2>{loadouts.length ? 'No matching loadouts' : 'No reusable loadouts yet'}</h2><p>Existing Equipment Sets remain compatible. Open one to assign semantic slots, or create a new loadout.</p><button className="focus-primary" onClick={() => setEditing(null)}>Create loadout</button></Card>}
     </div> : <Card className={styles.tableCard}>
       {visibleCylinders.length ? <div className={styles.tableWrap}><table className={styles.cylinderTable}>
-        <thead><tr>{visibleColumns.map((column) => <th key={column}>{CYLINDER_COLUMN_LABELS[column]}</th>)}</tr></thead>
-        <tbody>{visibleCylinders.map((item) => {
-          const itemFills = fills.filter((fill) => fill.cylinderEquipmentId === item.entityId);
-          const state = deriveCylinderCurrentState(item, itemFills, analyses.filter((analysis) => analysis.cylinderEquipmentId === item.entityId));
+        <thead><tr>{visibleColumns.map((column) => {
+          const selected = activeCylinderSort.column === column;
+          const nextSort = nextCylinderSort(activeCylinderSort, column);
+          const SortIcon = selected ? activeCylinderSort.direction === 'ascending' ? ArrowUp : ArrowDown : ArrowUpDown;
+          return <th key={column} scope="col" aria-sort={selected ? activeCylinderSort.direction : undefined}><button type="button" className={styles.sortButton} aria-label={`Sort by ${CYLINDER_COLUMN_LABELS[column]}, ${nextSort.direction}`} onClick={() => setCylinderSort(nextSort)}>{CYLINDER_COLUMN_LABELS[column]}<SortIcon size={14} aria-hidden="true"/></button></th>;
+        })}</tr></thead>
+        <tbody>{visibleCylinders.map(({ item, state, nextTest }) => {
           const fill = state.latestFill;
           const analysis = state.currentAnalysis ?? state.latestAnyAnalysis;
-          const schedule = deriveCylinderInspectionDisplay(item);
-          const nextTest = [schedule.nextHydroAt, schedule.visualDueAt, monthOnly(item.oxygenCleanUntil)].filter(Boolean).sort((a, b) => String(a).localeCompare(String(b)))[0] ?? null;
           return <tr key={item.entityId} tabIndex={0} onClick={() => setCylinder(item)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setCylinder(item); } }} aria-label={`Open ${item.name} cylinder details`}>
             {visibleColumns.includes('id') && <td>{typeof item.cylinderNumber==='string' ? item.cylinderNumber || '—' : 'Needs review'}</td>}
             {visibleColumns.includes('serial') && <td>{item.serialNumber || '—'}</td>}

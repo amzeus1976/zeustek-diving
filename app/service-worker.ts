@@ -40,7 +40,7 @@ registerRoute(({request,url})=>request.mode==='navigate'&&/^\/(?:signin-with-cha
 registerRoute(({request,url})=>request.mode==='navigate'&&(url.pathname==='/phone'||url.pathname.startsWith('/phone/')||url.pathname==='/'&&url.searchParams.get('source')==='pwa'),({request})=>phoneNavigation(request));
 registerRoute(({request,url})=>url.origin===self.location.origin&&request.method==='GET'&&request.headers.get('RSC')==='1'&&(url.pathname==='/phone'||url.pathname==='/phone/offline'||url.pathname==='/'&&url.searchParams.get('source')==='pwa'),({request})=>phoneNavigation(request));
 registerRoute(new NavigationRoute(new NetworkOnly()));
-registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v59' }));
+registerRoute(({ request,url }) => url.origin===self.location.origin&&(request.destination === 'script' || request.destination === 'style'), new CacheFirst({ cacheName: 'zeustek-static-v60' }));
 registerRoute(({ url }) => url.pathname.startsWith('/api/'), new NetworkOnly());
 registerRoute(({url})=>url.origin===self.location.origin&&isCompleteIconPath(url.pathname),new CacheFirst({
   cacheName:'zeustek-complete-icons-v1',
