@@ -25,6 +25,10 @@ export function nextCylinderSort(current: CylinderSort, column: CylinderColumn):
   return { column, direction: current.column === column && current.direction === 'ascending' ? 'descending' : 'ascending' };
 }
 
+export function visibleCylinderSort(current: CylinderSort, columns: readonly CylinderColumn[]): CylinderSort {
+  return columns.includes(current.column) ? current : { column: columns[0] ?? 'id', direction: 'ascending' };
+}
+
 function text(value: string | null | undefined) { return value?.trim() || null; }
 function number(value: number | null | undefined) { return typeof value === 'number' && Number.isFinite(value) ? value : null; }
 function percentage(value: number | null | undefined) { const fraction = number(value); return fraction == null ? null : Math.round(fraction * 100); }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCylinderTableRows, nextCylinderSort, sortCylinderTableRows } from '../lib/cylinders/cylinder-table';
+import { buildCylinderTableRows, nextCylinderSort, sortCylinderTableRows, visibleCylinderSort } from '../lib/cylinders/cylinder-table';
 import { CYLINDER_COLUMNS } from '../lib/cylinders/cylinder-column-preferences';
 import type { Stored } from '../lib/offline/dive-planning';
 import type { CylinderEquipmentRecord, CylinderFillRecord, GasAnalysisRecord } from '../lib/offline/loadouts-gas';
@@ -71,5 +71,13 @@ describe('Cylinder table ordering', () => {
     expect(descending.direction).toBe('descending');
     expect(nextCylinderSort(descending, 'id')).toEqual(ascending);
     expect(nextCylinderSort(descending, 'pressure')).toEqual({ column: 'pressure', direction: 'ascending' });
+  });
+
+  it('keeps the replacement order when a hidden sort column is subsequently shown again', () => {
+    const previous = { column: 'pressure' as const, direction: 'descending' as const };
+    const replacement = visibleCylinderSort(previous, ['id', 'gas']);
+    expect(replacement).toEqual({ column: 'id', direction: 'ascending' });
+    expect(visibleCylinderSort(replacement, ['id', 'gas', 'pressure'])).toBe(replacement);
+    expect(visibleCylinderSort(previous, ['gas', 'pressure'])).toBe(previous);
   });
 });
